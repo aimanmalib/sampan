@@ -20,13 +20,16 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
     "e2e": "playwright test",
-    "gate": "bash scripts/gerbang-ujian.sh"
+    "gate": "bash scripts/gerbang-ujian.sh",
+    "test-wallet:keys": "tsx tools/test-wallet/keys.ts"
   },
   "dependencies": {
+    "@bitauth/libauth": "^3.0.0",
     "@fastify/static": "^10.1.11",
     "fastify": "^5.12.8",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "viem": "^2.57.19"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
