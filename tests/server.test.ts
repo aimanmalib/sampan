@@ -54,6 +54,12 @@ describe('server', () => {
       expect(csp).toContain("default-src 'self'");
       expect(csp).toContain("script-src 'self'");
       expect(csp).not.toContain('unsafe-inline');
+      // WebAssembly (libauth) may compile; JavaScript eval stays off.
+      expect(csp).toMatch(/script-src 'self' 'wasm-unsafe-eval';/);
+      expect(csp).not.toMatch(/[^-]unsafe-eval/);
+      // The page may reach the WizardConnect relays named in config, and nothing else outside.
+      expect(csp).toContain('connect-src');
+      for (const relay of config.connect.relayUrls) expect(csp).toContain(new URL(relay).origin);
     }
   });
 

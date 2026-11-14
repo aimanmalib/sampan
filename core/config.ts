@@ -24,7 +24,8 @@ export interface EvmChainConfig {
 export interface SampanConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
-  features: { musd: boolean };
+  /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
+  features: { musd: boolean; swap: boolean };
   route: { active: ActiveRoute; symbols: string[] };
   thorchain: { nodes: string[]; chains: string[]; slippageBps: number; affiliate: string; affiliateBps: number };
   oneClick: {
@@ -50,6 +51,8 @@ export interface SampanConfig {
   electrum: { servers: string[]; chipnetServers: string[] };
   /** Wallet scan: stop after `gapLimit` unused addresses in a row; results are kept in memory only. */
   wallet: { gapLimit: number; maxAddressesPerScan: number; scanCacheSeconds: number };
+  /** Page side of the BCH wallet connection: WizardConnect relays, scan rounds and the explorer link. */
+  connect: { relayUrls: string[]; maxScanRounds: number; explorerTxUrl: string };
   landing: {
     toleranceBps: number;
     toleranceBpsDirect: number;
@@ -90,6 +93,7 @@ export interface PublicConfig {
   compliance: { crossChainEnabled: boolean };
   banner: SampanConfig['banner'];
   site: SampanConfig['site'];
+  connect: SampanConfig['connect'] & { gapLimit: number; feeCapSats: number };
 }
 
 const HEX32 = /^[0-9a-fA-F]{64}$/;
@@ -146,6 +150,12 @@ export function validateConfig(c: SampanConfig): string[] {
     posInt(c.wallet?.gapLimit) && c.wallet.maxAddressesPerScan >= c.wallet.gapLimit && posInt(c.wallet.scanCacheSeconds),
     'wallet: gapLimit, maxAddressesPerScan >= gapLimit, scanCacheSeconds',
   );
+  need(
+    c.connect?.relayUrls.length > 0 && c.connect.relayUrls.every((u) => /^wss:\/\/[^\s/]+\/?$/.test(u)),
+    'connect.relayUrls: wss URLs (host and port only)',
+  );
+  need(posInt(c.connect?.maxScanRounds), 'connect.maxScanRounds: positive integer');
+  need(isHttpsUrl(c.connect?.explorerTxUrl ?? '') && c.connect.explorerTxUrl.includes('{txid}'), 'connect.explorerTxUrl: https URL with {txid}');
   need(posInt(c.rate.quotesPerMinute) && posInt(c.rate.crossingsPerHour), 'rate: positive integers');
   need(c.rate.cloudflareCidrs.every((r) => /^[0-9a-fA-F:.]+\/\d{1,3}$/.test(r)), 'rate.cloudflareCidrs: CIDR ranges');
   need(posInt(c.ops.quotePayloadHours), 'ops.quotePayloadHours: positive integer');
@@ -159,6 +169,24 @@ export function validateConfig(c: SampanConfig): string[] {
 }
 
 /** Token categories are case-insensitive hex; the rest of the code compares them in lowercase. */
+/**
+ * SAMPAN_CONFIG_PATCH: JSON merged over the config file (objects merge, everything else replaces). Used by the
+ * e2e run to switch on unmeasured flows and lift rate limits; the result is validated like the file itself.
+ */
+export function patchConfig(c: SampanConfig, patch: string | undefined): SampanConfig {
+  if (!patch) return c;
+  const merge = (base: unknown, over: unknown): unknown => {
+    if (!over || typeof over !== 'object' || Array.isArray(over) || !base || typeof base !== 'object' || Array.isArray(base)) return over;
+    const out: Record<string, unknown> = { ...(base as Record<string, unknown>) };
+    for (const [k, v] of Object.entries(over)) {
+      if (!(k in out)) throw new Error(`SAMPAN_CONFIG_PATCH: unknown key ${k}`);
+      out[k] = merge(out[k], v);
+    }
+    return out;
+  };
+  return merge(c, JSON.parse(patch)) as SampanConfig;
+}
+
 export function normalizeConfig(c: SampanConfig): SampanConfig {
   const tokens = Object.fromEntries(
     Object.entries(c.tokens).map(([key, t]) => [key, { ...t, category: t.category.toLowerCase() }]),
@@ -179,5 +207,6 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     compliance: { crossChainEnabled: c.compliance.crossChainEnabled },
     banner: c.banner,
     site: c.site,
+    connect: { ...c.connect, gapLimit: c.wallet.gapLimit, feeCapSats: c.fees.capSats },
   };
 }

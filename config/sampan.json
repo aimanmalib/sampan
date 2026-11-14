@@ -17,7 +17,8 @@
   },
   "defaultToken": "PUSD",
   "features": {
-    "musd": false
+    "musd": false,
+    "swap": false
   },
   "route": {
     "active": "none",
@@ -75,6 +76,11 @@
     "gapLimit": 20,
     "maxAddressesPerScan": 60,
     "scanCacheSeconds": 600
+  },
+  "connect": {
+    "relayUrls": ["wss://relay.riften.net:443", "wss://relay.cauldron.quest:443"],
+    "maxScanRounds": 10,
+    "explorerTxUrl": "https://blockchair.com/bitcoin-cash/transaction/{txid}"
   },
   "landing": {
     "toleranceBps": 150,

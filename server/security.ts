@@ -3,10 +3,10 @@ import type { FastifyInstance } from 'fastify';
 import type { SampanConfig } from '../core/config.js';
 
 export function contentSecurityPolicy(config: SampanConfig): string {
-  const connect = ["'self'", ...config.evm.chains.map((c) => new URL(c.rpc).origin)];
+  const connect = ["'self'", ...config.evm.chains.map((c) => new URL(c.rpc).origin), ...config.connect.relayUrls.map((u) => new URL(u).origin)];
   return [
     "default-src 'self'",
-    "script-src 'self'",
+    "script-src 'self' 'wasm-unsafe-eval'",
     "style-src 'self'",
     "img-src 'self' data:",
     "font-src 'self'",

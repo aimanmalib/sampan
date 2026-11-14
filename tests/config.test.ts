@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { normalizeConfig, publicConfig, validateConfig, type SampanConfig } from '../core/config.js';
+import { normalizeConfig, patchConfig, publicConfig, validateConfig, type SampanConfig } from '../core/config.js';
 
 const shipped = JSON.parse(
   readFileSync(new URL('../config/sampan.json', import.meta.url), 'utf8'),
@@ -14,7 +14,7 @@ describe('config/sampan.json', () => {
 
   it('has every top-level section the code reads', () => {
     const sections = [
-      'tokens', 'defaultToken', 'features', 'route', 'thorchain', 'oneClick', 'evm', 'cauldron', 'electrum', 'wallet',
+      'tokens', 'defaultToken', 'features', 'route', 'thorchain', 'oneClick', 'evm', 'cauldron', 'electrum', 'wallet', 'connect',
       'landing', 'limits', 'fees', 'rate', 'compliance', 'banner', 'site', 'ops',
     ];
     expect(Object.keys(shipped).sort()).toEqual([...sections].sort());
@@ -75,5 +75,17 @@ describe('publicConfig', () => {
       expect(pub).not.toHaveProperty(hidden);
     }
     expect(Object.keys(publicConfig(c).tokens)).toEqual([c.defaultToken]);
+  });
+});
+
+describe('patchConfig (SAMPAN_CONFIG_PATCH)', () => {
+  it('merges objects, replaces values and refuses unknown keys', () => {
+    const c = clone();
+    const patched = patchConfig(c, JSON.stringify({ features: { swap: true }, rate: { quotesPerMinute: 999 } }));
+    expect(patched.features).toEqual({ ...c.features, swap: true });
+    expect(patched.rate.quotesPerMinute).toBe(999);
+    expect(patched.rate.cloudflareCidrs).toEqual(c.rate.cloudflareCidrs);
+    expect(patchConfig(c, undefined)).toBe(c);
+    expect(() => patchConfig(c, JSON.stringify({ featurez: {} }))).toThrow(/unknown key featurez/);
   });
 });

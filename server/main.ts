@@ -3,7 +3,7 @@ import { loadConfig } from './config.js';
 import { readEnv } from './env.js';
 
 const env = readEnv();
-const config = loadConfig(env.configPath);
+const config = loadConfig(env.configPath, process.env.SAMPAN_CONFIG_PATCH);
 const app = await buildApp({
   config,
   webDist: env.webDist,
