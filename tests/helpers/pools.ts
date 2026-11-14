@@ -8,7 +8,6 @@ interface IndexerPool {
   owner_p2pkh_addr: string;
   owner_pkh: string;
   sats: number;
-  token_id: string;
   tokens: number;
   tx_pos: number;
   txid: string;
@@ -16,16 +15,16 @@ interface IndexerPool {
 
 export const fixture = JSON.parse(
   readFileSync(new URL('../fixtures/cauldron-pusd-pools.json', import.meta.url), 'utf8'),
-) as { active: IndexerPool[] };
+) as { category: string; active: IndexerPool[] };
 
-export const PUSD = '2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544';
+export const PUSD = fixture.category;
 
 export const pools: PoolUtxo[] = fixture.active.map((p) => ({
   txid: p.txid,
   vout: p.tx_pos,
   sats: BigInt(p.sats),
   tokens: BigInt(p.tokens),
-  category: p.token_id,
+  category: PUSD,
   ownerPkh: p.owner_pkh,
 }));
 
