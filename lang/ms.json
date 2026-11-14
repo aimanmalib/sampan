@@ -29,5 +29,7 @@
   "footer.built": "Dibina untuk BCH BLAZE 2026.",
   "footer.license": "Sumber terbuka, MIT.",
   "footer.repo": "Kod sumber",
-  "footer.feedback": "Maklum balas"
+  "footer.feedback": "Maklum balas",
+  "alerts.unhealthy": "Sampan tidak sihat: laman awam atau /healthz gagal dua kali berturut. Semak kontena dan laluan; undur dengan deploy/deploy.sh --rollback jika deploy terakhir puncanya.",
+  "alerts.recovered": "Sampan sihat semula: laman dan /healthz menjawab 200. Tiada tindakan perlu."
 }

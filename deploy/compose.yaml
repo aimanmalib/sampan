@@ -1,0 +1,28 @@
+# Sampan: one container (API + built page) behind the host's reverse proxy. No published port, no keys (the
+# production server never signs). Run through deploy/deploy.sh, which sources deploy/hos.env (host values, not tracked).
+name: sampan
+services:
+  sampan:
+    image: sampan:${SAMPAN_TAG:-latest}
+    container_name: sampan
+    restart: unless-stopped
+    environment:
+      TZ: UTC
+      SAMPAN_DATA: /app/data
+    volumes:
+      - sampan-data:/app/data
+    read_only: true
+    tmpfs: [/tmp]
+    cpus: 0.5
+    mem_limit: 256m
+    networks: [proxy]
+
+volumes:
+  sampan-data:
+    name: sampan-data
+    external: true
+
+networks:
+  proxy:
+    name: ${SAMPAN_NETWORK:?set SAMPAN_NETWORK in deploy/hos.env}
+    external: true

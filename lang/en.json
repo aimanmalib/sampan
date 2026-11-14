@@ -29,5 +29,7 @@
   "footer.built": "Built for BCH BLAZE 2026.",
   "footer.license": "Open source, MIT.",
   "footer.repo": "Source code",
-  "footer.feedback": "Feedback"
+  "footer.feedback": "Feedback",
+  "alerts.unhealthy": "Sampan is not healthy: the public page or /healthz failed twice in a row. Check the container and the route; undo with deploy/deploy.sh --rollback if the last deploy caused it.",
+  "alerts.recovered": "Sampan is healthy again: the page and /healthz answer 200. Nothing to do."
 }
