@@ -1,0 +1,137 @@
+{
+ "source": "GET https://indexer.cauldron.quest/cauldron/pool/active?token=<PUSD category>",
+ "capturedUtc": "2026-11-14T17:43Z",
+ "note": "10 largest and 3 smallest active PUSD pools at capture time",
+ "active": [
+  {
+   "owner_p2pkh_addr": "bitcoincash:zqfwl7h932a6qjw4gqnrffcfu8n2zhqysqs7my6fek",
+   "owner_pkh": "12effae58abba049d5402634a709e1e6a15c0480",
+   "pool_id": "fac5a4a69f7c7459f751f43495cbee3821cbc478165d83e78db66a82cc697b0c",
+   "sats": 25110563139,
+   "token_id": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+   "tokens": 5255454,
+   "tx_pos": 0,
+   "txid": "e25f84701c694ca0af156b94106b389767ada4fbdc7cd4a1021d64007d76872e"
+  },
+  {
+   "owner_p2pkh_addr": "bitcoincash:zz4smcfq84p8fqdjgla2pdp5470afx37aq6a8n4mdk",
+   "owner_pkh": "ab0de1203d427481b247faa0b434af9fd49a3ee8",
+   "pool_id": "f72838e86a38bcd53485492cba8aa85275c255cc70adc96edb494d2814aa5118",
+   "sats": 7108449385,
+   "token_id": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+   "tokens": 1487745,
+   "tx_pos": 1,
+   "txid": "e25f84701c694ca0af156b94106b389767ada4fbdc7cd4a1021d64007d76872e"
+  },
+  {
+   "owner_p2pkh_addr": "bitcoincash:zqkwh9v4x69nw3563qcf9haq9dulx8k98qnzmfyxhl",
+   "owner_pkh": "2ceb9595368b37469a883092dfa02b79f31ec538",
+   "pool_id": "a9a2d6220736536d621bb8d514f49904451fe55acf776bb15a0e7ec4c27cf9e5",
+   "sats": 6038932441,
+   "token_id": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+   "tokens": 1263903,
+   "tx_pos": 2,
+   "txid": "e25f84701c694ca0af156b94106b389767ada4fbdc7cd4a1021d64007d76872e"
+  },
+  {
+   "owner_p2pkh_addr": "bitcoincash:zquqs7fuqsus7q92y9yh8vngy27s6rat8st923ftq6",
+   "owner_pkh": "3808793c04390f00aa214973b26822bd0d0fab3c",
+   "pool_id": "f7ed4d5353cddb0abc5b02e1e361fad02dec547dcde4fc28c4c641907d9d3323",
+   "sats": 4603711197,
+   "token_id": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+   "tokens": 963522,
+   "tx_pos": 3,
+   "txid": "e25f84701c694ca0af156b94106b389767ada4fbdc7cd4a1021d64007d76872e"
+  },
+  {
+   "owner_p2pkh_addr": "bitcoincash:zz6s8t6at58x8nl9uy5thr0alk2097e5muljaw8xmv",
+   "owner_pkh": "b503af5d5d0e63cfe5e128bb8dfdfd94f2fb34df",
+   "pool_id": "066d44260c6e0d9ea661761230a27e950b3f67d9d1ee7e9ec342868f004efe6a",
+   "sats": 2467796324,
+   "token_id": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+   "tokens": 516490,
+   "tx_pos": 4,
+   "txid": "e25f84701c694ca0af156b94106b389767ada4fbdc7cd4a1021d64007d76872e"
+  },
+  {
+   "owner_p2pkh_addr": "bitcoincash:zrg8xmhfqytlfmt7nwk44cymp2cv3y5kksr2gsyfyq",
+   "owner_pkh": "d0736ee90117f4ed7e9bad5ae09b0ab0c89296b4",
+   "pool_id": "93205c98906edec592fe9776ae8a00f1464f57a5fdda209704fc84ea7628dd87",
+   "sats": 1639403455,
+   "token_id": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+   "tokens": 343114,
+   "tx_pos": 5,
+   "txid": "e25f84701c694ca0af156b94106b389767ada4fbdc7cd4a1021d64007d76872e"
+  },
+  {
+   "owner_p2pkh_addr": "bitcoincash:zrx9rqcjz940hl9x48zjrumh6lzzhzsequetn5pv2v",
+   "owner_pkh": "cc518312116afbfca6a9c521f377d7c42b8a1907",
+   "pool_id": "aed0dfca846fcafe759d23d2818b76a234d7cc762dad675a9305a1c58efc57a4",
+   "sats": 1157615983,
+   "token_id": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+   "tokens": 242286,
+   "tx_pos": 6,
+   "txid": "2bdf53e3da427a2349b2750cbf71e7b63f9c00bebe6ac55fb91d022425367862"
+  },
+  {
+   "owner_p2pkh_addr": "bitcoincash:zpdf6vdxz9zs8qv83wtc8jysgz3g044suv539cpggd",
+   "owner_pkh": "5a9d31a611450381878b9783c89040a287d6b0e3",
+   "pool_id": "f991d46069de65057a734a8d6b0dded688e5e1779a5b3128241eede92da84bcd",
+   "sats": 438381414,
+   "token_id": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+   "tokens": 91752,
+   "tx_pos": 7,
+   "txid": "2bdf53e3da427a2349b2750cbf71e7b63f9c00bebe6ac55fb91d022425367862"
+  },
+  {
+   "owner_p2pkh_addr": "bitcoincash:zzyyyj2lnzxeqlywe78klut7jz3eazwj5sgqxxdcak",
+   "owner_pkh": "8842495f988d907c8ecf8f6ff17e90a39e89d2a4",
+   "pool_id": "cd1658257905b9fa1f19982a752d1bbf9cbeb59c4cb80407a5ebf15585b5b3ff",
+   "sats": 327540726,
+   "token_id": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+   "tokens": 68555,
+   "tx_pos": 11,
+   "txid": "2bdf53e3da427a2349b2750cbf71e7b63f9c00bebe6ac55fb91d022425367862"
+  },
+  {
+   "owner_p2pkh_addr": "bitcoincash:zz58f29v3twh3eu082a0j570wgmyqfv9wc69jvncpy",
+   "owner_pkh": "a874a8ac8add78e78f3abaf953cf723640258576",
+   "pool_id": "e699816abcc77664db106dfa1e45904271686cabcb620db40b077fab6cd0e5a6",
+   "sats": 315475033,
+   "token_id": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+   "tokens": 66028,
+   "tx_pos": 12,
+   "txid": "2bdf53e3da427a2349b2750cbf71e7b63f9c00bebe6ac55fb91d022425367862"
+  },
+  {
+   "owner_p2pkh_addr": "bitcoincash:zpc35vdk0phrhqaqkdhs3nfqm8s39p74hs4tszm3lw",
+   "owner_pkh": "711a31b6786e3b83a0b36f08cd20d9e11287d5bc",
+   "pool_id": "3251c6d464e26cfbc916533ec466d9b35a5d92eaf217228305592ac1245f248d",
+   "sats": 1436757,
+   "token_id": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+   "tokens": 298,
+   "tx_pos": 34,
+   "txid": "65c1745909566ba70d8b7fd72479a70fe9745f8d1aef446fe4356248716f094a"
+  },
+  {
+   "owner_p2pkh_addr": "bitcoincash:zptcvejyuqj8ayw297de40mp4xx3zfzq55mgvj5vzt",
+   "owner_pkh": "57866644e0247e91ca2f9b9abf61a98d112440a5",
+   "pool_id": "4b1ec59a645e18da12877a753f4f52b7434a194f224af3d096afb55bdc057c94",
+   "sats": 1276909,
+   "token_id": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+   "tokens": 264,
+   "tx_pos": 7,
+   "txid": "dc2bb892a4acf2d1b701ae43757bbeca274669d35fbc3508340782f4b28e217f"
+  },
+  {
+   "owner_p2pkh_addr": "bitcoincash:zrpla8837w7gz7qhyv8d3mwmrx6ehujxdy70mvsn2s",
+   "owner_pkh": "c3fe9cf1f3bc817817230ed8eddb19b59bf24669",
+   "pool_id": "f9a5540df622ce179948d8daf59d22b82d0b2485e9f5410de709eb25cd7d55b5",
+   "sats": 698677,
+   "token_id": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+   "tokens": 146,
+   "tx_pos": 0,
+   "txid": "afa88d0a4aa2c0a5e12c27b7077196ad5305f7714f1def9e0c15df01741c1d6d"
+  }
+ ]
+}
