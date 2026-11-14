@@ -23,4 +23,18 @@ Notes for anyone (person or coding agent) working in this repository.
 
 ## Commands
 
-Added with the code scaffold.
+Node 22 (`.nvmrc`), npm.
+
+- `npm ci` install.
+- `npm run dev` server on :8080 and Vite on :5173 (Vite proxies `/api`).
+- `npm test` unit tests (vitest, no network).
+- `npm run build` page into `web/dist`, server into `dist/server`.
+- `npm run e2e` Playwright against the built server with `SAMPAN_FAKE=1` (Chromium desktop, WebKit iPhone 13). Build first.
+- `npm run lint`, `npm run typecheck`.
+- `bash scripts/gerbang-ujian.sh` everything above in order; this is the gate CI runs.
+
+## Invariants checked by tests
+
+- `lang/en.json` and `lang/ms.json` have the same keys and placeholders.
+- `config/sampan.json` passes `validateConfig` (`core/config.ts`); `/api/config` never exposes server-only sections.
+- Every response has a strict CSP; HTML is `no-transform`; `noindex` follows `site.noindex`.
