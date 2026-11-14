@@ -4,7 +4,14 @@ import { readEnv } from './env.js';
 
 const env = readEnv();
 const config = loadConfig(env.configPath);
-const app = await buildApp({ config, webDist: env.webDist, fake: env.fake, logger: true });
+const app = await buildApp({
+  config,
+  webDist: env.webDist,
+  fake: env.fake,
+  logger: true,
+  dbFile: env.fake ? ':memory:' : env.dbFile,
+  trustedProxies: env.trustedProxies,
+});
 
 const stop = async (): Promise<void> => {
   await app.close();

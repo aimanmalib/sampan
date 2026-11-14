@@ -9,6 +9,7 @@ services:
     environment:
       TZ: UTC
       SAMPAN_DATA: /app/data
+      SAMPAN_TRUSTED_PROXY: ${PROXY_CONTAINER:-}
     volumes:
       - sampan-data:/app/data
     read_only: true

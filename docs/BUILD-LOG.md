@@ -10,3 +10,4 @@ One line per step, newest last.
 - 2026-11-14: The Build with XO bounty work is started as a separate repository with its own build plan; this repository does not depend on it.
 - 2026-11-14: Core swap pieces: pool v0 locking bytecode and arithmetic checked against cashlab on captured pools, swap transaction builder, VM verification with 2026 rules, browser-side transaction check (rules 1 to 5) with sabotage tests.
 - 2026-11-14: Token categories in config are case-insensitive and lowercased on load; the pool fixture reads the PUSD category from config instead of repeating it.
+- 2026-11-14: Server swap API: Electrum client with failover over four checked Fulcrum servers, Cauldron pool discovery verified against the chain, fresh pools before each build, wallet scan with gap limit, quote, build and broadcast endpoints, SQLite crossings, rate limits behind the proxy, offline fake network.

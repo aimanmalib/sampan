@@ -58,15 +58,23 @@
     "indexers": ["https://indexer.cauldron.quest"],
     "maxPoolsPerTx": 5,
     "slippageBps": 50,
-    "outSafetyBps": 30
+    "outSafetyBps": 30,
+    "cacheSeconds": 5,
+    "buildAttempts": 3
   },
   "electrum": {
     "servers": [
+      "wss://bch.loping.net:50004",
       "wss://bch.imaginary.cash:50004",
-      "wss://electroncash.de:60002",
-      "wss://bch.loping.net:50004"
+      "wss://fulcrum.greyh.at:50004",
+      "wss://fulcrum.jettscythe.xyz:50004"
     ],
     "chipnetServers": ["wss://chipnet.imaginary.cash:50004"]
+  },
+  "wallet": {
+    "gapLimit": 20,
+    "maxAddressesPerScan": 60,
+    "scanCacheSeconds": 600
   },
   "landing": {
     "toleranceBps": 150,
@@ -85,11 +93,19 @@
     "routeMinUsd": { "near-intents": 0.5, "thorchain": 1.5 }
   },
   "fees": {
-    "satsPerByte": 1
+    "satsPerByte": 1,
+    "capSats": 5000
   },
   "rate": {
     "quotesPerMinute": 30,
-    "crossingsPerHour": 10
+    "crossingsPerHour": 10,
+    "cloudflareCidrs": [
+      "173.245.48.0/20", "103.21.244.0/22", "103.22.200.0/22", "103.31.4.0/22", "141.101.64.0/18",
+      "108.162.192.0/18", "190.93.240.0/20", "188.114.96.0/20", "197.234.240.0/22", "198.41.128.0/17",
+      "162.158.0.0/15", "104.16.0.0/13", "104.24.0.0/14", "172.64.0.0/13", "131.0.72.0/22",
+      "2400:cb00::/32", "2606:4700::/32", "2803:f800::/32", "2405:b500::/32", "2405:8100::/32",
+      "2a06:98c0::/29", "2c0f:f248::/32"
+    ]
   },
   "compliance": {
     "blockedCountries": ["KP", "IR", "CU", "SY"],
@@ -106,6 +122,8 @@
     "feedbackUrl": ""
   },
   "ops": {
-    "healthIntervalSeconds": 600
+    "healthIntervalSeconds": 600,
+    "testAddresses": ["bitcoincash:qqyuz8zh06c8h39guuedjpfvnlvjeg394ucvfe6ltt"],
+    "quotePayloadHours": 24
   }
 }

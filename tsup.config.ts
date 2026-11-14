@@ -9,4 +9,6 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   splitting: false,
+  // Keep the node: prefix: node:sqlite has no bare-name alias.
+  removeNodeProtocol: false,
 });

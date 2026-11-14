@@ -15,7 +15,7 @@ cd "$(dirname "$0")"
 BUILD_CMD=${BUILD_CMD:-docker build}
 MIN_FREE_GB=${MIN_FREE_GB:-8}
 BROWSER_CMD=${BROWSER_CMD:-}
-export SAMPAN_NETWORK
+export SAMPAN_NETWORK PROXY_CONTAINER   # compose reads the proxy name for SAMPAN_TRUSTED_PROXY
 DC="docker compose -f compose.yaml"
 URL="https://$SAMPAN_DOMAIN"
 HOLDER=sampan-undo

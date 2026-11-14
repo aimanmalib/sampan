@@ -37,8 +37,19 @@ export interface SampanConfig {
     appFeeBps: number;
   };
   evm: { chains: EvmChainConfig[]; walletConnectProjectId: string };
-  cauldron: { indexers: string[]; maxPoolsPerTx: number; slippageBps: number; outSafetyBps: number };
+  cauldron: {
+    indexers: string[];
+    maxPoolsPerTx: number;
+    slippageBps: number;
+    outSafetyBps: number;
+    /** How long one indexer answer is reused. */
+    cacheSeconds: number;
+    /** Builds tried with freshly fetched pools before the user sees an error. */
+    buildAttempts: number;
+  };
   electrum: { servers: string[]; chipnetServers: string[] };
+  /** Wallet scan: stop after `gapLimit` unused addresses in a row; results are kept in memory only. */
+  wallet: { gapLimit: number; maxAddressesPerScan: number; scanCacheSeconds: number };
   landing: {
     toleranceBps: number;
     toleranceBpsDirect: number;
@@ -55,12 +66,17 @@ export interface SampanConfig {
     judgeOutToken: Record<RouteId, string>;
     routeMinUsd: Record<RouteId, number>;
   };
-  fees: { satsPerByte: number };
-  rate: { quotesPerMinute: number; crossingsPerHour: number };
+  fees: { satsPerByte: number; capSats: number };
+  rate: { quotesPerMinute: number; crossingsPerHour: number; cloudflareCidrs: string[] };
   compliance: { blockedCountries: string[]; crossChainEnabled: boolean };
   banner: { deckUrl: string; repoUrl: string; tokenAddress: string; note: boolean };
   site: { noindex: boolean; feedbackUrl: string };
-  ops: { healthIntervalSeconds: number };
+  ops: {
+    healthIntervalSeconds: number;
+    /** Addresses of the project's own test wallet: their crossings are counted as `test`, not `public`. */
+    testAddresses: string[];
+    quotePayloadHours: number;
+  };
 }
 
 /** The part of the config the page needs. Everything else stays on the server. */
@@ -122,6 +138,18 @@ export function validateConfig(c: SampanConfig): string[] {
   need(c.limits.minUsd > 0 && c.limits.maxUsd > c.limits.minUsd, 'limits: 0 < minUsd < maxUsd');
   need(Number.isInteger(c.limits.localMinSats) && c.limits.localMinSats > 0, 'limits.localMinSats: positive integer');
   need(c.fees.satsPerByte >= 1, 'fees.satsPerByte: at least 1');
+  need(Number.isInteger(c.fees.capSats) && c.fees.capSats >= 1000, 'fees.capSats: integer, at least 1000');
+  const posInt = (v: number): boolean => Number.isInteger(v) && v > 0;
+  need(posInt(c.cauldron.cacheSeconds) && posInt(c.cauldron.buildAttempts), 'cauldron.cacheSeconds, buildAttempts: positive integers');
+  need(posInt(c.cauldron.maxPoolsPerTx), 'cauldron.maxPoolsPerTx: positive integer');
+  need(
+    posInt(c.wallet?.gapLimit) && c.wallet.maxAddressesPerScan >= c.wallet.gapLimit && posInt(c.wallet.scanCacheSeconds),
+    'wallet: gapLimit, maxAddressesPerScan >= gapLimit, scanCacheSeconds',
+  );
+  need(posInt(c.rate.quotesPerMinute) && posInt(c.rate.crossingsPerHour), 'rate: positive integers');
+  need(c.rate.cloudflareCidrs.every((r) => /^[0-9a-fA-F:.]+\/\d{1,3}$/.test(r)), 'rate.cloudflareCidrs: CIDR ranges');
+  need(posInt(c.ops.quotePayloadHours), 'ops.quotePayloadHours: positive integer');
+  need(c.ops.testAddresses.every((a) => a.startsWith('bitcoincash:') || a.startsWith('bchtest:')), 'ops.testAddresses: cash addresses');
   need(c.ops.healthIntervalSeconds >= 30, 'ops.healthIntervalSeconds: at least 30');
   need(c.compliance.blockedCountries.every((cc) => /^[A-Z]{2}$/.test(cc)), 'compliance.blockedCountries: ISO codes');
   for (const url of [c.banner.deckUrl, c.banner.repoUrl, c.site.feedbackUrl]) {

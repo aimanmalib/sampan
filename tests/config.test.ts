@@ -14,7 +14,7 @@ describe('config/sampan.json', () => {
 
   it('has every top-level section the code reads', () => {
     const sections = [
-      'tokens', 'defaultToken', 'features', 'route', 'thorchain', 'oneClick', 'evm', 'cauldron', 'electrum',
+      'tokens', 'defaultToken', 'features', 'route', 'thorchain', 'oneClick', 'evm', 'cauldron', 'electrum', 'wallet',
       'landing', 'limits', 'fees', 'rate', 'compliance', 'banner', 'site', 'ops',
     ];
     expect(Object.keys(shipped).sort()).toEqual([...sections].sort());
@@ -71,7 +71,7 @@ describe('publicConfig', () => {
     const c = clone();
     c.features.musd = false;
     const pub = publicConfig(c) as unknown as Record<string, unknown>;
-    for (const hidden of ['electrum', 'thorchain', 'oneClick', 'cauldron', 'rate', 'ops']) {
+    for (const hidden of ['electrum', 'wallet', 'thorchain', 'oneClick', 'cauldron', 'rate', 'ops']) {
       expect(pub).not.toHaveProperty(hidden);
     }
     expect(Object.keys(publicConfig(c).tokens)).toEqual([c.defaultToken]);
