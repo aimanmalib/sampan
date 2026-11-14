@@ -1,0 +1,289 @@
+/* Flow panels (swap), the status page and the wallet dialog. Colours and sizes come from the tokens in styles.css. */
+.swap {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.swap__sides {
+  display: flex;
+  gap: 0.5rem;
+}
+.swap__side {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: var(--touch);
+  font: inherit;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  padding: 0 0.75rem;
+}
+.swap__side[aria-checked='true'] {
+  color: var(--ink);
+  font-weight: 600;
+  border-color: var(--river);
+  background: var(--river-pale);
+}
+.field {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.field__label {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+.field__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  border-bottom: 2px solid var(--line);
+  min-width: 0;
+}
+.field__row:focus-within {
+  border-bottom-color: var(--river);
+}
+.field__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  line-height: 1.2;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  padding: 0.125rem 0;
+}
+.field__input:focus-visible {
+  outline: none;
+}
+.field__unit {
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.swap__receive,
+.swap__wallet,
+.swap__error,
+.swap__done,
+.swap__tx,
+.swap__links {
+  margin: 0;
+}
+.swap__receive {
+  font-size: 0.9375rem;
+  min-height: 1.5em;
+}
+.swap__fees {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+.swap__fees summary {
+  cursor: pointer;
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  width: fit-content;
+}
+.swap__fees p {
+  margin: 0 0 0.375rem;
+}
+.swap__wallet {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+.swap__error {
+  color: var(--danger);
+  font-size: 0.9375rem;
+}
+.swap__done {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+}
+.swap__tx .mono {
+  overflow-wrap: anywhere;
+}
+.swap__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.25rem;
+}
+.swap__links a,
+.crossing a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}
+.link-button {
+  min-height: var(--touch);
+  font: inherit;
+  color: var(--river);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+.button--quiet {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+/* Status page */
+.crossing {
+  max-width: var(--measure);
+  display: grid;
+  gap: 0.75rem;
+}
+.crossing__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 6vw, 2.5rem);
+  line-height: 1.1;
+  margin: 0;
+}
+.crossing__kind,
+.crossing__status,
+.crossing__tx {
+  margin: 0;
+}
+.crossing__tx {
+  overflow-wrap: anywhere;
+}
+.crossing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  margin: 0;
+}
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.timeline__step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--ink-soft);
+}
+.timeline__mark {
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--card);
+}
+.timeline__step--done {
+  color: var(--ink);
+}
+.timeline__step--done .timeline__mark {
+  border-color: var(--river);
+  background: radial-gradient(circle, var(--river) 0 45%, var(--card) 50%);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* WizardConnect pairing dialog. A plain tinted overlay: no blur (WebKit). */
+.connect {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: var(--overlay);
+  overflow-y: auto;
+}
+.connect__box {
+  width: 100%;
+  max-width: 24rem;
+  min-width: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem 1.25rem;
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+}
+.connect__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.connect__title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  margin: 0;
+}
+.connect__close {
+  flex: 0 0 auto;
+  width: var(--touch);
+  height: var(--touch);
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.connect__text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+.connect__qr {
+  max-width: 100%;
+  overflow: hidden;
+}
+.connect__qr canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 55.99rem) {
+  .swap {
+    gap: 0.5rem;
+  }
+  /* The direction buttons and the unit already say what is paid; the label stays for screen readers. */
+  .field__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .field__input {
+    font-size: 1.625rem;
+  }
+  .swap__receive {
+    font-size: 0.8125rem;
+    line-height: 1.35;
+  }
+}

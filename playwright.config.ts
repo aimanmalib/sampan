@@ -3,6 +3,9 @@ import { defineConfig, devices } from '@playwright/test';
 const port = Number(process.env.E2E_PORT ?? 4173);
 // E2E_BASE_URL checks a running site (deploy/deploy.sh points it at the public URL); otherwise a local fake server starts.
 const live = process.env.E2E_BASE_URL;
+// The local fake server shows the swap flow before it is switched on in production, and its rate limits are
+// lifted because every browser in the run shares one IP.
+const e2ePatch = { features: { swap: true }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } };
 
 export default defineConfig({
   testDir: 'e2e',
@@ -22,7 +25,7 @@ export default defineConfig({
           url: `http://127.0.0.1:${port}/healthz`,
           reuseExistingServer: false,
           timeout: 30_000,
-          env: { PORT: String(port), HOST: '127.0.0.1', SAMPAN_FAKE: '1' },
+          env: { PORT: String(port), HOST: '127.0.0.1', SAMPAN_FAKE: '1', SAMPAN_CONFIG_PATCH: JSON.stringify(e2ePatch) },
         },
       }),
 });
