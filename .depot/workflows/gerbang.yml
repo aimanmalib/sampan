@@ -1,0 +1,20 @@
+# Gate workflow for Sampan (Node + npm, package-lock.json). Manual dispatch only.
+# No secrets: synthetic values in `env`; the runner has no network-dependent tests (SAMPAN_FAKE=1 fixtures).
+name: gerbang
+on: workflow_dispatch
+jobs:
+  gerbang:
+    runs-on: depot-ubuntu-24.04-4
+    timeout-minutes: 30
+    env:
+      NO_COLOR: "1"
+      CI: "1"
+      TERM: dumb
+      SAMPAN_FAKE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - run: bash scripts/gerbang-ujian.sh
