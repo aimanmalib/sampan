@@ -18,7 +18,7 @@ beforeAll(async () => {
   server = createServer((_req, res) => res.writeHead(status).end('x'));
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-  const notify = path.join(dir, 'notify.sh');
+  const notify = path.join(dir, 'alert-hook');
   writeFileSync(notify, `#!/bin/sh\nprintf '%s|%s\\n' "$2" "$1" >> "${dir}/sent.log"\n`);
   chmodSync(notify, 0o755);
 });
@@ -31,7 +31,7 @@ const execFileAsync = promisify(execFile);
 
 async function run(code: number, now: number): Promise<string[]> {
   status = code;
-  const env: NodeJS.ProcessEnv = { ...process.env, UPTIME_URL: url, UPTIME_STATE: path.join(dir, 'state'), UPTIME_NOTIFY: path.join(dir, 'notify.sh'),
+  const env: NodeJS.ProcessEnv = { ...process.env, UPTIME_URL: url, UPTIME_STATE: path.join(dir, 'state'), UPTIME_NOTIFY: path.join(dir, 'alert-hook'),
     UPTIME_NOW: String(now), UPTIME_LANG: 'en', UPTIME_CONTAINER: 'sampan-test-absent', UPTIME_TIMEOUT: '5' };
   for (const k of Object.keys(env)) if (k.startsWith('GIT_')) delete env[k];
   await execFileAsync('bash', ['deploy/uptime.sh'], { env });
