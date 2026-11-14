@@ -10,7 +10,6 @@ NEXT.md
 CLAUDE.md
 CLAUDE.local.md
 .claude/
-.autopilot/
 node_modules/
 dist/
 web/dist/
