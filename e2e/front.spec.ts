@@ -34,14 +34,32 @@ test('front page: banner, one headline, one primary button, both banks, no conso
   expect(errors).toEqual([]);
 });
 
-test('headline and action card fit on the first screen', async ({ page }) => {
+test('headline, picture, card and primary button fit on the first screen', async ({ page }) => {
   await page.goto('/');
   const viewport = page.viewportSize();
-  const tabs = await page.getByRole('tablist').boundingBox();
-  const h1 = await page.getByRole('heading', { level: 1 }).boundingBox();
-  expect(viewport && h1 && tabs).toBeTruthy();
-  expect(h1!.y).toBeLessThan(viewport!.height);
-  expect(tabs!.y + tabs!.height).toBeLessThanOrEqual(viewport!.height);
+  expect(viewport).toBeTruthy();
+  const boxes = {
+    h1: await page.getByRole('heading', { level: 1 }).boundingBox(),
+    scene: await page.locator('figure.scene').boundingBox(),
+    tabs: await page.getByRole('tablist').boundingBox(),
+    primary: await page.locator('.button--primary').boundingBox(),
+  };
+  for (const [name, box] of Object.entries(boxes)) {
+    expect(box, name).toBeTruthy();
+    expect(box!.y, name).toBeGreaterThanOrEqual(0);
+    expect(box!.y + box!.height, name).toBeLessThanOrEqual(viewport!.height);
+  }
+});
+
+test('touch targets are at least 44 px tall', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('.banner__copy')).toBeVisible();
+  const small = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('button, a[href]')]
+      .filter((el) => el.offsetParent !== null && el.getBoundingClientRect().height < 44)
+      .map((el) => el.className || el.tagName),
+  );
+  expect(small).toEqual([]);
 });
 
 test('language switch shows Malay text and keeps the event name', async ({ page }) => {

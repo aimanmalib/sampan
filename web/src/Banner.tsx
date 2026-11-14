@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { shortAddress } from './address';
 import { useConfig } from './config';
 import { useText } from './i18n';
 
@@ -26,10 +27,17 @@ export function Banner() {
       {banner?.repoUrl ? <a href={banner.repoUrl}>{t('banner.source')}</a> : null}
       {banner?.tokenAddress ? (
         <span className="banner__address">
-          <span>{t('banner.address')}</span>{' '}
-          <code className="mono">{banner.tokenAddress}</code>{' '}
-          <button type="button" className="banner__copy" onClick={() => void copy(banner.tokenAddress)}>
-            {copied ? t('banner.copied') : t('banner.copy')}
+          <span className="banner__label">{t('banner.address')}</span>
+          <button
+            type="button"
+            className="banner__copy"
+            title={banner.tokenAddress}
+            onClick={() => void copy(banner.tokenAddress)}
+          >
+            <code className="mono">{shortAddress(banner.tokenAddress)}</code>
+            <span className="banner__copy-word" aria-live="polite">
+              {copied ? t('banner.copied') : t('banner.copy')}
+            </span>
           </button>
         </span>
       ) : null}
