@@ -1,27 +1,6 @@
 // JSON shapes on the wire. Amounts are decimal strings (never floats); bytes are lowercase hex.
-import { binToHex, encodeTransaction, hexToBin, type Output } from '@bitauth/libauth';
-import type { Tx } from '../../core/tx/types.js';
+export { outputFromWire, outputToWire, txToHex, type WireOutput } from '../../core/wire.js';
 import type { ChainUtxo } from '../chain/types.js';
-
-export interface WireOutput {
-  lockingBytecode: string;
-  valueSatoshis: string;
-  token?: { category: string; amount: string };
-}
-
-export const outputToWire = (o: Output): WireOutput => ({
-  lockingBytecode: binToHex(o.lockingBytecode),
-  valueSatoshis: o.valueSatoshis.toString(),
-  ...(o.token ? { token: { category: binToHex(o.token.category), amount: o.token.amount.toString() } } : {}),
-});
-
-export const outputFromWire = (w: WireOutput): Output => ({
-  lockingBytecode: hexToBin(w.lockingBytecode),
-  valueSatoshis: BigInt(w.valueSatoshis),
-  ...(w.token ? { token: { category: hexToBin(w.token.category), amount: BigInt(w.token.amount) } } : {}),
-});
-
-export const txToHex = (tx: Tx): string => binToHex(encodeTransaction(tx));
 
 export const utxoToWire = (u: ChainUtxo): Record<string, unknown> => ({
   txid: u.txid,

@@ -12,7 +12,7 @@ import { buildApp } from '../server/app.js';
 import { outputFromWire, type WireOutput } from '../server/api/wire.js';
 import { BroadcastError } from '../server/chain/types.js';
 import { createServices, type Services } from '../server/services.js';
-import { signP2pkhInputs } from '../tools/test-wallet/sign.js';
+import { signP2pkhInputs } from '../core/tx/sign.js';
 import { PUSD, testKey } from './helpers/pools.js';
 import { blankAddresses, userAddress, userTokenAddress } from './helpers/wallet.js';
 

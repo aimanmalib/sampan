@@ -4,8 +4,8 @@
 import { parseAddress, type CashPrefix } from '../core/address.js';
 import type { Chain, ChainUtxo } from './chain/types.js';
 
-export const WALLET_PATHS = ['receive', 'change', 'defi'] as const;
-export type WalletPath = (typeof WALLET_PATHS)[number];
+export { WALLET_PATHS, type WalletPath } from '../core/wallet.js';
+import { WALLET_PATHS, type WalletPath } from '../core/wallet.js';
 
 export interface ScanRequest {
   paths: Partial<Record<WalletPath, string[]>>;

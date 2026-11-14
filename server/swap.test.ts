@@ -7,7 +7,7 @@ import shipped from '../config/sampan.json' with { type: 'json' };
 import { PUSD, testKey } from '../tests/helpers/pools.js';
 import { tokenAddressOf } from '../core/address.js';
 import { otherLockHex, userAddress, userLockHex, userTokenAddress } from '../tests/helpers/wallet.js';
-import { signP2pkhInputs } from '../tools/test-wallet/sign.js';
+import { signP2pkhInputs } from '../core/tx/sign.js';
 import { expectationOf } from './api/swap.js';
 import { PoolDirectory } from './indexer.js';
 import { fakeNetwork } from './services.js';

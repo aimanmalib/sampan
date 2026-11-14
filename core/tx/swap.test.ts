@@ -1,7 +1,7 @@
 import { binToHex, hexToBin } from '@bitauth/libauth';
 import { describe, expect, it } from 'vitest';
 import { PUSD, coin, otherKey, pools, testKey, userLock } from '../../tests/helpers/pools.js';
-import { signP2pkhInputs } from '../../tools/test-wallet/sign.js';
+import { signP2pkhInputs } from './sign.js';
 import { poolV0LockingBytecode } from '../pools/template.js';
 import { selectTrade } from '../pools/trade.js';
 import { buildSwapTx, SwapBuildError } from './swap.js';

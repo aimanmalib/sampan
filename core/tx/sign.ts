@@ -1,5 +1,5 @@
-// Signs the P2PKH inputs of an unsigned transaction with one private key (test wallet and unit tests).
-// Never deployed. Signs with SIGHASH_ALL | FORKID (libauth P2PKH template); other inputs keep their
+// Signs the P2PKH inputs of an unsigned transaction with one private key (test wallets and unit tests).
+// Used by the headless test wallet and the fake wallet of SAMPAN_FAKE=1. Signs with SIGHASH_ALL | FORKID (libauth P2PKH template); other inputs keep their
 // pre-set unlocking bytecode.
 import {
   generateTransaction,
@@ -7,7 +7,7 @@ import {
   walletTemplateToCompilerBch,
   type Output,
 } from '@bitauth/libauth';
-import type { Tx } from '../../core/tx/types.js';
+import type { Tx } from './types.js';
 
 const compiler = walletTemplateToCompilerBch(walletTemplateP2pkhNonHd);
 

@@ -30,3 +30,17 @@ export const poolV0ExchangeUnlocking = (ownerPkh: Uint8Array): Uint8Array =>
   encodeDataPush(poolV0RedeemScript(ownerPkh));
 
 export const poolV0LockingHex = (ownerPkhHex: string): string => binToHex(poolV0LockingBytecode(hexToBin(ownerPkhHex)));
+
+/**
+ * Owner hash (hex) of a pool input spent through the exchange path, or undefined when the input is anything
+ * else. The unlocking bytecode must be exactly the exchange unlocking of that owner and the spent locking
+ * bytecode must be the pool built from it, so a look-alike script never passes.
+ */
+export const poolV0OwnerOf = (unlocking: Uint8Array, locking: Uint8Array): string | undefined => {
+  const start = unlocking.length - SUFFIX.length - 20;
+  if (start < 0) return undefined;
+  const pkh = unlocking.slice(start, start + 20);
+  const same = (a: Uint8Array, b: Uint8Array): boolean => a.length === b.length && a.every((x, i) => x === b[i]);
+  if (!same(unlocking, poolV0ExchangeUnlocking(pkh)) || !same(locking, poolV0LockingBytecode(pkh))) return undefined;
+  return binToHex(pkh);
+};
