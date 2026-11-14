@@ -9,3 +9,4 @@ One line per step, newest last.
 - 2026-11-14: Test wallet key tool (secrets only in the ignored env file, addresses printed), single-container deploy with rollback and a browser check against the public URL, uptime watch.
 - 2026-11-14: The Build with XO bounty work is started as a separate repository with its own build plan; this repository does not depend on it.
 - 2026-11-14: Core swap pieces: pool v0 locking bytecode and arithmetic checked against cashlab on captured pools, swap transaction builder, VM verification with 2026 rules, browser-side transaction check (rules 1 to 5) with sabotage tests.
+- 2026-11-14: Token categories in config are case-insensitive and lowercased on load; the pool fixture reads the PUSD category from config instead of repeating it.

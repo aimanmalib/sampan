@@ -1,8 +1,7 @@
 {
  "source": "GET https://indexer.cauldron.quest/cauldron/pool/active?token=<PUSD category>",
  "capturedUtc": "2026-11-14T17:43Z",
- "note": "10 largest and 3 smallest active PUSD pools at capture time; token_id is identical for every pool, so it is stored once as category",
- "category": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+ "note": "10 largest and 3 smallest active PUSD pools at capture time; token_id is the same for every pool and is omitted (the tests read the PUSD category from config/sampan.json)",
  "active": [
   {
    "owner_p2pkh_addr": "bitcoincash:zqfwl7h932a6qjw4gqnrffcfu8n2zhqysqs7my6fek",

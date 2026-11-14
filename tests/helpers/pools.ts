@@ -1,6 +1,7 @@
 // Frozen capture of real Cauldron PUSD pools plus a throwaway signing key for building test swaps.
 import { readFileSync } from 'node:fs';
 import { encodeLockingBytecodeP2pkh, hash160, secp256k1, sha256, utf8ToBin } from '@bitauth/libauth';
+import { normalizeConfig, type SampanConfig } from '../../core/config.js';
 import type { PoolUtxo } from '../../core/pools/trade.js';
 import type { UserCoin } from '../../core/tx/types.js';
 
@@ -15,9 +16,11 @@ interface IndexerPool {
 
 export const fixture = JSON.parse(
   readFileSync(new URL('../fixtures/cauldron-pusd-pools.json', import.meta.url), 'utf8'),
-) as { category: string; active: IndexerPool[] };
+) as { active: IndexerPool[] };
 
-export const PUSD = fixture.category;
+const shipped = JSON.parse(readFileSync(new URL('../../config/sampan.json', import.meta.url), 'utf8')) as SampanConfig;
+/** The PUSD token category every captured pool trades, taken from the shipped config. */
+export const PUSD = normalizeConfig(shipped).tokens.PUSD!.category;
 
 export const pools: PoolUtxo[] = fixture.active.map((p) => ({
   txid: p.txid,

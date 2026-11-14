@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { publicConfig, validateConfig, type SampanConfig } from '../core/config.js';
+import { normalizeConfig, publicConfig, validateConfig, type SampanConfig } from '../core/config.js';
 
 const shipped = JSON.parse(
   readFileSync(new URL('../config/sampan.json', import.meta.url), 'utf8'),
@@ -27,6 +27,14 @@ describe('validateConfig', () => {
     const token = Object.values(c.tokens)[0]!;
     token.category = 'abc';
     expect(validateConfig(c).join()).toMatch(/category/);
+  });
+
+  it('accepts a category in either case and loads it in lowercase', () => {
+    const c = clone();
+    const token = Object.values(c.tokens)[0]!;
+    token.category = 'Ab'.repeat(32);
+    expect(validateConfig(c)).toEqual([]);
+    expect(Object.values(normalizeConfig(c).tokens)[0]!.category).toBe('ab'.repeat(32));
   });
 
   it('rejects an unknown route and a default token that is not configured', () => {

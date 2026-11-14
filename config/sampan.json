@@ -3,14 +3,14 @@
     "PUSD": {
       "symbol": "PUSD",
       "name": "ParyonUSD",
-      "category": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544",
+      "category": "2469ACC5AFA4B10CB5B5C04AFB89C3A3FFD61C5DA9C01E26D00951CAE2A02544",
       "decimals": 2,
       "icon": "/icons/pusd.svg"
     },
     "MUSD": {
       "symbol": "MUSD",
       "name": "MUSD",
-      "category": "b38a33f750f84c5c169a6f23cb873e6e79605021585d4f3408789689ed87f366",
+      "category": "B38A33F750F84C5C169A6F23CB873E6E79605021585D4F3408789689ED87F366",
       "decimals": 2,
       "icon": "/icons/musd.svg"
     }

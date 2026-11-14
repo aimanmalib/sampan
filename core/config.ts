@@ -76,7 +76,7 @@ export interface PublicConfig {
   site: SampanConfig['site'];
 }
 
-const HEX32 = /^[0-9a-f]{64}$/;
+const HEX32 = /^[0-9a-fA-F]{64}$/;
 const ROUTES: readonly ActiveRoute[] = ['none', 'near-intents', 'thorchain'];
 
 function isHttpsUrl(value: string): boolean {
@@ -94,7 +94,7 @@ export function validateConfig(c: SampanConfig): string[] {
   need(tokens.length > 0, 'tokens: at least one token');
   for (const [key, t] of tokens) {
     need(t.symbol === key, `tokens.${key}: symbol must equal its key`);
-    need(HEX32.test(t.category), `tokens.${key}: category must be 64 lowercase hex characters`);
+    need(HEX32.test(t.category), `tokens.${key}: category must be 64 hex characters`);
     need(Number.isInteger(t.decimals) && t.decimals >= 0 && t.decimals <= 18, `tokens.${key}: decimals 0 to 18`);
   }
   need(Boolean(c.tokens?.[c.defaultToken]), 'defaultToken: must name a configured token');
@@ -128,6 +128,14 @@ export function validateConfig(c: SampanConfig): string[] {
     need(url === '' || isHttpsUrl(url) || url.startsWith('/'), `URL must be empty, a path or https: ${url}`);
   }
   return errors;
+}
+
+/** Token categories are case-insensitive hex; the rest of the code compares them in lowercase. */
+export function normalizeConfig(c: SampanConfig): SampanConfig {
+  const tokens = Object.fromEntries(
+    Object.entries(c.tokens).map(([key, t]) => [key, { ...t, category: t.category.toLowerCase() }]),
+  );
+  return { ...c, tokens };
 }
 
 export function publicConfig(c: SampanConfig): PublicConfig {
