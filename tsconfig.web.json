@@ -6,5 +6,5 @@
     "types": ["vite/client"]
   },
   "include": ["web/src", "core", "lang/*.json"],
-  "exclude": ["node_modules", "dist", "web/dist"]
+  "exclude": ["node_modules", "dist", "web/dist", "core/**/*.test.ts"]
 }
