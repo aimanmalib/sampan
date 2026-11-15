@@ -23,6 +23,7 @@
 | 2026-11-15T19:24:59Z | land | 0.001 BCH to 0.20 PUSD (wallet pays through WizardConnect) | 3c04bd0a95e8432b0f36cbead20cc8aff32b017e2f88951ed7766cd02d251a79 | 1.0 | ok |
 | 2026-11-15T19:25:21Z | land | 0.001 BCH to 0.20 PUSD (plain payment) | 418fe0c9d58fcb671e9d5cda5fd40c081be9f9496a114a59142048fa19375b6d | 4.0 | ok |
 | 2026-11-15T19:25:30Z | land | 0.001 BCH to 0.20 PUSD (plain payment) | f75dbacac674f8d835e69d245ccb8100181bea8f1ec5bd4cafb6e2901de2c7fe | 3.0 | ok |
+| 2026-11-15T20:13:04Z | giveBack | 0.003 BCH back to the owner as 299776 sats (minimum rate out of reach, after 6 blocks) | 5671fd920b3a3c74d322b23250d31a33326452e28528236227f0c89f3a585ba6 | 2800.4 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from
