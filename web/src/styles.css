@@ -156,7 +156,7 @@ a {
 .hero__title {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(2rem, 7vw, 3.75rem);
+  font-size: clamp(1.75rem, 7vw, 3.75rem);
   line-height: 1.05;
   letter-spacing: -0.01em;
   margin: 0.25rem 0 0.75rem;
@@ -345,7 +345,7 @@ a {
     margin: 0 0 0.5rem;
   }
   .hero__sub {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     line-height: 1.4;
   }
   .scene svg {

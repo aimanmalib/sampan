@@ -78,6 +78,30 @@ test('judge path: fill, connect, get the landing address, pay from the wallet, s
   await shot(page, errors, 'status', info.project.name);
 });
 
+/** Bottom edge of an element in CSS pixels, failing when it is not laid out. */
+async function bottom(page: Page, selector: string): Promise<number> {
+  const box = await page.locator(selector).first().boundingBox();
+  expect(box, selector).not.toBeNull();
+  return box ? box.y + box.height : Infinity;
+}
+
+test('the judge strip and the card primary button are on the first screen, phone and 1440x900', async ({ page }, info) => {
+  const sizes = info.project.name.includes('desktop') ? [{ width: 1440, height: 900 }, { width: 1280, height: 720 }] : [null];
+  for (const size of sizes) {
+    if (size) await page.setViewportSize(size);
+    await page.goto('/');
+    await expect(page.locator('.judge__fill')).toBeVisible();
+    await expect(primary(page)).toHaveCount(1);
+    const height = page.viewportSize()?.height ?? 0;
+    for (const selector of ['h1', '.judge__fill', '.button--primary']) {
+      expect(await bottom(page, selector), `${selector} at ${height}px high`).toBeLessThanOrEqual(height);
+    }
+    // The no-wallet hint lives in the landing panel only, not in the strip as well.
+    await expect(page.locator('.judge').getByText(en['land.noWallet'])).toHaveCount(0);
+    await noHorizontalOverflow(page);
+  }
+});
+
 test('a pasted token address gets a landing address and a QR to pay from any wallet, also at 320 px', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   const errors = collectErrors(page);
@@ -93,7 +117,7 @@ test('a pasted token address gets a landing address and a QR to pay from any wal
   await primary(page).click();
   await expect(page.locator('.land__address')).toHaveText(/^bitcoincash:p/, { timeout: 20_000 });
   await expect(primary(page)).toHaveText(en['land.connectToPay']);
-  await expect(page.getByText(en['land.noWallet'])).toHaveCount(2);
+  await expect(page.getByText(en['land.noWallet'])).toHaveCount(1);
   await noHorizontalOverflow(page);
   const follow = await page.getByRole('link', { name: en['land.follow'] }).getAttribute('href');
   expect(follow).toMatch(/^\/c\/[0-9a-f]{32}#card=/);

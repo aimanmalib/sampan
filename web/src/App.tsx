@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
-import { descriptionKey, heroSubKey, openFlows, symbolList } from '../../core/flows';
-import { ActionCard } from './ActionCard';
+import { useEffect, useState } from 'react';
+import { descriptionKey, heroSubKey, openFlows, symbolList, type TabId } from '../../core/flows';
+import { ActionCard, cardTabs } from './ActionCard';
 import { useConfig } from './config';
 import { Footer } from './Footer';
+import { JudgeStrip } from './JudgeStrip';
 import { setLang, useText } from './i18n';
 import { Scene } from './Scene';
 import { CrossingPage } from './CrossingPage';
@@ -16,6 +17,9 @@ export function App() {
   const vars = { symbols: symbolList(config?.route.symbols ?? [], t('text.and')) };
   const description = config ? t(descriptionKey(flows), vars) : null;
   const wallet = useWallet(config, t('wallet.fakeName'));
+  const [chosen, setChosen] = useState<TabId | null>(null);
+  const [fill, setFill] = useState(0);
+  const judge = config && flows.land && cardTabs(config).includes('in') ? config : null;
   const crossing = /^\/c\/([0-9a-f]{32})$/.exec(location.pathname)?.[1];
 
   useEffect(() => {
@@ -45,14 +49,23 @@ export function App() {
           <CrossingPage id={crossing} config={config} />
         </main>
       ) : (
-      <main className="page">
+      <main className={judge ? 'page page--judge' : 'page'}>
         <section className="hero">
           <h1 className="hero__title">{t('hero.title')}</h1>
           {config ? <p className="hero__sub">{t(heroSubKey(flows), vars)}</p> : null}
           {flows.cross && route !== 'none' ? <p className="hero__honest">{t('hero.honest', { route: t(`route.${route}`) })}</p> : null}
         </section>
         <Scene />
-        <ActionCard config={config} wallet={wallet} />
+        {judge ? (
+          <JudgeStrip
+            config={judge}
+            onFill={() => {
+              setChosen('in');
+              setFill((n) => n + 1);
+            }}
+          />
+        ) : null}
+        <ActionCard config={config} wallet={wallet} chosen={chosen} onChoose={setChosen} fill={fill} />
       </main>
       )}
       <Footer />

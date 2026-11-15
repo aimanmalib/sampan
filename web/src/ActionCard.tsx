@@ -1,8 +1,7 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { openFlows, openTabs, type TabId } from '../../core/flows';
 import type { LoadedConfig } from './config';
 import { useText, type TextKey } from './i18n';
-import { JudgeStrip } from './JudgeStrip';
 import { LandPanel } from './land/LandPanel';
 import { SwapPanel } from './swap/SwapPanel';
 import { ConnectDialog } from './wallet/ConnectDialog';
@@ -18,16 +17,32 @@ const PANELS: Partial<Record<TabId, Panel>> = {
   in: ({ config, wallet, fill }) => <LandPanel key={fill} config={config} wallet={wallet} />,
 };
 
+/** The tabs the card shows for this config: flow flag on and a working panel. */
+export function cardTabs(config: LoadedConfig | null): TabId[] {
+  return openTabs(openFlows(config)).filter((id) => PANELS[id]);
+}
+
 /**
  * The single action card. A flow shows only when its feature flag is on (it has been measured on mainnet);
  * a closed flow has no tab at all. With no open flow the card is not drawn.
  */
-export function ActionCard({ config, wallet }: { config: LoadedConfig | null; wallet: Wallet }) {
+export function ActionCard({
+  config,
+  wallet,
+  chosen,
+  onChoose,
+  fill,
+}: {
+  config: LoadedConfig | null;
+  wallet: Wallet;
+  /** The tab the visitor picked (the judge strip picks the landing tab). */
+  chosen: TabId | null;
+  onChoose: (id: TabId) => void;
+  /** Bumped by the judge strip: remounts the landing panel with the judge amount. */
+  fill: number;
+}) {
   const { t } = useText();
-  const flows = openFlows(config);
-  const tabs = openTabs(flows).filter((id) => PANELS[id]);
-  const [chosen, setChosen] = useState<TabId | null>(null);
-  const [fill, setFill] = useState(0);
+  const tabs = cardTabs(config);
   const tab = chosen && tabs.includes(chosen) ? chosen : tabs[0];
   const Body = tab ? PANELS[tab] : undefined;
   if (!config || !tab || !Body) return null;
@@ -43,7 +58,7 @@ export function ActionCard({ config, wallet }: { config: LoadedConfig | null; wa
             aria-selected={tab === id}
             aria-controls="tab-panel"
             className="tabs__tab"
-            onClick={() => setChosen(id)}
+            onClick={() => onChoose(id)}
           >
             {t(LABELS[id])}
           </button>
@@ -52,15 +67,6 @@ export function ActionCard({ config, wallet }: { config: LoadedConfig | null; wa
       <div className="card__body" role="tabpanel" id="tab-panel" aria-labelledby={`tab-${tab}`}>
         <Body config={config} wallet={wallet} fill={fill} />
       </div>
-      {flows.land && tabs.includes('in') ? (
-        <JudgeStrip
-          config={config}
-          onFill={() => {
-            setChosen('in');
-            setFill((n) => n + 1);
-          }}
-        />
-      ) : null}
       {wallet.status === 'connecting' && wallet.uri && wallet.qrUri ? (
         <ConnectDialog uri={wallet.uri} qrUri={wallet.qrUri} onClose={() => void wallet.disconnect()} />
       ) : null}
