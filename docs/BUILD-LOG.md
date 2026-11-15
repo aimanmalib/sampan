@@ -23,3 +23,4 @@ One line per step, newest last.
 - 2026-11-15: Link preview: Open Graph and Twitter tags filled at build time from lang and config, 1200x630 PNG (44 KB) drawn from the page's sampan picture by `npm run og-image`, cache key from content; ADR 0012.
 - 2026-11-15: Route B (THORChain) behind one Route interface, fixture-tested THORNode client with node failover, our own limit in the memo, the 3-output deposit and checkTransaction rule 6; Send out tab (two signatures from PUSD) and its status page, hidden while cross-chain is off; ADR 0013.
 - 2026-11-15: EVM wallet (EIP-6963), exact-approval router deposit and Bring in from Base behind the cross-chain flag; fake-provider tests on both engines (ADR 0014).
+- 2026-11-15: Bring in refuses a plan altered between server and page (memo address, limit, token, amount, landing card terms) before any wallet call; each check pinned by a test.
