@@ -19,7 +19,7 @@
   "features": {
     "musd": false,
     "swap": true,
-    "landing": false
+    "landing": true
   },
   "route": {
     "active": "none",

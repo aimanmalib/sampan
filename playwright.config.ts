@@ -5,9 +5,9 @@ const port = Number(process.env.E2E_PORT ?? 4173);
 const landingPort = port + 1;
 // E2E_BASE_URL checks a running site (deploy/deploy.sh points it at the public URL); otherwise a local fake server starts.
 const live = process.env.E2E_BASE_URL;
-// The local fake server shows the swap flow before it is switched on in production, and its rate limits are
-// lifted because every browser in the run shares one IP.
-const e2ePatch = { features: { swap: true }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } };
+// The local fake server shows the swap flow alone (the landing flow has its own server below), and its rate
+// limits are lifted because every browser in the run shares one IP.
+const e2ePatch = { features: { swap: true, landing: false }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } };
 const landingPatch = { ...e2ePatch, features: { swap: true, landing: true } };
 const fakeServer = (p: number, patch: unknown) => ({
   command: 'node dist/server/main.js',

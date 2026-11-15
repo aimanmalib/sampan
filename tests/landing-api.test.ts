@@ -65,7 +65,7 @@ const openLanding = async (owner = userTokenAddress): Promise<Opened> => {
 describe('landing API', () => {
   it('is closed while features.landing is off', async () => {
     await app.close();
-    await start(base);
+    await start({ ...base, features: { ...base.features, landing: false } });
     const res = await post('/api/land/open', { ownerAddress: userTokenAddress, token: 'PUSD' });
     expect(res.statusCode).toBe(404);
     expect(res.json()).toMatchObject({ error: 'flow_closed' });

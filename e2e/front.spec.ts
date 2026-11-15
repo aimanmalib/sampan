@@ -29,10 +29,12 @@ test('front page: banner, one headline, one primary button, both banks, no conso
   await expect(page.locator('.button--primary')).toHaveCount(1);
   await expect(page.getByText(en['scene.left'])).toBeVisible();
   await expect(page.getByText(en['scene.right'], { exact: true })).toBeVisible();
-  // Only open flows have a tab; the local server switches on swap alone, so no tab says "Not open yet".
-  await expect(page.getByRole('tab')).toHaveCount(1);
+  // Only open flows have a tab, as the served config says; no tab says "Not open yet". The send out flow has no
+  // panel yet, so it has no tab either.
+  const { features } = (await (await page.request.get('/api/config')).json()) as { features: { swap: boolean; landing: boolean } };
+  await expect(page.getByRole('tab')).toHaveCount(Number(features.swap) + Number(features.landing));
+  await expect(page.getByRole('tab', { name: en['tabs.in'] })).toHaveCount(features.landing ? 1 : 0);
   await expect(page.getByText(en['tabs.out'])).toHaveCount(0);
-  await expect(page.getByText(en['tabs.in'])).toHaveCount(0);
   await expect(page.getByText(/Not open yet/i)).toHaveCount(0);
   await noHorizontalOverflow(page);
   expect(errors).toEqual([]);
