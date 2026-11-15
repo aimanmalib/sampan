@@ -19,6 +19,7 @@ interface Crossing {
   landing?: LandingView['landing'];
   route?: OutView['route'];
   out?: OutView['out'];
+  landingId?: string | null;
 }
 
 type Load = { state: 'loading' } | { state: 'missing' } | { state: 'error' } | { state: 'ok'; crossing: Crossing };
@@ -54,7 +55,7 @@ export function CrossingPage({ id, config }: { id: string; config: LoadedConfig 
   // A landing still waiting: ask the server to look again now and then (it also watches by itself).
   const landWaiting = load.state === 'ok' && load.crossing.kind === 'land' && ['open', 'seen'].includes(load.crossing.status) && load.crossing.landing?.watching;
   // A crossing out that was sent: the server asks the route each time the page asks.
-  const outWaiting = load.state === 'ok' && load.crossing.kind === 'out' && !!load.crossing.txid && !outIsFinal(asOut(load.crossing));
+  const outWaiting = load.state === 'ok' && (load.crossing.kind === 'out' || load.crossing.kind === 'in') && !!load.crossing.txid && !outIsFinal(asOut(load.crossing));
   const waiting = landWaiting || outWaiting;
   const pollMs = (config?.landing.pagePollSeconds ?? 10) * 1000;
   useEffect(() => {
@@ -83,12 +84,17 @@ export function CrossingPage({ id, config }: { id: string; config: LoadedConfig 
       </section>
     );
   }
-  if (c.kind === 'out') {
+  if (c.kind === 'out' || c.kind === 'in') {
     return (
       <section className="crossing">
         <h1 className="crossing__title">{t('crossing.title')}</h1>
-        <p className="crossing__kind">{t('crossing.kind.out')}</p>
-        <OutStatus c={asOut(c)} config={config} />
+        <p className="crossing__kind">{t(c.kind === 'in' ? 'crossing.kind.in' : 'crossing.kind.out')}</p>
+        <OutStatus c={asOut(c)} config={config} direction={c.kind} />
+        {c.landingId ? (
+          <p className="crossing__tx">
+            <a href={`/c/${c.landingId}`}>{t('in.landingStatus')}</a>
+          </p>
+        ) : null}
         <p className="crossing__actions">
           <button type="button" className="button button--quiet" onClick={() => check(false)}>
             {t('crossing.check')}

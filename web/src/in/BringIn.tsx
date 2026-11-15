@@ -1,0 +1,36 @@
+// Tab "Bring in": the landing address ("BCH from any wallet") and, when crossings are open, a stablecoin from another
+// chain. Each source shows only when its flow flag is on; with one source there is no chooser.
+import { useState } from 'react';
+import { openFlows } from '../../../core/flows';
+import type { LoadedConfig } from '../config';
+import { useText } from '../i18n';
+import { LandPanel } from '../land/LandPanel';
+import type { Wallet } from '../wallet/useWallet';
+import { InPanel } from './InPanel';
+
+type Source = 'land' | 'cross';
+
+export function BringIn({ config, wallet }: { config: LoadedConfig; wallet: Wallet }) {
+  const { t } = useText();
+  const flows = openFlows(config);
+  const sources: Source[] = [...(flows.land ? (['land'] as const) : []), ...(flows.cross ? (['cross'] as const) : [])];
+  const [chosen, setChosen] = useState<Source | null>(null);
+  const source = chosen && sources.includes(chosen) ? chosen : sources[0];
+  if (!source) return null;
+  const firstChain = config.evm.chains.find((c) => config.routeChains.includes(c.key));
+  const crossLabel = t('in.source.cross', { symbol: config.route.symbols[0] ?? '', chain: firstChain?.name ?? '' });
+  return (
+    <>
+      {sources.length > 1 ? (
+        <div className="swap__sides in__sources" role="radiogroup" aria-label={t('in.source')}>
+          {sources.map((s) => (
+            <button key={s} type="button" role="radio" aria-checked={source === s} className="swap__side" onClick={() => setChosen(s)}>
+              {s === 'land' ? t('land.source') : crossLabel}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      {source === 'land' ? <LandPanel config={config} wallet={wallet} /> : <InPanel config={config} wallet={wallet} />}
+    </>
+  );
+}

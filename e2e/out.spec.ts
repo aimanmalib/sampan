@@ -40,6 +40,8 @@ test('send 2 PUSD out in two signatures, then follow it on the status page', asy
   await expect(primary(page)).toBeEnabled();
   await noHorizontalOverflow(page);
   await primary(page).click();
+  // The first crossing in this browser asks once, then never again.
+  await page.getByRole('dialog').getByRole('button', { name: en['disclose.ok'] }).click();
   await expect(page.locator('.swap__done')).toContainText('Sent. THORChain pays the USDC', { timeout: 30_000 });
 
   await page.getByRole('link', { name: en['swap.status'] }).click();

@@ -11,6 +11,9 @@ import { useText, type TextKey } from '../i18n';
 import type { Wallet } from '../wallet/useWallet';
 import { outCodeKey, outErrorKey } from './errors';
 import { useOutQuote } from './useOutQuote';
+import { useDisclosure } from '../cross/disclosure';
+import { EvmWallets } from '../evm/EvmWallets';
+import { shortEvm, useEvm } from '../evm/store';
 
 const BCH = 'BCH';
 const BCH_DECIMALS = 8;
@@ -50,6 +53,8 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
   const lacking = have !== undefined && amount !== undefined && amount > have;
   const busy = run.phase === 'running';
   const routeName = t(`route.${config.route.active}` as TextKey);
+  const evm = useEvm();
+  const gate = useDisclosure(routeName);
   if (!pick) return null;
   const vars = { symbol: pick.symbol, chain: pick.chain.name, route: routeName, token: token.symbol };
   const badAddress = destination.trim() !== '' && !/^0x[0-9a-fA-F]{40}$/.test(destination.trim());
@@ -116,7 +121,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
     if (run.phase === 'running') return { label: stepLabel(run.at), disabled: true, onClick: () => {} };
     if (run.phase === 'stopped') return { label: t('out.continue'), disabled: quote.status !== 'ok', onClick: () => void send(run.swapTxid) };
     if (wallet.status === 'scanning') return { label: t('wallet.scanning'), disabled: true, onClick: () => {} };
-    return { label: t('out.go'), disabled: quote.status !== 'ok' || lacking || !view, onClick: () => void send() };
+    return { label: t('out.go'), disabled: quote.status !== 'ok' || lacking || !view, onClick: () => gate.run(() => void send()) };
   })();
   const q = quote.status === 'ok' ? quote.quote : null;
   const feePct = q ? (q.fees.totalBps / 100).toFixed(1) : '';
@@ -181,6 +186,16 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
         </span>
         <span className="field__hint">{t(badAddress ? 'out.badAddress' : 'out.addressHint', vars)}</span>
       </label>
+      {evm.connected ? (
+        <button type="button" className="link-button out__mine" disabled={busy} onClick={() => setDestination(evm.connected!.address)}>
+          {t('out.useMine', { address: shortEvm(evm.connected.address) })}
+        </button>
+      ) : evm.wallets.length > 0 ? (
+        <details className="out__wallets">
+          <summary>{t('out.fromWallet')}</summary>
+          <EvmWallets chain={pick.chain.name} />
+        </details>
+      ) : null}
       <p className="swap__receive" aria-live="polite">
         {q
           ? t('out.receive', { ...vars, about: shown(q.expectedOut, q.outDecimals), min: shown(q.minOut, q.outDecimals) })
@@ -216,6 +231,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
         <p>{t('swap.networkFee', { fee: formatUnits(BigInt(config.connect.feeCapSats), BCH_DECIMALS) })}</p>
         <p>{t('out.time', { ...vars, minutes: String(Math.max(1, Math.ceil((q?.seconds ?? 600) / 60))) })}</p>
       </details>
+      {gate.dialog}
     </div>
   );
 }

@@ -1,0 +1,84 @@
+/* Bring in from another chain and the EVM wallet line: only what the shared field and swap styles do not cover. */
+.in__sources {
+  margin-bottom: 0.25rem;
+}
+.evm {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.evm--on {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+.evm--none,
+.evm__label {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+.evm__who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.evm__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.evm__wallet {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+  min-height: var(--touch);
+  padding: 0 0.875rem;
+  font: inherit;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) / 2);
+  cursor: pointer;
+}
+.evm__wallet:hover {
+  border-color: var(--river);
+}
+.evm__wallet:focus-visible {
+  outline: var(--focus);
+  outline-offset: 2px;
+}
+.evm__icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+.out__mine {
+  justify-self: start;
+  text-align: left;
+}
+.out__wallets > summary {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  color: var(--river);
+  cursor: pointer;
+}
+.out__wallets[open] > summary {
+  margin-bottom: 0.5rem;
+}
+.disclose__list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+  color: var(--ink);
+}

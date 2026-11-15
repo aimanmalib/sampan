@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { openFlows, openTabs, type TabId } from '../../core/flows';
 import type { LoadedConfig } from './config';
 import { useText, type TextKey } from './i18n';
-import { LandPanel } from './land/LandPanel';
+import { BringIn } from './in/BringIn';
 import { OutPanel } from './out/OutPanel';
 import { SwapPanel } from './swap/SwapPanel';
 import { ConnectDialog } from './wallet/ConnectDialog';
@@ -16,7 +16,7 @@ type Panel = (props: { config: LoadedConfig; wallet: Wallet; fill: number; onCho
 const PANELS: Partial<Record<TabId, Panel>> = {
   swap: ({ config, wallet }) => <SwapPanel config={config} wallet={wallet} />,
   out: ({ config, wallet, onChoose }) => <OutPanel config={config} wallet={wallet} onSwap={() => onChoose('swap')} />,
-  in: ({ config, wallet, fill }) => <LandPanel key={fill} config={config} wallet={wallet} />,
+  in: ({ config, wallet, fill }) => <BringIn key={fill} config={config} wallet={wallet} />,
 };
 
 /** The tabs the card shows for this config: flow flag on and a working panel. */
