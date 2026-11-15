@@ -23,7 +23,10 @@
     "gate": "bash scripts/gerbang-ujian.sh",
     "test-wallet:keys": "tsx tools/test-wallet/keys.ts",
     "test-wallet": "tsx tools/test-wallet/connect.ts",
-    "test-wallet:send": "tsx tools/test-wallet/send.ts"
+    "test-wallet:send": "tsx tools/test-wallet/send.ts",
+    "contracts:build": "cashc contracts/landing.cash -o contracts/landing.json",
+    "verify-landing": "tsx scripts/verify-landing.ts",
+    "finisher": "tsx scripts/finisher.ts"
   },
   "dependencies": {
     "@bitauth/libauth": "3.1.0-next.6",
@@ -34,6 +37,7 @@
     "@wizardconnect/core": "0.2.10",
     "@wizardconnect/dapp": "0.2.7",
     "@wizardconnect/react": "0.2.6",
+    "cashscript": "^0.14.0",
     "fastify": "^5.12.8",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
@@ -47,6 +51,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.3.0",
     "@wizardconnect/wallet": "0.2.4",
+    "cashc": "^0.14.0",
     "concurrently": "^10.0.7",
     "eslint": "^10.15.0",
     "eslint-plugin-react-hooks": "^7.1.1",

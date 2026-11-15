@@ -18,6 +18,6 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["core", "server", "tools", "scripts", "tests", "e2e", "*.ts"],
+  "include": ["core", "contracts", "server", "tools", "scripts", "tests", "e2e", "*.ts"],
   "exclude": ["node_modules", "dist", "web"]
 }
