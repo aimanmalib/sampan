@@ -56,7 +56,10 @@
         }
       }
     ],
-    "walletConnectProjectId": ""
+    "walletConnectProjectId": "",
+    "receiptPollSeconds": 3,
+    "receiptWaitSeconds": 180,
+    "replanSeconds": 60
   },
   "cauldron": {
     "indexers": ["https://indexer.cauldron.quest"],

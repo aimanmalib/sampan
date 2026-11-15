@@ -26,7 +26,7 @@ async function outStage(s: Services, id: string): Promise<Record<string, unknown
 
 async function view(s: Services, id: string): Promise<Record<string, unknown>> {
   const first = s.db.getCrossing(id);
-  const out = first?.kind === 'out' ? await outStage(s, id) : undefined;
+  const out = first?.kind === 'out' || first?.kind === 'in' ? await outStage(s, id) : undefined;
   const row = s.db.getCrossing(id);
   if (!row) throw new ApiError(404, 'not_found', 'unknown crossing');
   const base = {
@@ -40,6 +40,11 @@ async function view(s: Services, id: string): Promise<Record<string, unknown>> {
     updatedAt: row.updated_at,
   };
   if (row.kind === 'out') return { ...base, route: row.route, out: out ?? null };
+  if (row.kind === 'in') {
+    // The landing address the route pays, when the user asked for the stablecoin (its own status page).
+    const landing = row.deposit_address ? s.db.landingByAddress(row.deposit_address) : undefined;
+    return { ...base, route: row.route, out: out ?? null, landingId: landing?.crossing_id ?? null };
+  }
   if (row.kind !== 'land') return base;
   const l = s.db.landingOf(row.id);
   return {

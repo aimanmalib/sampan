@@ -23,6 +23,12 @@ export interface OpenedLanding {
   reused: boolean;
 }
 
+/** The smallest payment a landing address is priced for, and the tolerance below today's pools. */
+export interface LandingFloor {
+  minSats: bigint;
+  toleranceBps: number;
+}
+
 export interface LandingServiceOptions {
   config: SampanConfig;
   chain: Chain;
@@ -50,10 +56,14 @@ export class LandingService {
     return p.lockingHex;
   }
 
-  /** PRD flow L step 2: tokensMin and rateNum for the smallest payment shown. */
-  async minimumRate(category: string): Promise<{ minSats: bigint; tokensMin: bigint; rateNum: bigint }> {
+  /**
+   * PRD flow L step 2: tokensMin and rateNum for the smallest payment shown. A crossing in (flow C step 2) passes the
+   * route's minimum output and the wider route tolerance instead.
+   */
+  async minimumRate(category: string, at?: LandingFloor): Promise<{ minSats: bigint; tokensMin: bigint; rateNum: bigint }> {
     const { landing, limits, cauldron, fees } = this.o.config;
-    const minSats = BigInt(limits.localMinSats);
+    const minSats = at?.minSats ?? BigInt(limits.localMinSats);
+    const toleranceBps = at?.toleranceBps ?? landing.toleranceBpsDirect;
     const tradeSats = minSats - BigInt(landing.convertFeeSats) - BigInt(landing.tokenDustSats);
     let demand: bigint;
     try {
@@ -69,15 +79,17 @@ export class LandingService {
       if (e instanceof Error && /indexer/i.test(e.message)) throw e;
       throw new SwapError('no_liquidity', e instanceof Error ? e.message : 'no trade possible');
     }
-    const tokensMin = (demand * BigInt(10_000 - landing.toleranceBpsDirect)) / 10_000n;
+    const tokensMin = (demand * BigInt(10_000 - toleranceBps)) / 10_000n;
     if (tokensMin <= 0n) throw new SwapError('no_liquidity', 'the pools pay nothing for the minimum amount');
     return { minSats, tokensMin, rateNum: rateNumFor(tokensMin, minSats) };
   }
 
-  async open(r: { ownerAddress: string; token: string }): Promise<OpenedLanding> {
+  async open(r: { ownerAddress: string; token: string }, at?: LandingFloor): Promise<OpenedLanding> {
     const { category } = this.token(r.token);
     const ownerLockHex = this.ownerLock(r.ownerAddress);
-    const rate = await this.minimumRate(category);
+    const rate = await this.minimumRate(category, at);
+    if (rate.minSats <= BigInt(this.o.config.landing.convertFeeSats + this.o.config.landing.tokenDustSats))
+      throw new SwapError('below_min', 'the amount is too small to convert at a landing address');
     const params: LandingParams = {
       ownerLockHex,
       category,

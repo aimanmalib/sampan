@@ -46,7 +46,15 @@ export interface SampanConfig {
     deadlineMinutes: { out: number; in: number };
     appFeeBps: number;
   };
-  evm: { chains: EvmChainConfig[]; walletConnectProjectId: string };
+  evm: {
+    chains: EvmChainConfig[];
+    walletConnectProjectId: string;
+    /** How often the page asks the EVM wallet for a receipt, and how long it waits for an approval to confirm. */
+    receiptPollSeconds: number;
+    receiptWaitSeconds: number;
+    /** A plan older than this is asked for again before the deposit is signed. */
+    replanSeconds: number;
+  };
   cauldron: {
     indexers: string[];
     maxPoolsPerTx: number;
@@ -120,9 +128,9 @@ export interface PublicConfig {
   route: SampanConfig['route'];
   /** Destination chains the active route carries (keys of evm.chains). */
   routeChains: string[];
-  evm: { chains: EvmChainConfig[]; walletConnect: boolean };
+  evm: { chains: EvmChainConfig[]; walletConnect: boolean } & Pick<SampanConfig['evm'], 'receiptPollSeconds' | 'receiptWaitSeconds' | 'replanSeconds'>;
   limits: SampanConfig['limits'];
-  landing: Pick<SampanConfig['landing'], 'toleranceBpsDirect' | 'returnAfterBlocks' | 'validHours' | 'pagePollSeconds'>;
+  landing: Pick<SampanConfig['landing'], 'toleranceBps' | 'toleranceBpsDirect' | 'returnAfterBlocks' | 'validHours' | 'pagePollSeconds'>;
   compliance: { crossChainEnabled: boolean };
   banner: SampanConfig['banner'];
   site: SampanConfig['site'];
@@ -163,6 +171,10 @@ export function validateConfig(c: SampanConfig): string[] {
   need(c.electrum.servers.length >= 3, 'electrum.servers: at least three servers');
   need(c.electrum.indexWaitMs >= 0 && c.electrum.indexPollMs > 0, 'electrum.indexWaitMs >= 0 and indexPollMs > 0');
   need(c.evm.chains.length > 0 && c.evm.chains.every((ch) => isHttpsUrl(ch.rpc)), 'evm.chains: https RPC per chain');
+  need(
+    c.evm.receiptPollSeconds > 0 && c.evm.receiptWaitSeconds >= c.evm.receiptPollSeconds && c.evm.replanSeconds > 0,
+    'evm: receiptPollSeconds > 0, receiptWaitSeconds >= receiptPollSeconds, replanSeconds > 0',
+  );
   for (const ch of c.evm.chains) {
     for (const [sym, addr] of Object.entries(ch.tokens)) {
       need(/^0x[0-9a-fA-F]{40}$/.test(addr), `evm.chains.${ch.key}.tokens.${sym}: 20-byte hex address`);
@@ -251,9 +263,16 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     features: c.features,
     route: c.route,
     routeChains: c.route.active === 'thorchain' ? c.thorchain.chains : c.route.active === 'near-intents' ? c.oneClick.chains.map((k) => k.toUpperCase()) : [],
-    evm: { chains: c.evm.chains, walletConnect: c.evm.walletConnectProjectId !== '' },
+    evm: {
+      chains: c.evm.chains,
+      walletConnect: c.evm.walletConnectProjectId !== '',
+      receiptPollSeconds: c.evm.receiptPollSeconds,
+      receiptWaitSeconds: c.evm.receiptWaitSeconds,
+      replanSeconds: c.evm.replanSeconds,
+    },
     limits: c.limits,
     landing: {
+      toleranceBps: c.landing.toleranceBps,
       toleranceBpsDirect: c.landing.toleranceBpsDirect,
       returnAfterBlocks: c.landing.returnAfterBlocks,
       validHours: c.landing.validHours,
