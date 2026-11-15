@@ -4,6 +4,7 @@ import { binToHex, decodeTransaction, hexToBin } from '@bitauth/libauth';
 import type { FastifyInstance } from 'fastify';
 import type { SampanConfig } from '../../core/config.js';
 import { verifyTransaction } from '../../core/tx/verify.js';
+import { waitIndexed } from '../chain/settle.js';
 import { BroadcastError } from '../chain/types.js';
 import type { Services } from '../services.js';
 import { ApiError, quoteLimit, sendError } from './guard.js';
@@ -55,6 +56,7 @@ export function registerBroadcast(app: FastifyInstance, config: SampanConfig, s:
         try {
           const txid = await s.chain.broadcast(req.body.tx);
           s.db.updateCrossing(row.id, { status: 'broadcast', txid, error: null });
+          await waitIndexed(s.chain, txid, tx, { waitMs: config.electrum.indexWaitMs, pollMs: config.electrum.indexPollMs });
           s.scanner.forget([...record.sourceOutputs.map((o) => o.lockingBytecode), ...tx.outputs.map((o) => binToHex(o.lockingBytecode))]);
           return { crossingId: row.id, txid };
         } catch (e) {

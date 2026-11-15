@@ -70,7 +70,9 @@
       "wss://fulcrum.greyh.at:50004",
       "wss://fulcrum.jettscythe.xyz:50004"
     ],
-    "chipnetServers": ["wss://chipnet.imaginary.cash:50004"]
+    "chipnetServers": ["wss://chipnet.imaginary.cash:50004"],
+    "indexWaitMs": 8000,
+    "indexPollMs": 400
   },
   "wallet": {
     "gapLimit": 20,

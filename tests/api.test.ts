@@ -116,6 +116,32 @@ describe('swap API on the fake network', () => {
     expect(tokensAfter - tokensBefore).toBeGreaterThanOrEqual(BigInt(b.quote.minReceive));
   });
 
+  it('a rescan right after the broadcast shows the new coins even when the index lists them late', async () => {
+    await app.close();
+    await start({ ...config, electrum: { ...config.electrum, indexWaitMs: 3000, indexPollMs: 20 } });
+    await scan();
+    const b = (await buyBuild()).json() as BuildBody;
+    // Like Fulcrum: the broadcast is accepted at once, the outputs reach listunspent a little later.
+    const chain = services.chain;
+    const broadcast = chain.broadcast.bind(chain);
+    const listUnspent = chain.listUnspent.bind(chain);
+    let hidden: { txid: string; until: number } | undefined;
+    chain.broadcast = async (hex) => {
+      const txid = await broadcast(hex);
+      hidden = { txid, until: Date.now() + 300 };
+      return txid;
+    };
+    chain.listUnspent = async (lock) => {
+      const list = await listUnspent(lock);
+      return hidden && Date.now() < hidden.until ? list.filter((u) => u.txid !== hidden!.txid) : list;
+    };
+    const sent = await post('/api/broadcast', { crossingId: b.crossingId, tx: signBody(b) });
+    expect(sent.statusCode).toBe(200);
+    const after = (await scan()).json();
+    const txids = (after.paths.receive.addresses[0].utxos as Array<{ txid: string }>).map((u) => u.txid);
+    expect(txids).toContain(sent.json().txid);
+  });
+
   it('refuses a signed transaction that is not valid and sends nothing', async () => {
     await scan();
     const b = (await buyBuild()).json() as BuildBody;

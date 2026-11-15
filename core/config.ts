@@ -48,7 +48,13 @@ export interface SampanConfig {
     /** Builds tried with freshly fetched pools before the user sees an error. */
     buildAttempts: number;
   };
-  electrum: { servers: string[]; chipnetServers: string[] };
+  electrum: {
+    servers: string[];
+    chipnetServers: string[];
+    /** After a broadcast, how long to wait for the server's index to show the transaction before answering. */
+    indexWaitMs: number;
+    indexPollMs: number;
+  };
   /** Wallet scan: stop after `gapLimit` unused addresses in a row; results are kept in memory only. */
   wallet: { gapLimit: number; maxAddressesPerScan: number; scanCacheSeconds: number };
   /** Page side of the BCH wallet connection: WizardConnect relays, scan rounds and the explorer link. */
@@ -124,6 +130,7 @@ export function validateConfig(c: SampanConfig): string[] {
   need(c.route.active !== 'near-intents' || c.oneClick.baseUrl !== '', 'oneClick.baseUrl: required for near-intents');
   need(c.cauldron.indexers.length > 0 && c.cauldron.indexers.every(isHttpsUrl), 'cauldron.indexers: https URLs');
   need(c.electrum.servers.length >= 3, 'electrum.servers: at least three servers');
+  need(c.electrum.indexWaitMs >= 0 && c.electrum.indexPollMs > 0, 'electrum.indexWaitMs >= 0 and indexPollMs > 0');
   need(c.evm.chains.length > 0 && c.evm.chains.every((ch) => isHttpsUrl(ch.rpc)), 'evm.chains: https RPC per chain');
   for (const ch of c.evm.chains) {
     for (const [sym, addr] of Object.entries(ch.tokens)) {
