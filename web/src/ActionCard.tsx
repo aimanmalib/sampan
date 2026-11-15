@@ -3,17 +3,19 @@ import { openFlows, openTabs, type TabId } from '../../core/flows';
 import type { LoadedConfig } from './config';
 import { useText, type TextKey } from './i18n';
 import { LandPanel } from './land/LandPanel';
+import { OutPanel } from './out/OutPanel';
 import { SwapPanel } from './swap/SwapPanel';
 import { ConnectDialog } from './wallet/ConnectDialog';
 import type { Wallet } from './wallet/useWallet';
 
 const LABELS: Record<TabId, TextKey> = { swap: 'tabs.swap', out: 'tabs.out', in: 'tabs.in' };
 
-type Panel = (props: { config: LoadedConfig; wallet: Wallet; fill: number }) => ReactNode;
+type Panel = (props: { config: LoadedConfig; wallet: Wallet; fill: number; onChoose: (id: TabId) => void }) => ReactNode;
 
 /** Tabs with a working panel. A tab is listed only when its flow flag is on and its panel exists. */
 const PANELS: Partial<Record<TabId, Panel>> = {
   swap: ({ config, wallet }) => <SwapPanel config={config} wallet={wallet} />,
+  out: ({ config, wallet, onChoose }) => <OutPanel config={config} wallet={wallet} onSwap={() => onChoose('swap')} />,
   in: ({ config, wallet, fill }) => <LandPanel key={fill} config={config} wallet={wallet} />,
 };
 
@@ -65,7 +67,7 @@ export function ActionCard({
         ))}
       </div>
       <div className="card__body" role="tabpanel" id="tab-panel" aria-labelledby={`tab-${tab}`}>
-        <Body config={config} wallet={wallet} fill={fill} />
+        <Body config={config} wallet={wallet} fill={fill} onChoose={onChoose} />
       </div>
       {wallet.status === 'connecting' && wallet.uri && wallet.qrUri ? (
         <ConnectDialog uri={wallet.uri} qrUri={wallet.qrUri} onClose={() => void wallet.disconnect()} />

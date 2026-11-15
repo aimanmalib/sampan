@@ -6,6 +6,7 @@ import { api } from './api';
 import type { LoadedConfig } from './config';
 import { useText, type TextKey } from './i18n';
 import { LandingStatus, type LandingView } from './land/LandingStatus';
+import { OutStatus, outIsFinal, type OutView } from './out/OutStatus';
 
 interface Crossing {
   id: string;
@@ -16,6 +17,8 @@ interface Crossing {
   createdAt: number;
   updatedAt: number;
   landing?: LandingView['landing'];
+  route?: OutView['route'];
+  out?: OutView['out'];
 }
 
 type Load = { state: 'loading' } | { state: 'missing' } | { state: 'error' } | { state: 'ok'; crossing: Crossing };
@@ -27,6 +30,8 @@ const STATUS_KEYS: Record<string, TextKey> = {
   broadcast: 'crossing.status.broadcast',
   failed: 'crossing.status.failed',
 };
+
+const asOut = (c: Crossing): OutView => ({ status: c.status, route: c.route ?? null, asset: c.asset, txid: c.txid, out: c.out ?? null });
 
 export function CrossingPage({ id, config }: { id: string; config: LoadedConfig | null }) {
   const { t } = useText();
@@ -47,13 +52,16 @@ export function CrossingPage({ id, config }: { id: string; config: LoadedConfig 
   useEffect(() => check(false), [check]);
 
   // A landing still waiting: ask the server to look again now and then (it also watches by itself).
-  const waiting = load.state === 'ok' && load.crossing.kind === 'land' && ['open', 'seen'].includes(load.crossing.status) && load.crossing.landing?.watching;
+  const landWaiting = load.state === 'ok' && load.crossing.kind === 'land' && ['open', 'seen'].includes(load.crossing.status) && load.crossing.landing?.watching;
+  // A crossing out that was sent: the server asks the route each time the page asks.
+  const outWaiting = load.state === 'ok' && load.crossing.kind === 'out' && !!load.crossing.txid && !outIsFinal(asOut(load.crossing));
+  const waiting = landWaiting || outWaiting;
   const pollMs = (config?.landing.pagePollSeconds ?? 10) * 1000;
   useEffect(() => {
     if (!waiting) return;
-    const timer = setInterval(() => check(true), pollMs);
+    const timer = setInterval(() => check(!outWaiting), pollMs);
     return () => clearInterval(timer);
-  }, [waiting, pollMs, check]);
+  }, [waiting, outWaiting, pollMs, check]);
 
   if (load.state !== 'ok') {
     return (
@@ -72,6 +80,21 @@ export function CrossingPage({ id, config }: { id: string; config: LoadedConfig 
         <h1 className="crossing__title">{t('crossing.title')}</h1>
         <p className="crossing__kind">{t('crossing.kind.land')}</p>
         <LandingStatus c={{ status: c.status, txid: c.txid, landing: c.landing }} config={config} fragment={fragment} onCheck={() => check(true)} />
+      </section>
+    );
+  }
+  if (c.kind === 'out') {
+    return (
+      <section className="crossing">
+        <h1 className="crossing__title">{t('crossing.title')}</h1>
+        <p className="crossing__kind">{t('crossing.kind.out')}</p>
+        <OutStatus c={asOut(c)} config={config} />
+        <p className="crossing__actions">
+          <button type="button" className="button button--quiet" onClick={() => check(false)}>
+            {t('crossing.check')}
+          </button>
+          <a href="/">{t('crossing.back')}</a>
+        </p>
       </section>
     );
   }

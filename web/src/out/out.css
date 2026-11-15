@@ -1,0 +1,32 @@
+/* Send out tab: only what the shared field and swap styles do not cover. */
+.field__hint {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+.field:has([aria-invalid='true']) .field__hint {
+  color: var(--danger);
+}
+.out__to {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+.out__select {
+  min-height: var(--touch);
+  max-width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) / 2);
+  padding: 0 0.5rem;
+}
+.out__select:focus-visible {
+  outline: var(--focus);
+  outline-offset: 2px;
+}
+.timeline__out {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

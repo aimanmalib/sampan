@@ -5,6 +5,7 @@ import { Banner } from './Banner';
 import './styles.css';
 import './flows.css';
 import './land/land.css';
+import './out/out.css';
 
 const banner = document.getElementById('banner');
 const root = document.getElementById('root');
