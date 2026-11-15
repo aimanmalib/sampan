@@ -77,7 +77,7 @@
   "wallet": {
     "gapLimit": 20,
     "maxAddressesPerScan": 60,
-    "scanCacheSeconds": 600
+    "scanCacheSeconds": 30
   },
   "connect": {
     "relayUrls": ["wss://relay.riften.net:443", "wss://relay.cauldron.quest:443"],

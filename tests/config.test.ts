@@ -64,6 +64,12 @@ describe('validateConfig', () => {
     c.electrum.servers = c.electrum.servers.slice(0, 2);
     expect(validateConfig(c).join()).toMatch(/electrum/);
   });
+
+  it('rejects a wallet scan cache long enough to hide coins that arrive after the first scan', () => {
+    const c = clone();
+    c.wallet.scanCacheSeconds = 600;
+    expect(validateConfig(c).join()).toMatch(/scanCacheSeconds/);
+  });
 });
 
 describe('publicConfig', () => {

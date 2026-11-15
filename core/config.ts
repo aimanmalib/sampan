@@ -110,6 +110,8 @@ function isHttpsUrl(value: string): boolean {
 }
 
 /** Returns a list of problems; an empty list means the config can be used. */
+const MAX_SCAN_CACHE_SECONDS = 60;
+
 export function validateConfig(c: SampanConfig): string[] {
   const errors: string[] = [];
   const need = (ok: boolean, message: string): void => {
@@ -157,6 +159,8 @@ export function validateConfig(c: SampanConfig): string[] {
     posInt(c.wallet?.gapLimit) && c.wallet.maxAddressesPerScan >= c.wallet.gapLimit && posInt(c.wallet.scanCacheSeconds),
     'wallet: gapLimit, maxAddressesPerScan >= gapLimit, scanCacheSeconds',
   );
+  // A wallet funded after its first scan must show the coins on the next connect, not minutes later.
+  need(c.wallet.scanCacheSeconds <= MAX_SCAN_CACHE_SECONDS, `wallet.scanCacheSeconds: at most ${MAX_SCAN_CACHE_SECONDS}`);
   need(
     c.connect?.relayUrls.length > 0 && c.connect.relayUrls.every((u) => /^wss:\/\/[^\s/]+\/?$/.test(u)),
     'connect.relayUrls: wss URLs (host and port only)',
