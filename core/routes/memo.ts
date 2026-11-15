@@ -6,6 +6,8 @@ import { binToHex, utf8ToBin } from '@bitauth/libauth';
 export const THOR_DECIMALS = 8;
 export const MEMO_MAX_BYTES = 80;
 const SWAP_ACTIONS = new Set(['=', 's', 'swap']);
+/** THORChain's documented short codes for whole assets (memos may use them instead of the full name). */
+const SHORT_CODES: Record<string, string> = { C: 'BCH.BCH' };
 
 export interface SwapMemo {
   asset: string;
@@ -60,8 +62,9 @@ export function opReturnHex(memo: string): string {
 export function memoMatches(memo: string, want: { asset: string; destination: string; minOut: bigint }): string | true {
   const m = parseSwapMemo(memo);
   if (typeof m === 'string') return m;
-  const short = want.asset.split('-')[0]!;
-  if (m.asset.toUpperCase() !== want.asset.toUpperCase() && m.asset.toUpperCase() !== short.toUpperCase()) return 'the memo names another asset';
+  const short = want.asset.split('-')[0]!.toUpperCase();
+  const named = m.asset.toUpperCase();
+  if (named !== want.asset.toUpperCase() && named !== short && SHORT_CODES[named] !== want.asset.toUpperCase()) return 'the memo names another asset';
   const evm = /^0x[0-9a-f]{40}$/i.test(want.destination);
   const same = evm ? m.destination.toLowerCase() === want.destination.toLowerCase() : m.destination === want.destination;
   if (!same) return 'the memo pays another address';
