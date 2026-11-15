@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { openFlows, openTabs, type TabId } from '../../core/flows';
 import type { LoadedConfig } from './config';
 import { useText, type TextKey } from './i18n';
@@ -21,6 +21,9 @@ const PANELS: Partial<Record<TabId, Panel>> = {
 export function cardTabs(config: LoadedConfig | null): TabId[] {
   return openTabs(openFlows(config)).filter((id) => PANELS[id]);
 }
+
+/** Space kept under the primary button when "Fill this in for me" scrolls it into view. */
+const SCROLL_MARGIN_PX = 16;
 
 /**
  * The single action card. A flow shows only when its feature flag is on (it has been measured on mainnet);
@@ -45,9 +48,19 @@ export function ActionCard({
   const tabs = cardTabs(config);
   const tab = chosen && tabs.includes(chosen) ? chosen : tabs[0];
   const Body = tab ? PANELS[tab] : undefined;
+  const card = useRef<HTMLElement>(null);
+  // After "Fill this in for me" the filled panel can be taller than the first screen: bring its one primary button
+  // into view so the next step is never below the fold.
+  useEffect(() => {
+    const button = fill > 0 ? card.current?.querySelector('.button--primary') : null;
+    if (!button) return;
+    // Measured scroll, not scrollIntoView: it leaves a small margin under the button (WebKit ignores scroll-margin here).
+    const below = button.getBoundingClientRect().bottom + SCROLL_MARGIN_PX - window.innerHeight;
+    if (below > 0) window.scrollBy(0, below);
+  }, [fill]);
   if (!config || !tab || !Body) return null;
   return (
-    <section className="card" aria-label={t('tabs.label')}>
+    <section className="card" aria-label={t('tabs.label')} ref={card}>
       <div className="tabs" role="tablist" aria-label={t('tabs.label')}>
         {tabs.map((id) => (
           <button

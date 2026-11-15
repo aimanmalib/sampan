@@ -123,6 +123,7 @@
   "land.prompt": "Pay {amount} BCH to your Sampan landing address",
   "land.paid": "Paid. Taking you to the status page.",
   "judge.title": "Judging? A real mainnet transaction in about a minute.",
+  "judge.short": "Judging?",
   "judge.step1": "Connect Selene, Paytaca or Cashonize with WizardConnect.",
   "judge.step2": "Pay {amount} BCH to your landing address. It arrives as {symbol} by itself.",
   "judge.fill": "Fill this in for me",

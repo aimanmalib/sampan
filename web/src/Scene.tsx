@@ -5,7 +5,7 @@ export function Scene() {
   const { t } = useText();
   return (
     <figure className="scene" aria-label={t('scene.label')} role="img">
-      <svg viewBox="0 0 640 170" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+      <svg viewBox="0 56 640 114" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
         <path className="scene__bank" d="M0 70 C40 66 80 72 120 76 L150 118 L0 118 Z" />
         <path className="scene__bank" d="M640 70 C600 66 560 72 520 76 L490 118 L640 118 Z" />
         <path className="scene__water" d="M0 118 H640 V170 H0 Z" />
