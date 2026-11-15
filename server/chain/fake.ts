@@ -29,13 +29,16 @@ export class FakeChain implements Chain {
   async broadcast(txHex: string): Promise<string> {
     const tx = decodeTransaction(hexToBin(txHex));
     if (typeof tx === 'string') throw new BroadcastError(`TX decode failed: ${tx}`);
-    const spent: Array<[string, number]> = [];
+    // All inputs are checked before any is spent, so a rejected transaction leaves the set untouched (as a node does).
+    const spent: Array<[string, string, number]> = [];
     for (const input of tx.inputs) {
       const txid = binToHex(input.outpointTransactionHash);
       const found = [...this.utxos.entries()].find(([, list]) => list.some((u) => u.txid === txid && u.vout === input.outpointIndex));
       if (!found) throw new BroadcastError('bad-txns-inputs-missingorspent');
-      spent.push([found[0], input.outpointIndex]);
-      this.utxos.set(found[0], found[1].filter((u) => !(u.txid === txid && u.vout === input.outpointIndex)));
+      spent.push([found[0], txid, input.outpointIndex]);
+    }
+    for (const [lock, txid, vout] of spent) {
+      this.utxos.set(lock, (this.utxos.get(lock) ?? []).filter((u) => !(u.txid === txid && u.vout === vout)));
     }
     const txid = hashTransaction(hexToBin(txHex));
     tx.outputs.forEach((o, vout) => {
