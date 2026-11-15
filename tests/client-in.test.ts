@@ -1,5 +1,6 @@
 // Flow C in the page's own code (core/client/in.ts) against the fake server and a fake EIP-1193 wallet: chain
-// switch, exact approval, a fresh plan when the first is old, the deposit simulated and sent, the hash recorded.
+// switch, exact approval, a fresh plan when the first is old, the deposit simulated and sent, the hash recorded;
+// and a plan altered between the server and the page is refused before the wallet is asked to sign anything.
 import type { FastifyInstance } from 'fastify';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -11,10 +12,13 @@ import { makeApi, type Api, type Fetch } from '../core/client/api.js';
 import { InStop, runIn, type InIntent, type InStep } from '../core/client/in.js';
 import { normalizeConfig, patchConfig, type SampanConfig } from '../core/config.js';
 import { ERC20_ABI, ROUTER_ABI } from '../core/evm/calldata.js';
+import { makeCard, readCard } from '../core/landing-card.js';
+import type { LandingParams } from '../core/landing.js';
+import { withoutPrefix } from '../core/routes/memo.js';
 import { buildApp } from '../server/app.js';
 import { createServices } from '../server/services.js';
 import { fakeEip1193 } from './helpers/fake-eip1193.js';
-import { userAddress } from './helpers/wallet.js';
+import { otherLockHex, userAddress } from './helpers/wallet.js';
 
 const config = patchConfig(
   normalizeConfig(shipped as unknown as SampanConfig),
@@ -105,5 +109,46 @@ describe('runIn', () => {
   it('refuses a plan whose minimum is above what the route now offers', async () => {
     const i = { ...(await intent('BCH')), minSats: 10n ** 12n };
     await expect(runIn({ api, provider: fakeEip1193(), from: FROM, intent: i, timing: timing({ t: Date.now() }), onStep: () => {} })).rejects.toMatchObject({ code: 'price_moved' });
+  });
+
+  type Plan = { deposit: { token: string; amount: string; memo: string }; landing?: { card: Record<string, unknown> } };
+  const OTHER_BCH = 'qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a';
+  const parts = (memo: string) => memo.split(':');
+  const payTo = (p: Plan, address: string) => { const m = parts(p.deposit.memo); m[2] = withoutPrefix(address); p.deposit.memo = m.join(':'); };
+  // A server that lies consistently: a well-formed card for different terms, and a memo paying that card's address.
+  const reissue = (p: Plan, change: Partial<LandingParams>) => {
+    const read = readCard(p.landing!.card);
+    if (typeof read === 'string') throw new Error(read);
+    const card = makeCard({ ...read.params, ...change }, { network: read.card.network, token: read.card.token, created: new Date(read.card.created) });
+    p.landing!.card = card as unknown as Record<string, unknown>;
+    payTo(p, card.address);
+  };
+  const tampers: Array<[string, string, (p: Plan) => void]> = [
+    ['memo pays another BCH address', 'BCH', (p) => { const m = parts(p.deposit.memo); m[2] = OTHER_BCH; p.deposit.memo = m.join(':'); }],
+    ['memo limit below the minimum shown', 'BCH', (p) => { const m = parts(p.deposit.memo); m[3] = '10'; p.deposit.memo = m.join(':'); }],
+    ['another token contract', 'BCH', (p) => { p.deposit.token = '0x' + '11'.repeat(20); }],
+    ['another amount', 'BCH', (p) => { p.deposit.amount = '1'; }],
+    ['a landing address nobody asked for', 'BCH', (p) => { p.landing = { card: {} }; }],
+    ['no landing address when one was asked for', 'PUSD', (p) => { delete p.landing; payTo(p, userAddress); }],
+    ['landing card for another token', 'PUSD', (p) => reissue(p, { category: 'ab'.repeat(32) })],
+    ['landing card paying another owner', 'PUSD', (p) => reissue(p, { ownerLockHex: otherLockHex })],
+    ['landing card waiting another number of blocks', 'PUSD', (p) => reissue(p, { returnAfter: config.landing.returnAfterBlocks + 1 })],
+    ['memo pays a BCH address other than the landing card', 'PUSD', (p) => { const m = parts(p.deposit.memo); m[2] = OTHER_BCH; p.deposit.memo = m.join(':'); }],
+  ];
+
+  it.each(tampers)('refuses a plan with %s before any approval or deposit is sent', async (_name, receive, tamper) => {
+    const tampering: Api = {
+      get: (p) => api.get(p),
+      post: async <T,>(p: string, body: unknown): Promise<T> => {
+        const reply = await api.post<T>(p, body);
+        if (p === '/api/in/plan') tamper(reply as unknown as Plan);
+        return reply;
+      },
+    };
+    const wallet = fakeEip1193();
+    const run = runIn({ api: tampering, provider: wallet, from: FROM, intent: await intent(receive), timing: timing({ t: Date.now() }), onStep: () => {} });
+    await expect(run).rejects.toBeInstanceOf(InStop);
+    await expect(run).rejects.toMatchObject({ reason: 'plan_mismatch' });
+    expect(wallet.sent).toHaveLength(0);
   });
 });
