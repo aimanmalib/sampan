@@ -9,6 +9,8 @@ import { outputFromWire, txFromHex, type WireOutput } from '../../core/wire.js';
 export interface Intent {
   spend: { sats: string; tokens?: Record<string, string> };
   receive: { category: string; min: string };
+  /** Exact plain BCH outputs the page showed, e.g. the landing address it computed (lock hex, satoshis). */
+  deposits?: Array<{ lockingBytecode: string; sats: string }>;
   usd: number;
 }
 
@@ -49,6 +51,7 @@ export function review(
     userLockingBytecodes: ctx.ownLocks,
     inputPaths: ask.inputPaths,
     poolOwnerPkhs,
+    deposits: (intent.deposits ?? []).map((d) => ({ lockingBytecode: d.lockingBytecode.toLowerCase(), sats: BigInt(d.sats) })),
     spend: {
       sats: BigInt(intent.spend.sats),
       tokens: Object.fromEntries(Object.entries(intent.spend.tokens ?? {}).map(([k, v]) => [k.toLowerCase(), BigInt(v)])),

@@ -22,6 +22,10 @@ import { record, spentOn } from '../tools/test-wallet/ledger.js';
 import { review, type Budget, type Intent } from '../tools/test-wallet/policy.js';
 import { BCH } from '../core/check.js';
 import { PUSD } from './helpers/pools.js';
+import { LANDING_RATE_DEN, landingLockingHex } from '../core/landing.js';
+import { buildPayment } from '../core/tx/payment.js';
+import { deriveAddress } from '../core/wallet.js';
+import { outputToWire, txToHex } from '../core/wire.js';
 
 const config = normalizeConfig(shipped as unknown as SampanConfig);
 const budget: Budget = { maxUsdPerTx: 3, maxUsdPerDay: 12 };
@@ -123,5 +127,30 @@ describe('test wallet', { timeout: 30_000 }, () => {
   it('refuses when the day would pass its limit', async () => {
     const { run } = await swapThroughTestWallet((min) => intentOk(min, 1), budget.maxUsdPerDay - 0.5);
     await expect(run).rejects.toThrow(/daily limit/);
+  });
+});
+
+describe('test wallet paying a landing address', () => {
+  const params = { ownerLockHex: `76a914${'11'.repeat(20)}88ac`, category: PUSD, rateNum: 1n, rateDen: LANDING_RATE_DEN, returnAfter: 6 };
+  const landingLock = landingLockingHex(params);
+  const own = deriveAddress(keys.publicKey('receive', 0), 'receive', 0, 'bitcoincash');
+  const pay = buildPayment({
+    coins: [{ txid: 'ab'.repeat(32), vout: 0, sats: 500_000n, lockingHex: own.lockingHex, path: 'receive/0', hasToken: false }],
+    toLockingHex: landingLock,
+    sats: 100_000n,
+    changeLockingHex: own.lockingHex,
+    satsPerByte: 1n,
+  });
+  const ask = { tx: txToHex(pay.transaction), sourceOutputs: pay.sourceOutputs.map(outputToWire), inputPaths: pay.inputPaths };
+  const ctx = (intent: Intent) => ({ ownLocks: [own.lockingHex], intent, budget, spentTodayUsd: 0, feeCapSats: BigInt(config.fees.capSats) });
+  const base: Intent = { spend: { sats: '100000' }, receive: { category: PUSD, min: '0' }, usd: 0.2 };
+
+  it('signs a payment to the landing address the page showed', () => {
+    expect(review(ask, ctx({ ...base, deposits: [{ lockingBytecode: landingLock.toUpperCase(), sats: '100000' }] }))).toEqual({ ok: true });
+  });
+
+  it('refuses a payment to an address the page did not show, or another amount', () => {
+    expect(review(ask, ctx(base))).toMatchObject({ ok: false });
+    expect(review(ask, ctx({ ...base, deposits: [{ lockingBytecode: landingLock, sats: '99999' }] }))).toMatchObject({ ok: false });
   });
 });
