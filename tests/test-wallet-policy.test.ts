@@ -20,6 +20,7 @@ import { createServices } from '../server/services.js';
 import { testWalletAdapter } from '../tools/test-wallet/adapter.js';
 import { record, spentOn } from '../tools/test-wallet/ledger.js';
 import { review, type Budget, type Intent } from '../tools/test-wallet/policy.js';
+import { BCH } from '../core/check.js';
 import { PUSD } from './helpers/pools.js';
 
 const config = normalizeConfig(shipped as unknown as SampanConfig);
@@ -48,11 +49,11 @@ afterEach(async () => {
 });
 
 /** A page session whose wallet is the test wallet, reached through hdwalletv1 sign requests. */
-async function swapThroughTestWallet(intentFor: (min: bigint) => Intent, spentBefore = 0) {
+async function swapThroughTestWallet(intentFor: (min: bigint) => Intent, spentBefore = 0, trade: { side: 'buy' | 'sell'; amount: bigint } = { side: 'buy', amount: 100_000n }) {
   const api = makeApi(injectFetch);
   const ledger = path.join(dir, 'ledger.jsonl');
   if (spentBefore > 0) record(ledger, { utc: new Date().toISOString(), usd: spentBefore, prompt: 'earlier' });
-  const quote = await quoteSwap(api, { token: 'PUSD', side: 'buy', amount: 100_000n });
+  const quote = await quoteSwap(api, { token: 'PUSD', ...trade });
   const intent = intentFor(BigInt(quote.minReceive));
   let sequence = 0;
   const session: WalletSession = {
@@ -81,7 +82,7 @@ async function swapThroughTestWallet(intentFor: (min: bigint) => Intent, spentBe
     api,
     session,
     wallet: view,
-    intent: { token: 'PUSD', side: 'buy', amount: 100_000n, minReceive: BigInt(quote.minReceive), category: PUSD, feeCapSats: BigInt(config.fees.capSats), userPrompt: 'Swap 0.001 BCH' },
+    intent: { token: 'PUSD', ...trade, minReceive: BigInt(quote.minReceive), category: PUSD, feeCapSats: BigInt(config.fees.capSats), userPrompt: 'Swap 0.001 BCH' },
   });
   return { run, ledger };
 }
@@ -95,6 +96,12 @@ describe('test wallet', { timeout: 30_000 }, () => {
     const lines = readFileSync(ledger, 'utf8').trim().split('\n');
     expect(lines).toHaveLength(1);
     expect(JSON.parse(lines[0]!)).toMatchObject({ usd: 0.5, prompt: 'Swap 0.001 BCH' });
+  });
+
+  it('signs a sell to BCH: the BCH category is not lowercased into a token id', async () => {
+    const sell = (min: bigint): Intent => ({ spend: { sats: '0', tokens: { [PUSD]: '100' } }, receive: { category: BCH, min: min.toString() }, usd: 1 });
+    const { run } = await swapThroughTestWallet(sell, 0, { side: 'sell', amount: 100n });
+    await expect(run).resolves.toMatchObject({ txid: expect.stringMatching(/^[0-9a-f]{64}$/) });
   });
 
   it('refuses when the transaction pays less than the intent expects', async () => {

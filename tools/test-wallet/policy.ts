@@ -1,7 +1,7 @@
 // When the headless test wallet may sign: the request must pass the same checkTransaction the page runs,
 // rebuilt from what the caller intended, and stay inside the test budget. Pure.
 import { hexToBin } from '@bitauth/libauth';
-import { checkTransaction, type Expectation } from '../../core/check.js';
+import { BCH, checkTransaction, type Expectation } from '../../core/check.js';
 import { poolV0OwnerOf } from '../../core/pools/template.js';
 import { outputFromWire, txFromHex, type WireOutput } from '../../core/wire.js';
 
@@ -54,7 +54,7 @@ export function review(
       tokens: Object.fromEntries(Object.entries(intent.spend.tokens ?? {}).map(([k, v]) => [k.toLowerCase(), BigInt(v)])),
     },
     feeCapSats: ctx.feeCapSats,
-    receive: { category: intent.receive.category.toLowerCase(), min: BigInt(intent.receive.min) },
+    receive: { category: intent.receive.category === BCH ? BCH : intent.receive.category.toLowerCase(), min: BigInt(intent.receive.min) },
   };
   const res = checkTransaction(tx, ask.sourceOutputs.map(outputFromWire), expectation);
   return res.ok ? res : { ok: false, reason: `checkTransaction rule ${res.rule}: ${res.reason}` };
