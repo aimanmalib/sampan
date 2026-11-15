@@ -29,7 +29,11 @@ test('front page: banner, one headline, one primary button, both banks, no conso
   await expect(page.locator('.button--primary')).toHaveCount(1);
   await expect(page.getByText(en['scene.left'])).toBeVisible();
   await expect(page.getByText(en['scene.right'], { exact: true })).toBeVisible();
-  await expect(page.getByRole('tab')).toHaveCount(3);
+  // Only open flows have a tab; the local server switches on swap alone, so no tab says "Not open yet".
+  await expect(page.getByRole('tab')).toHaveCount(1);
+  await expect(page.getByText(en['tabs.out'])).toHaveCount(0);
+  await expect(page.getByText(en['tabs.in'])).toHaveCount(0);
+  await expect(page.getByText(/Not open yet/i)).toHaveCount(0);
   await noHorizontalOverflow(page);
   expect(errors).toEqual([]);
 });

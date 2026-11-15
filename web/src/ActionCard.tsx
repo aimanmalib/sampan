@@ -1,51 +1,51 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
+import { openFlows, openTabs, type TabId } from '../../core/flows';
 import type { LoadedConfig } from './config';
 import { useText, type TextKey } from './i18n';
 import { SwapPanel } from './swap/SwapPanel';
 import { ConnectDialog } from './wallet/ConnectDialog';
 import type { Wallet } from './wallet/useWallet';
 
-const TABS = [
-  { id: 'swap', label: 'tabs.swap' },
-  { id: 'out', label: 'tabs.out' },
-  { id: 'in', label: 'tabs.in' },
-] as const satisfies readonly { id: string; label: TextKey }[];
+const LABELS: Record<TabId, TextKey> = { swap: 'tabs.swap', out: 'tabs.out', in: 'tabs.in' };
 
-type TabId = (typeof TABS)[number]['id'];
+type Panel = (props: { config: LoadedConfig; wallet: Wallet }) => ReactNode;
 
-/** The single action card. A flow shows only when its feature flag is on (it has been measured on mainnet). */
+/** Tabs with a working panel. A tab is listed only when its flow flag is on and its panel exists. */
+const PANELS: Partial<Record<TabId, Panel>> = {
+  swap: ({ config, wallet }) => <SwapPanel config={config} wallet={wallet} />,
+};
+
+/**
+ * The single action card. A flow shows only when its feature flag is on (it has been measured on mainnet);
+ * a closed flow has no tab at all. With no open flow the card is not drawn.
+ */
 export function ActionCard({ config, wallet }: { config: LoadedConfig | null; wallet: Wallet }) {
   const { t } = useText();
-  const [tab, setTab] = useState<TabId>('swap');
+  const tabs = openTabs(openFlows(config)).filter((id) => PANELS[id]);
+  const [chosen, setChosen] = useState<TabId | null>(null);
+  const tab = chosen && tabs.includes(chosen) ? chosen : tabs[0];
+  const Body = tab ? PANELS[tab] : undefined;
+  if (!config || !tab || !Body) return null;
   return (
     <section className="card" aria-label={t('tabs.label')}>
       <div className="tabs" role="tablist" aria-label={t('tabs.label')}>
-        {TABS.map((item) => (
+        {tabs.map((id) => (
           <button
-            key={item.id}
+            key={id}
             type="button"
             role="tab"
-            id={`tab-${item.id}`}
-            aria-selected={tab === item.id}
+            id={`tab-${id}`}
+            aria-selected={tab === id}
             aria-controls="tab-panel"
             className="tabs__tab"
-            onClick={() => setTab(item.id)}
+            onClick={() => setChosen(id)}
           >
-            {t(item.label)}
+            {t(LABELS[id])}
           </button>
         ))}
       </div>
       <div className="card__body" role="tabpanel" id="tab-panel" aria-labelledby={`tab-${tab}`}>
-        {tab === 'swap' && config?.features.swap ? (
-          <SwapPanel config={config} wallet={wallet} />
-        ) : (
-          <>
-            <p className="card__note">{t('card.notOpen')}</p>
-            <button type="button" className="button button--primary" disabled>
-              {t('card.connect')}
-            </button>
-          </>
-        )}
+        <Body config={config} wallet={wallet} />
       </div>
       {wallet.status === 'connecting' && wallet.uri && wallet.qrUri ? (
         <ConnectDialog uri={wallet.uri} qrUri={wallet.qrUri} onClose={() => void wallet.disconnect()} />

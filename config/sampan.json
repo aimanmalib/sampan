@@ -18,11 +18,12 @@
   "defaultToken": "PUSD",
   "features": {
     "musd": false,
-    "swap": true
+    "swap": true,
+    "landing": false
   },
   "route": {
     "active": "none",
-    "symbols": ["USDC", "USDT"]
+    "symbols": ["USDC"]
   },
   "thorchain": {
     "nodes": ["https://gateway.liquify.com/chain/thorchain_api"],

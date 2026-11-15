@@ -25,7 +25,7 @@ export interface SampanConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
   /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
-  features: { musd: boolean; swap: boolean };
+  features: { musd: boolean; swap: boolean; landing: boolean };
   route: { active: ActiveRoute; symbols: string[] };
   thorchain: { nodes: string[]; chains: string[]; slippageBps: number; affiliate: string; affiliateBps: number };
   oneClick: {

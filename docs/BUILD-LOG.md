@@ -15,3 +15,4 @@ One line per step, newest last.
 - 2026-11-15: Measured mainnet swaps through the page and the headless test wallet; pool locks rebuilt from owner_pkh match the chain; broadcast waits for the Electrum index; test wallet sells fixed; swap tab switched on.
 - 2026-11-15: Cashonize web signed both swap directions on mainnet through the page; wallet scan cache cut to 30 seconds; test wallet can pay plain BCH within its budget.
 - 2026-11-15: Landing contract (convert and giveBack) with its compiled artifact, address computed in core and checked against CashScript, recovery card, verify-landing and finisher scripts, contract tests on the mock network.
+- 2026-11-15: Page text and tabs follow the flow flags: one hero and description text per flag combination, no USDT, no fee-free claim, closed flows have no tab.
