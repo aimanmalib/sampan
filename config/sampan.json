@@ -18,7 +18,7 @@
   "defaultToken": "PUSD",
   "features": {
     "musd": false,
-    "swap": false
+    "swap": true
   },
   "route": {
     "active": "none",
