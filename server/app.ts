@@ -3,6 +3,7 @@ import { publicConfig, type SampanConfig } from '../core/config.js';
 import { registerBroadcast } from './api/broadcast.js';
 import { registerCrossings } from './api/crossings.js';
 import { registerLanding } from './api/landing.js';
+import { registerOut } from './api/out.js';
 import { registerSwap } from './api/swap.js';
 import { registerWallet } from './api/wallet.js';
 import { registerSecurityHeaders } from './security.js';
@@ -45,6 +46,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   registerSwap(app, config, services);
   registerBroadcast(app, config, services);
   registerLanding(app, config, services);
+  registerOut(app, config, services);
   registerCrossings(app, config, services);
   if (options.startWatcher ?? true) services.watcher.start();
 

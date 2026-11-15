@@ -22,13 +22,15 @@
     "landing": true
   },
   "route": {
-    "active": "none",
+    "active": "thorchain",
     "symbols": ["USDC"]
   },
   "thorchain": {
     "nodes": ["https://gateway.liquify.com/chain/thorchain_api"],
     "chains": ["BASE"],
     "slippageBps": 150,
+    "timeoutMs": 8000,
+    "maxGasRate": 10,
     "affiliate": "",
     "affiliateBps": 0
   },
@@ -105,7 +107,8 @@
     "judgeLandBch": "0.001",
     "judgeSwapBch": "0.001",
     "judgeOutToken": { "near-intents": "0.50", "thorchain": "2.00" },
-    "routeMinUsd": { "near-intents": 0.5, "thorchain": 1.5 }
+    "routeMinUsd": { "near-intents": 0.5, "thorchain": 1.5 },
+    "feeWarnBps": 500
   },
   "fees": {
     "satsPerByte": 1,

@@ -36,6 +36,7 @@ export interface WireExpectation {
   poolOwnerPkhs: string[];
   deposits?: Array<{ lockingBytecode: string; sats: string }>;
   opReturn?: string;
+  thorDeposit?: boolean;
   spend: { sats: string; tokens: Record<string, string> };
   feeCapSats: string;
   receive: { category: string; min: string };
@@ -47,6 +48,7 @@ export const expectationFromWire = (w: WireExpectation): Expectation => ({
   poolOwnerPkhs: w.poolOwnerPkhs,
   ...(w.deposits ? { deposits: w.deposits.map((d) => ({ lockingBytecode: d.lockingBytecode, sats: BigInt(d.sats) })) } : {}),
   ...(w.opReturn !== undefined ? { opReturn: w.opReturn } : {}),
+  ...(w.thorDeposit ? { thorDeposit: true } : {}),
   spend: { sats: BigInt(w.spend.sats), tokens: Object.fromEntries(Object.entries(w.spend.tokens).map(([k, v]) => [k, BigInt(v)])) },
   feeCapSats: BigInt(w.feeCapSats),
   receive: { category: w.receive.category, min: BigInt(w.receive.min) },

@@ -1,0 +1,80 @@
+{
+  "tx": {
+    "id": "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB",
+    "chain": "BCH",
+    "from_address": "qqyuz8zh06c8h39guuedjpfvnlvjeg394ucvfe6ltt",
+    "to_address": "qre7hk63vp6jh6vrlt02swgn5pqvsr27j5hvr7tpj9",
+    "coins": [
+      {
+        "asset": "BCH.BCH",
+        "amount": "1000000"
+      }
+    ],
+    "gas": [
+      {
+        "asset": "BCH.BCH",
+        "amount": "900"
+      }
+    ],
+    "memo": "=:BASE.USDC:0x1a877169bB03400fA69EC4813889E78994D194Cb:181757716"
+  },
+  "planned_out_txs": [
+    {
+      "chain": "BASE",
+      "to_address": "0x1a877169bb03400fa69ec4813889e78994d194cb",
+      "coin": {
+        "asset": "BASE.USDC-0X833589FCD6EDB6E08F4C7C32D4F71B54BDA02913",
+        "amount": "184525600"
+      },
+      "refund": false
+    }
+  ],
+  "out_txs": [
+    {
+      "id": "0000000000000000000000000000000000000000000000000000000000000000",
+      "chain": "THOR",
+      "from_address": "thor1g98cy3n9mmjrpn0sxmn63lztelera37n8n67c0",
+      "to_address": "thor1dl7un46w7l7f3ewrnrm6nq58nerjtp0dradjtd",
+      "coins": [],
+      "gas": [],
+      "memo": "OUT:ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+    },
+    {
+      "id": "C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0",
+      "chain": "BASE",
+      "from_address": "0x4d39d5c55cfeb48f44d680fcac20493635dafdee",
+      "to_address": "0x1a877169bb03400fa69ec4813889e78994d194cb",
+      "coins": [
+        {
+          "asset": "BASE.USDC-0X833589FCD6EDB6E08F4C7C32D4F71B54BDA02913",
+          "amount": "184525600",
+          "decimals": 6
+        }
+      ],
+      "gas": [],
+      "memo": "OUT:ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+    }
+  ],
+  "stages": {
+    "inbound_observed": {
+      "final_count": 111,
+      "completed": true
+    },
+    "inbound_confirmation_counted": {
+      "remaining_confirmation_seconds": 0,
+      "completed": true
+    },
+    "inbound_finalised": {
+      "completed": true
+    },
+    "swap_status": {
+      "pending": false
+    },
+    "swap_finalised": {
+      "completed": true
+    },
+    "outbound_signed": {
+      "completed": true
+    }
+  }
+}

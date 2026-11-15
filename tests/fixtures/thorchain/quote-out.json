@@ -1,0 +1,29 @@
+{
+  "inbound_address": "qre7hk63vp6jh6vrlt02swgn5pqvsr27j5hvr7tpj9",
+  "inbound_confirmation_blocks": 1,
+  "inbound_confirmation_seconds": 600,
+  "outbound_delay_blocks": 0,
+  "outbound_delay_seconds": 0,
+  "fees": {
+    "asset": "BASE.USDC-0X833589FCD6EDB6E08F4C7C32D4F71B54BDA02913",
+    "affiliate": "0",
+    "outbound": "25020800",
+    "liquidity": "419700",
+    "total": "25440500",
+    "slippage_bps": 19,
+    "total_bps": 1082
+  },
+  "expiry": 1794775824,
+  "warning": "Do not cache this response. Do not send funds after the expiry. Rapid streaming time is a best-case estimate. Actual execution may take longer due to direction skipping, swap failures, or queue budget limits.",
+  "notes": "First output should be to inbound_address, second output should be change back to self, third output should be OP_RETURN, limited to 80 bytes. Do not send below the dust threshold. Do not use exotic spend scripts, locks or address formats.",
+  "dust_threshold": "10000",
+  "recommended_min_amount_in": "387501",
+  "recommended_gas_rate": "3",
+  "gas_rate_units": "satsperbyte",
+  "memo": "=:BASE.USDC:0x1a877169bB03400fA69EC4813889E78994D194Cb",
+  "expected_amount_out": "184525600",
+  "max_streaming_quantity": 1,
+  "streaming_swap_blocks": 1,
+  "streaming_swap_seconds": 6,
+  "total_swap_seconds": 606
+}

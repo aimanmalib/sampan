@@ -1,0 +1,33 @@
+[
+  {
+    "chain": "BASE",
+    "pub_key": "thorpub1addwnpepq0dvh7eefu93m7zlc8wkmwxexq3t7k5lanswqj9npl37rtp5l8msupg2wf8",
+    "address": "0x4d39d5c55cfeb48f44d680fcac20493635dafdee",
+    "router": "0x00dc6100103BC402d490aEE3F9a5560cBd91f1d4",
+    "halted": false,
+    "global_trading_paused": false,
+    "chain_trading_paused": false,
+    "chain_lp_actions_paused": false,
+    "observed_fee_rate": "100",
+    "gas_rate": "150",
+    "gas_rate_units": "mwei",
+    "outbound_tx_size": "100000",
+    "outbound_fee": "13633",
+    "dust_threshold": "1000"
+  },
+  {
+    "chain": "BCH",
+    "pub_key": "thorpub1addwnpepq0dvh7eefu93m7zlc8wkmwxexq3t7k5lanswqj9npl37rtp5l8msupg2wf8",
+    "address": "qpzlxtlf0kr3745ez3s5g2k4q648sj8l6grc7ktk5v",
+    "halted": false,
+    "global_trading_paused": false,
+    "chain_trading_paused": false,
+    "chain_lp_actions_paused": false,
+    "observed_fee_rate": "2",
+    "gas_rate": "3",
+    "gas_rate_units": "satsperbyte",
+    "outbound_tx_size": "1500",
+    "outbound_fee": "119064",
+    "dust_threshold": "10000"
+  }
+]

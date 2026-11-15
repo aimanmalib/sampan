@@ -1,5 +1,5 @@
 // checkTransaction: the browser's own review of a server-built transaction before any wallet sees it.
-// Pure, rules 1-5 of the product spec. Source outputs come from the server too, but wallets sign with
+// Pure, rules 1-6 of the product spec. Source outputs come from the server too, but wallets sign with
 // SIGHASH_UTXOS, so a lie about them makes every signature invalid rather than moving funds.
 import { binToHex, type Output } from '@bitauth/libauth';
 import { poolV0LockingHex } from './pools/template.js';
@@ -18,6 +18,8 @@ export interface Expectation {
   deposits?: Array<{ lockingBytecode: string; sats: bigint }>;
   /** Expected OP_RETURN output (hex locking bytecode), byte for byte. */
   opReturn?: string;
+  /** THORChain deposit (rule 6): vault, change to input 0's address, memo; plain user coins only. */
+  thorDeposit?: boolean;
   /** What the user was shown as leaving the wallet. */
   spend: { sats: bigint; tokens: Record<string, bigint> };
   feeCapSats: bigint;
@@ -25,10 +27,12 @@ export interface Expectation {
   receive: { category: string; min: bigint };
 }
 
-export type CheckResult = { ok: true } | { ok: false; rule: 1 | 2 | 3 | 4 | 5; reason: string };
+export type Rule = 1 | 2 | 3 | 4 | 5 | 6;
+export type CheckResult = { ok: true } | { ok: false; rule: Rule; reason: string };
 
-const fail = (rule: 1 | 2 | 3 | 4 | 5, reason: string): CheckResult => ({ ok: false, rule, reason });
+const fail = (rule: Rule, reason: string): CheckResult => ({ ok: false, rule, reason });
 const hex = (b: Uint8Array): string => binToHex(b);
+const P2PKH = /^76a914[0-9a-f]{40}88ac$/;
 const catOf = (o: Output): string | undefined => (o.token ? hex(o.token.category) : undefined);
 
 interface Flow {
@@ -41,6 +45,23 @@ const addFlow = (f: Flow, o: Output, sign: 1n | -1n): void => {
   if (c && o.token) f.tokens.set(c, (f.tokens.get(c) ?? 0n) + sign * o.token.amount);
 };
 
+/** Rule 6: the exact output order THORChain reads, and nothing but plain coins of this user going in. */
+function depositShape(tx: Tx, sourceOutputs: Output[], e: Expectation, signed: Map<number, string>): string | undefined {
+  if (tx.outputs.length !== 3) return 'a deposit has exactly three outputs';
+  const [vault, change, memo] = tx.outputs as [Output, Output, Output];
+  const first = sourceOutputs[0];
+  if (!first || !(e.deposits ?? []).some((d) => d.lockingBytecode.toLowerCase() === hex(vault.lockingBytecode)))
+    return 'output 0 is not the quoted vault';
+  if (hex(change.lockingBytecode) !== hex(first.lockingBytecode)) return "output 1 does not return change to input 0's address";
+  if (e.opReturn === undefined || hex(memo.lockingBytecode) !== e.opReturn.toLowerCase()) return 'output 2 is not the expected memo';
+  for (const [i, src] of sourceOutputs.entries()) {
+    if (!signed.has(i)) return `input ${i} is not the user's own coin`;
+    if (src.token) return `input ${i} carries a token`;
+    if (!P2PKH.test(hex(src.lockingBytecode))) return `input ${i} is not a plain P2PKH coin`;
+  }
+  return undefined;
+}
+
 export const checkTransaction = (tx: Tx, sourceOutputs: Output[], e: Expectation): CheckResult => {
   if (tx.version !== 2) return fail(5, 'transaction version is not 2');
   if (tx.locktime !== 0) return fail(5, 'locktime is not 0');
@@ -52,6 +73,11 @@ export const checkTransaction = (tx: Tx, sourceOutputs: Output[], e: Expectation
   for (const p of e.inputPaths) {
     if (signed.has(p.inputIndex)) return fail(5, `input ${p.inputIndex} listed twice`);
     signed.set(p.inputIndex, p.path);
+  }
+
+  if (e.thorDeposit) {
+    const shape = depositShape(tx, sourceOutputs, e, signed);
+    if (shape) return fail(6, shape);
   }
 
   // Rule 5: every input is a pool spent through its exchange path or a listed coin of this user.

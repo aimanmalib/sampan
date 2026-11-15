@@ -8,7 +8,25 @@ import { ApiError, quoteLimit, sendError } from './guard.js';
 
 const ID_PARAMS = { type: 'object', required: ['id'], properties: { id: { type: 'string', pattern: '^[0-9a-f]{32}$' } } } as const;
 
-function view(s: Services, id: string): Record<string, unknown> {
+const STAGE_STATUS = { done: 'completed', refunded: 'refunded' } as const;
+
+/** A crossing out: ask the route how far it got and keep a final answer on the row. */
+async function outStage(s: Services, id: string): Promise<Record<string, unknown> | undefined> {
+  const row = s.db.getCrossing(id);
+  if (!row?.txid || !s.route) return undefined;
+  try {
+    const st = await s.route.status(row.txid);
+    const final = st.stage === 'done' || st.stage === 'refunded' ? STAGE_STATUS[st.stage] : undefined;
+    if (final && row.status !== final) s.db.updateCrossing(id, { status: final });
+    return { stage: st.stage, outTxid: st.outTxid ?? null, outChain: st.outChain ?? null };
+  } catch {
+    return { stage: 'unknown', outTxid: null, outChain: null };
+  }
+}
+
+async function view(s: Services, id: string): Promise<Record<string, unknown>> {
+  const first = s.db.getCrossing(id);
+  const out = first?.kind === 'out' ? await outStage(s, id) : undefined;
   const row = s.db.getCrossing(id);
   if (!row) throw new ApiError(404, 'not_found', 'unknown crossing');
   const base = {
@@ -21,6 +39,7 @@ function view(s: Services, id: string): Record<string, unknown> {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+  if (row.kind === 'out') return { ...base, route: row.route, out: out ?? null };
   if (row.kind !== 'land') return base;
   const l = s.db.landingOf(row.id);
   return {
@@ -38,7 +57,7 @@ function view(s: Services, id: string): Record<string, unknown> {
 export function registerCrossings(app: FastifyInstance, config: SampanConfig, s: Services): void {
   app.get<{ Params: { id: string } }>('/api/crossings/:id', { schema: { params: ID_PARAMS } }, async (req, reply) => {
     try {
-      return view(s, req.params.id);
+      return await view(s, req.params.id);
     } catch (e) {
       return sendError(reply, e);
     }
@@ -50,7 +69,7 @@ export function registerCrossings(app: FastifyInstance, config: SampanConfig, s:
       const row = s.db.getCrossing(req.params.id);
       if (!row) throw new ApiError(404, 'not_found', 'unknown crossing');
       if (row.kind === 'land') await s.watcher.kick(row.id);
-      return view(s, row.id);
+      return await view(s, row.id);
     } catch (e) {
       return sendError(reply, e);
     }

@@ -15,6 +15,9 @@ import { httpFetchActive, PoolDirectory, type FetchActive, type IndexerPool } fr
 import { refreshPools } from './pools.js';
 import { RateLimiter } from './rate.js';
 import { Scanner } from './scan.js';
+import { OutService } from './out.js';
+import { createRoute } from './routes/index.js';
+import type { Route } from './routes/types.js';
 import { SwapService } from './swap.js';
 
 export interface Services {
@@ -23,6 +26,9 @@ export interface Services {
   pools: PoolDirectory;
   scanner: Scanner;
   swaps: SwapService;
+  /** The active cross-chain route and "Send out", or null when route.active is none. */
+  route: Route | null;
+  outs: OutService | null;
   landings: LandingService;
   /** In-process finisher for landing addresses; started by the app. */
   watcher: LandingWatcher;
@@ -105,12 +111,16 @@ export function createServices(o: ServiceOptions): Services {
     }),
   );
   const db = new Db(o.dbFile);
+  const swaps = new SwapService({ config, chain, pools, prefix });
+  const route = createRoute(config, o.fake);
   return {
     prefix,
     chain,
     pools,
     scanner,
-    swaps: new SwapService({ config, chain, pools, prefix }),
+    swaps,
+    route,
+    outs: route ? new OutService({ config, route, swaps, chain, prefix }) : null,
     landings: new LandingService({ config, chain, pools, db, prefix, testLocks }),
     watcher: new LandingWatcher({
       config,

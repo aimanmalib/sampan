@@ -2,6 +2,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { SampanConfig } from '../../core/config.js';
 import { ChainUnavailableError } from '../chain/types.js';
+import { RouteError } from '../routes/types.js';
 import { ScanInputError } from '../scan.js';
 import type { Services } from '../services.js';
 import { SwapError } from '../swap.js';
@@ -38,9 +39,12 @@ const SWAP_STATUS: Record<SwapError['code'], number> = {
   build_failed: 502,
 };
 
+const ROUTE_STATUS: Record<RouteError['code'], number> = { bad_request: 400, below_route_min: 400, route_paused: 503, route_unavailable: 503 };
+
 export function sendError(reply: FastifyReply, e: unknown): FastifyReply {
   if (e instanceof ApiError) return reply.code(e.status).send({ error: e.code, message: e.message });
   if (e instanceof SwapError) return reply.code(SWAP_STATUS[e.code]).send({ error: e.code, message: e.message });
+  if (e instanceof RouteError) return reply.code(ROUTE_STATUS[e.code]).send({ error: e.code, message: e.message });
   if (e instanceof ScanInputError) return reply.code(400).send({ error: 'bad_request', message: e.message });
   if (e instanceof ChainUnavailableError) return reply.code(503).send({ error: 'chain_unavailable', message: 'Bitcoin Cash servers are not answering' });
   if (e instanceof Error && /indexer/i.test(e.message)) return reply.code(503).send({ error: 'pools_unavailable', message: 'Cauldron pools are not available' });

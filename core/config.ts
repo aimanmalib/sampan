@@ -27,7 +27,16 @@ export interface SampanConfig {
   /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
   features: { musd: boolean; swap: boolean; landing: boolean };
   route: { active: ActiveRoute; symbols: string[] };
-  thorchain: { nodes: string[]; chains: string[]; slippageBps: number; affiliate: string; affiliateBps: number };
+  thorchain: {
+    nodes: string[];
+    chains: string[];
+    slippageBps: number;
+    timeoutMs: number;
+    /** Highest deposit fee rate (sat/byte) a quote may ask for; also the rate used to reserve fees. */
+    maxGasRate: number;
+    affiliate: string;
+    affiliateBps: number;
+  };
   oneClick: {
     baseUrl: string;
     chains: string[];
@@ -86,6 +95,8 @@ export interface SampanConfig {
     judgeSwapBch: string;
     judgeOutToken: Record<RouteId, string>;
     routeMinUsd: Record<RouteId, number>;
+    /** Above this share of the amount, the page says fees are high and suggests a larger amount. */
+    feeWarnBps: number;
   };
   fees: { satsPerByte: number; capSats: number };
   rate: { quotesPerMinute: number; crossingsPerHour: number; cloudflareCidrs: string[] };
@@ -107,6 +118,8 @@ export interface PublicConfig {
   defaultToken: string;
   features: SampanConfig['features'];
   route: SampanConfig['route'];
+  /** Destination chains the active route carries (keys of evm.chains). */
+  routeChains: string[];
   evm: { chains: EvmChainConfig[]; walletConnect: boolean };
   limits: SampanConfig['limits'];
   landing: Pick<SampanConfig['landing'], 'toleranceBpsDirect' | 'returnAfterBlocks' | 'validHours' | 'pagePollSeconds'>;
@@ -131,6 +144,7 @@ export function validateConfig(c: SampanConfig): string[] {
   const need = (ok: boolean, message: string): void => {
     if (!ok) errors.push(message);
   };
+  const posInt = (v: number): boolean => Number.isInteger(v) && v > 0;
 
   const tokens = Object.entries(c.tokens ?? {});
   need(tokens.length > 0, 'tokens: at least one token');
@@ -142,6 +156,7 @@ export function validateConfig(c: SampanConfig): string[] {
   need(Boolean(c.tokens?.[c.defaultToken]), 'defaultToken: must name a configured token');
   need(ROUTES.includes(c.route?.active), 'route.active: none, near-intents or thorchain');
   need(c.thorchain.nodes.length > 0 && c.thorchain.nodes.every(isHttpsUrl), 'thorchain.nodes: https URLs');
+  need(posInt(c.thorchain.timeoutMs) && posInt(c.thorchain.maxGasRate), 'thorchain.timeoutMs, maxGasRate: positive integers');
   need(c.oneClick.baseUrl === '' || isHttpsUrl(c.oneClick.baseUrl), 'oneClick.baseUrl: empty or an https URL');
   need(c.route.active !== 'near-intents' || c.oneClick.baseUrl !== '', 'oneClick.baseUrl: required for near-intents');
   need(c.cauldron.indexers.length > 0 && c.cauldron.indexers.every(isHttpsUrl), 'cauldron.indexers: https URLs');
@@ -160,13 +175,13 @@ export function validateConfig(c: SampanConfig): string[] {
     c.cauldron.outSafetyBps,
     c.landing.toleranceBps,
     c.landing.toleranceBpsDirect,
+    c.limits.feeWarnBps,
   ];
   need(bps.every((v) => Number.isInteger(v) && v >= 0 && v < 10000), 'basis points: integers from 0 to 9999');
   need(c.limits.minUsd > 0 && c.limits.maxUsd > c.limits.minUsd, 'limits: 0 < minUsd < maxUsd');
   need(Number.isInteger(c.limits.localMinSats) && c.limits.localMinSats > 0, 'limits.localMinSats: positive integer');
   need(c.fees.satsPerByte >= 1, 'fees.satsPerByte: at least 1');
   need(Number.isInteger(c.fees.capSats) && c.fees.capSats >= 1000, 'fees.capSats: integer, at least 1000');
-  const posInt = (v: number): boolean => Number.isInteger(v) && v > 0;
   need(posInt(c.cauldron.cacheSeconds) && posInt(c.cauldron.buildAttempts), 'cauldron.cacheSeconds, buildAttempts: positive integers');
   need(posInt(c.cauldron.maxPoolsPerTx), 'cauldron.maxPoolsPerTx: positive integer');
   need(
@@ -235,6 +250,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     defaultToken: c.defaultToken,
     features: c.features,
     route: c.route,
+    routeChains: c.route.active === 'thorchain' ? c.thorchain.chains : c.route.active === 'near-intents' ? c.oneClick.chains.map((k) => k.toUpperCase()) : [],
     evm: { chains: c.evm.chains, walletConnect: c.evm.walletConnectProjectId !== '' },
     limits: c.limits,
     landing: {
