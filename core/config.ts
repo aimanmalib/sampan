@@ -91,7 +91,8 @@ export interface SampanConfig {
   rate: { quotesPerMinute: number; crossingsPerHour: number; cloudflareCidrs: string[] };
   compliance: { blockedCountries: string[]; crossChainEnabled: boolean };
   banner: { deckUrl: string; repoUrl: string; tokenAddress: string; note: boolean };
-  site: { noindex: boolean; feedbackUrl: string };
+  /** `url` is the public origin; `ogImage` is the link preview picture under web/public. */
+  site: { url: string; noindex: boolean; feedbackUrl: string; ogImage: string };
   ops: {
     healthIntervalSeconds: number;
     /** Addresses of the project's own test wallet: their crossings are counted as `test`, not `public`. */
@@ -192,6 +193,8 @@ export function validateConfig(c: SampanConfig): string[] {
   need(c.ops.testAddresses.every((a) => a.startsWith('bitcoincash:') || a.startsWith('bchtest:')), 'ops.testAddresses: cash addresses');
   need(c.ops.healthIntervalSeconds >= 30, 'ops.healthIntervalSeconds: at least 30');
   need(c.compliance.blockedCountries.every((cc) => /^[A-Z]{2}$/.test(cc)), 'compliance.blockedCountries: ISO codes');
+  need(isHttpsUrl(c.site.url) && !c.site.url.endsWith('/'), 'site.url: https origin without a trailing slash');
+  need(/^\/[\w.-]+\.png$/.test(c.site.ogImage), 'site.ogImage: a /name.png path under web/public');
   for (const url of [c.banner.deckUrl, c.banner.repoUrl, c.site.feedbackUrl]) {
     need(url === '' || isHttpsUrl(url) || url.startsWith('/'), `URL must be empty, a path or https: ${url}`);
   }

@@ -133,8 +133,10 @@
     "note": true
   },
   "site": {
+    "url": "https://sampan.sasateguh.com",
     "noindex": true,
-    "feedbackUrl": ""
+    "feedbackUrl": "",
+    "ogImage": "/og.png"
   },
   "ops": {
     "healthIntervalSeconds": 600,

@@ -37,6 +37,15 @@ describe('validateConfig', () => {
     expect(Object.values(normalizeConfig(c).tokens)[0]!.category).toBe('ab'.repeat(32));
   });
 
+  it('rejects a site origin with a trailing slash and a preview picture that is not a PNG path', () => {
+    const c = clone();
+    c.site.url = 'https://example.test/';
+    c.site.ogImage = 'og.jpg';
+    const errors = validateConfig(c).join();
+    expect(errors).toMatch(/site\.url/);
+    expect(errors).toMatch(/site\.ogImage/);
+  });
+
   it('rejects an unknown route and a default token that is not configured', () => {
     const c = clone();
     (c.route as { active: string }).active = 'other';

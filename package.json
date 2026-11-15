@@ -26,7 +26,8 @@
     "test-wallet:send": "tsx tools/test-wallet/send.ts",
     "contracts:build": "cashc contracts/landing.cash -o contracts/landing.json",
     "verify-landing": "tsx scripts/verify-landing.ts",
-    "finisher": "tsx scripts/finisher.ts"
+    "finisher": "tsx scripts/finisher.ts",
+    "og-image": "tsx tools/og-image.tsx"
   },
   "dependencies": {
     "@bitauth/libauth": "3.1.0-next.6",
