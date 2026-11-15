@@ -24,3 +24,4 @@ One line per step, newest last.
 - 2026-11-15: Route B (THORChain) behind one Route interface, fixture-tested THORNode client with node failover, our own limit in the memo, the 3-output deposit and checkTransaction rule 6; Send out tab (two signatures from PUSD) and its status page, hidden while cross-chain is off; ADR 0013.
 - 2026-11-15: EVM wallet (EIP-6963), exact-approval router deposit and Bring in from Base behind the cross-chain flag; fake-provider tests on both engines (ADR 0014).
 - 2026-11-15: Bring in refuses a plan altered between server and page (memo address, limit, token, amount, landing card terms) before any wallet call; each check pinned by a test.
+- 2026-11-15: Selene web checked against the live site: paired through WizardConnect and signed one swap each way on mainnet; rows and a Wallets checked entry in MEASURED.

@@ -24,12 +24,16 @@
 | 2026-11-15T19:25:21Z | land | 0.001 BCH to 0.20 PUSD (plain payment) | 418fe0c9d58fcb671e9d5cda5fd40c081be9f9496a114a59142048fa19375b6d | 4.0 | ok |
 | 2026-11-15T19:25:30Z | land | 0.001 BCH to 0.20 PUSD (plain payment) | f75dbacac674f8d835e69d245ccb8100181bea8f1ec5bd4cafb6e2901de2c7fe | 3.0 | ok |
 | 2026-11-15T20:13:04Z | giveBack | 0.003 BCH back to the owner as 299776 sats (minimum rate out of reach, after 6 blocks) | 5671fd920b3a3c74d322b23250d31a33326452e28528236227f0c89f3a585ba6 | 2800.4 | ok |
+| 2026-11-15T21:44:02Z | swap | 0.001 BCH to at least 0.19 PUSD (Selene web) | f9c4f0f3ce552d5f4e70c0500968d26791904fe22fe5e2d5b452a17215844e44 | 4.1 | ok |
+| 2026-11-15T21:44:10Z | swap | 0.2 PUSD to at least 0.00095011 BCH (Selene web) | 600b815b45d36066daadbf8f42b75ea16a5eeb03ba2eeba5e711afbcfa38e389 | 3.9 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from
 pressing Swap to the page showing the broadcast transaction. Rows marked "Cashonize web" were signed by a fresh
 Cashonize web wallet (cashonize.com) in an automated browser instead of the test wallet; the first of them has no
 time because the script paused before pressing Sign.
+Rows marked "Selene web" were signed by a fresh Selene web wallet (app.selene.cash) in an automated browser on the
+live site; their time includes the script pressing Approve in Selene as soon as the request appeared.
 
 ### Landing address runs
 
@@ -76,3 +80,4 @@ same BCH and token amounts.
 |---|---|---|
 | Sampan test wallet (`@wizardconnect/wallet` 0.2.4, headless) | mainnet, paired through the page | 12 swaps broadcast (table above) |
 | Cashonize web (cashonize.com, 2026-11-15) | fresh wallet in automated Chromium, link pasted in its Connect tab | paired, xpubs shared, coins found; showed the page's one-sentence prompt and the balance change; signed both directions (2 swaps above) |
+| Selene web (app.selene.cash, version 2026.10.02, 2026-11-15) | fresh wallet in automated Chromium, link pasted in its WizardConnect app, against the live site | paired after its "Connect to Sampan?" question, coins found; the signature request showed the page's one-sentence prompt, the net balance change and every output, with PUSD shown by its short token id (2469ac) because its token metadata request failed in that browser; signed both directions (2 swaps above); the balance was then sent back to the test wallet |
