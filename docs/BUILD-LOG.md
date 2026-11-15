@@ -14,3 +14,4 @@ One line per step, newest last.
 - 2026-11-14: Page swap tab: WizardConnect session with an own pairing dialog, wallet scan from xpubs, quote, build, browser-written expectation checked before signing, broadcast with rebuild, status page, headless test wallet with budget, offline e2e in Chromium and WebKit (flow flagged off until measured).
 - 2026-11-15: Measured mainnet swaps through the page and the headless test wallet; pool locks rebuilt from owner_pkh match the chain; broadcast waits for the Electrum index; test wallet sells fixed; swap tab switched on.
 - 2026-11-15: Cashonize web signed both swap directions on mainnet through the page; wallet scan cache cut to 30 seconds; test wallet can pay plain BCH within its budget.
+- 2026-11-15: Landing contract (convert and giveBack) with its compiled artifact, address computed in core and checked against CashScript, recovery card, verify-landing and finisher scripts, contract tests on the mock network.
