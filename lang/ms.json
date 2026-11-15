@@ -123,7 +123,6 @@
   "land.prompt": "Bayar {amount} BCH ke alamat pendaratan Sampan anda",
   "land.paid": "Sudah dibayar. Membawa anda ke halaman status.",
   "judge.title": "Menjadi juri? Satu transaksi mainnet sebenar dalam kira-kira seminit.",
-  "judge.short": "Menjadi juri?",
   "judge.step1": "Sambung Selene, Paytaca atau Cashonize dengan WizardConnect.",
   "judge.step2": "Bayar {amount} BCH ke alamat pendaratan anda. Ia tiba sebagai {symbol} dengan sendirinya.",
   "judge.fill": "Isikan untuk saya",

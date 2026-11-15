@@ -1,0 +1,65 @@
+// PRD 4.10 first-screen rule on the page that shows every part of it (landing flow on, so the judge strip is drawn):
+// without scrolling, the headline, the boat picture with both labelled banks, the judge strip with Fill, the card's
+// tabs and its one primary button are fully in view, in English and Malay, on an iPhone 13 and two desktop sizes.
+// After "Fill this in for me" the primary button is still in view without scrolling.
+import { expect, test, type Page } from '@playwright/test';
+import en from '../lang/en.json' with { type: 'json' };
+import ms from '../lang/ms.json' with { type: 'json' };
+
+test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server with the landing flow on');
+const landingPort = Number(process.env.E2E_PORT ?? 4173) + 1;
+test.use({ baseURL: `http://127.0.0.1:${landingPort}` });
+
+const LANGS = { en, ms } as const;
+const DESKTOP_SIZES = [
+  { width: 1440, height: 900 },
+  { width: 1280, height: 720 },
+];
+
+/** Fails unless the element is laid out and lies fully between the top and bottom of the viewport. */
+async function inView(page: Page, selector: string, label: string): Promise<void> {
+  const height = page.viewportSize()?.height ?? 0;
+  const box = await page.locator(selector).first().boundingBox();
+  expect(box, `${label}: ${selector} is laid out`).not.toBeNull();
+  expect(box!.y, `${label}: ${selector} top`).toBeGreaterThanOrEqual(0);
+  expect(box!.y + box!.height, `${label}: ${selector} bottom at ${height}px high`).toBeLessThanOrEqual(height);
+}
+
+/** With E2E_SHOTS_DIR set, saves the first screen (viewport only) for review. */
+async function shot(page: Page, name: string): Promise<void> {
+  const dir = process.env.E2E_SHOTS_DIR;
+  if (dir) await page.screenshot({ path: `${dir}/sampan-first-screen-${name}.png` });
+}
+
+for (const [lang, text] of Object.entries(LANGS)) {
+  test(`first screen holds headline, picture, judge strip, tabs and one primary button (${lang})`, async ({ page }, info) => {
+    const sizes = info.project.name.includes('desktop') ? DESKTOP_SIZES : [null];
+    await page.addInitScript((value) => localStorage.setItem('sampan.lang', value), lang);
+    for (const size of sizes) {
+      if (size) await page.setViewportSize(size);
+      const viewport = page.viewportSize()!;
+      const label = `${info.project.name} ${viewport.width}x${viewport.height} ${lang}`;
+      await page.goto('/');
+      await expect(page.locator('h1')).toHaveText(text['hero.title']);
+      await expect(page.locator('.judge__fill')).toHaveText(text['judge.fill']);
+      await expect(page.locator('.button--primary')).toHaveCount(1);
+      // Measure the card as a visitor sees it: with the price line filled in (it adds a line once the quote arrives).
+      await expect(page.locator('.swap__receive')).toContainText(/\d/, { timeout: 10_000 });
+      await expect(page.locator('figure.scene').getByText(text['scene.left'], { exact: true })).toBeVisible();
+      await expect(page.locator('figure.scene').getByText(text['scene.right'], { exact: true })).toBeVisible();
+      await expect(page.locator('.judge__title')).toHaveText(text['judge.title']);
+      for (const selector of ['h1', 'figure.scene', '.judge__title', '.judge__fill', '[role=tablist]', '.button--primary']) {
+        await inView(page, selector, label);
+      }
+      expect(await page.evaluate(() => window.scrollY), `${label}: no scroll`).toBe(0);
+      await shot(page, `${info.project.name}-${viewport.width}-${lang}`);
+
+      await page.locator('.judge__fill').click();
+      await expect(page.getByRole('tab', { name: text['tabs.in'] })).toHaveAttribute('aria-selected', 'true');
+      await expect(page.locator('.button--primary')).toHaveCount(1);
+      await inView(page, '.button--primary', `${label} after Fill`);
+      expect(await page.evaluate(() => window.scrollY), `${label}: no scroll after Fill`).toBe(0);
+      await shot(page, `${info.project.name}-${viewport.width}-${lang}-filled`);
+    }
+  });
+}

@@ -44,9 +44,7 @@ test('judge path: fill, connect, get the landing address, pay from the wallet, s
   await expect(page.getByRole('tab')).toHaveCount(2);
   await expect(page.locator('.judge__title')).toBeVisible();
   await shot(page, errors, 'front', info.project.name);
-  // Phones show the short title in one row; wide screens show the full one.
-  const phone = info.project.name.includes('iphone');
-  await expect(page.locator('.judge__title')).toHaveAccessibleName(phone ? en['judge.short'] : en['judge.title']);
+  await expect(page.locator('.judge__title')).toHaveText(en['judge.title']);
   await page.getByRole('button', { name: en['judge.fill'] }).click();
   await expect(page.getByRole('tab', { name: en['tabs.in'] })).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByText(en['land.source'], { exact: true })).toBeVisible();
@@ -80,38 +78,12 @@ test('judge path: fill, connect, get the landing address, pay from the wallet, s
   await shot(page, errors, 'status', info.project.name);
 });
 
-/** Bottom edge of an element in CSS pixels, failing when it is not laid out. */
-async function bottom(page: Page, selector: string): Promise<number> {
-  const box = await page.locator(selector).first().boundingBox();
-  expect(box, selector).not.toBeNull();
-  return box ? box.y + box.height : Infinity;
-}
-
-test('the picture, judge strip and card primary button are on the first screen, also after Fill', async ({ page }, info) => {
-  const sizes = info.project.name.includes('desktop') ? [{ width: 1440, height: 900 }, { width: 1280, height: 720 }] : [null];
-  for (const size of sizes) {
-    if (size) await page.setViewportSize(size);
-    await page.goto('/');
-    await expect(page.locator('.judge__fill')).toBeVisible();
-    await expect(primary(page)).toHaveCount(1);
-    const height = page.viewportSize()?.height ?? 0;
-    // PRD 4.10: the boat with its two labelled banks is part of the first screen, next to H1, card and strip.
-    for (const selector of ['h1', '.scene', '.judge__fill', '.button--primary']) {
-      expect(await bottom(page, selector), `${selector} at ${height}px high`).toBeLessThanOrEqual(height);
-    }
-    // The no-wallet hint lives in the landing panel only, not in the strip as well.
-    await expect(page.locator('.judge').getByText(en['land.noWallet'])).toHaveCount(0);
-    await noHorizontalOverflow(page);
-    // After Fill the next step (the one primary button) is fully in view.
-    await page.locator('.judge__fill').click();
-    await expect(primary(page)).toHaveText(en['wallet.connect']);
-    await expect(async () => {
-      const box = await primary(page).boundingBox();
-      expect(box).not.toBeNull();
-      expect(box!.y).toBeGreaterThanOrEqual(0);
-      expect(box!.y + box!.height).toBeLessThanOrEqual(height);
-    }).toPass({ timeout: 2_000 });
-  }
+// The first-screen rule (headline, picture, strip, card, primary button above the fold) lives in first-screen.spec.ts.
+test('the no-wallet hint is in the landing panel only, not in the judge strip as well', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('.judge__fill')).toBeVisible();
+  await expect(page.locator('.judge').getByText(en['land.noWallet'])).toHaveCount(0);
+  await noHorizontalOverflow(page);
 });
 
 test('opened judge steps at 320 px take the full row and Fill sits below them', async ({ page }) => {

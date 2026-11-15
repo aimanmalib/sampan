@@ -129,7 +129,6 @@ export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
           </label>
         )}
         {!view && ownerText.trim() !== '' && !ownerOk ? <p className="swap__error">{t('land.err.owner')}</p> : null}
-        <p className="card__note">{t('land.promise', { symbol: token.symbol, pct: String(config.landing.toleranceBpsDirect / 100) })}</p>
         {error ? (
           <p className="swap__error" role="alert">
             {t(error, { min: vars.min, max: String(config.limits.maxUsd) })}
@@ -138,6 +137,8 @@ export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
         <button type="button" className="button button--primary" disabled={primary.disabled} onClick={primary.onClick}>
           {primary.label}
         </button>
+        {/* The promise sits under the one button so the next step stays on the first screen after Fill. */}
+        <p className="card__note">{t('land.promise', { symbol: token.symbol, pct: String(config.landing.toleranceBpsDirect / 100) })}</p>
       </div>
     );
   }
