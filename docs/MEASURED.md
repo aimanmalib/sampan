@@ -18,10 +18,14 @@
 | 2026-11-15T12:55:50Z | swap | 0.4 PUSD to at least 0.00188821 BCH | 35b4f68d212b93df1089951cd998115dbf708a046b323a0b3b479c27911c92d4 | 2.9 | ok |
 | 2026-11-15T12:55:55Z | swap | 0.001 BCH to at least 0.19 PUSD | 11ab321b49204daad4187444e07b1d0e000fdc8281cfcfa68716f83fda7575fe | 2.9 | ok |
 | 2026-11-15T12:56:00Z | swap | 0.2 PUSD to at least 0.00094411 BCH | dd1b6c416a19acb5371674cdd5ba179d00067d625c2d1f30751d9a8771adb2df | 2.9 | ok |
+| 2026-11-15T13:15:08Z | swap | 0.001 BCH to at least 0.19 PUSD (Cashonize web) | b05c33b32fc4aacd371325b8fb9c73b7067ef030c20b3b5d4d6d84adcd221a50 | - | ok |
+| 2026-11-15T13:16:02Z | swap | 0.2 PUSD to at least 0.00094423 BCH (Cashonize web) | 26f9aab0dc21774ab687e0f3a9ceb04fd3d03d7b0501e73190064c44eecc4398 | 2.8 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from
-pressing Swap to the page showing the broadcast transaction.
+pressing Swap to the page showing the broadcast transaction. Rows marked "Cashonize web" were signed by a fresh
+Cashonize web wallet (cashonize.com) in an automated browser instead of the test wallet; the first of them has no
+time because the script paused before pressing Sign.
 
 ### Notes on failed runs
 
@@ -31,6 +35,9 @@ pressing Swap to the page showing the broadcast transaction.
 - Before those rows, a stale wallet balance after a swap was traced to the Electrum server answering the broadcast
   before its index listed the new outputs. The server now waits for the index (`electrum.indexWaitMs`) before it
   answers the broadcast.
+- During the Cashonize check, a wallet funded after its first scan still showed 0 BCH on the next connect: the
+  server kept the empty result for its 10 minute scan cache. The cache is now 30 seconds (`wallet.scanCacheSeconds`,
+  at most 60 by config validation).
 
 ## Pool locks rebuilt from owner_pkh
 
@@ -49,3 +56,4 @@ same BCH and token amounts.
 | Wallet | How | Result |
 |---|---|---|
 | Sampan test wallet (`@wizardconnect/wallet` 0.2.4, headless) | mainnet, paired through the page | 12 swaps broadcast (table above) |
+| Cashonize web (cashonize.com, 2026-11-15) | fresh wallet in automated Chromium, link pasted in its Connect tab | paired, xpubs shared, coins found; showed the page's one-sentence prompt and the balance change; signed both directions (2 swaps above) |

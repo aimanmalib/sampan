@@ -18,14 +18,20 @@ Gate G1 asks for three consecutive BCH to PUSD to BCH swaps on mainnet through t
   are in `docs/MEASURED.md`.
 - **Sign request shape.** The page sends hdwalletv1 `sign_transaction_request` with the unsigned transaction as hex, the source
   outputs in the relay encoding, `broadcast: false`, a one-sentence `userPrompt`, and input paths. The reference wallet library
-  (`@wizardconnect/wallet`, used by the test wallet) signed every request on mainnet in this shape. Real wallets (Cashonize web,
-  Paytaca on a phone) are recorded in the "Wallets checked" table as they are tried.
+  (`@wizardconnect/wallet`, used by the test wallet) signed every request on mainnet in this shape, and so did Cashonize web
+  (a fresh wallet in automated Chromium, funded with 0.003 BCH by `npm run test-wallet:send` and emptied back afterwards). Cashonize
+  showed the `userPrompt` sentence and its own balance change. Hex stays the shape; no object form is needed. Paytaca on a phone is
+  the owner's check. Selene is a phone app and is not run in an automated browser.
 - **The broadcast answer waits for the index.** A Fulcrum server accepts a broadcast before its own index lists the new outputs,
   so the page's rescan straight after a swap read the old coins and the server cached them. `/api/broadcast` now polls
   `listunspent` for one output of the new transaction for up to `electrum.indexWaitMs` (every `electrum.indexPollMs`) before it
   answers. When the time runs out it answers anyway; the balance then catches up on the next scan.
 - **Test wallet policy.** The `BCH` receive marker is kept as is; only token ids are lowercased. Before this fix the test wallet
   refused every sell (two recorded failures, nothing sent).
+- **Wallet scan cache: 30 seconds, at most 60.** With 10 minutes, a wallet funded after its first scan still showed 0 BCH on
+  the next connect. Config validation now refuses more than 60 seconds.
+- **Test wallet payments.** `tools/test-wallet/send.ts` pays plain BCH from the test wallet (largest coins first, tokens never
+  touched, VM check before broadcast, same budget and ledger as signing).
 - **Swap tab switched on** (`features.swap: true`) after the measured runs.
 
 ## Consequences
