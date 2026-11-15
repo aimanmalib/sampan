@@ -6,12 +6,13 @@
 // included, and the run stops at the first failure. The test wallet signs only what passes checkTransaction
 // against what the page showed and stays inside state/budget.json.
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { chromium, type Page } from '@playwright/test';
 import { BCH } from '../../core/check.js';
 import { formatUnits, parseUnits } from '../../core/wallet.js';
 import { loadConfig } from '../../server/config.js';
 import { appendRuns, type Run } from './runs.js';
+import { CLIPBOARD_SPY, startServer, waitHealthy } from './server.js';
 
 const arg = (name: string, fallback: string): string => {
   const i = process.argv.indexOf(name);
@@ -29,26 +30,8 @@ const config = loadConfig('config/sampan.json');
 const token = config.tokens[config.defaultToken]!;
 const category = token.category.toLowerCase();
 
-// Swap tab on; rate limits lifted because every request of the run comes from one local address.
-const SERVER_PATCH = { features: { swap: true }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } };
-
-function startServer(): ChildProcess {
-  mkdirSync('state/measure-data', { recursive: true });
-  const child = spawn('node', ['dist/server/main.js'], {
-    env: { ...process.env, PORT: String(PORT), HOST: '127.0.0.1', SAMPAN_DATA: 'state/measure-data', SAMPAN_CONFIG_PATCH: JSON.stringify(SERVER_PATCH) },
-    stdio: ['ignore', 'ignore', 'inherit'],
-  });
-  return child;
-}
-
-async function waitHealthy(): Promise<void> {
-  for (let i = 0; i < 60; i++) {
-    const ok = await fetch(`${BASE}/healthz`).then((r) => r.ok, () => false);
-    if (ok) return;
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  throw new Error('server did not start');
-}
+// Swap tab on.
+const SERVER_PATCH = { features: { swap: true } };
 
 async function quote(side: 'buy' | 'sell', amount: bigint): Promise<{ usd: number; minReceive: string }> {
   const res = await fetch(`${BASE}/api/swap/quote`, {
@@ -122,17 +105,14 @@ async function swapOnce(page: Page, side: 'buy' | 'sell', amount: bigint): Promi
 }
 
 async function main(): Promise<void> {
-  const server = startServer();
+  const server = startServer({ port: PORT, dataDir: 'state/measure-data', patch: SERVER_PATCH });
   let wallet: ChildProcess | undefined;
   const browser = await chromium.launch();
   try {
-    await waitHealthy();
+    await waitHealthy(BASE);
     const page = await browser.newPage();
     page.on('pageerror', (e) => console.error(`page error: ${e.message}`));
-    // A string, so the bundler's helpers never reach the page. The page's "Copy link" lands in window.__copied.
-    await page.addInitScript(
-      "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (t) => { window.__copied = t; } } });",
-    );
+    await page.addInitScript(CLIPBOARD_SPY);
     await page.goto(BASE);
     await primary(page).click();
     await page.getByRole('button', { name: 'Copy link' }).click();

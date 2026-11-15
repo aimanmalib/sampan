@@ -20,12 +20,30 @@
 | 2026-11-15T12:56:00Z | swap | 0.2 PUSD to at least 0.00094411 BCH | dd1b6c416a19acb5371674cdd5ba179d00067d625c2d1f30751d9a8771adb2df | 2.9 | ok |
 | 2026-11-15T13:15:08Z | swap | 0.001 BCH to at least 0.19 PUSD (Cashonize web) | b05c33b32fc4aacd371325b8fb9c73b7067ef030c20b3b5d4d6d84adcd221a50 | - | ok |
 | 2026-11-15T13:16:02Z | swap | 0.2 PUSD to at least 0.00094423 BCH (Cashonize web) | 26f9aab0dc21774ab687e0f3a9ceb04fd3d03d7b0501e73190064c44eecc4398 | 2.8 | ok |
+| 2026-11-15T19:24:59Z | land | 0.001 BCH to 0.20 PUSD (wallet pays through WizardConnect) | 3c04bd0a95e8432b0f36cbead20cc8aff32b017e2f88951ed7766cd02d251a79 | 1.0 | ok |
+| 2026-11-15T19:25:21Z | land | 0.001 BCH to 0.20 PUSD (plain payment) | 418fe0c9d58fcb671e9d5cda5fd40c081be9f9496a114a59142048fa19375b6d | 4.0 | ok |
+| 2026-11-15T19:25:30Z | land | 0.001 BCH to 0.20 PUSD (plain payment) | f75dbacac674f8d835e69d245ccb8100181bea8f1ec5bd4cafb6e2901de2c7fe | 3.0 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from
 pressing Swap to the page showing the broadcast transaction. Rows marked "Cashonize web" were signed by a fresh
 Cashonize web wallet (cashonize.com) in an automated browser instead of the test wallet; the first of them has no
 time because the script paused before pressing Sign.
+
+### Landing address runs
+
+`land` rows are written by `tools/measure/land.ts`: the built server against mainnet with the Bring in tab on, the
+real page in Chromium, and its own finisher converting what arrives. "wallet pays through WizardConnect": the test
+wallet paired through the page and signed the payment only after its checkTransaction matched the landing address
+the page computed. "plain payment": the owner address typed into the form, and the test wallet paid the shown
+address as an ordinary BCH payment (`tools/test-wallet/send.ts`). `seconds` runs from the payment broadcast to the
+server reporting the conversion; a row is ok only when the token output is found at the owner's address. Each
+landing had its own owner address of the test wallet. Median of the three rows of 2026-11-15: 3.0 s.
+
+`giveBack` rows are written by `tools/measure/give-back.ts`: a recovery card whose minimum rate is 1000 times
+what the pools pay, paid from the test wallet, then finished by the public `scripts/finisher.ts` with no Sampan
+server. The finisher tried the conversion first and refused it ("trade pays 62 tokens, the contract needs at
+least 60000"), then returned the BCH once the coin was `returnAfter` blocks old. `seconds` includes that wait.
 
 ### Notes on failed runs
 
