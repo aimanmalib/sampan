@@ -90,7 +90,13 @@
     "toleranceBpsDirect": 300,
     "returnAfterBlocks": 6,
     "returnFeeCapSats": 1000,
-    "tokenDustSats": 1000
+    "tokenDustSats": 1000,
+    "convertFeeSats": 700,
+    "validHours": 24,
+    "pollSeconds": 30,
+    "pagePollSeconds": 10,
+    "finishAttempts": 5,
+    "idleDays": 7
   },
   "limits": {
     "minUsd": 0.5,

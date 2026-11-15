@@ -6,12 +6,28 @@ import { BroadcastError, type Chain, type ChainUtxo } from './types.js';
 export class FakeChain implements Chain {
   private readonly utxos = new Map<string, ChainUtxo[]>();
   private readonly history = new Map<string, number>();
+  private readonly watchers = new Map<string, Set<() => void>>();
   height = 900_000;
 
   add(lockingHex: string, utxo: ChainUtxo): void {
     const key = lockingHex.toLowerCase();
     this.utxos.set(key, [...(this.utxos.get(key) ?? []), utxo]);
     this.history.set(key, (this.history.get(key) ?? 0) + 1);
+    for (const cb of this.watchers.get(key) ?? []) queueMicrotask(cb);
+  }
+
+  watch(lockingHex: string, onChange: () => void): () => void {
+    const key = lockingHex.toLowerCase();
+    const set = this.watchers.get(key) ?? new Set();
+    set.add(onChange);
+    this.watchers.set(key, set);
+    return () => {
+      set.delete(onChange);
+    };
+  }
+
+  watching(lockingHex: string): number {
+    return this.watchers.get(lockingHex.toLowerCase())?.size ?? 0;
   }
 
   async listUnspent(lockingHex: string): Promise<ChainUtxo[]> {

@@ -23,6 +23,11 @@ export interface Chain {
   /** Returns the txid, or throws BroadcastError with the node's message. */
   broadcast(txHex: string): Promise<string>;
   tipHeight(): Promise<number>;
+  /**
+   * Calls `onChange` whenever the server reports a change at this locking bytecode (a payment seen in the mempool,
+   * a confirmation, a spend). Best effort: callers still poll. Returns a function that stops watching.
+   */
+  watch(lockingHex: string, onChange: () => void): () => void;
   close(): Promise<void>;
 }
 

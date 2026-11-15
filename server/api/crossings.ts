@@ -1,29 +1,60 @@
-// GET /api/crossings/:id: what the status page shows. No addresses or quote payloads leave the server here.
+// GET /api/crossings/:id: what the status page shows. POST /api/crossings/:id/kick: try to finish now.
+// GET /api/stats: counts for the "Measured" line, split by origin. No owner addresses or quote payloads leave here;
+// the recovery card stays in the page's URL fragment.
 import type { FastifyInstance } from 'fastify';
+import type { SampanConfig } from '../../core/config.js';
 import type { Services } from '../services.js';
-import { ApiError, sendError } from './guard.js';
+import { ApiError, quoteLimit, sendError } from './guard.js';
 
-export function registerCrossings(app: FastifyInstance, s: Services): void {
-  app.get<{ Params: { id: string } }>(
-    '/api/crossings/:id',
-    { schema: { params: { type: 'object', required: ['id'], properties: { id: { type: 'string', pattern: '^[0-9a-f]{32}$' } } } } },
-    async (req, reply) => {
-      try {
-        const row = s.db.getCrossing(req.params.id);
-        if (!row) throw new ApiError(404, 'not_found', 'unknown crossing');
-        return {
-          id: row.id,
-          kind: row.kind,
-          status: row.status,
-          asset: row.asset,
-          amount: row.amount,
-          txid: row.txid,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at,
-        };
-      } catch (e) {
-        return sendError(reply, e);
-      }
+const ID_PARAMS = { type: 'object', required: ['id'], properties: { id: { type: 'string', pattern: '^[0-9a-f]{32}$' } } } as const;
+
+function view(s: Services, id: string): Record<string, unknown> {
+  const row = s.db.getCrossing(id);
+  if (!row) throw new ApiError(404, 'not_found', 'unknown crossing');
+  const base = {
+    id: row.id,
+    kind: row.kind,
+    status: row.status,
+    asset: row.asset,
+    amount: row.amount,
+    txid: row.txid,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+  if (row.kind !== 'land') return base;
+  const l = s.db.landingOf(row.id);
+  return {
+    ...base,
+    landing: {
+      address: row.deposit_address,
+      paymentTxid: l?.utxo ? l.utxo.split(':')[0] : null,
+      seenAt: l?.seen_at ?? null,
+      finishedAt: l?.finished_at ?? null,
+      watching: l?.status === 'watching',
     },
-  );
+  };
+}
+
+export function registerCrossings(app: FastifyInstance, config: SampanConfig, s: Services): void {
+  app.get<{ Params: { id: string } }>('/api/crossings/:id', { schema: { params: ID_PARAMS } }, async (req, reply) => {
+    try {
+      return view(s, req.params.id);
+    } catch (e) {
+      return sendError(reply, e);
+    }
+  });
+
+  app.post<{ Params: { id: string } }>('/api/crossings/:id/kick', { schema: { params: ID_PARAMS } }, async (req, reply) => {
+    try {
+      quoteLimit(s, config, req);
+      const row = s.db.getCrossing(req.params.id);
+      if (!row) throw new ApiError(404, 'not_found', 'unknown crossing');
+      if (row.kind === 'land') await s.watcher.kick(row.id);
+      return view(s, row.id);
+    } catch (e) {
+      return sendError(reply, e);
+    }
+  });
+
+  app.get('/api/stats', async () => ({ test: s.db.stats('test'), public: s.db.stats('public') }));
 }

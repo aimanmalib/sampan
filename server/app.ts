@@ -2,6 +2,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { publicConfig, type SampanConfig } from '../core/config.js';
 import { registerBroadcast } from './api/broadcast.js';
 import { registerCrossings } from './api/crossings.js';
+import { registerLanding } from './api/landing.js';
 import { registerSwap } from './api/swap.js';
 import { registerWallet } from './api/wallet.js';
 import { registerSecurityHeaders } from './security.js';
@@ -16,6 +17,8 @@ export interface AppOptions {
   /** SQLite file; defaults to an in-memory database (tests). */
   dbFile?: string;
   trustedProxies?: string[];
+  /** Run the landing finisher in this process (default true; tests drive it by hand). */
+  startWatcher?: boolean;
   /** Ready-made services (tests); otherwise built from the options above. */
   services?: Services;
 }
@@ -41,12 +44,15 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   registerWallet(app, config, services);
   registerSwap(app, config, services);
   registerBroadcast(app, config, services);
-  registerCrossings(app, services);
+  registerLanding(app, config, services);
+  registerCrossings(app, config, services);
+  if (options.startWatcher ?? true) services.watcher.start();
 
   const purge = setInterval(() => services.db.purgeQuotes(config.ops.quotePayloadHours), 3_600_000);
   purge.unref();
   app.addHook('onClose', async () => {
     clearInterval(purge);
+    services.watcher.stop();
     await services.chain.close();
     services.db.close();
   });

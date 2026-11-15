@@ -13,7 +13,7 @@ import { ElectrumChain } from '../../server/chain/electrum.js';
 import { loadConfig } from '../../server/config.js';
 import { SECRET_KEYS, parseEnv } from './keys.js';
 import { record, spentOn } from './ledger.js';
-import { buildPayment, type WalletCoin } from './payment.js';
+import { buildPayment, type WalletCoin } from '../../core/tx/payment.js';
 import type { Budget } from './policy.js';
 
 const ADDRESSES_PER_PATH = 25;

@@ -56,7 +56,41 @@ CREATE TABLE IF NOT EXISTS landings (
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );
+CREATE INDEX IF NOT EXISTS landings_status ON landings (status);
 `;
+
+/** Columns added after the first release, created in place (never by rebuilding a table). */
+const ADDED_COLUMNS: Array<[table: string, column: string, type: string]> = [
+  ['landings', 'seen_at', 'INTEGER'],
+  ['landings', 'finished_at', 'INTEGER'],
+  ['landings', 'last_activity', 'INTEGER'],
+];
+
+export type LandingStatus = 'watching' | 'idle';
+
+export interface LandingRow {
+  address: string;
+  crossing_id: string;
+  /** The recovery card (core/landing-card), JSON. */
+  params_json: string;
+  /** First coin seen at the address, "txid:vout". */
+  utxo: string | null;
+  finish_txid: string | null;
+  status: LandingStatus;
+  seen_at: number | null;
+  finished_at: number | null;
+  last_activity: number | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface StatsCounts {
+  completed: number;
+  returned: number;
+  lost: number;
+  /** Seconds from the coin being seen to it being finished, completed landings only. */
+  medianSeconds: number | null;
+}
 
 export interface NewCrossing {
   kind: CrossingKind;
@@ -66,8 +100,13 @@ export interface NewCrossing {
   address: string;
   origin: Origin;
   route?: string;
+  depositAddress?: string;
   quote?: unknown;
 }
+
+/** Crossing statuses that count as done for /api/stats. */
+const COMPLETED = ['converted', 'completed'];
+const RETURNED = ['returned', 'refunded'];
 
 export class Db {
   private readonly db: DatabaseSync;
@@ -80,6 +119,10 @@ export class Db {
     this.db = new DatabaseSync(file);
     this.db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
     this.db.exec(SCHEMA);
+    for (const [table, column, type] of ADDED_COLUMNS) {
+      const cols = this.db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+      if (!cols.some((c) => c.name === column)) this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+    }
   }
 
   /** 128-bit random id, hex. */
@@ -92,10 +135,10 @@ export class Db {
     const t = this.now();
     this.db
       .prepare(
-        `INSERT INTO crossings (id, kind, status, asset, amount, address, route, origin, quote_json, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO crossings (id, kind, status, asset, amount, address, deposit_address, route, origin, quote_json, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run(id, c.kind, c.status, c.asset, c.amount, c.address, c.route ?? null, c.origin, c.quote === undefined ? null : JSON.stringify(c.quote), t, t);
+      .run(id, c.kind, c.status, c.asset, c.amount, c.address, c.depositAddress ?? null, c.route ?? null, c.origin, c.quote === undefined ? null : JSON.stringify(c.quote), t, t);
     return id;
   }
 
@@ -118,7 +161,65 @@ export class Db {
     return Number(res.changes);
   }
 
+  createLanding(l: { address: string; crossingId: string; card: unknown }): void {
+    const t = this.now();
+    this.db
+      .prepare(
+        `INSERT INTO landings (address, crossing_id, params_json, status, last_activity, created_at, updated_at)
+         VALUES (?, ?, ?, 'watching', ?, ?, ?)`,
+      )
+      .run(l.address, l.crossingId, JSON.stringify(l.card), t, t, t);
+  }
+
+  landingOf(crossingId: string): LandingRow | undefined {
+    return this.db.prepare('SELECT * FROM landings WHERE crossing_id = ?').get(crossingId) as LandingRow | undefined;
+  }
+
+  landingByAddress(address: string): LandingRow | undefined {
+    return this.db.prepare('SELECT * FROM landings WHERE address = ?').get(address) as LandingRow | undefined;
+  }
+
+  watchedLandings(): LandingRow[] {
+    return this.db.prepare(`SELECT * FROM landings WHERE status = 'watching' ORDER BY created_at`).all() as unknown as LandingRow[];
+  }
+
+  updateLanding(
+    address: string,
+    patch: Partial<Pick<LandingRow, 'utxo' | 'finish_txid' | 'status' | 'seen_at' | 'finished_at' | 'last_activity'>>,
+  ): void {
+    const keys = Object.keys(patch) as Array<keyof typeof patch>;
+    if (keys.length === 0) return;
+    const sets = keys.map((k) => `${k} = ?`).join(', ');
+    const values = keys.map((k) => patch[k] ?? null);
+    this.db.prepare(`UPDATE landings SET ${sets}, updated_at = ? WHERE address = ?`).run(...values, this.now(), address);
+  }
+
+  /** Counts for the "Measured" line: landings and crossings between chains (swaps are not crossings). */
+  stats(origin: Origin): StatsCounts {
+    const count = (statuses: string[]): number => {
+      const marks = statuses.map(() => '?').join(',');
+      const row = this.db
+        .prepare(`SELECT COUNT(*) AS n FROM crossings WHERE kind != 'swap' AND origin = ? AND status IN (${marks})`)
+        .get(origin, ...statuses) as { n: number };
+      return Number(row.n);
+    };
+    const times = this.db
+      .prepare(
+        `SELECT l.finished_at - l.seen_at AS ms FROM landings l JOIN crossings c ON c.id = l.crossing_id
+         WHERE c.origin = ? AND c.status = 'converted' AND l.seen_at IS NOT NULL AND l.finished_at IS NOT NULL ORDER BY ms`,
+      )
+      .all(origin) as Array<{ ms: number }>;
+    return { completed: count(COMPLETED), returned: count(RETURNED), lost: count(['lost']), medianSeconds: median(times.map((t) => Number(t.ms) / 1000)) };
+  }
+
   close(): void {
     this.db.close();
   }
+}
+
+/** Middle value of a sorted list (mean of the two middle values for an even count); null when empty. */
+export function median(sorted: number[]): number | null {
+  if (sorted.length === 0) return null;
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
 }

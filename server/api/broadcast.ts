@@ -40,7 +40,9 @@ export function registerBroadcast(app: FastifyInstance, config: SampanConfig, s:
         quoteLimit(s, config, req);
         const row = s.db.getCrossing(req.body.crossingId);
         if (!row) throw new ApiError(404, 'not_found', 'unknown crossing');
-        if (row.status !== 'built' || !row.quote_json) throw new ApiError(409, 'not_broadcastable', 'this transaction is no longer waiting to be sent');
+        // A landing payment can be built and sent while the address waits; a swap only once, from `built`.
+        const ready = row.kind === 'land' ? row.quote_json !== null : row.status === 'built' && row.quote_json !== null;
+        if (!ready || !row.quote_json) throw new ApiError(409, 'not_broadcastable', 'this transaction is no longer waiting to be sent');
         const record = JSON.parse(row.quote_json) as { tx: string; sourceOutputs: WireOutput[] };
         const tx = decodeTransaction(hexToBin(req.body.tx));
         if (typeof tx === 'string') throw new ApiError(400, 'bad_transaction', 'the transaction could not be read');
@@ -55,12 +57,18 @@ export function registerBroadcast(app: FastifyInstance, config: SampanConfig, s:
         }
         try {
           const txid = await s.chain.broadcast(req.body.tx);
-          s.db.updateCrossing(row.id, { status: 'broadcast', txid, error: null });
+          if (row.kind === 'land') s.db.updateCrossing(row.id, { quote_json: null, error: null });
+          else s.db.updateCrossing(row.id, { status: 'broadcast', txid, error: null });
           await waitIndexed(s.chain, txid, tx, { waitMs: config.electrum.indexWaitMs, pollMs: config.electrum.indexPollMs });
           s.scanner.forget([...record.sourceOutputs.map((o) => o.lockingBytecode), ...tx.outputs.map((o) => binToHex(o.lockingBytecode))]);
+          if (row.kind === 'land') void s.watcher.kick(row.id);
           return { crossingId: row.id, txid };
         } catch (e) {
           if (!(e instanceof BroadcastError)) throw e;
+          if (row.kind === 'land') {
+            s.db.updateCrossing(row.id, { error: e.message.slice(0, 500) });
+            throw new ApiError(e.staleInputs ? 409 : 400, e.staleInputs ? 'stale_inputs' : 'rejected', 'the network rejected the payment; nothing was sent');
+          }
           if (e.staleInputs) {
             s.db.updateCrossing(row.id, { status: 'stale', attempts: row.attempts + 1, error: e.message.slice(0, 500) });
             throw new ApiError(409, 'stale_inputs', 'a pool was used by someone else first; rebuild and sign again');

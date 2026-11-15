@@ -4,7 +4,7 @@ import { hdKeysFromPhrase, signWithHdKeys } from '../core/client/session.js';
 import { verifyTransaction } from '../core/tx/verify.js';
 import { deriveAddress } from '../core/wallet.js';
 import { outputToWire, txFromHex, txToHex } from '../core/wire.js';
-import { buildPayment, type WalletCoin } from '../tools/test-wallet/payment.js';
+import { buildPayment, type WalletCoin } from '../core/tx/payment.js';
 
 const keys = hdKeysFromPhrase(FAKE_WALLET_PHRASE);
 const addr = (path: 'receive' | 'change', i: number) => deriveAddress(keys.publicKey(path, i), path, i, 'bitcoincash');

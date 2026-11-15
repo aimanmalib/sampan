@@ -1,7 +1,7 @@
-// A plain BCH payment from the test wallet's coins: largest coins first, tokens never touched, change back to the
+// A plain BCH payment from a wallet's coins: largest coins first, tokens never touched, change back to the
 // wallet. Pure; the caller signs and sends.
 import { encodeTransaction, hexToBin, type Output } from '@bitauth/libauth';
-import { BCH_DUST_SATS, P2PKH_UNLOCK_SIZE, type Tx } from '../../core/tx/types.js';
+import { BCH_DUST_SATS, P2PKH_UNLOCK_SIZE, type Tx } from './types.js';
 
 export interface WalletCoin {
   txid: string;
@@ -50,5 +50,5 @@ export function buildPayment(o: { coins: WalletCoin[]; toLockingHex: string; sat
       };
     }
   }
-  throw new Error('not enough plain BCH in the test wallet');
+  throw new Error('not enough plain BCH in the wallet');
 }

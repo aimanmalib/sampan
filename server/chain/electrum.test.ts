@@ -70,3 +70,54 @@ describe('ElectrumChain failover', () => {
     expect(calls).toHaveLength(1);
   });
 });
+
+describe('ElectrumChain watch', () => {
+  const lock = '76a914' + '22'.repeat(20) + '88ac';
+
+  const subscribingClients = () => {
+    const subs: string[] = [];
+    const listeners = new Map<string, (n: { method: string; params?: unknown }) => void>();
+    const createClient = (s: Server): ElectrumLike => ({
+      connect: async () => {
+        if (s.host === 'down.example') throw new Error('cannot reach');
+      },
+      request: async (method) => {
+        if (s.host === 'bad.example') throw new Error('broken');
+        return method === 'blockchain.headers.get_tip' ? { height: 1n } : [];
+      },
+      disconnect: async () => true,
+      subscribe: async (method, sh) => {
+        subs.push(`${s.host} ${method} ${String(sh)}`);
+      },
+      unsubscribe: async (method, sh) => {
+        subs.push(`${s.host} un ${String(sh)}`);
+      },
+      on: (_event, listener) => listeners.set(s.host, listener),
+    });
+    return { subs, listeners, createClient };
+  };
+
+  it('subscribes the script hash, routes notifications to the listener and unsubscribes when the last one leaves', async () => {
+    const { subs, listeners, createClient } = subscribingClients();
+    const chain = new ElectrumChain(['wss://a.example:50004'], { createClient });
+    let seen = 0;
+    const off = chain.watch(lock, () => seen++);
+    await chain.tipHeight();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(subs).toEqual([`a.example blockchain.scripthash.subscribe ${scriptHash(lock)}`]);
+    listeners.get('a.example')!({ method: 'blockchain.scripthash.subscribe', params: [scriptHash(lock), 'status'] });
+    listeners.get('a.example')!({ method: 'blockchain.scripthash.subscribe', params: ['00'.repeat(32), 'status'] });
+    expect(seen).toBe(1);
+    off();
+    expect(subs.at(-1)).toBe(`a.example un ${scriptHash(lock)}`);
+  });
+
+  it('subscribes again on the next server after a failover', async () => {
+    const { subs, createClient } = subscribingClients();
+    const chain = new ElectrumChain(['wss://bad.example:50004', 'wss://b.example:50004'], { createClient });
+    chain.watch(lock, () => undefined);
+    await chain.tipHeight();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(subs).toContain(`b.example blockchain.scripthash.subscribe ${scriptHash(lock)}`);
+  });
+});

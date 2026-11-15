@@ -52,7 +52,12 @@ export interface ElectrumLike {
   connect(): Promise<void>;
   request(method: string, ...params: Array<string | number | boolean>): Promise<unknown>;
   disconnect(force?: boolean): Promise<unknown>;
+  subscribe?(method: string, ...params: Array<string | number | boolean>): Promise<void>;
+  unsubscribe?(method: string, ...params: Array<string | number | boolean>): Promise<void>;
+  on?(event: 'notification', listener: (n: { method: string; params?: unknown }) => void): unknown;
 }
+
+const SUBSCRIBE = 'blockchain.scripthash.subscribe';
 
 const defaultClient = (s: Server, timeoutMs: number): ElectrumLike =>
   new ElectrumClient<ElectrumClientEvents>('sampan', '1.5', s.host, {
@@ -73,6 +78,8 @@ export class ElectrumChain implements Chain {
   private index = 0;
   private client: ElectrumLike | undefined;
   private connecting: Promise<ElectrumLike> | undefined;
+  /** Script hashes being watched, with their listeners; subscribed again on every new connection. */
+  private readonly watched = new Map<string, Set<() => void>>();
 
   constructor(
     urls: string[],
@@ -99,6 +106,8 @@ export class ElectrumChain implements Chain {
         throw e;
       }
       this.client = c;
+      c.on?.('notification', (n) => this.notified(n));
+      for (const sh of this.watched.keys()) void this.subscribe(c, sh);
       return c;
     })().finally(() => {
       this.connecting = undefined;
@@ -154,7 +163,38 @@ export class ElectrumChain implements Chain {
     return Number(res.height);
   }
 
+  private notified(n: { method: string; params?: unknown }): void {
+    if (n.method !== SUBSCRIBE || !Array.isArray(n.params)) return;
+    for (const cb of this.watched.get(String(n.params[0])) ?? []) cb();
+  }
+
+  private async subscribe(c: ElectrumLike, sh: string): Promise<void> {
+    try {
+      await c.subscribe?.(SUBSCRIBE, sh);
+    } catch (e) {
+      this.opts.log?.(`electrum subscribe failed (${e instanceof Error ? e.message : String(e)}); polling covers it`);
+    }
+  }
+
+  watch(lockingHex: string, onChange: () => void): () => void {
+    const sh = scriptHash(lockingHex);
+    const set = this.watched.get(sh) ?? new Set();
+    const first = set.size === 0;
+    set.add(onChange);
+    this.watched.set(sh, set);
+    // A new connection subscribes every watched hash itself; an open one is told about this hash now.
+    if (first && this.client) void this.subscribe(this.client, sh);
+    else if (first) void this.connect().catch(() => undefined);
+    return () => {
+      set.delete(onChange);
+      if (set.size > 0 || this.watched.get(sh) !== set) return;
+      this.watched.delete(sh);
+      void this.client?.unsubscribe?.(SUBSCRIBE, sh).catch(() => undefined);
+    };
+  }
+
   async close(): Promise<void> {
+    this.watched.clear();
     const c = this.client;
     this.client = undefined;
     if (c) await c.disconnect(true).catch(() => undefined);

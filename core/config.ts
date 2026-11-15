@@ -65,6 +65,18 @@ export interface SampanConfig {
     returnAfterBlocks: number;
     returnFeeCapSats: number;
     tokenDustSats: number;
+    /** Miner fee assumed for the convert transaction when the minimum rate is set (worst case, one pool). */
+    convertFeeSats: number;
+    /** The page says payments within this many hours convert; later ones may come back. */
+    validHours: number;
+    /** The in-process finisher looks at every open landing address this often. */
+    pollSeconds: number;
+    /** A status page that waits for a landing asks the server to check again this often. */
+    pagePollSeconds: number;
+    /** Convert attempts per coin when a pool is spent between build and broadcast. */
+    finishAttempts: number;
+    /** An address that received nothing for this many days is no longer watched (its card still works). */
+    idleDays: number;
   };
   limits: {
     minUsd: number;
@@ -96,6 +108,7 @@ export interface PublicConfig {
   route: SampanConfig['route'];
   evm: { chains: EvmChainConfig[]; walletConnect: boolean };
   limits: SampanConfig['limits'];
+  landing: Pick<SampanConfig['landing'], 'toleranceBpsDirect' | 'returnAfterBlocks' | 'validHours' | 'pagePollSeconds'>;
   compliance: { crossChainEnabled: boolean };
   banner: SampanConfig['banner'];
   site: SampanConfig['site'];
@@ -169,6 +182,12 @@ export function validateConfig(c: SampanConfig): string[] {
   need(isHttpsUrl(c.connect?.explorerTxUrl ?? '') && c.connect.explorerTxUrl.includes('{txid}'), 'connect.explorerTxUrl: https URL with {txid}');
   need(posInt(c.rate.quotesPerMinute) && posInt(c.rate.crossingsPerHour), 'rate: positive integers');
   need(c.rate.cloudflareCidrs.every((r) => /^[0-9a-fA-F:.]+\/\d{1,3}$/.test(r)), 'rate.cloudflareCidrs: CIDR ranges');
+  const l = c.landing;
+  need(
+    [l.convertFeeSats, l.validHours, l.pollSeconds, l.pagePollSeconds, l.finishAttempts, l.idleDays, l.tokenDustSats, l.returnAfterBlocks].every(posInt),
+    'landing: convertFeeSats, validHours, pollSeconds, pagePollSeconds, finishAttempts, idleDays, tokenDustSats, returnAfterBlocks: positive integers',
+  );
+  need(l.convertFeeSats + l.tokenDustSats < c.limits.localMinSats, 'landing: convertFeeSats + tokenDustSats below limits.localMinSats');
   need(posInt(c.ops.quotePayloadHours), 'ops.quotePayloadHours: positive integer');
   need(c.ops.testAddresses.every((a) => a.startsWith('bitcoincash:') || a.startsWith('bchtest:')), 'ops.testAddresses: cash addresses');
   need(c.ops.healthIntervalSeconds >= 30, 'ops.healthIntervalSeconds: at least 30');
@@ -215,6 +234,12 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     route: c.route,
     evm: { chains: c.evm.chains, walletConnect: c.evm.walletConnectProjectId !== '' },
     limits: c.limits,
+    landing: {
+      toleranceBpsDirect: c.landing.toleranceBpsDirect,
+      returnAfterBlocks: c.landing.returnAfterBlocks,
+      validHours: c.landing.validHours,
+      pagePollSeconds: c.landing.pagePollSeconds,
+    },
     compliance: { crossChainEnabled: c.compliance.crossChainEnabled },
     banner: c.banner,
     site: c.site,

@@ -9,7 +9,10 @@ import { FakeChain } from './chain/fake.js';
 import type { Chain } from './chain/types.js';
 import { ClientIp } from './client-ip.js';
 import { Db } from './db.js';
+import { LandingService } from './landing/service.js';
+import { LandingWatcher } from './landing/watcher.js';
 import { httpFetchActive, PoolDirectory, type FetchActive, type IndexerPool } from './indexer.js';
+import { refreshPools } from './pools.js';
 import { RateLimiter } from './rate.js';
 import { Scanner } from './scan.js';
 import { SwapService } from './swap.js';
@@ -20,6 +23,9 @@ export interface Services {
   pools: PoolDirectory;
   scanner: Scanner;
   swaps: SwapService;
+  landings: LandingService;
+  /** In-process finisher for landing addresses; started by the app. */
+  watcher: LandingWatcher;
   db: Db;
   clientIp: ClientIp;
   limiter: RateLimiter;
@@ -98,13 +104,22 @@ export function createServices(o: ServiceOptions): Services {
       return typeof p === 'string' ? [] : [p.lockingHex];
     }),
   );
+  const db = new Db(o.dbFile);
   return {
     prefix,
     chain,
     pools,
     scanner,
     swaps: new SwapService({ config, chain, pools, prefix }),
-    db: new Db(o.dbFile),
+    landings: new LandingService({ config, chain, pools, db, prefix, testLocks }),
+    watcher: new LandingWatcher({
+      config,
+      db,
+      chain,
+      loadPools: async (category) => refreshPools(chain, await pools.active(category)),
+      log: o.log,
+    }),
+    db,
     clientIp: new ClientIp({ trustedProxies: o.trustedProxies, cloudflareCidrs: config.rate.cloudflareCidrs, log: o.log }),
     limiter: new RateLimiter(),
     testLocks,
