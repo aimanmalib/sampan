@@ -1,6 +1,6 @@
 // Recovery card: the public parameters of one landing address, as JSON. With the card and the open-source
 // finisher anyone can finish a landing (convert, or give the BCH back) without the Sampan server. Pure.
-import { lockingBytecodeToCashAddress, hexToBin } from '@bitauth/libauth';
+import { base64ToBin, binToBase64, binToUtf8, hexToBin, isBase64, lockingBytecodeToCashAddress, utf8ToBin } from '@bitauth/libauth';
 import type { CashPrefix } from './address.js';
 import { landingAddress, landingParamsProblem, type LandingParams } from './landing.js';
 
@@ -86,4 +86,21 @@ export function readCard(raw: unknown): { card: LandingCard; params: LandingPara
   const address = landingAddress(params, prefix);
   if (address !== card.address.toLowerCase()) return `address does not match the parameters (recomputed ${address})`;
   return { card, params };
+}
+
+/** The card as it rides in a status link's fragment (`/c/<id>#card=<this>`): base64url of the JSON. */
+export function cardToFragment(card: LandingCard): string {
+  return binToBase64(utf8ToBin(JSON.stringify(card))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/** Reads a fragment made by cardToFragment; the result is checked by readCard like any other card. */
+export function cardFromFragment(fragment: string): ReturnType<typeof readCard> {
+  try {
+    const b64 = fragment.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+    if (!isBase64(padded)) return 'card link is damaged';
+    return readCard(JSON.parse(binToUtf8(base64ToBin(padded))));
+  } catch {
+    return 'card link is damaged';
+  }
 }

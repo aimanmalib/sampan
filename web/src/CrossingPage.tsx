@@ -1,9 +1,11 @@
-// /c/:id: where a crossing stands. Swaps have two steps (built, sent); later flows add theirs.
+// /c/:id: where a crossing stands. Swaps have two steps (built, sent); a landing has its own view and, while it
+// waits, asks the server to check again every `landing.pagePollSeconds`.
 import { useCallback, useEffect, useState } from 'react';
 import { ApiFailure } from '../../core/client/api';
 import { api } from './api';
 import type { LoadedConfig } from './config';
 import { useText, type TextKey } from './i18n';
+import { LandingStatus, type LandingView } from './land/LandingStatus';
 
 interface Crossing {
   id: string;
@@ -13,6 +15,7 @@ interface Crossing {
   txid: string | null;
   createdAt: number;
   updatedAt: number;
+  landing?: LandingView['landing'];
 }
 
 type Load = { state: 'loading' } | { state: 'missing' } | { state: 'error' } | { state: 'ok'; crossing: Crossing };
@@ -29,13 +32,28 @@ export function CrossingPage({ id, config }: { id: string; config: LoadedConfig 
   const { t } = useText();
   const [load, setLoad] = useState<Load>({ state: 'loading' });
 
-  const check = useCallback(() => {
-    api
-      .get<Crossing>(`/api/crossings/${id}`)
-      .then((crossing) => setLoad({ state: 'ok', crossing }))
-      .catch((e: unknown) => setLoad({ state: e instanceof ApiFailure && e.status === 404 ? 'missing' : 'error' }));
-  }, [id]);
-  useEffect(check, [check]);
+  const fragment = /(?:^#|&)card=([A-Za-z0-9_-]+)/.exec(location.hash)?.[1] ?? null;
+  const isLanding = load.state === 'ok' && load.crossing.kind === 'land';
+
+  const check = useCallback(
+    (kick = false) => {
+      const req = kick ? api.post<Crossing>(`/api/crossings/${id}/kick`, {}) : api.get<Crossing>(`/api/crossings/${id}`);
+      req
+        .then((crossing) => setLoad({ state: 'ok', crossing }))
+        .catch((e: unknown) => setLoad((prev) => (prev.state === 'ok' ? prev : { state: e instanceof ApiFailure && e.status === 404 ? 'missing' : 'error' })));
+    },
+    [id],
+  );
+  useEffect(() => check(false), [check]);
+
+  // A landing still waiting: ask the server to look again now and then (it also watches by itself).
+  const waiting = load.state === 'ok' && load.crossing.kind === 'land' && ['open', 'seen'].includes(load.crossing.status) && load.crossing.landing?.watching;
+  const pollMs = (config?.landing.pagePollSeconds ?? 10) * 1000;
+  useEffect(() => {
+    if (!waiting) return;
+    const timer = setInterval(() => check(true), pollMs);
+    return () => clearInterval(timer);
+  }, [waiting, pollMs, check]);
 
   if (load.state !== 'ok') {
     return (
@@ -48,11 +66,20 @@ export function CrossingPage({ id, config }: { id: string; config: LoadedConfig 
   }
 
   const c = load.crossing;
+  if (isLanding && c.landing) {
+    return (
+      <section className="crossing">
+        <h1 className="crossing__title">{t('crossing.title')}</h1>
+        <p className="crossing__kind">{t('crossing.kind.land')}</p>
+        <LandingStatus c={{ status: c.status, txid: c.txid, landing: c.landing }} config={config} fragment={fragment} onCheck={() => check(true)} />
+      </section>
+    );
+  }
   const reached = c.status === 'broadcast' ? 2 : c.status === 'failed' ? 0 : 1;
   return (
     <section className="crossing">
       <h1 className="crossing__title">{t('crossing.title')}</h1>
-      <p className="crossing__kind">{t(c.kind === 'swap' ? 'tabs.swap' : 'crossing.title')}</p>
+      <p className="crossing__kind">{t(c.kind === 'swap' ? 'crossing.kind.swap' : 'crossing.title')}</p>
       <ol className="timeline">
         {SWAP_STEPS.map((step, i) => {
           const done = i < reached;
@@ -77,7 +104,7 @@ export function CrossingPage({ id, config }: { id: string; config: LoadedConfig 
         </p>
       ) : null}
       <p className="crossing__actions">
-        <button type="button" className="button button--quiet" onClick={check}>
+        <button type="button" className="button button--quiet" onClick={() => check(false)}>
           {t('crossing.check')}
         </button>
         <a href="/">{t('crossing.back')}</a>

@@ -1,7 +1,7 @@
 import { binToHex } from '@bitauth/libauth';
 import { describe, expect, it } from 'vitest';
 import { LANDING_RATE_DEN, type LandingParams } from '../core/landing.js';
-import { makeCard, readCard } from '../core/landing-card.js';
+import { cardFromFragment, cardToFragment, makeCard, readCard } from '../core/landing-card.js';
 import { verifyCard } from '../scripts/verify-landing.js';
 import { otherLock, PUSD, userLock } from './helpers/pools.js';
 import { tokenAddressOf } from '../core/address.js';
@@ -45,5 +45,15 @@ describe('verify-landing', () => {
 
   it('refuses a tampered card', () => {
     expect(verifyCard({ ...card(), returnAfter: 7 }).ok).toBe(false);
+  });
+
+  it('rides in a URL fragment without characters that need escaping, and a damaged or edited one is refused', () => {
+    const frag = cardToFragment(card());
+    expect(frag).toMatch(/^[A-Za-z0-9_-]+$/);
+    expect(cardFromFragment(frag)).toMatchObject({ params: PARAMS });
+    expect(cardFromFragment(frag.slice(0, -6))).toBeTypeOf('string');
+    expect(cardFromFragment('%%%')).toBeTypeOf('string');
+    const edited = cardToFragment({ ...card(), rateNum: '1' });
+    expect(cardFromFragment(edited)).toMatch(/address does not match/);
   });
 });

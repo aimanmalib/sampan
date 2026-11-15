@@ -1,0 +1,183 @@
+/* Bring in (landing address), the judge strip and the landing status page. Tokens from styles.css only. */
+.land {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.land__route {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+}
+.land__route-label {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+.land__arrow {
+  color: var(--river);
+  font-weight: 700;
+}
+.land__owner {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.field__input--address {
+  font-size: 0.9375rem;
+}
+.land__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+}
+.land__pay {
+  display: grid;
+  grid-template-columns: minmax(0, 9.5rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+}
+.land__details {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+  min-width: 0;
+}
+.land__address {
+  margin: 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.payqr {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+.payqr__bg {
+  fill: var(--card);
+}
+.payqr__dots {
+  fill: var(--ink);
+}
+@media (max-width: 22rem) {
+  .land__pay {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .payqr {
+    max-width: 12rem;
+  }
+}
+
+/* Judge strip: inside the card, under the panel. */
+.judge {
+  border-top: 1px dashed var(--line);
+  padding: 0.75rem var(--gap) var(--gap);
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+.judge__title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+.judge__steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.25rem;
+}
+.judge__fill {
+  justify-self: start;
+}
+.judge__note {
+  margin: 0;
+}
+
+/* Status page: boat crossing, recovery card. */
+.ferry {
+  position: relative;
+  height: 3rem;
+  max-width: 100%;
+  overflow: hidden;
+}
+.ferry__river {
+  position: absolute;
+  inset: auto 0 0 0;
+  width: 100%;
+  height: 1.5rem;
+  fill: none;
+  stroke: var(--river);
+  stroke-width: 3;
+}
+.ferry__lane {
+  position: absolute;
+  left: 0;
+  bottom: 0.5rem;
+  width: calc(100% - 3rem);
+  height: 1.75rem;
+  transition: transform 1.2s ease-in-out;
+}
+.ferry__boat {
+  display: block;
+  width: 3rem;
+  height: 1.75rem;
+}
+.ferry__hull {
+  fill: var(--ink);
+}
+.ferry__roof {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+.ferry__coin {
+  fill: var(--lamp);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+/* The lane is as wide as the boat's travel, so translateX(%) of the lane is the share of the crossing done. */
+.ferry__lane--2-of-4,
+.ferry__lane--2-of-3 {
+  transform: translateX(33%);
+}
+.ferry__lane--3-of-4 {
+  transform: translateX(66%);
+}
+.ferry__lane--4-of-4 {
+  transform: translateX(100%);
+}
+.ferry__lane--3-of-3 .ferry__boat {
+  transform: scaleX(-1);
+}
+.crossing__address {
+  overflow-wrap: anywhere;
+}
+.recovery {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  padding: 0.5rem var(--gap) var(--gap);
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.recovery summary {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  cursor: pointer;
+}
+.recovery__json {
+  margin: 0;
+  font-size: 0.75rem;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
