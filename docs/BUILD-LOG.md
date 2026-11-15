@@ -16,3 +16,4 @@ One line per step, newest last.
 - 2026-11-15: Cashonize web signed both swap directions on mainnet through the page; wallet scan cache cut to 30 seconds; test wallet can pay plain BCH within its budget.
 - 2026-11-15: Landing contract (convert and giveBack) with its compiled artifact, address computed in core and checked against CashScript, recovery card, verify-landing and finisher scripts, contract tests on the mock network.
 - 2026-11-15: Page text and tabs follow the flow flags: one hero and description text per flag combination, no USDT, no fee-free claim, closed flows have no tab.
+- 2026-11-15: Landing addresses end to end on the fake network: open with a worst-case minimum rate, page recomputes the address, pay from the connected wallet, in-process finisher (subscription, polling, restart, idle stop), status page with boat and recovery card, judge strip, stats endpoint; flow still switched off.
