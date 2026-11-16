@@ -12,6 +12,8 @@ export interface BusinessSource {
   /** Where the number was read, and the day it was read (YYYY-MM-DD). */
   url: string;
   read: string;
+  /** A flow per day the scenario table may take a share of (a stock such as a supply is context only). */
+  scenario?: boolean;
 }
 
 export interface BusinessConfig {
@@ -60,8 +62,12 @@ export function validateBusiness(b: BusinessConfig | undefined): string[] {
     'business.scenarioShares: shares above 0 and at most 1',
   );
   need(Array.isArray(b.sources), 'business.sources: a list');
-  for (const s of b.sources ?? []) {
+  const keys = new Set<string>();
+  for (const s of Array.isArray(b.sources) ? b.sources : []) {
     need(/^https:\/\/\S+$/.test(s.url) && /^\d{4}-\d{2}-\d{2}$/.test(s.read), `business.sources.${s.key}: https url and read date`);
+    need(!keys.has(s.key), `business.sources.${s.key}: key used twice`);
+    keys.add(s.key);
+    if (s.scenario) need(typeof s.value === 'number' && s.value > 0, `business.sources.${s.key}: a scenario source needs a number above 0`);
   }
   return errors;
 }

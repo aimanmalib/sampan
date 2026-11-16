@@ -27,6 +27,7 @@
     "contracts:build": "cashc contracts/landing.cash -o contracts/landing.json",
     "verify-landing": "tsx scripts/verify-landing.ts",
     "finisher": "tsx scripts/finisher.ts",
+    "business-model": "tsx scripts/business-model.ts",
     "og-image": "tsx tools/og-image.tsx"
   },
   "dependencies": {

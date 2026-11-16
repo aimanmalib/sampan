@@ -181,6 +181,32 @@
     "feeAddress": "bitcoincash:qplrydnf2z4pj4z9rv7uhmwsuxyrm8hj7u3nqeslpn",
     "scenarioBps": 30,
     "scenarioShares": [0.01, 0.05, 0.1],
-    "sources": []
+    "sources": [
+      {
+        "key": "bchVolume",
+        "label": "BCH traded across all markets in 24 hours",
+        "value": 61029720,
+        "unit": "USD per day",
+        "url": "https://api.coingecko.com/api/v3/coins/bitcoin-cash?localization=false&tickers=false&community_data=false&developer_data=false",
+        "read": "2026-11-16",
+        "scenario": true
+      },
+      {
+        "key": "cauldronTvl",
+        "label": "Value locked in Cauldron pools on BCH",
+        "value": 991821,
+        "unit": "USD",
+        "url": "https://api.llama.fi/protocol/cauldron",
+        "read": "2026-11-16"
+      },
+      {
+        "key": "usdtSupply",
+        "label": "USDT in circulation on all chains",
+        "value": 175325413949,
+        "unit": "USD",
+        "url": "https://stablecoins.llama.fi/stablecoins?includePrices=false",
+        "read": "2026-11-16"
+      }
+    ]
   }
 }

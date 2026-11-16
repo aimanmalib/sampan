@@ -26,6 +26,9 @@ describe('business config', () => {
     expect(validateBusiness({ ...ok, feeBps: 1.5 }).join()).toMatch(/feeBps/);
     expect(validateBusiness({ ...ok, scenarioShares: [0, 2] }).join()).toMatch(/scenarioShares/);
     expect(validateBusiness({ ...ok, sources: [{ key: 'a', label: 'a', value: 1, unit: 'USD', url: 'http://x', read: '2026-11-16' }] }).join()).toMatch(/sources/);
+    const src = { key: 'a', label: 'a', value: 1, unit: 'USD', url: 'https://x', read: '2026-11-16' };
+    expect(validateBusiness({ ...ok, sources: [src, src] }).join()).toMatch(/key used twice/);
+    expect(validateBusiness({ ...ok, sources: [{ ...src, value: 'n/a', scenario: true }] }).join()).toMatch(/number above 0/);
   });
   it('gives no fee lock while the fee is off and the P2PKH lock when it is on', () => {
     expect(feeLockingHex(ok, 'bitcoincash')).toBeUndefined();

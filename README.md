@@ -9,7 +9,7 @@
 Built in Malaysia by <a href="https://aimanmalib.com">Aiman Malib</a> · <a href="https://sasateguh.com">Sasa Teguh</a></p>
 
 Sampan swaps BCH and the PUSD stablecoin through existing Cauldron pools on Bitcoin Cash mainnet, and gives you a landing
-address: send BCH to it from any wallet or exchange and it arrives at your address as PUSD, while the Sampan server holds no key.
+address: send BCH to it from any wallet and it arrives at your address as PUSD, while the Sampan server holds no key.
 
 ## Try it in a minute
 
@@ -37,8 +37,43 @@ wants to be paid in dollars on BCH has to ask the payer to do all of that for th
 
 Sampan answers with two things you can use today. The swap tab trades BCH and PUSD in one transaction that your own wallet
 signs, after the page has checked what the server built. The landing address is a small contract: whoever pays BCH to it,
-from any wallet or exchange, the coins can leave towards one place, your address, either as PUSD at or above a minimum rate or,
+from any wallet, the coins can leave towards one place, your address, either as PUSD at or above a minimum rate or,
 after six blocks, as the BCH itself. You keep a recovery card, so you can finish or recover a landing without Sampan.
+
+## Business model
+
+**Who it is for.** People in Southeast Asia who already hold USDT and want dollars on Bitcoin Cash, and people who are
+paid in BCH and want part of it kept in dollars without setting up a token wallet beforehand. The
+numbers below were read from public APIs on the day shown: BCH trades in volume, while the dollar liquidity on BCH
+itself is small, so the step between the two is where Sampan sits.
+
+**From an exchange, as tested once.** BCH was bought on Binance spot (BCH/USDT) from a USDT balance, in 5 steps and
+about 2 minutes, then withdrawn straight to the Sampan test wallet: 0.098701 BCH in
+[693c583b84893344133a448ee9f40c3133700dad372fe74ebdd0cc5de3c23548](https://blockchair.com/bitcoin-cash/transaction/693c583b84893344133a448ee9f40c3133700dad372fe74ebdd0cc5de3c23548),
+in a block at 12:19 UTC on 15 November 2026. That withdrawal went to an ordinary address. An exchange paying a landing
+address has not been tested.
+
+**Where revenue would come from.** `business.feeBps` adds one output to `business.feeAddress` on each swap (measured
+once at 30 bps on a local server, see the `fee 30 bps` row in [the measured runs](docs/MEASURED.md#runs)), and
+`thorchain.affiliateBps` would take a share on the cross-chain route once a THORName is registered. A landing address
+carries no fee; the contract does not change. Both settings are 0 during the event and live in `config/sampan.json`,
+so changing them needs no code.
+
+<!-- business-model:start (made by scripts/business-model.ts from config/sampan.json) -->
+| Number | Value | Read on | Source |
+| --- | --- | --- | --- |
+| BCH traded across all markets in 24 hours | USD 61,029,720 per day | 2026-11-16 | https://api.coingecko.com/api/v3/coins/bitcoin-cash?localization=false&tickers=false&community_data=false&developer_data=false |
+| Value locked in Cauldron pools on BCH | USD 991,821 | 2026-11-16 | https://api.llama.fi/protocol/cauldron |
+| USDT in circulation on all chains | USD 175,325,413,949 | 2026-11-16 | https://stablecoins.llama.fi/stablecoins?includePrices=false |
+
+Scenario, arithmetic, not a forecast. Base: BCH traded across all markets in 24 hours (USD 61,029,720 per day, read 2026-11-16) x share x a 30 bps fee. The Sampan fee today is 0 bps.
+
+| Share of that volume through Sampan | Fee per day at 30 bps | Fee per year (365 days) |
+| --- | --- | --- |
+| 1 % | USD 1,831 | USD 668,275 |
+| 5 % | USD 9,154 | USD 3,341,377 |
+| 10 % | USD 18,309 | USD 6,682,754 |
+<!-- business-model:end -->
 
 ## How it works
 
@@ -138,7 +173,7 @@ does not match its own address; both are refused before any wallet is asked to s
 | Innovation and creativity | The landing address ([The landing contract](#the-landing-contract)): a payer needs no token wallet and no Sampan account |
 | Design and usability | The live site in English and Malay, laid out for phones; the judging steps sit on the opening screen ([its e2e test](e2e/first-screen.spec.ts)) |
 | Technical strength | Browser check before signing (`core/check.ts`), the contract and its tests, [What is measured](#what-is-measured) |
-| Business potential | [Limits](#limits): the fee setting of the cross-chain route exists in config and is 0 during the event |
+| Business potential | [Business model](#business-model): users, sourced numbers, the fee settings (0 during the event) and a scenario table made from config |
 | Mainnet Track: live demo in one click | [sampan.sasateguh.com](https://sampan.sasateguh.com), a 0.001 BCH swap or landing on mainnet |
 | Mainnet Track: WizardConnect | `web/src/wallet/wizard.ts`, the pairing dialog in `web/src/wallet/` |
 | Mainnet Track: banner on the home page | `web/src/Banner.tsx`: event name, CashTokens address with a copy button, the planning note |
