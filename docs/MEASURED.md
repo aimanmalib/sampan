@@ -30,6 +30,7 @@
 | 2026-11-16T06:42:44Z | land | 0.001 BCH to 0.20 PUSD (Paytaca iOS, owner's phone) | 069a3f838227e4efcc4952466347582284b1924eba347ebaaaf00da494743e2f | - | ok |
 | 2026-11-16T06:42:44Z | swap | 0.40 PUSD to 0.00191467 BCH (Paytaca iOS, owner's phone) | 3e528db3e6fd4a65b713cde806e5ae444caa15f69c1fcc34ee79305dbebff19f | - | ok |
 | 2026-11-16T06:51:56Z | swap | 0.00096309 BCH to 0.20 PUSD (Selene iOS, owner's phone) | fdac791db778ff37640e7741a8578b30db95b0b963bd1b45ff5eeab271720944 | - | ok |
+| 2026-11-16T10:52:46Z | swap | 0.002 BCH to at least 0.4 PUSD · fee 30 bps | 2f3d3c9aac9bb00689c47d06074da707efdc2c6d72bc119228ffd192965a7f6e | 3.3 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from
