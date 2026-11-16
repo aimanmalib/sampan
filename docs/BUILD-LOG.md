@@ -28,3 +28,4 @@ One line per step, newest last.
 - 2026-11-16: README assets: brand/logo.svg with 512 and 64 px PNGs, and live-site screenshots (desktop Chromium, iPhone 13 WebKit, English and Malay) from tools/readme/.
 - 2026-11-16: README for judges: header with logo and links, try-it steps, live screenshots, the measured mainnet table with explorer links, judging criteria, limits, a run command checked from a clean clone, third-party licences; Malay translation in README.ms.md (ADR 0015).
 - 2026-11-16: Soft launch: owner's phone test passed with Paytaca and Selene on iPhone; site opened to search engines; /how page (open flows, whole landing contract, verify and finish commands, what already exists, checked 16 Nov); Measured line from /api/stats with team-wallet runs counted as test; deployed 8960db1.
+- 2026-11-16: MEASURED Wallets checked: Paytaca and Selene on the owner's iPhone, as reported by the owner.
