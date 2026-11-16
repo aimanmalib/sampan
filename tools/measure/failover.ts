@@ -1,9 +1,9 @@
 // Failover, measured: the built server (dist/) on this host against the real providers, with one provider at a time
 // replaced by an address that refuses the connection or never answers. Reads only: no transaction is built or sent.
-//   npx tsx tools/measure/failover.ts --to 0x<test wallet on Base> [--only a-refused,b] [--port 4186] [--write]
+//   npx tsx tools/measure/failover.ts --to 0x<test wallet on Base> [--only a-refused,b] [--port 4186] [--shots dir] [--write]
 // Cases: base (shipped config), a-* (first Electrum server broken), b (every Electrum server broken), c (every
 // Cauldron indexer broken), d-* (first THORNode broken; crossings opened for this local server only). For b and c the
-// page is opened in WebKit (iPhone 13) and screenshots go to $AUTOPILOT_BUKTI_DIR or state/failover/ (not tracked).
+// page is opened in WebKit (iPhone 13) and screenshots go to --shots (default state/failover/, not tracked).
 // Run it through the host's browser queue. --write replaces the Failover section of docs/MEASURED.md.
 import { execSync, type ChildProcess } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -20,7 +20,7 @@ const PORT = Number(arg('--port', '4186'));
 const BASE = `http://127.0.0.1:${PORT}`;
 const TO = arg('--to');
 const ONLY = arg('--only').split(',').filter(Boolean);
-const SHOTS = process.env.AUTOPILOT_BUKTI_DIR || 'state/failover';
+const SHOTS = arg('--shots', 'state/failover');
 
 interface Shipped {
   electrum: { servers: string[] };
