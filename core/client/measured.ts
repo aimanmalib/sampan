@@ -22,7 +22,7 @@ export interface Stats {
 }
 
 /** Seconds under this many are shown as seconds, longer times as whole minutes. */
-const SECONDS_UP_TO = 120;
+export const SECONDS_UP_TO = 120;
 
 export function measuredParts(s: Stats, t: (key: MeasuredKey, vars?: Record<string, string>) => string): string[] {
   const parts = [t('measured.completed', { n: String(s.all.completed) })];

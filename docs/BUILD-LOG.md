@@ -37,3 +37,4 @@ One line per step, newest last.
 - 2026-11-16: Read-only crossing pre-check (route open both ways, quotes at USD 2 and 3, memo form, empty test wallet on Base; ADR 0018) and tools/measure/cross.ts, which follows a crossing to arrival and writes one Runs row with the BCH and Base txids in full.
 - 2026-11-16: Crossing tracer: a refund paid back on the first chain stays out of the second-chain cell and is named in the note.
 - 2026-11-16: Added the owner's iPhone checks to Runs (Paytaca iOS: two swaps and a landing; Selene iOS: one swap) with full txids found by Electrum address history and checked against the pool and landing scripts; README counts and Wallets checked follow MEASURED.
+- 2026-11-16: /how shows what MEASURED.md records (done and failed per flow, wallets checked, median time, newest runs) with every transaction id linked; the front page Measured line links to it (ADR 0019)

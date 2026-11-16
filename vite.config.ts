@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 import { fillPageMeta, type PageMetaConfig } from './core/page-meta.js';
+import { MEASURED_FILE, measuredJson } from './scripts/measured-json.js';
 
 const root = fileURLToPath(new URL('./web', import.meta.url));
 const en = JSON.parse(readFileSync(new URL('./lang/en.json', import.meta.url), 'utf8')) as Record<string, string>;
@@ -19,9 +20,23 @@ function htmlText(): Plugin {
   };
 }
 
+/** `virtual:sampan-proof`: the Runs and Wallets checked tables of docs/MEASURED.md, parsed when the page is built. */
+function proof(): Plugin {
+  const id = 'virtual:sampan-proof';
+  return {
+    name: 'sampan-proof',
+    resolveId: (source) => (source === id ? `\0${id}` : undefined),
+    load(loaded) {
+      if (loaded !== `\0${id}`) return undefined;
+      this.addWatchFile(MEASURED_FILE);
+      return `export default ${JSON.stringify(measuredJson())};`;
+    },
+  };
+}
+
 export default defineConfig({
   root,
-  plugins: [react(), htmlText()],
+  plugins: [react(), htmlText(), proof()],
   build: { outDir: 'dist', emptyOutDir: true, sourcemap: false },
   server: {
     port: 5173,

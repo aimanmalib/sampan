@@ -1,15 +1,21 @@
 // /how: what each open flow does, the whole landing contract, how to check an address and finish a landing without
 // Sampan, and what already exists. A flow whose flag is off is not described (same rule as the front page).
 import { openFlows, symbolList } from '../../../core/flows';
+import { useEffect } from 'react';
 import source from '../../../contracts/landing.cash?raw';
 import type { LoadedConfig } from '../config';
 import { useText, type TextKey } from '../i18n';
 import { Measured } from '../Measured';
 import { Diagram } from './Diagram';
+import { ProofTable } from './ProofTable';
 import './how.css';
 
 export function HowPage({ config }: { config: LoadedConfig | null }) {
   const { t } = useText();
+  // The page is drawn after the config arrives, so the browser's own jump to #proof finds nothing: do it once here.
+  useEffect(() => {
+    if (config && location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+  }, [config]);
   if (!config) return null;
   const flows = openFlows(config);
   const symbol = config.tokens[config.defaultToken]?.symbol ?? '';
@@ -108,6 +114,7 @@ export function HowPage({ config }: { config: LoadedConfig | null }) {
         </ul>
       </section>
       <Measured />
+      <ProofTable config={config} />
     </article>
   );
 }

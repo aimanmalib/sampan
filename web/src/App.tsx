@@ -78,7 +78,7 @@ export function App() {
           />
         ) : null}
         <ActionCard config={config} wallet={wallet} chosen={chosen} onChoose={setChosen} fill={fill} />
-        <Measured />
+        <Measured link />
       </main>
       )}
       <Footer />

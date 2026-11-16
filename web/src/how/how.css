@@ -121,3 +121,119 @@
   margin: 0;
   font-variant-numeric: tabular-nums;
 }
+.measured__how {
+  margin: 0.25rem 0 0;
+}
+.measured__how a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}
+
+/* Proof table: counts per flow as a table; newest runs as stacked rows (the reading column is too narrow for six
+   columns). Below 34rem the flow table stacks too. Labels come from data-label. */
+.proof {
+  scroll-margin-top: 1rem;
+}
+.proof__wallets {
+  font-weight: 600;
+}
+.proof__table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-variant-numeric: tabular-nums;
+}
+.proof__table th,
+.proof__table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5rem 0.5rem 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.proof__table thead th {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.proof__ids {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.75rem;
+}
+.proof__ids a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  max-width: 100%;
+}
+.proof__table--runs thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.proof__table--runs,
+.proof__table--runs tbody {
+  display: block;
+}
+.proof__table--runs tr {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.125rem 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.proof__table--runs th,
+.proof__table--runs td {
+  display: block;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.proof__table--runs td::before {
+  content: attr(data-label);
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+.proof__table--runs td[data-label]:nth-child(3),
+.proof__table--runs td[data-label]:nth-child(6) {
+  grid-column: 1 / -1;
+}
+.proof__full {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+@media (max-width: 34rem) {
+  .proof__table--flows thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .proof__table--flows,
+  .proof__table--flows tbody,
+  .proof__table--flows tr {
+    display: block;
+  }
+  .proof__table--flows tr {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .proof__table--flows th,
+  .proof__table--flows td {
+    display: block;
+    padding: 0.125rem 0;
+    border: 0;
+  }
+  .proof__table--flows td::before {
+    content: attr(data-label) ': ';
+    color: var(--ink-soft);
+  }
+}

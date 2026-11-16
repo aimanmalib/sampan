@@ -118,8 +118,9 @@ export interface SampanConfig {
   rate: { quotesPerMinute: number; crossingsPerHour: number; cloudflareCidrs: string[] };
   compliance: { blockedCountries: string[]; crossChainEnabled: boolean };
   banner: { deckUrl: string; repoUrl: string; tokenAddress: string; note: boolean };
-  /** `url` is the public origin; `ogImage` is the link preview picture under web/public. */
-  site: { url: string; noindex: boolean; feedbackUrl: string; ogImage: string };
+  /** `url` is the public origin; `ogImage` is the link preview picture under web/public; `proofRuns` = rows of the
+   *  newest measured runs on /how (the full list is docs/MEASURED.md). */
+  site: { url: string; noindex: boolean; feedbackUrl: string; ogImage: string; proofRuns: number };
   /** /terms and /risks: who runs the site and which sections to show (text in lang/ under terms.<key>.* and risks.<key>.*). */
   legal: { operator: string; terms: LegalSection[]; risks: LegalSection[] };
   ops: {
@@ -241,6 +242,7 @@ export function validateConfig(c: SampanConfig): string[] {
   need(c.compliance.blockedCountries.every((cc) => /^[A-Z]{2}$/.test(cc)), 'compliance.blockedCountries: ISO codes');
   need(isHttpsUrl(c.site.url) && !c.site.url.endsWith('/'), 'site.url: https origin without a trailing slash');
   need(/^\/[\w.-]+\.png$/.test(c.site.ogImage), 'site.ogImage: a /name.png path under web/public');
+  need(posInt(c.site.proofRuns) && c.site.proofRuns <= 30, 'site.proofRuns: 1 to 30');
   need(typeof c.legal?.operator === 'string' && c.legal.operator.trim() !== '', 'legal.operator: who runs the site');
   for (const list of [c.legal?.terms, c.legal?.risks]) {
     need(

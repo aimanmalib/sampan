@@ -5,7 +5,8 @@ import { api } from './api';
 import { measuredParts, type Stats } from '../../core/client/measured';
 import { useText } from './i18n';
 
-export function Measured() {
+/** `link`: a "How it was measured" link to the proof table on /how (front page). */
+export function Measured({ link = false }: { link?: boolean }) {
   const { t } = useText();
   const [stats, setStats] = useState<Stats | null>(null);
   useEffect(() => {
@@ -25,6 +26,11 @@ export function Measured() {
         {t('measured.title')}
       </h2>
       <p className="measured__line">{measuredParts(stats, t).join(' · ')}</p>
+      {link ? (
+        <p className="measured__how">
+          <a href="/how#proof">{t('measured.how')}</a>
+        </p>
+      ) : null}
     </section>
   );
 }
