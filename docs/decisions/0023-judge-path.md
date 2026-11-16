@@ -16,7 +16,7 @@ One line per step, before and after (seconds from page load, from the Judge path
 
 | path | step | before (324135c) | after |
 |---|---|---|---|
-| see, WebKit iPhone 13 | scroll to "How it was measured" (waits for /api/stats) | 1.9 s, 1 action | removed: the proof link sits in the judge strip's folded steps; one tap opens them |
+| see, WebKit iPhone 13 | scroll to "How it was measured" (waits for /api/stats) | 1.9 s, 1 action | replaced by a tap on the judge strip title that opens its steps, where the proof link sits (no scroll, no wait for /api/stats) |
 | see, Chromium desktop | click "How it was measured" under the card | 0.8 s, 1 action | the same link is visible in the open judge steps, no wait for /api/stats |
 | see, both | judge strip title claimed "in about a minute" | not measured | removed: "Make a real mainnet transaction yourself." |
 
@@ -27,7 +27,17 @@ Kept, with the reason:
   desktop a phone wallet scans the QR code instead and "Copy link" is not used.
 - "Swap" (one page action) and the wallet's approval: each moves money, so each stays a choice a person makes.
 
-Measured after the deploy: see the `## Judge path` rows on the commit that holds this file.
+Measured after the deploy (f301d1d, `## Judge path` rows):
+
+| engine | see before | see after | do before | do after |
+|---|---|---|---|---|
+| WebKit iPhone 13 | 2.7 s, 2 page actions | 4.0 s, 2 page actions | 11.9 s | 14.2 s |
+| Chromium desktop | 2.5 s, 1 page action | 1.9 s, 1 page action | 15.7 s | 13.6 s |
+
+The WebKit "see" path did not get faster. The page actions stay at two, the scroll and the wait for /api/stats are
+gone, and the time moved into page loads: an unrecorded rerun the same minute loaded the front page in 1.4 s
+(0.7 s before) and /how in 1.6 s (0.7 s before). Both paths stay far under the 60 s target. The "do" times
+depend on the wallet relay (about 6 to 10 s to pair) and moved both ways.
 
 ## Way back
 
