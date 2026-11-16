@@ -115,3 +115,18 @@ same BCH and token amounts.
 | 2026-11-16T12:02:56Z | webkit-iphone13 | do | 14.2 | 3 page actions + 3 wallet actions | f301d1d |
 | 2026-11-16T12:03:02Z | chromium-desktop | see | 1.9 | 1 page action | f301d1d |
 | 2026-11-16T12:03:26Z | chromium-desktop | do | 13.6 | 3 page actions + 3 wallet actions | f301d1d |
+
+## Failover
+
+Measured with `tools/measure/failover.ts`: the built server on the host, the real providers, and the config patched so that one provider is replaced by an address that refuses the connection (`127.0.0.1:9`) or never answers (`10.255.255.1`). "base" rows use the shipped config. Times are one request each, after the first health report.
+
+| UTC | case | what was broken | first health report (s) | health | swap quote | wallet scan | route quote | page shows | commit |
+|---|---|---|---|---|---|---|---|---|---|
+| 2026-11-16T15:22:51Z | base | nothing | 6.1 | pools up, BCH servers up | 200 in 0.6 s | 200 in 0.1 s | not asked | not opened | a0d421e |
+| 2026-11-16T15:22:58Z | a-refused | first Electrum server refuses | 6.3 | pools up, BCH servers up | 200 in 0.3 s | 200 in 0.1 s | not asked | not opened | a0d421e |
+| 2026-11-16T15:23:14Z | a-silent | first Electrum server never answers | 15.4 | pools up, BCH servers up | 200 in 0.4 s | 200 in 0.1 s | not asked | not opened | a0d421e |
+| 2026-11-16T15:24:09Z | b | every Electrum server down (two refuse, one never answers) | 24.6 | pools unknown, BCH servers down | 503 chain_unavailable in 11.5 s | 503 chain_unavailable in 10.1 s | not asked | Not answering right now: Bitcoin Cash. Steps that need it cannot finish until it is back; the status line at the foot of the page shows when it is. / Bitcoin Cash not answering | a0d421e |
+| 2026-11-16T15:24:20Z | c | every Cauldron indexer down (refuses) | 4.5 | pools down, BCH servers up | 503 pools_unavailable in 0.0 s | 200 in 0.1 s | not asked | Not answering right now: Cauldron. Steps that need it cannot finish until it is back; the status line at the foot of the page shows when it is. / Cauldron not answering · Bitcoin Cash ok | a0d421e |
+| 2026-11-16T15:24:27Z | d-base | nothing; crossings open | 6.5 | pools up, BCH servers up, route paused | 200 in 0.3 s | 200 in 0.1 s | 503 route_paused in 0.0 s | not opened | a0d421e |
+| 2026-11-16T15:24:33Z | d-refused | first THORNode refuses; crossings open | 5.4 | pools up, BCH servers up, route paused | 200 in 0.4 s | 200 in 0.1 s | 503 route_paused in 0.0 s | not opened | a0d421e |
+| 2026-11-16T15:24:47Z | d-silent | first THORNode never answers; crossings open | 11.6 | pools up, BCH servers up, route paused | 200 in 1.9 s | 200 in 0.1 s | 503 route_paused in 0.0 s | not opened | a0d421e |

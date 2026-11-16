@@ -1,7 +1,7 @@
 # Operations
 
-How the public site is watched and what to do when a check fails. Draft: the Failover, Test wallet funds and Judging
-week sections are added later.
+How the public site is watched and what to do when a check fails. Draft: the Test wallet funds and Judging week sections are
+added later.
 
 ## Probes
 
@@ -38,3 +38,17 @@ most once per UTC day, and probes that go down in the same run share one message
 | `render` | the page or one of its assets | restart with the same tag, then run `deploy/synthetic.sh render` again |
 
 The container's uptime watch (`deploy/uptime.sh`, every five minutes) runs alongside and alerts on `/` and `/healthz`.
+
+## Failover
+
+Measured on 2026-11-16 with `tools/measure/failover.ts` (table: `docs/MEASURED.md`, section Failover; decision:
+`docs/decisions/0026-failover-measured.md`).
+
+| What fails | What the server does | What the page shows | Action |
+|---|---|---|---|
+| One Electrum server | moves to the next server in `electrum.servers`; a server that never answers costs one 10 s timeout once | nothing | none; if it stays down, remove it from config at the next allowed deploy |
+| Every Electrum server | swaps, scans and landings answer `chain_unavailable` (503) after the timeouts | "Not answering right now: Bitcoin Cash" under the card and in the status line; Cauldron is not named | wait for the providers |
+| The Cauldron indexer | swaps answer `pools_unavailable` (503) at once; wallet scans still work | "Not answering right now: Cauldron" | wait for the provider; there is one indexer in config |
+| One THORNode | the next node in `thorchain.nodes` answers; a node that never answers costs `thorchain.timeoutMs` once | nothing | none |
+| THORChain halts BCH or the destination chain | new crossings answer `route_paused` (503) | "Paused by the route" in the crossing tabs | wait for THORChain to reopen |
+
