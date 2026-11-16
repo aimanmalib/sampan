@@ -294,7 +294,7 @@
   "how.adds.cross": "{symbols} on Base to {symbol} as one flow.",
   "measured.title": "Measured",
   "measured.completed": "{n} landings and crossings completed",
-  "measured.public": "{p} of them by other people",
+  "measured.public": "Swaps, landings and crossings by wallets outside the team: {p}",
   "measured.median": "median {time} from payment to conversion",
   "measured.seconds": "{n} s",
   "measured.minutes": "{n} min",

@@ -294,7 +294,7 @@
   "how.adds.cross": "{symbols} di Base kepada {symbol} sebagai satu aliran.",
   "measured.title": "Diukur",
   "measured.completed": "{n} pendaratan dan lintasan selesai",
-  "measured.public": "{p} daripadanya oleh orang lain",
+  "measured.public": "Tukaran, pendaratan dan lintasan oleh dompet di luar pasukan: {p}",
   "measured.median": "median {time} dari bayaran hingga tukaran",
   "measured.seconds": "{n} s",
   "measured.minutes": "{n} min",

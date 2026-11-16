@@ -13,8 +13,16 @@ describe('Measured line', () => {
 
   it('names how many were made by other people and shows long medians in minutes', () => {
     const parts = measuredParts({ all: counts({ completed: 9, lost: 1, medianSeconds: 600 }), public: counts({ completed: 2 }) }, t);
-    expect(parts).toContain('2 of them by other people');
+    expect(parts).toContain('Swaps, landings and crossings by wallets outside the team: 2');
     expect(parts).toContain('median 10 min from payment to conversion');
     expect(parts).toContain('1 lost');
+  });
+
+  it('counts swaps by wallets outside the team, and shows nothing for them at zero', () => {
+    const only = (pub: Partial<Counts>) => measuredParts({ all: counts({ completed: 3 }), public: counts(pub) }, t);
+    expect(only({ swaps: 1 })).toContain('Swaps, landings and crossings by wallets outside the team: 1');
+    expect(only({ swaps: 2, completed: 1 })).toContain('Swaps, landings and crossings by wallets outside the team: 3');
+    expect(only({ swaps: 0 }).some((p) => p.includes('outside the team'))).toBe(false);
+    expect(only({}).some((p) => p.includes('outside the team'))).toBe(false);
   });
 });

@@ -86,6 +86,8 @@ export interface LandingRow {
 
 export interface StatsCounts {
   completed: number;
+  /** Swaps on BCH that reached the network (txid recorded). Counted apart from landings and crossings. */
+  swaps: number;
   returned: number;
   lost: number;
   /** Seconds from the coin being seen to it being finished, completed landings only. */
@@ -203,7 +205,7 @@ export class Db {
     this.db.prepare('UPDATE crossings SET origin = ? WHERE id = ?').run(origin, id);
   }
 
-  /** Counts for the "Measured" line: landings and crossings between chains (swaps are not crossings). No origin = all rows. */
+  /** Counts for the "Measured" line: landings and crossings between chains, and broadcast swaps apart. No origin = all rows. */
   stats(origin?: Origin): StatsCounts {
     const origins: Origin[] = origin ? [origin] : ['test', 'public'];
     const om = origins.map(() => '?').join(',');
@@ -214,13 +216,22 @@ export class Db {
         .get(...origins, ...statuses) as { n: number };
       return Number(row.n);
     };
+    const swaps = this.db
+      .prepare(`SELECT COUNT(*) AS n FROM crossings WHERE kind = 'swap' AND origin IN (${om}) AND status = 'broadcast' AND txid IS NOT NULL`)
+      .get(...origins) as { n: number };
     const times = this.db
       .prepare(
         `SELECT l.finished_at - l.seen_at AS ms FROM landings l JOIN crossings c ON c.id = l.crossing_id
          WHERE c.origin IN (${om}) AND c.status = 'converted' AND l.seen_at IS NOT NULL AND l.finished_at IS NOT NULL ORDER BY ms`,
       )
       .all(...origins) as Array<{ ms: number }>;
-    return { completed: count(COMPLETED), returned: count(RETURNED), lost: count(['lost']), medianSeconds: median(times.map((t) => Number(t.ms) / 1000)) };
+    return {
+      completed: count(COMPLETED),
+      swaps: Number(swaps.n),
+      returned: count(RETURNED),
+      lost: count(['lost']),
+      medianSeconds: median(times.map((t) => Number(t.ms) / 1000)),
+    };
   }
 
   close(): void {
