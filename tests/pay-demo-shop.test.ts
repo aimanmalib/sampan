@@ -97,7 +97,7 @@ describe('demo shop', () => {
     const row = services.pay.store.get(id)!;
     expect(row.merchant_address).toBe(on.pay.demo.merchantAddress);
     expect(row.webhook_url).toBe(`${on.site.url}/api/pay/demo-hook`);
-    expect((await get(a, `/api/pay/demo/order/${id}`)).json()).toEqual({ fulfilled: false, fulfilledAt: null });
+    expect((await get(a, `/api/pay/demo/order/${id}`)).json()).toEqual({ fulfilled: false, fulfilledAt: null, event: null });
 
     expect((await post(a, `/api/pay/fake/pay/${id}`)).statusCode).toBe(200);
     const paid = (await get(a, `/api/pay/invoice/${id}`)).json() as { status: string; convert: unknown[] };
@@ -105,8 +105,10 @@ describe('demo shop', () => {
     expect(paid.convert).toHaveLength(1);
     await services.webhooks.tick();
     await services.webhooks.tick();
-    const order = (await get(a, `/api/pay/demo/order/${id}`)).json() as { fulfilled: boolean };
+    const order = (await get(a, `/api/pay/demo/order/${id}`)).json() as { fulfilled: boolean; fulfilledAt: string; event: string };
     expect(order.fulfilled).toBe(true);
+    expect(order.event).toBe('invoice.paid');
+    expect(Number.isNaN(Date.parse(order.fulfilledAt))).toBe(false);
     expect(services.webhooks.events(id).some((e) => e.state === 'delivered')).toBe(true);
   });
 

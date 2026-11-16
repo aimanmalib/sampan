@@ -1,10 +1,15 @@
 // Measured Sampan Pay invoices on mainnet (PAY4, KP30), against the built server on this host.
 //   npx tsx tools/measure/pay.ts [--runs 2] [--port 4186]
+//   npx tsx tools/measure/pay.ts --live [--runs 1]
 // Starts dist/ with features.pay on and private webhook targets allowed (local only), and a small HTTPS webhook
 // receiver on 127.0.0.1 with a throwaway self-signed certificate that only the spawned server trusts. Each run makes
 // an invoice of pay.demo.priceUsd for pay.demo.merchantAddress (a test wallet address), pays the exact amount from
 // the test wallet as a plain BCH payment (tools/test-wallet/send.ts), then waits for the signed webhook.
 // `seconds` runs from the payment broadcast to the receiver checking the webhook signature.
+// --live (PAY5): no local server or receiver. Each run is a demo shop order on the public site (POST
+// /api/pay/demo/order, the button on /pay), so the webhook goes out through the public URL to the site's own demo
+// hook, which hands the order over only after checking the signature; the run reads that hand-over (time and event)
+// from GET /api/pay/demo/order/:id.
 import { execFileSync, spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
@@ -26,16 +31,17 @@ const arg = (name: string, fallback: string): string => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1]! : fallback;
 };
-const RUNS = Number(arg('--runs', '2'));
+const LIVE = process.argv.includes('--live');
+const RUNS = Number(arg('--runs', LIVE ? '1' : '2'));
 const PORT = Number(arg('--port', '4186'));
 const HOOK_PORT = PORT + 1;
-const BASE = `http://127.0.0.1:${PORT}`;
+const config = loadConfig('config/sampan.json');
+const BASE = LIVE ? config.site.url : `http://127.0.0.1:${PORT}`;
 const HOOK_URL = `https://127.0.0.1:${HOOK_PORT}/hook`;
 const MEASURED = 'docs/MEASURED.md';
 const WAIT_MS = 15 * 60_000;
 const HOOK_TOLERANCE_SECONDS = 300;
 
-const config = loadConfig('config/sampan.json');
 const token = config.tokens[config.defaultToken]!;
 const category = token.category.toLowerCase();
 const usd = config.pay.demo.priceUsd;
@@ -96,13 +102,23 @@ function sendPlain(address: string, bch: string): Promise<string | undefined> {
   return new Promise((r) => send.on('exit', (code) => r(code === 0 ? /txid ([0-9a-f]{64})/.exec(out)?.[1] : undefined)));
 }
 
+/** Live: the demo hook of the site checked the signature before it handed the order over. */
+async function liveHook(id: string): Promise<void> {
+  const o = await json<{ fulfilled: boolean; fulfilledAt: string | null; event: string | null }>(`${BASE}/api/pay/demo/order/${id}`);
+  if (o.fulfilled && o.fulfilledAt && !hooks.some((h) => h.invoiceId === id)) {
+    hooks.push({ verified: true, type: o.event ?? '', invoiceId: id, receivedAt: Date.parse(o.fulfilledAt) });
+  }
+}
+
 async function waitDone(id: string): Promise<{ view: PayInvoiceView; hook: HookReceipt | undefined }> {
   const until = Date.now() + WAIT_MS;
   for (;;) {
     const view = await json<PayInvoiceView>(`${BASE}/api/pay/invoice/${id}`);
+    if (LIVE) await liveHook(id);
     const hook = hooks.find((h) => h.invoiceId === id && h.verified);
-    if (hook || Date.now() > until || view.webhook.state === 'failed') return { view, hook: hook ?? hooks.find((h) => h.invoiceId === id) };
-    await new Promise((r) => setTimeout(r, 1000));
+    // The receiver sees the message just before the server records the answer, so wait for both.
+    if ((hook && view.webhook.state === 'delivered') || Date.now() > until || view.webhook.state === 'failed') return { view, hook: hook ?? hooks.find((h) => h.invoiceId === id) };
+    await new Promise((r) => setTimeout(r, LIVE ? 3000 : 1000));
   }
 }
 
@@ -121,12 +137,13 @@ async function tokensAtMerchant(chain: ElectrumChain, txid: string | undefined):
 }
 
 async function oneRun(chain: ElectrumChain, n: number): Promise<PayFacts> {
-  const facts: PayFacts = { usd, how: 'plain', where: 'local', utc: new Date(), onChain: { pay: false, convert: false } };
-  const inv = await json<{ id: string; address: string; requiredSats: string }>(`${BASE}/api/pay/invoice`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ usd, merchantAddress: merchant, webhookUrl: HOOK_URL, webhookSecret: secret, orderId: `measure-${Date.now()}-${n}` }),
-  });
+  const facts: PayFacts = { usd, how: 'plain', where: LIVE ? 'live' : 'local', utc: new Date(), onChain: { pay: false, convert: false } };
+  const post = (url: string, body: unknown) => json<{ id: string }>(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  const made = LIVE
+    ? await post(`${BASE}/api/pay/demo/order`, {})
+    : await post(`${BASE}/api/pay/invoice`, { usd, merchantAddress: merchant, webhookUrl: HOOK_URL, webhookSecret: secret, orderId: `measure-${Date.now()}-${n}` });
+  // The PUSD output is checked at pay.demo.merchantAddress below, so a site paying another merchant is a fail row.
+  const inv = await json<{ id: string; address: string; requiredSats: string }>(`${BASE}/api/pay/invoice/${made.id}`);
   if (typeof parseAddress(inv.address, 'bitcoincash') === 'string') throw new Error(`the invoice address does not parse: ${inv.address}`);
   const bch = formatUnits(BigInt(inv.requiredSats), 8, 8);
   console.log(`invoice ${inv.id}: ${bch} BCH to ${inv.address}`);
@@ -146,7 +163,8 @@ async function oneRun(chain: ElectrumChain, n: number): Promise<PayFacts> {
   };
 }
 
-async function main(): Promise<void> {
+/** Local: a built server with private webhook targets allowed and an HTTPS receiver. Live: nothing to start. */
+function startLocal(): { stop: () => void } {
   const dir = mkdtempSync(path.join(tmpdir(), 'sampan-pay-'));
   const tls = certificate(dir);
   const hookServer = receiver(tls);
@@ -160,9 +178,20 @@ async function main(): Promise<void> {
     },
     env: { NODE_EXTRA_CA_CERTS: tls.certFile },
   });
+  return {
+    stop: () => {
+      server.kill();
+      hookServer.close();
+      rmSync(dir, { recursive: true, force: true });
+    },
+  };
+}
+
+async function main(): Promise<void> {
+  const local = LIVE ? undefined : startLocal();
   const chain = new ElectrumChain(config.electrum.servers);
   try {
-    await waitHealthy(BASE);
+    if (local) await waitHealthy(BASE);
     for (let n = 1; n <= RUNS; n++) {
       const facts = await oneRun(chain, n);
       const run = payRun(facts);
@@ -173,9 +202,7 @@ async function main(): Promise<void> {
     }
   } finally {
     await chain.close();
-    server.kill();
-    hookServer.close();
-    rmSync(dir, { recursive: true, force: true });
+    local?.stop();
   }
 }
 

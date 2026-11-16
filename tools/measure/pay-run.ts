@@ -1,7 +1,7 @@
 // One Sampan Pay measurement as a Runs row (KP30) and its note line. Pure: tools/measure/pay.ts gathers the facts.
 // A row is ok only when every link of the chain held: the payment was broadcast, the server calls the invoice paid,
 // the conversion paid PUSD to the merchant, both transactions are known to Electrum, the PUSD output is at the
-// merchant's address, and the webhook receiver checked the signature of an invoice.paid event for this invoice.
+// merchant's address, the server counts the webhook delivered, and the webhook receiver checked the signature of an invoice.paid event for this invoice.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { payTxid, type Run } from './runs.js';
 
@@ -48,6 +48,7 @@ export function payProblem(f: PayFacts): string | null {
   if (!f.onChain.convert) return 'the conversion is not on Electrum';
   if (f.tokensAtMerchant === undefined || f.tokensAtMerchant <= 0n) return 'no PUSD at the merchant address';
   if (!f.hook) return `no webhook received (state ${f.view.webhook.state})`;
+  if (f.view.webhook.state !== 'delivered') return `webhook state ${f.view.webhook.state}`;
   if (!f.hook.verified) return 'the webhook signature did not check';
   if (f.hook.invoiceId !== f.view.id) return 'the webhook names another invoice';
   if (f.hook.type !== 'invoice.paid') return `webhook event ${f.hook.type}`;
@@ -71,7 +72,8 @@ export function payNote(f: PayFacts): string {
   const utc = f.utc.toISOString().replace(/:\d\d\.\d{3}Z$/, 'Z').replace('T', ' ');
   if (!f.view) return `- ${utc}: no invoice view (${payProblem(f) ?? 'unknown'}).`;
   const w = f.view.webhook;
-  const hook = f.hook ? `${f.hook.type}, signature ${f.hook.verified ? 'checked' : 'refused'} by the receiver` : 'nothing received';
+  const by = f.where === 'live' ? "the site's demo shop, which then handed the order over" : 'the receiver';
+  const hook = f.hook ? `${f.hook.type}, signature ${f.hook.verified ? 'checked' : 'refused'} by ${by}` : 'nothing received';
   return `- ${utc} invoice \`${f.view.id}\`: ${f.view.status}, webhook ${w.state} after ${w.attempts} attempt${w.attempts === 1 ? '' : 's'} (${hook}).`;
 }
 

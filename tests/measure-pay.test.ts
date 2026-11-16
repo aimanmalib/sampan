@@ -53,6 +53,7 @@ describe('Sampan Pay measured row', () => {
     ['a conversion missing from Electrum', { onChain: { pay: true, convert: false } }, /conversion is not on Electrum/],
     ['a payment missing from Electrum', { onChain: { pay: false, convert: true } }, /payment is not on Electrum/],
     ['no PUSD at the merchant', { tokensAtMerchant: undefined }, /no PUSD/],
+    ['a hook seen while the server still retries', { view: { ...good().view!, webhook: { state: 'retrying', attempts: 2 } } }, /webhook state retrying/],
   ])('is not ok with %s', (_name, change, reason) => {
     const facts = { ...good(), ...change } as PayFacts;
     for (const k of Object.keys(change) as Array<keyof PayFacts>) if (facts[k] === undefined) delete facts[k];
@@ -61,6 +62,14 @@ describe('Sampan Pay measured row', () => {
     expect(run.note).toMatch(reason);
     expect(run.seconds).toBeUndefined();
     expect(gateCount(runRow(run))).toBe(0);
+  });
+
+  it('writes a live row whose hook is the site demo shop', () => {
+    const live: PayFacts = { ...good(), where: 'live' };
+    const row = runRow(payRun(live));
+    expect(row).toContain('| 0.20 USD · plain · live |');
+    expect(gateCount(row)).toBe(1);
+    expect(payNote(live)).toContain("signature checked by the site's demo shop, which then handed the order over");
   });
 
   it('records an unsent payment without a transaction id', () => {

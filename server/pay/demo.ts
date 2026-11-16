@@ -2,7 +2,7 @@
 // webhook to this route, signed with SAMPAN_PAY_DEMO_SECRET (host only, never in the repository). An order is shown
 // as fulfilled only after this route checked the signature and the timestamp, as a merchant's server would.
 // POST /api/pay/demo/order is the shop's checkout (one product at pay.demo.priceUsd, paid to the test wallet);
-// GET /api/pay/demo/order/:id tells the status page whether the shop has handed the order over.
+// GET /api/pay/demo/order/:id tells the status page whether the shop has handed the order over, when, and on which event.
 import { randomBytes } from 'node:crypto';
 import type { DatabaseSync } from 'node:sqlite';
 import type { FastifyInstance } from 'fastify';
@@ -126,7 +126,9 @@ export function registerDemoShop(app: FastifyInstance, config: SampanConfig, s: 
         open();
         const order = s.demoOrders.get(req.params.id);
         if (!order) throw new ApiError(404, 'not_found', 'not a demo order');
-        return { fulfilled: order.fulfilled_at !== null, fulfilledAt: order.fulfilled_at === null ? null : new Date(order.fulfilled_at).toISOString() };
+        const fulfilledAt = order.fulfilled_at === null ? null : new Date(order.fulfilled_at).toISOString();
+        // event = the signed webhook type that handed the order over (null until then).
+        return { fulfilled: order.fulfilled_at !== null, fulfilledAt, event: order.event ?? null };
       } catch (e) {
         return sendError(reply, e);
       }
