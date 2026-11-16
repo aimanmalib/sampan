@@ -75,8 +75,9 @@ made that way. Decisions and tests: [ADR 0008](docs/decisions/0008-landing-contr
 ## What is measured
 
 Every row is a mainnet transaction from [`docs/MEASURED.md`](docs/MEASURED.md), written by the scripts in `tools/measure/`
-against the real page in Chromium. Seconds run from pressing Swap to the page showing the broadcast, or for landings from
-the payment to the conversion. Failed rows stay in the table.
+against the real page in Chromium, except the rows made on the owner's phone, which were found afterwards by address history
+and not timed. Seconds run from pressing Swap to the page showing the broadcast, or for landings from the payment to the
+conversion. Failed rows stay in the table.
 
 | UTC (2026) | flow | amount | signed by | seconds | result | transaction |
 |---|---|---|---|---|---|---|
@@ -102,9 +103,13 @@ the payment to the conversion. Failed rows stay in the table.
 | 11-15 20:13 | giveBack | 0.003 BCH back to the owner after 6 blocks | public finisher, no Sampan server | 2800.4 | ok | [`5671fd92`](https://explorer.salemkode.com/tx/5671fd920b3a3c74d322b23250d31a33326452e28528236227f0c89f3a585ba6) |
 | 11-15 21:44 | swap | 0.001 BCH to at least 0.19 PUSD | Selene web | 4.1 | ok | [`f9c4f0f3`](https://explorer.salemkode.com/tx/f9c4f0f3ce552d5f4e70c0500968d26791904fe22fe5e2d5b452a17215844e44) |
 | 11-15 21:44 | swap | 0.2 PUSD to at least 0.00095011 BCH | Selene web | 3.9 | ok | [`600b815b`](https://explorer.salemkode.com/tx/600b815b45d36066daadbf8f42b75ea16a5eeb03ba2eeba5e711afbcfa38e389) |
+| 11-16 06:42 | swap | 0.00096309 BCH to 0.20 PUSD | Paytaca iOS, owner's phone | - | ok | [`4c83412e`](https://explorer.salemkode.com/tx/4c83412e895794fd079d5f77b131fb320a464f58e17effd0c13563d022d57bfb) |
+| 11-16 06:42 | land | 0.001 BCH to 0.20 PUSD | Paytaca iOS, owner's phone | - | ok | [`069a3f83`](https://explorer.salemkode.com/tx/069a3f838227e4efcc4952466347582284b1924eba347ebaaaf00da494743e2f) |
+| 11-16 06:42 | swap | 0.40 PUSD to 0.00191467 BCH | Paytaca iOS, owner's phone | - | ok | [`3e528db3`](https://explorer.salemkode.com/tx/3e528db3e6fd4a65b713cde806e5ae444caa15f69c1fcc34ee79305dbebff19f) |
+| 11-16 06:51 | swap | 0.00096309 BCH to 0.20 PUSD | Selene iOS, owner's phone | - | ok | [`fdac791d`](https://explorer.salemkode.com/tx/fdac791db778ff37640e7741a8578b30db95b0b963bd1b45ff5eeab271720944) |
 
-In numbers: 16 swaps broadcast in both directions, from 1.4 to 4.1 seconds; 3 landings converted to PUSD at the owner with a
-median of 3.0 seconds from payment to conversion; 1 giveBack by the public finisher after it refused a conversion below the
+In numbers: 19 swaps broadcast in both directions, 16 of them timed from 1.4 to 4.1 seconds; 4 landings converted to PUSD at
+the owner, 3 of them timed with a median of 3.0 seconds from payment to conversion; 1 giveBack by the public finisher after it refused a conversion below the
 card's minimum rate; 2 sells refused by the test wallet's own check. The cause of those two was a bug in the test wallet's
 policy, fixed with a regression test; nothing was sent. The same file lists three Cauldron pools whose locks were rebuilt from
 `owner_pkh` and found on chain.
@@ -116,6 +121,8 @@ policy, fixed with a regression test; nothing was sent. The same file lists thre
 | Sampan test wallet (`@wizardconnect/wallet` 0.2.4, headless) | mainnet, paired through the page | 12 swaps broadcast |
 | Cashonize web (cashonize.com) | fresh wallet in automated Chromium | paired, showed the page's prompt and the balance change, signed both directions |
 | Selene web (app.selene.cash, 2026.10.02) | fresh wallet in automated Chromium, against the live site | paired, showed the prompt, the net change and every output, signed both directions |
+| Paytaca on iPhone (owner's phone) | live site in the phone browser; the page's button only offers Copy link, so the link was pasted in the wallet | paired, swapped both directions, paid a landing address that converted to PUSD |
+| Selene on iPhone (owner's phone) | same, link pasted in the wallet | stayed on "Waiting for your wallet" once, paired on the second try, swapped BCH to PUSD |
 
 ### Tests
 

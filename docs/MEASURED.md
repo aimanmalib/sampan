@@ -26,6 +26,10 @@
 | 2026-11-15T20:13:04Z | giveBack | 0.003 BCH back to the owner as 299776 sats (minimum rate out of reach, after 6 blocks) | 5671fd920b3a3c74d322b23250d31a33326452e28528236227f0c89f3a585ba6 | 2800.4 | ok |
 | 2026-11-15T21:44:02Z | swap | 0.001 BCH to at least 0.19 PUSD (Selene web) | f9c4f0f3ce552d5f4e70c0500968d26791904fe22fe5e2d5b452a17215844e44 | 4.1 | ok |
 | 2026-11-15T21:44:10Z | swap | 0.2 PUSD to at least 0.00095011 BCH (Selene web) | 600b815b45d36066daadbf8f42b75ea16a5eeb03ba2eeba5e711afbcfa38e389 | 3.9 | ok |
+| 2026-11-16T06:42:44Z | swap | 0.00096309 BCH to 0.20 PUSD (Paytaca iOS, owner's phone) | 4c83412e895794fd079d5f77b131fb320a464f58e17effd0c13563d022d57bfb | - | ok |
+| 2026-11-16T06:42:44Z | land | 0.001 BCH to 0.20 PUSD (Paytaca iOS, owner's phone) | 069a3f838227e4efcc4952466347582284b1924eba347ebaaaf00da494743e2f | - | ok |
+| 2026-11-16T06:42:44Z | swap | 0.40 PUSD to 0.00191467 BCH (Paytaca iOS, owner's phone) | 3e528db3e6fd4a65b713cde806e5ae444caa15f69c1fcc34ee79305dbebff19f | - | ok |
+| 2026-11-16T06:51:56Z | swap | 0.00096309 BCH to 0.20 PUSD (Selene iOS, owner's phone) | fdac791db778ff37640e7741a8578b30db95b0b963bd1b45ff5eeab271720944 | - | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from
@@ -34,6 +38,16 @@ Cashonize web wallet (cashonize.com) in an automated browser instead of the test
 time because the script paused before pressing Sign.
 Rows marked "Selene web" were signed by a fresh Selene web wallet (app.selene.cash) in an automated browser on the
 live site; their time includes the script pressing Approve in Selene as soon as the request appeared.
+Rows marked "owner's phone" were made by the project owner on an iPhone, on the live site, with Paytaca and Selene.
+We did not time them, so `seconds` is `-`, and `UTC` is the time of the block that holds the transaction. The rows were
+found afterwards by Electrum address history of the two wallets' receive addresses and checked from the transactions
+themselves (`npx tsx` scripts against Electrum, 2026-11-16): each swap spends a Cauldron pool v0 input whose lock
+rebuilds from its `owner_pkh`, and the amounts are the pool's BCH change and the PUSD the wallet received. The
+landing row is the conversion: its first input is the landing address `bitcoincash:pqrvthh4fepvc4qr8my9t0qa842drzztvszjr5487r`,
+whose redeem script ends with the compiled body of `contracts/landing.cash` and hashes to that address, and it pays
+20 PUSD units (0.20 PUSD) to the owner lock inside that script. The payment of 0.001 BCH to the landing address was
+`0037d4fab832ae0908f17ec45a51734c0c704512ea64edcf4da08be063c79c5d`, in the same block. The PUSD to BCH swap sold
+the PUSD of the first swap and of the landing together.
 
 ### Landing address runs
 
@@ -81,5 +95,5 @@ same BCH and token amounts.
 | Sampan test wallet (`@wizardconnect/wallet` 0.2.4, headless) | mainnet, paired through the page | 12 swaps broadcast (table above) |
 | Cashonize web (cashonize.com, 2026-11-15) | fresh wallet in automated Chromium, link pasted in its Connect tab | paired, xpubs shared, coins found; showed the page's one-sentence prompt and the balance change; signed both directions (2 swaps above) |
 | Selene web (app.selene.cash, version 2026.10.02, 2026-11-15) | fresh wallet in automated Chromium, link pasted in its WizardConnect app, against the live site | paired after its "Connect to Sampan?" question, coins found; the signature request showed the page's one-sentence prompt, the net balance change and every output, with PUSD shown by its short token id (2469ac) because its token metadata request failed in that browser; signed both directions (2 swaps above); the balance was then sent back to the test wallet |
-| Paytaca on iPhone (owner's phone, 2026-11-16) | live site in the phone browser, link copied with Copy link and pasted in the wallet; the page's button does not open the wallet by itself | paired; swapped 0.001 BCH to 0.20 PUSD and back; paid 0.001 BCH to a landing address, which was converted to PUSD with all four status steps done |
-| Selene on iPhone (owner's phone, 2026-11-16) | same, link pasted in the wallet | paired on the second try (the first stayed on "Waiting for your wallet"); swapped 0.001 BCH to 0.20 PUSD |
+| Paytaca on iPhone (owner's phone, 2026-11-16) | live site in the phone browser, link copied with Copy link and pasted in the wallet; the page's button does not open the wallet by itself | paired; swapped BCH to 0.20 PUSD, paid 0.001 BCH to a landing address, which was converted to 0.20 PUSD with all four status steps done, then sold the 0.40 PUSD back to BCH (3 rows above) |
+| Selene on iPhone (owner's phone, 2026-11-16) | same, link pasted in the wallet | paired on the second try (the first stayed on "Waiting for your wallet"); swapped BCH to 0.20 PUSD (1 row above) |
