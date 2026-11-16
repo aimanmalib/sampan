@@ -16,6 +16,12 @@ export interface ChainUtxo {
   token?: ChainToken;
 }
 
+/** A transaction read back from the network. `height` 0 or below = in the mempool (only filled when asked for). */
+export interface ChainTx {
+  hex: string;
+  height: number;
+}
+
 export interface Chain {
   listUnspent(lockingHex: string): Promise<ChainUtxo[]>;
   /** Number of transactions that ever touched this locking bytecode (confirmed and mempool). */
@@ -23,6 +29,8 @@ export interface Chain {
   /** Returns the txid, or throws BroadcastError with the node's message. */
   broadcast(txHex: string): Promise<string>;
   tipHeight(): Promise<number>;
+  /** The transaction as the network has it, or null when the network does not know it. */
+  transaction(txid: string, withHeight?: boolean): Promise<ChainTx | null>;
   /**
    * Calls `onChange` whenever the server reports a change at this locking bytecode (a payment seen in the mempool,
    * a confirmation, a spend). Best effort: callers still poll. Returns a function that stops watching.

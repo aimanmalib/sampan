@@ -44,6 +44,12 @@ describe('config pay', () => {
     expect(errors).toMatch(/minUsd/);
   });
 
+  it('rejects a webhook tick slower than the first retry', () => {
+    const c = clone();
+    c.pay.webhook.tickSeconds = c.pay.webhook.retrySeconds[0]! + 1;
+    expect(validateConfig(c).join()).toMatch(/tickSeconds/);
+  });
+
   it('needs rate.invoicesPerHour', () => {
     const c = clone();
     c.rate.invoicesPerHour = 0;

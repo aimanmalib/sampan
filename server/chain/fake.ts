@@ -1,12 +1,14 @@
 // In-memory chain for tests and SAMPAN_FAKE=1. Broadcast really spends the inputs and creates the outputs, so a
 // swap followed by a rescan shows the new balances. Nothing leaves the machine.
 import { binToHex, decodeTransaction, hashTransaction, hexToBin } from '@bitauth/libauth';
-import { BroadcastError, type Chain, type ChainUtxo } from './types.js';
+import { BroadcastError, type Chain, type ChainTx, type ChainUtxo } from './types.js';
 
 export class FakeChain implements Chain {
   private readonly utxos = new Map<string, ChainUtxo[]>();
   private readonly history = new Map<string, number>();
   private readonly watchers = new Map<string, Set<() => void>>();
+  /** Transactions broadcast here, by txid (coins added with add() have no transaction). */
+  private readonly txs = new Map<string, string>();
   height = 900_000;
 
   add(lockingHex: string, utxo: ChainUtxo): void {
@@ -57,6 +59,7 @@ export class FakeChain implements Chain {
       this.utxos.set(lock, (this.utxos.get(lock) ?? []).filter((u) => !(u.txid === txid && u.vout === vout)));
     }
     const txid = hashTransaction(hexToBin(txHex));
+    this.txs.set(txid, txHex.toLowerCase());
     tx.outputs.forEach((o, vout) => {
       if (o.valueSatoshis === 0n) return;
       this.add(binToHex(o.lockingBytecode), {
@@ -73,6 +76,11 @@ export class FakeChain implements Chain {
 
   async tipHeight(): Promise<number> {
     return this.height;
+  }
+
+  async transaction(txid: string): Promise<ChainTx | null> {
+    const hex = this.txs.get(txid.toLowerCase());
+    return hex === undefined ? null : { hex, height: 0 };
   }
 
   async close(): Promise<void> {}

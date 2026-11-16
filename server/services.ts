@@ -11,7 +11,10 @@ import { ClientIp } from './client-ip.js';
 import { Db } from './db.js';
 import { LandingService } from './landing/service.js';
 import { LandingWatcher } from './landing/watcher.js';
+import { DemoOrders } from './pay/demo.js';
 import { PayService } from './pay/service.js';
+import { httpsTransport, systemLookup, type Lookup, type Transport } from './pay/ssrf.js';
+import { WebhookDispatcher } from './pay/webhook.js';
 import { httpFetchActive, PoolDirectory, type FetchActive, type IndexerPool } from './indexer.js';
 import { refreshPools } from './pools.js';
 import { RateLimiter } from './rate.js';
@@ -40,6 +43,10 @@ export interface Services {
   watcher: LandingWatcher;
   /** Sampan Pay invoices (landing addresses whose owner is a merchant); reads what the watcher reports. */
   pay: PayService;
+  /** Sampan Pay webhooks: queued in SQLite, checked against the network, sent signed (started by the app). */
+  webhooks: WebhookDispatcher;
+  /** Orders of the demo shop, fulfilled by its own webhook. */
+  demoOrders: DemoOrders;
   db: Db;
   clientIp: ClientIp;
   limiter: RateLimiter;
@@ -64,6 +71,9 @@ export interface ServiceOptions {
   /** SAMPAN_FAKE_OUTAGE: with the fake network, the indexer or the BCH servers fail (server/outage.ts). */
   outage?: Outage | null;
   log?: (message: string) => void;
+  /** Webhook DNS and sending (tests). The fake network answers every name with a documentation address and sends nothing. */
+  webhookLookup?: Lookup;
+  webhookTransport?: Transport;
 }
 
 /** Fake wallet balance handed to the first address of a scan that has never been seen. */
@@ -127,7 +137,10 @@ export function createServices(o: ServiceOptions): Services {
   const swaps = new SwapService({ config, chain, pools, prefix });
   const route = createRoute(config, o.fake);
   const landings = new LandingService({ config, chain, pools, db, prefix, testLocks });
-  const pay = new PayService({ config, db, pools, prefix, testLocks });
+  // The fake network sends no webhook anywhere: names resolve to TEST-NET-3 and the transport answers 503 (nothing leaves).
+  const webhookLookup: Lookup = o.webhookLookup ?? (o.fake ? async () => ['203.0.113.10'] : systemLookup);
+  const webhookTransport: Transport = o.webhookTransport ?? (o.fake ? async () => 503 : httpsTransport);
+  const pay = new PayService({ config, db, pools, prefix, testLocks, lookup: webhookLookup });
   const category = config.tokens[config.defaultToken]!.category;
   const routeChains = publicConfig(config).routeChains;
   const health = new HealthMonitor({
@@ -157,6 +170,8 @@ export function createServices(o: ServiceOptions): Services {
       onResults: (row, results) => pay.observe(row, results),
     }),
     pay,
+    webhooks: new WebhookDispatcher({ config, db: db.handle, pay, chain, prefix, lookup: webhookLookup, transport: webhookTransport, log: o.log }),
+    demoOrders: new DemoOrders(db.handle),
     db,
     clientIp: new ClientIp({ trustedProxies: o.trustedProxies, cloudflareCidrs: config.rate.cloudflareCidrs, log: o.log }),
     limiter: new RateLimiter(),

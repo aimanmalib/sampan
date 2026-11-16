@@ -15,6 +15,7 @@ import { Db, type LandingRow, type Origin } from '../db.js';
 import type { PoolDirectory } from '../indexer.js';
 import type { FinishResult } from '../landing/finish.js';
 import { SwapError } from '../swap.js';
+import { webhookTarget, type Lookup } from './ssrf.js';
 import { PayStore, type InvoiceRow, type StoredPayment } from './store.js';
 
 /** Draws before giving up on a free nonce (the space is at least 100 times the open invoices, see core/pay/config). */
@@ -66,6 +67,8 @@ export interface PayServiceOptions {
   pools: PoolDirectory;
   prefix: CashPrefix;
   testLocks: Set<string>;
+  /** DNS for the webhook address check (server/pay/ssrf.ts). */
+  lookup: Lookup;
   now?: () => number;
   /** Nonce source (tests); defaults to crypto randomInt over 1..pay.maxNonce. */
   nonce?: () => number;
@@ -107,7 +110,6 @@ export class PayService {
     if (r.usd > pay.maxUsd) throw new SwapError('above_max', `an invoice is at most ${pay.maxUsd} USD`);
     const tokens = usdToTokens(r.usd, this.token.decimals);
     if (typeof tokens === 'string') throw new SwapError('bad_request', tokens);
-    if (r.webhookUrl !== undefined && !isHttps(r.webhookUrl)) throw new SwapError('bad_request', 'webhookUrl must be an https URL');
     if (r.webhookSecret !== undefined && r.webhookUrl === undefined) throw new SwapError('bad_request', 'webhookSecret needs a webhookUrl');
     if (r.webhookSecret !== undefined && !SECRET.test(r.webhookSecret)) throw new SwapError('bad_request', 'webhookSecret must be whsec_ followed by base64 of at least 24 bytes');
     if (r.returnUrl !== undefined && !isHttps(r.returnUrl)) throw new SwapError('bad_request', 'returnUrl must be an https URL');
@@ -136,6 +138,10 @@ export class PayService {
     const { config, db } = this.o;
     const tokens = this.checkRequest(r);
     const merchantLock = this.merchantLock(r.merchantAddress);
+    if (r.webhookUrl !== undefined) {
+      const target = await webhookTarget(r.webhookUrl, { allowPrivate: config.pay.webhook.allowPrivate, lookup: this.o.lookup });
+      if (typeof target === 'string') throw new SwapError('bad_request', target);
+    }
     const t = this.now();
     const taken = this.store.openNonces(merchantLock, t);
     if (taken.size >= config.pay.maxOpenInvoices) throw new ApiError(429, 'too_many_open', `at most ${config.pay.maxOpenInvoices} open invoices per merchant`);
@@ -221,13 +227,24 @@ export class PayService {
     return invoiceStatus({ requiredSats: BigInt(row.required_sats), expiresAt: row.expires_at, payments: seen }, this.now(), this.o.config.pay);
   }
 
-  /** The invoice as GET /api/pay/invoice/:id shows it; the status is recomputed (and stored when it moved). */
-  view(id: string): InvoiceView | undefined {
+  /** The invoice with its status recomputed now (and stored when it moved). */
+  current(id: string): { row: InvoiceRow; payments: StoredPayment[]; status: InvoiceStatus } | undefined {
     const row = this.store.get(id);
     if (!row) return undefined;
     const payments = this.payments(row);
     const status = this.statusOf(row, payments);
-    if (status !== row.status) this.store.update(id, { status });
+    if (status !== row.status) {
+      this.store.update(id, { status });
+      row.status = status;
+    }
+    return { row, payments, status };
+  }
+
+  /** The invoice as GET /api/pay/invoice/:id shows it. */
+  view(id: string): InvoiceView | undefined {
+    const cur = this.current(id);
+    if (!cur) return undefined;
+    const { row, payments, status } = cur;
     const decimals = this.token.decimals;
     const paid = payments.reduce((s, p) => s + BigInt(p.sats), 0n);
     return {

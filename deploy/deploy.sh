@@ -16,7 +16,7 @@ cd "$(dirname "$0")"
 BUILD_CMD=${BUILD_CMD:-docker build}
 MIN_FREE_GB=${MIN_FREE_GB:-8}
 BROWSER_CMD=${BROWSER_CMD:-}
-export SAMPAN_NETWORK PROXY_CONTAINER SAMPAN_TEST_ADDRESSES   # compose reads these (proxy name, team wallet addresses)
+export SAMPAN_NETWORK PROXY_CONTAINER SAMPAN_TEST_ADDRESSES SAMPAN_PAY_DEMO_SECRET   # compose reads these (proxy name, team wallet addresses, demo shop hook secret)
 DC="docker compose -f compose.yaml"
 URL="https://$SAMPAN_DOMAIN"
 HOLDER=sampan-undo

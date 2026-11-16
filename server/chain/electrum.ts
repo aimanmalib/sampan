@@ -2,9 +2,13 @@
 // request moves to the next server and is retried once there. Responses keep amounts exact (BigInt).
 import { binToHex, hexToBin, sha256 } from '@bitauth/libauth';
 import { ElectrumClient, type ElectrumClientEvents } from '@electrum-cash/network';
-import { BroadcastError, ChainUnavailableError, type Chain, type ChainUtxo } from './types.js';
+import { BroadcastError, ChainUnavailableError, type Chain, type ChainTx, type ChainUtxo } from './types.js';
 
 /** Electrum addresses scripts by the reversed sha256 of the locking bytecode. */
+/** Methods whose error result is the server's answer about the transaction, not a failed server. */
+const ANSWERED_ERRORS = new Set(['blockchain.transaction.broadcast', 'blockchain.transaction.get', 'blockchain.transaction.get_height']);
+const UNKNOWN_TX = /no such|not found|unknown|invalid tx hash|missing/i;
+
 export const scriptHash = (lockingHex: string): string => binToHex(sha256.hash(hexToBin(lockingHex)).reverse());
 
 interface RawUtxo {
@@ -130,7 +134,8 @@ export class ElectrumChain implements Chain {
       try {
         const c = await this.connect();
         const res = await c.request(method, ...params);
-        if (res instanceof Error && method !== 'blockchain.transaction.broadcast') throw res;
+        // Broadcast and transaction.get answer an error for a bad or unknown transaction: that is an answer, not an outage.
+        if (res instanceof Error && !ANSWERED_ERRORS.has(method)) throw res;
         return res;
       } catch (e) {
         lastError = e instanceof Error ? e.message : String(e);
@@ -160,6 +165,20 @@ export class ElectrumChain implements Chain {
     if (res instanceof Error) throw new BroadcastError(res.message);
     if (typeof res !== 'string' || !/^[0-9a-f]{64}$/i.test(res)) throw new BroadcastError(`unexpected broadcast answer`);
     return res.toLowerCase();
+  }
+
+  /** Raw transaction (and, when asked, its height: Fulcrum's blockchain.transaction.get_height, 0 = mempool). */
+  async transaction(txid: string, withHeight = false): Promise<ChainTx | null> {
+    const res = await this.request('blockchain.transaction.get', txid);
+    if (res instanceof Error) {
+      if (UNKNOWN_TX.test(res.message)) return null;
+      throw new ChainUnavailableError(`transaction.get: ${res.message}`);
+    }
+    if (typeof res !== 'string' || !/^[0-9a-f]+$/i.test(res)) throw new ChainUnavailableError('transaction.get did not return hex');
+    if (!withHeight) return { hex: res.toLowerCase(), height: 0 };
+    const h = await this.request('blockchain.transaction.get_height', txid);
+    if (h instanceof Error) throw new ChainUnavailableError(`transaction.get_height: ${h.message}`);
+    return { hex: res.toLowerCase(), height: Number(h ?? 0) };
   }
 
   async tipHeight(): Promise<number> {

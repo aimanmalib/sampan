@@ -28,6 +28,7 @@ export function downChain(): Chain {
     historyCount: fail,
     broadcast: fail,
     tipHeight: fail,
+    transaction: fail,
     watch: () => () => undefined,
     close: async () => undefined,
   };

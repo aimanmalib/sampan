@@ -17,6 +17,8 @@ export interface ServerEnv {
   trustedProxies: string[];
   /** SAMPAN_TEST_ADDRESSES: comma-separated extra addresses of the team's own wallets (host only, not in the repo). */
   testAddresses: string[];
+  /** SAMPAN_PAY_DEMO_SECRET: Standard Webhooks secret of the demo shop's own hook (host only). */
+  payDemoSecret: string | undefined;
 }
 
 export function readEnv(env: NodeJS.ProcessEnv = process.env, cwd = process.cwd()): ServerEnv {
@@ -37,5 +39,6 @@ export function readEnv(env: NodeJS.ProcessEnv = process.env, cwd = process.cwd(
     dbFile: path.resolve(cwd, env.SAMPAN_DATA ?? 'data', 'sampan.db'),
     trustedProxies: list(env.SAMPAN_TRUSTED_PROXY),
     testAddresses: list(env.SAMPAN_TEST_ADDRESSES),
+    payDemoSecret: env.SAMPAN_PAY_DEMO_SECRET || undefined,
   };
 }

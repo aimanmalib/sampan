@@ -6,6 +6,7 @@ import { registerLanding } from './api/landing.js';
 import { registerIn } from './api/in.js';
 import { registerOut } from './api/out.js';
 import { registerPay } from './api/pay.js';
+import { registerDemoHook } from './pay/demo.js';
 import { registerSwap } from './api/swap.js';
 import { registerWallet } from './api/wallet.js';
 import { registerSecurityHeaders } from './security.js';
@@ -28,6 +29,8 @@ export interface AppOptions {
   testAddresses?: string[];
   /** Transaction ids of the team's own measured runs. */
   teamTxids?: string[];
+  /** SAMPAN_PAY_DEMO_SECRET: the demo shop's webhook secret; without it /api/pay/demo-hook is 404. */
+  payDemoSecret?: string | undefined;
   /** Run the landing finisher in this process (default true; tests drive it by hand). */
   startWatcher?: boolean;
   /** Ready-made services (tests); otherwise built from the options above. */
@@ -66,9 +69,11 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   registerIn(app, config, services);
   registerCrossings(app, config, services);
   registerPay(app, config, services);
+  registerDemoHook(app, config, services.demoOrders, options.payDemoSecret);
   if (options.startWatcher ?? true) {
     services.watcher.start();
     services.health.start();
+    if (config.features.pay) services.webhooks.start();
   }
 
   const purge = setInterval(() => services.db.purgeQuotes(config.ops.quotePayloadHours), 3_600_000);
@@ -77,6 +82,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
     clearInterval(purge);
     services.watcher.stop();
     services.health.stop();
+    services.webhooks.stop();
     await services.chain.close();
     services.db.close();
   });

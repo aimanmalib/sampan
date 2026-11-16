@@ -16,6 +16,7 @@ const app = await buildApp({
   dbFile: env.fake ? ':memory:' : env.dbFile,
   trustedProxies: env.trustedProxies,
   testAddresses: env.testAddresses,
+  payDemoSecret: env.payDemoSecret,
   teamTxids: typeof __SAMPAN_TEAM_TXIDS__ === 'undefined' ? [] : __SAMPAN_TEAM_TXIDS__,
 });
 

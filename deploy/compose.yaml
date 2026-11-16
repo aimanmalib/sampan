@@ -11,6 +11,7 @@ services:
       SAMPAN_DATA: /app/data
       SAMPAN_TRUSTED_PROXY: ${PROXY_CONTAINER:-}
       SAMPAN_TEST_ADDRESSES: ${SAMPAN_TEST_ADDRESSES:-}
+      SAMPAN_PAY_DEMO_SECRET: ${SAMPAN_PAY_DEMO_SECRET:-}
     volumes:
       - sampan-data:/app/data
     read_only: true

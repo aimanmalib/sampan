@@ -29,6 +29,8 @@ export interface PayConfig {
     /** Wait before each retry; the number of entries is the number of retries. */
     retrySeconds: number[];
     timeoutMs: number;
+    /** How often the server looks for webhooks to queue and attempts that are due. */
+    tickSeconds: number;
     /** Allow webhooks to private and loopback addresses (local measurement only, never on the public site). */
     allowPrivate: boolean;
   };
@@ -62,6 +64,7 @@ export function validatePay(p: PayConfig | undefined): string[] {
     'pay.webhook.retrySeconds: positive integers, not decreasing',
   );
   need(posInt(w?.timeoutMs) && w.timeoutMs <= 30_000, 'pay.webhook.timeoutMs: integer from 1 to 30000');
+  need(posInt(w?.tickSeconds) && w.tickSeconds <= Math.min(...(w?.retrySeconds ?? [1])), 'pay.webhook.tickSeconds: positive integer, at most the first retry wait');
   need(typeof w?.allowPrivate === 'boolean', 'pay.webhook.allowPrivate: boolean');
   need(cents(p.demo?.priceUsd) && p.demo.priceUsd >= p.minUsd && p.demo.priceUsd <= p.maxUsd, 'pay.demo.priceUsd: whole cents from minUsd to maxUsd');
   const merchant = parseAddress(p.demo?.merchantAddress ?? '', prefixOf(p.demo?.merchantAddress ?? ''));

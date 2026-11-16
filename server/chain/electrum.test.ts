@@ -71,6 +71,27 @@ describe('ElectrumChain failover', () => {
   });
 });
 
+describe('ElectrumChain transaction', () => {
+  const urls = ['wss://a.example:50004', 'wss://b.example:50004'];
+
+  it('reads a transaction back, with its height only when asked', async () => {
+    const { calls, createClient } = fakeClients({
+      'a.example': (m) => (m === 'blockchain.transaction.get' ? 'AB01' : 977000),
+    });
+    const chain = new ElectrumChain(urls, { createClient });
+    expect(await chain.transaction('aa'.repeat(32))).toEqual({ hex: 'ab01', height: 0 });
+    expect(await chain.transaction('aa'.repeat(32), true)).toEqual({ hex: 'ab01', height: 977000 });
+    expect(calls).toEqual(['a.example blockchain.transaction.get', 'a.example blockchain.transaction.get', 'a.example blockchain.transaction.get_height']);
+  });
+
+  it('answers null for a transaction the server does not know, without failing over', async () => {
+    const { calls, createClient } = fakeClients({ 'a.example': () => new Error('No such mempool or blockchain transaction') });
+    const chain = new ElectrumChain(urls, { createClient });
+    expect(await chain.transaction('bb'.repeat(32))).toBeNull();
+    expect(calls).toHaveLength(1);
+  });
+});
+
 describe('ElectrumChain watch', () => {
   const lock = '76a914' + '22'.repeat(20) + '88ac';
 
