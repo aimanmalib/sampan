@@ -2,7 +2,7 @@
 // the headline is in view, the page has readable text that says what is wrong, and no error goes uncaught.
 import { expect, test, type Page } from '@playwright/test';
 import en from '../lang/en.json' with { type: 'json' };
-import { OUTAGE_MODES } from '../playwright.config';
+import { OUTAGE_MODES } from '../playwright.config.js';
 
 test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake servers with outages switched on');
 const portOf = (mode: (typeof OUTAGE_MODES)[number]) => Number(process.env.E2E_PORT ?? 4173) + 3 + OUTAGE_MODES.indexOf(mode);
