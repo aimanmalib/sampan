@@ -197,8 +197,12 @@ export class Db {
   }
 
   /** Rows counted as other people's, with the user address each was made for. */
-  publicCrossings(): Array<{ id: string; address: string }> {
-    return this.db.prepare(`SELECT id, address FROM crossings WHERE origin = 'public'`).all() as Array<{ id: string; address: string }>;
+  publicCrossings(): Array<{ id: string; address: string; txid: string | null }> {
+    return this.db.prepare(`SELECT id, address, txid FROM crossings WHERE origin = 'public'`).all() as Array<{
+      id: string;
+      address: string;
+      txid: string | null;
+    }>;
   }
 
   setOrigin(id: string, origin: Origin): void {

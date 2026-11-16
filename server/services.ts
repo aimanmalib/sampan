@@ -53,6 +53,8 @@ export interface ServiceOptions {
   trustedProxies: string[];
   /** Extra team wallet addresses from the host (SAMPAN_TEST_ADDRESSES). */
   testAddresses?: string[];
+  /** Transaction ids of the team's own measured runs (docs/MEASURED.md, set at build). */
+  teamTxids?: string[];
   /** Frozen indexer capture used by the fake network. */
   fakeFixture?: string;
   log?: (message: string) => void;
@@ -114,7 +116,7 @@ export function createServices(o: ServiceOptions): Services {
   });
   const testLocks = testLocksOf([...config.ops.testAddresses, ...(o.testAddresses ?? [])], prefix);
   const db = new Db(o.dbFile);
-  const moved = markOwnRows(db, testLocks, prefix);
+  const moved = markOwnRows(db, testLocks, prefix, new Set(o.teamTxids ?? []));
   if (moved > 0) o.log?.(`origin: ${moved} rows from team wallets counted as test`);
   const swaps = new SwapService({ config, chain, pools, prefix });
   const route = createRoute(config, o.fake);

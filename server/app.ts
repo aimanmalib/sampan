@@ -21,6 +21,8 @@ export interface AppOptions {
   trustedProxies?: string[];
   /** Extra team wallet addresses (SAMPAN_TEST_ADDRESSES). */
   testAddresses?: string[];
+  /** Transaction ids of the team's own measured runs. */
+  teamTxids?: string[];
   /** Run the landing finisher in this process (default true; tests drive it by hand). */
   startWatcher?: boolean;
   /** Ready-made services (tests); otherwise built from the options above. */
@@ -39,6 +41,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
       dbFile: options.dbFile ?? ':memory:',
       trustedProxies: options.trustedProxies ?? [],
       testAddresses: options.testAddresses ?? [],
+      teamTxids: options.teamTxids ?? [],
       log: (m) => app.log.warn(m),
     });
   await services.clientIp.refresh();

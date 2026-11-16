@@ -110,6 +110,14 @@ export function countWallets(markdown: string): number {
   return tableRows(markdown.split('\n'), /^\| Wallet \| How \| Result \|$/).length;
 }
 
+/** Every transaction id in the Runs table, lower case without 0x: all of them were made by the team's own wallets. */
+export function proofTxids(p: Proof): string[] {
+  return [...new Set(p.runs.flatMap((r) => r.txids.map((t) => normalTxid(t.id))))];
+}
+
+/** Lower case, no 0x: how a BCH id and a Base id compare with the ids the server stores. */
+export const normalTxid = (id: string): string => id.toLowerCase().replace(/^0x/, '');
+
 export function buildProof(markdown: string): Proof {
   const runs = parseRuns(markdown);
   const flows: ProofFlow[] = [];

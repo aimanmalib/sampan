@@ -2,6 +2,9 @@ import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
 import { readEnv } from './env.js';
 
+/** Set by the server build (tsup.config.ts) from docs/MEASURED.md; absent when the source runs directly. */
+declare const __SAMPAN_TEAM_TXIDS__: string[] | undefined;
+
 const env = readEnv();
 const config = loadConfig(env.configPath, process.env.SAMPAN_CONFIG_PATCH);
 const app = await buildApp({
@@ -12,6 +15,7 @@ const app = await buildApp({
   dbFile: env.fake ? ':memory:' : env.dbFile,
   trustedProxies: env.trustedProxies,
   testAddresses: env.testAddresses,
+  teamTxids: typeof __SAMPAN_TEAM_TXIDS__ === 'undefined' ? [] : __SAMPAN_TEAM_TXIDS__,
 });
 
 const stop = async (): Promise<void> => {
