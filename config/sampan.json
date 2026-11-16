@@ -238,6 +238,6 @@
     "demo": { "priceUsd": 0.2, "merchantAddress": "bitcoincash:zpn0pzjdqy0m36jlvnrjs3fmalq0zt0wvvxdewu2m5" }
   },
   "ui": {
-    "ferryMotion": false
+    "ferryMotion": true
   }
 }

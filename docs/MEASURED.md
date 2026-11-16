@@ -149,3 +149,12 @@ Measured with `tools/measure/failover.ts`: the built server on the host, the rea
 | 2026-11-16T15:24:27Z | d-base | nothing; crossings open | 6.5 | pools up, BCH servers up, route paused | 200 in 0.3 s | 200 in 0.1 s | 503 route_paused in 0.0 s | not opened | a0d421e |
 | 2026-11-16T15:24:33Z | d-refused | first THORNode refuses; crossings open | 5.4 | pools up, BCH servers up, route paused | 200 in 0.4 s | 200 in 0.1 s | 503 route_paused in 0.0 s | not opened | a0d421e |
 | 2026-11-16T15:24:47Z | d-silent | first THORNode never answers; crossings open | 11.6 | pools up, BCH servers up, route paused | 200 in 1.9 s | 200 in 0.1 s | 503 route_paused in 0.0 s | not opened | a0d421e |
+
+## Ferry
+
+The boat on the status page (`/c/:id`) with `ui.ferryMotion` on: `data-step` of `.ferry` read every 200 ms, one screenshot per step, then the page kept open 30 s after the last step (no crash event, no page error, no console error, no sideways scroll). `local fake` rows: built server with the fake network and the landing flow on, the crossing answers held back as `open` then `seen` before the real `converted` answer, page poll 2 s. `mainnet` rows: the live site, a real landing paid from the test wallet, page poll as configured.
+
+| UTC | engine | kind | steps seen | txid | result |
+|---|---|---|---|---|---|
+| 2026-11-16T19:26:30Z | webkit-iphone13 · local fake | land | 1 moving (+0.3 s) → 2 moving (+6.4 s) → 4 arrived (+12.2 s); alive 36 s after | none (fake network) | ok |
+| 2026-11-16T19:27:20Z | chromium-desktop 1440×900 · local fake | land | 1 moving (+0.2 s) → 2 moving (+6.3 s) → 4 arrived (+12.1 s); alive 34 s after | none (fake network) | ok |

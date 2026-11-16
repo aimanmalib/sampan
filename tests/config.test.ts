@@ -117,9 +117,9 @@ describe('patchConfig (SAMPAN_CONFIG_PATCH)', () => {
 });
 
 describe('ui.ferryMotion', () => {
-  it('is off in the shipped config, is sent to the page, and must be a boolean', () => {
-    expect(shipped.ui.ferryMotion).toBe(false);
-    expect(publicConfig(shipped).ui).toEqual({ ferryMotion: false });
+  it('is a boolean in the shipped config, is sent to the page as it is, and must be a boolean', () => {
+    expect(typeof shipped.ui.ferryMotion).toBe('boolean');
+    expect(publicConfig(shipped).ui).toEqual({ ferryMotion: shipped.ui.ferryMotion });
     const bad = { ...shipped, ui: { ferryMotion: 'yes' } } as unknown as typeof shipped;
     expect(validateConfig(bad)).toContain('ui.ferryMotion: true or false');
   });
