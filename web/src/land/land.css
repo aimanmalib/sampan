@@ -105,10 +105,11 @@
 .judge__proof {
   margin: 0.25rem 0 0;
 }
-/* Padding keeps the link a 24 px target on its own line. */
+/* A full touch target on its own line, like every other link and button on the front page. */
 .judge__proof a {
-  display: inline-block;
-  padding: 0.25rem 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
 }
 .judge__fill {
   flex: 0 0 auto;

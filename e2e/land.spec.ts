@@ -107,7 +107,7 @@ test('the judge strip links to the proof table one tap from the first screen, wi
   await expect(proof).toHaveAttribute('href', '/how#proof');
   const box = await proof.boundingBox();
   expect(box!.y + box!.height).toBeLessThanOrEqual(640);
-  expect(box!.height).toBeGreaterThanOrEqual(24);
+  expect(box!.height).toBeGreaterThanOrEqual(44);
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
   await noHorizontalOverflow(page);
 });
