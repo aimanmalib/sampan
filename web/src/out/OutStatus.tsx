@@ -1,6 +1,8 @@
 // Status of a crossing through the route. Out: deposit sent on Bitcoin Cash, seen by the route, delivered (or
 // refunded) on the other chain. In: the same three steps from the other chain to Bitcoin Cash. The page asks again every `landing.pagePollSeconds` until the answer is final.
 import type { LoadedConfig } from '../config';
+import { Ferry, useBanks } from '../ferry/Ferry';
+import { ferryStep } from '../ferry/step';
 import { useText, type TextKey } from '../i18n';
 
 export interface OutView {
@@ -11,23 +13,13 @@ export interface OutView {
   out: { stage: 'unseen' | 'pending' | 'done' | 'refunded' | 'unknown'; outTxid: string | null; outChain: string | null } | null;
 }
 
-const STEPS = ['sent', 'seen', 'delivered'] as const;
-
-/** How many steps are done for this answer. */
-function reached(c: OutView): number {
-  if (!c.txid) return 0;
-  const stage = c.out?.stage;
-  if (stage === 'done' || stage === 'refunded') return 3;
-  if (stage === 'pending') return 2;
-  return 1;
-}
-
 export const outIsFinal = (c: OutView): boolean => c.status === 'completed' || c.status === 'refunded' || c.status === 'failed';
 
 export function OutStatus({ c, config, direction }: { c: OutView; config: LoadedConfig | null; direction: 'out' | 'in' }) {
   const { t } = useText();
   const vars = { route: t(`route.${c.route ?? 'thorchain'}` as TextKey), symbol: c.asset };
-  const n = reached(c);
+  const at = ferryStep(direction, c);
+  const n = at.done;
   const stage = c.status === 'completed' ? 'completed' : c.status === 'refunded' ? 'refunded' : c.txid ? (c.out?.stage ?? 'unknown') : 'built';
   const evmChain = config?.evm.chains.find((ch) => (direction === 'out' ? ch.key === c.out?.outChain : config.routeChains.includes(ch.key)));
   const bchLink = (txid: string): string => config?.connect.explorerTxUrl.replace('{txid}', txid.toLowerCase()) ?? '#';
@@ -35,11 +27,13 @@ export function OutStatus({ c, config, direction }: { c: OutView; config: Loaded
   // Out: the BCH deposit, then the other chain's payment. In: the other chain's deposit, then the BCH payment.
   const source = c.txid && config && (direction === 'out' || evmChain) ? (direction === 'out' ? bchLink(c.txid) : evmLink(c.txid)) : null;
   const paid = c.out?.outTxid && config && (direction === 'in' || evmChain) ? (direction === 'out' ? evmLink(c.out.outTxid) : bchLink(c.out.outTxid)) : null;
+  const banks = useBanks(direction, { chain: evmChain?.name });
   const short = (h: string): string => `${h.slice(0, 10).toLowerCase()}…${h.slice(-8).toLowerCase()}`;
   return (
     <>
+      {config?.ui.ferryMotion ? <Ferry kind={direction} at={at} banks={banks} motion /> : null}
       <ol className="timeline">
-        {STEPS.map((step, i) => (
+        {at.steps.map((step, i) => (
           <li key={step} className={`timeline__step${i < n ? ' timeline__step--done' : ''}`}>
             <span className="timeline__mark" aria-hidden="true" />
             <span>

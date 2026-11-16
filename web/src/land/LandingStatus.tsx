@@ -1,24 +1,15 @@
-// Status of one landing on /c/:id: a timeline (icon and words, not colour alone), a boat that crosses as the steps
-// complete (transform only, still under prefers-reduced-motion), the transactions with explorer links, and the
+// Status of one landing on /c/:id: a timeline (icon and words, not colour alone), the ferry (both read ferryStep), the transactions with explorer links, and the
 // recovery card read from the link's fragment. The card never goes to the server.
 import { cardFromFragment, type LandingCard } from '../../../core/landing-card';
 import type { LoadedConfig } from '../config';
-import { useText } from '../i18n';
+import { Ferry, useBanks } from '../ferry/Ferry';
+import { ferryStep } from '../ferry/step';
+import { useText, type TextKey } from '../i18n';
 
 export interface LandingView {
   status: string;
   txid: string | null;
   landing: { address: string | null; paymentTxid: string | null; watching: boolean };
-}
-
-const STEPS = ['waiting', 'seen', 'converted', 'arrived'] as const;
-const RETURNED_STEPS = ['waiting', 'seen', 'returned'] as const;
-
-function reached(status: string): number {
-  if (status === 'converted') return 4;
-  if (status === 'returned') return 3;
-  if (status === 'seen') return 2;
-  return 1;
 }
 
 const short = (txid: string): string => `${txid.slice(0, 10)}…${txid.slice(-8)}`;
@@ -64,42 +55,24 @@ function Card({ fragment }: { fragment: string | null }) {
   );
 }
 
-/** Boat on the river; its position class follows the step reached. Decorative: the timeline carries the meaning. */
-function Ferry({ step, of }: { step: number; of: number }) {
-  return (
-    <div className="ferry" aria-hidden="true">
-      <svg className="ferry__river" viewBox="0 0 300 40" preserveAspectRatio="none">
-        <path d="M0 30 Q 37 24 75 30 T 150 30 T 225 30 T 300 30" />
-      </svg>
-      <div className={`ferry__lane ferry__lane--${step}-of-${of}`}>
-        <svg className="ferry__boat" viewBox="0 0 48 28">
-          <path className="ferry__hull" d="M2 16 h44 l-7 9 h-30 z" />
-          <path className="ferry__roof" d="M14 16 q10 -12 20 0" />
-          <circle className="ferry__coin" cx="24" cy="12" r="3.5" />
-        </svg>
-      </div>
-    </div>
-  );
-}
-
 export function LandingStatus({ c, config, fragment, onCheck }: { c: LandingView; config: LoadedConfig | null; fragment: string | null; onCheck: () => void }) {
   const { t } = useText();
   const symbol = config?.tokens[config.defaultToken]?.symbol ?? '';
-  const steps = c.status === 'returned' ? RETURNED_STEPS : STEPS;
-  const done = reached(c.status);
+  const at = ferryStep('land', { status: c.status, txid: c.txid });
+  const banks = useBanks('land', { symbol });
   const statusKey =
     c.status === 'converted' || c.status === 'returned' || c.status === 'seen' ? (`crossing.land.status.${c.status}` as const) : 'crossing.land.status.open';
   return (
     <>
-      <Ferry step={Math.min(done, steps.length)} of={steps.length} />
+      <Ferry kind="land" at={at} banks={banks} motion={config?.ui.ferryMotion ?? false} />
       <ol className="timeline">
-        {steps.map((step, i) => {
-          const isDone = i < done;
+        {at.steps.map((step, i) => {
+          const isDone = i < at.done;
           return (
             <li key={step} className={`timeline__step${isDone ? ' timeline__step--done' : ''}`}>
               <span className="timeline__mark" aria-hidden="true" />
               <span>
-                {t(`crossing.land.step.${step}`, { symbol })}
+                {t(`crossing.land.step.${step}` as TextKey, { symbol })}
                 <span className="visually-hidden">{isDone ? t('crossing.done') : t('crossing.pending')}</span>
               </span>
             </li>

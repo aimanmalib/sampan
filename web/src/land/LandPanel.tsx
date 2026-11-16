@@ -16,6 +16,8 @@ import type { Wallet } from '../wallet/useWallet';
 import type { SwapStep } from '../../../core/client/swap';
 import { ApiFailure } from '../../../core/client/api';
 import { PayQr } from './PayQr';
+import { Ferry, useBanks } from '../ferry/Ferry';
+import { ferryStep } from '../ferry/step';
 
 const BCH_DECIMALS = 8;
 
@@ -40,6 +42,7 @@ function failureKey(e: unknown): TextKey {
 export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wallet }) {
   const { t } = useText();
   const token = config.tokens[config.defaultToken]!;
+  const banks = useBanks('land', { symbol: token.symbol });
   const [ownerText, setOwnerText] = useState('');
   const [amountText, setAmountText] = useState(config.limits.judgeLandBch);
   const [phase, setPhase] = useState<Phase>({ at: 'form' });
@@ -158,6 +161,7 @@ export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
   return (
     <div className="land land--open">
       <h3 className="land__title">{t('land.addressTitle')}</h3>
+      {config.ui.ferryMotion ? <Ferry kind="land" at={ferryStep('land', { status: 'open', txid: null })} banks={banks} motion={false} /> : null}
       <div className="land__pay">
         <PayQr value={link} label={t('land.qrLabel', { amount: amountOk ? amountText.trim() : vars.min })} />
         <div className="land__details">

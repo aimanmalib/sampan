@@ -137,6 +137,8 @@ export interface SampanConfig {
   };
   business: BusinessConfig;
   pay: PayConfig;
+  /** How the status pages draw; not a flow. ferryMotion: the ferry on every status page and the landing card, moving while a step is under way. */
+  ui: { ferryMotion: boolean };
 }
 
 /** The part of the config the page needs. Everything else stays on the server. */
@@ -162,6 +164,7 @@ export interface PublicConfig {
   business: Pick<BusinessConfig, 'feeBps' | 'feeAddress'>;
   /** Sampan Pay as its pages show it: how long an invoice is open, the invoice range and the demo shop's price. */
   pay: Pick<PayConfig, 'validMinutes' | 'minUsd' | 'maxUsd'> & { demoPriceUsd: number };
+  ui: SampanConfig['ui'];
 }
 
 const HEX32 = /^[0-9a-fA-F]{64}$/;
@@ -250,6 +253,7 @@ export function validateConfig(c: SampanConfig): string[] {
     posInt(c.ops.healthRetrySeconds) && c.ops.healthRetrySeconds <= c.ops.healthIntervalSeconds,
     'ops.healthRetrySeconds: positive integer, at most ops.healthIntervalSeconds',
   );
+  need(typeof c.ui?.ferryMotion === 'boolean', 'ui.ferryMotion: true or false');
   need(posInt(c.ops.requestTimeoutSeconds) && c.ops.requestTimeoutSeconds >= 10, 'ops.requestTimeoutSeconds: integer, at least 10');
   need(c.compliance.blockedCountries.every((cc) => /^[A-Z]{2}$/.test(cc)), 'compliance.blockedCountries: ISO codes');
   need(isHttpsUrl(c.site.url) && !c.site.url.endsWith('/'), 'site.url: https origin without a trailing slash');
@@ -329,5 +333,6 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     health: { intervalSeconds: c.ops.healthIntervalSeconds, retrySeconds: c.ops.healthRetrySeconds, requestTimeoutSeconds: c.ops.requestTimeoutSeconds },
     business: { feeBps: c.business.feeBps, feeAddress: c.business.feeAddress },
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
+    ui: { ferryMotion: c.ui.ferryMotion },
   };
 }

@@ -169,62 +169,7 @@
   }
 }
 
-/* Status page: boat crossing, recovery card. */
-.ferry {
-  position: relative;
-  height: 3rem;
-  max-width: 100%;
-  overflow: hidden;
-}
-.ferry__river {
-  position: absolute;
-  inset: auto 0 0 0;
-  width: 100%;
-  height: 1.5rem;
-  fill: none;
-  stroke: var(--river);
-  stroke-width: 3;
-}
-.ferry__lane {
-  position: absolute;
-  left: 0;
-  bottom: 0.5rem;
-  width: calc(100% - 3rem);
-  height: 1.75rem;
-  transition: transform 1.2s ease-in-out;
-}
-.ferry__boat {
-  display: block;
-  width: 3rem;
-  height: 1.75rem;
-}
-.ferry__hull {
-  fill: var(--ink);
-}
-.ferry__roof {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 2.5;
-}
-.ferry__coin {
-  fill: var(--lamp);
-  stroke: var(--ink);
-  stroke-width: 1.5;
-}
-/* The lane is as wide as the boat's travel, so translateX(%) of the lane is the share of the crossing done. */
-.ferry__lane--2-of-4,
-.ferry__lane--2-of-3 {
-  transform: translateX(33%);
-}
-.ferry__lane--3-of-4 {
-  transform: translateX(66%);
-}
-.ferry__lane--4-of-4 {
-  transform: translateX(100%);
-}
-.ferry__lane--3-of-3 .ferry__boat {
-  transform: scaleX(-1);
-}
+/* Status page: recovery card. */
 .crossing__address {
   overflow-wrap: anywhere;
 }

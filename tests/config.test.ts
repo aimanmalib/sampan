@@ -15,7 +15,7 @@ describe('config/sampan.json', () => {
   it('has every top-level section the code reads', () => {
     const sections = [
       'tokens', 'defaultToken', 'features', 'route', 'thorchain', 'oneClick', 'evm', 'cauldron', 'electrum', 'wallet', 'connect',
-      'landing', 'limits', 'fees', 'rate', 'compliance', 'banner', 'site', 'legal', 'ops', 'business', 'pay',
+      'landing', 'limits', 'fees', 'rate', 'compliance', 'banner', 'site', 'legal', 'ops', 'business', 'pay', 'ui',
     ];
     expect(Object.keys(shipped).sort()).toEqual([...sections].sort());
   });
@@ -113,5 +113,14 @@ describe('patchConfig (SAMPAN_CONFIG_PATCH)', () => {
     expect(patched.rate.cloudflareCidrs).toEqual(c.rate.cloudflareCidrs);
     expect(patchConfig(c, undefined)).toBe(c);
     expect(() => patchConfig(c, JSON.stringify({ featurez: {} }))).toThrow(/unknown key featurez/);
+  });
+});
+
+describe('ui.ferryMotion', () => {
+  it('is off in the shipped config, is sent to the page, and must be a boolean', () => {
+    expect(shipped.ui.ferryMotion).toBe(false);
+    expect(publicConfig(shipped).ui).toEqual({ ferryMotion: false });
+    const bad = { ...shipped, ui: { ferryMotion: 'yes' } } as unknown as typeof shipped;
+    expect(validateConfig(bad)).toContain('ui.ferryMotion: true or false');
   });
 });

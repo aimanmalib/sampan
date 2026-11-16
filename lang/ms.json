@@ -443,5 +443,10 @@
   "pay.inv.order.fulfilled": "Kedai demo: pesanan selesai. Pelayan kedai sudah menyemak webhook yang ditandatangani.",
   "pay.inv.back": "Kembali ke kedai",
   "pay.inv.missing": "Tiada invois pada pautan ini.",
-  "pay.inv.error": "Invois tidak dapat dimuat. Semak sambungan anda dan cuba lagi."
+  "pay.inv.error": "Invois tidak dapat dimuat. Semak sambungan anda dan cuba lagi.",
+  "ferry.bank.bch": "Bitcoin Cash",
+  "ferry.bank.owner": "{symbol} di alamat anda",
+  "ferry.bank.other": "Rangkaian lain",
+  "ferry.bank.wallet": "Dompet anda",
+  "ferry.bank.network": "Rangkaian"
 }

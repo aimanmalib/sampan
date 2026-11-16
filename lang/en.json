@@ -443,5 +443,10 @@
   "pay.inv.order.fulfilled": "Demo shop: order fulfilled. The shop's server checked the signed webhook.",
   "pay.inv.back": "Back to the shop",
   "pay.inv.missing": "There is no invoice at this link.",
-  "pay.inv.error": "The invoice could not be loaded. Check your connection and try again."
+  "pay.inv.error": "The invoice could not be loaded. Check your connection and try again.",
+  "ferry.bank.bch": "Bitcoin Cash",
+  "ferry.bank.owner": "{symbol} at your address",
+  "ferry.bank.other": "The other chain",
+  "ferry.bank.wallet": "Your wallet",
+  "ferry.bank.network": "The network"
 }

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { ApiFailure } from '../../core/client/api';
 import { api } from './api';
 import type { LoadedConfig } from './config';
+import { Ferry, useBanks } from './ferry/Ferry';
+import { ferryStep } from './ferry/step';
 import { useText, type TextKey } from './i18n';
 import { LandingStatus, type LandingView } from './land/LandingStatus';
 import { OutStatus, outIsFinal, type OutView } from './out/OutStatus';
@@ -24,7 +26,6 @@ interface Crossing {
 
 type Load = { state: 'loading' } | { state: 'missing' } | { state: 'error' } | { state: 'ok'; crossing: Crossing };
 
-const SWAP_STEPS = ['built', 'broadcast'] as const;
 const STATUS_KEYS: Record<string, TextKey> = {
   built: 'crossing.status.built',
   stale: 'crossing.status.stale',
@@ -36,6 +37,7 @@ const asOut = (c: Crossing): OutView => ({ status: c.status, route: c.route ?? n
 
 export function CrossingPage({ id, config }: { id: string; config: LoadedConfig | null }) {
   const { t } = useText();
+  const swapBanks = useBanks('swap', {});
   const [load, setLoad] = useState<Load>({ state: 'loading' });
 
   const fragment = /(?:^#|&)card=([A-Za-z0-9_-]+)/.exec(location.hash)?.[1] ?? null;
@@ -104,19 +106,20 @@ export function CrossingPage({ id, config }: { id: string; config: LoadedConfig 
       </section>
     );
   }
-  const reached = c.status === 'broadcast' ? 2 : c.status === 'failed' ? 0 : 1;
+  const at = ferryStep('swap', c);
   return (
     <section className="crossing">
       <h1 className="crossing__title">{t('crossing.title')}</h1>
       <p className="crossing__kind">{t(c.kind === 'swap' ? 'crossing.kind.swap' : 'crossing.title')}</p>
+      {config?.ui.ferryMotion ? <Ferry kind="swap" at={at} banks={swapBanks} motion /> : null}
       <ol className="timeline">
-        {SWAP_STEPS.map((step, i) => {
-          const done = i < reached;
+        {at.steps.map((step, i) => {
+          const done = i < at.done;
           return (
             <li key={step} className={`timeline__step${done ? ' timeline__step--done' : ''}`}>
               <span className="timeline__mark" aria-hidden="true" />
               <span>
-                {t(`crossing.step.${step}`)}
+                {t(`crossing.step.${step}` as TextKey)}
                 <span className="visually-hidden">{done ? t('crossing.done') : t('crossing.pending')}</span>
               </span>
             </li>
