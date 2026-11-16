@@ -1,7 +1,6 @@
 # Operations
 
-How the public site is watched and what to do when a check fails. Draft: the Test wallet funds and Judging week sections are
-added later.
+How the public site is watched and what to do when a check fails. Draft: the Judging week section is added after judging.
 
 ## Probes
 
@@ -52,3 +51,34 @@ Measured on 2026-11-16 with `tools/measure/failover.ts` (table: `docs/MEASURED.m
 | One THORNode | the next node in `thorchain.nodes` answers; a node that never answers costs `thorchain.timeoutMs` once | nothing | none |
 | THORChain halts BCH or the destination chain | new crossings answer `route_paused` (503) | "Paused by the route" in the crossing tabs | wait for THORChain to reopen |
 
+## Test wallet funds
+
+Which flows a judge can start on the public site, and whether any of them spends money that Sampan holds. Read from the
+code at commit 83b9f56; the server holds no key at all (it reads no phrase or private key from its environment), so it
+cannot pay for anything.
+
+| Flow | Who pays | Sampan funds spent |
+| --- | --- | --- |
+| "Fill this in for me" on the judging strip | nobody: it only fills the landing amount (`limits.judgeLandBch`) and opens the landing tab | none |
+| Landing address | the judge's own wallet pays the address; the miner fee of the convert or give-back transaction comes out of that coin, and the contract paths need no signature | none |
+| Swap (BCH and PUSD) | the judge's own wallet signs; the miner fee is in the judge's transaction | none |
+| "Or see the transactions already made" (`/how#proof`) | nobody: links to transactions already on chain | none |
+| Crossings to and from Base | hidden while `compliance.crossChainEnabled` is false; when open, the judge's own wallets sign and pay | none |
+| Merchant demo (`/pay`) | hidden while `features.pay` is off | none |
+| Synthetic monitor | opens a landing address for the test wallet's own address and pays nothing | none |
+
+No judge flow spends Sampan funds, so nothing has to stay in the test wallets for judging and there is no `funds` probe.
+The test wallets pay only for the team's own measured runs in `docs/MEASURED.md`, inside the test budget, and those stop
+when the code freezes.
+
+Balances from `npx tsx tools/measure/funds.ts` (read only): the BCH wallet is every address of its receive, change and defi
+paths walked until 20 unused addresses in a row, named here by its first receive address; Base balances are read over the
+configured RPC.
+
+| UTC | wallet | asset | balance | needed until 2026-11-28 | why |
+| --- | --- | --- | --- | --- | --- |
+| 2026-11-16 15:42 | `bitcoincash:qqyuz8zh06c8h39guuedjpfvnlvjeg394ucvfe6ltt` | BCH | 0.03537039 BCH (3537039 sats) | 0 | no judge flow spends Sampan funds |
+| 2026-11-16 15:42 | `bitcoincash:qqyuz8zh06c8h39guuedjpfvnlvjeg394ucvfe6ltt` | PUSD | 1.81 PUSD | 0 | no judge flow spends Sampan funds |
+| 2026-11-16 15:42 | `bitcoincash:qqyuz8zh06c8h39guuedjpfvnlvjeg394ucvfe6ltt` | MUSD | 0.00 MUSD | 0 | no judge flow spends Sampan funds |
+| 2026-11-16 15:42 | `0x1a877169bB03400fA69EC4813889E78994D194Cb` | ETH (Base) | 0 ETH | 0 | no judge flow spends Sampan funds |
+| 2026-11-16 15:42 | `0x1a877169bB03400fA69EC4813889E78994D194Cb` | USDC (Base) | 0.00 USDC | 0 | no judge flow spends Sampan funds |
