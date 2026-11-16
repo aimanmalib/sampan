@@ -52,6 +52,9 @@ export interface CrossDeps {
 }
 
 const evmHash = (id: string): string => `0x${id.replace(/^0x/i, '').toLowerCase()}`;
+/** `bch <txid>` or `base 0x<hash>` for a transaction named only in a note. */
+const refundRef = (chain: string | undefined, id: string): string =>
+  chain === 'BCH' ? `bch ${id.toLowerCase()}` : `${(chain ?? 'unknown').toLowerCase()} ${evmHash(id)}`;
 const pad32 = (address: string): string => `0x${address.replace(/^0x/i, '').toLowerCase().padStart(64, '0')}`;
 
 /** True when the receipt succeeded and carries a Transfer of `token` to `to`. */
@@ -84,7 +87,11 @@ export async function traceCrossing(c: Crossing, d: CrossDeps): Promise<Run> {
     } catch {
       s = undefined; // the route did not answer this time; ask again
     }
-    if (s?.stage === 'refunded') return row(false, s.outTxid, undefined, 'refunded by the route');
+    if (s?.stage === 'refunded') {
+      // A refund usually goes back on the first chain: only a transaction on the expected chain fills the second cell.
+      if (s.outTxid && s.outChain === wantChain) return row(false, s.outTxid, undefined, 'refunded by the route');
+      return row(false, undefined, undefined, s.outTxid ? `refunded by the route (${refundRef(s.outChain, s.outTxid)})` : 'refunded by the route');
+    }
     if (s?.stage === 'pending') stage = 'swapping';
     if (s?.stage === 'done') {
       if (!s.outTxid || s.outChain !== wantChain) return row(false, undefined, undefined, `route reports done without a ${wantChain} transaction`);

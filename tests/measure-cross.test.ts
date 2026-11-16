@@ -99,4 +99,17 @@ describe('crossing tracer', () => {
     };
     expect(await traceCrossing(out, deps({ get: refunding }))).toMatchObject({ ok: false, note: 'refunded by the route' });
   });
+
+  it('keeps a refund paid back on BCH out of the Base cell of an out row', async () => {
+    const fake = doneWith([{ id: BCH_OUT.toUpperCase(), chain: 'BCH' }]);
+    const refundedOnBch: HttpGet = async (url, t) => {
+      const res = await fake(url, t);
+      const body = res.body as { planned_out_txs?: Array<{ refund: boolean }> };
+      return { status: 200, body: { ...body, planned_out_txs: [{ chain: 'BCH', refund: true }] } };
+    };
+    const run = await traceCrossing(out, deps({ get: refundedOnBch }));
+    expect(run).toMatchObject({ ok: false, txid: BCH_IN, note: `refunded by the route (bch ${BCH_OUT})` });
+    expect(run.txid).not.toMatch(/base 0x/);
+    expect(runRow(run)).not.toMatch(/0x[0-9a-f]{64}/);
+  });
 });
