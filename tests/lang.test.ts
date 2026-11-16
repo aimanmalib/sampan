@@ -39,6 +39,18 @@ describe('lang files', () => {
     }
   });
 
+  it('say on /risks, in both languages, that an arrival below the dust amount from config cannot be given back', () => {
+    const config = JSON.parse(readFileSync(new URL('../config/sampan.json', import.meta.url), 'utf8')) as {
+      landing: { dustSats: number };
+      legal: { risks: { key: string }[] };
+    };
+    expect(config.landing.dustSats).toBeGreaterThan(0);
+    const shown = config.legal.risks.filter((r) => !('cross' in r)).map((r) => `risks.${r.key}.funds`);
+    for (const lang of [en, ms]) {
+      expect(shown.some((id) => lang[id]?.includes('{dust}'))).toBe(true);
+    }
+  });
+
   it('keep the event name exact in both languages', () => {
     expect(en['banner.event']).toBe('BCH BLAZE 2026');
     expect(ms['banner.event']).toBe('BCH BLAZE 2026');

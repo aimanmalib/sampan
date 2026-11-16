@@ -38,6 +38,14 @@ test('/terms names the operator and fits a 320 px screen', async ({ page }) => {
   expect(scroll).toBeLessThanOrEqual(client);
 });
 
+test('/risks says how small an arrival is too small to give back, with the amount from config', async ({ page }) => {
+  await page.goto('/risks');
+  const cfg = (await (await page.request.get('/api/config')).json()) as { landing: { dustSats: number } };
+  const funds = page.locator('#price .legal__funds');
+  await expect(funds).toContainText(`${cfg.landing.dustSats.toLocaleString('en-US')} sat`);
+  await expect(page.locator('.legal')).not.toContainText('{');
+});
+
 test.describe('with crossings to other chains open', () => {
   test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the local fake server with crossings on');
   test.use({ baseURL: `http://127.0.0.1:${Number(process.env.E2E_PORT ?? 4173) + 2}` });

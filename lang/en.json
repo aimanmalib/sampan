@@ -321,7 +321,7 @@
   "terms.data.text": "There are no accounts. The server keeps public addresses and the details of each landing and crossing (amounts, transaction ids and status) so the page can show their history. It keeps no names, emails or keys. The site loads no analytics or tracking scripts; your language choice is kept in your browser.",
   "risks.price.title": "The price moves",
   "risks.price.text": "Pool prices change with every trade, and a landing address fixes a minimum rate when it is made.",
-  "risks.price.funds": "A swap that no longer matches the pool is rejected and your coins stay in your wallet. BCH at a landing address that cannot be converted at the minimum rate waits there; once the coin is {blocks} blocks old it is given back to your address as BCH, less a small network fee.",
+  "risks.price.funds": "A swap that no longer matches the pool is rejected and your coins stay in your wallet. BCH at a landing address that cannot be converted at the minimum rate waits there; once the coin is {blocks} blocks old it is given back to your address as BCH, less a small network fee. A payment of less than about {dust} sat is too small to give back after the fee and stays in the contract.",
   "risks.route.title": "The cross-chain route fails",
   "risks.route.text": "{route} can pause, run short of liquidity or refuse a crossing whose price moved past its limit.",
   "risks.route.funds": "{route} sends the coins back to the address they came from, less its fees. Sampan cannot speed up or redirect a refund.",

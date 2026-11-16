@@ -96,6 +96,8 @@ export interface SampanConfig {
     pollSeconds: number;
     /** A status page that waits for a landing asks the server to check again this often. */
     pagePollSeconds: number;
+    /** Arrivals below about this many sats are too small to give back after fees (dust); /risks says so. */
+    dustSats: number;
     /** Convert attempts per coin when a pool is spent between build and broadcast. */
     finishAttempts: number;
     /** An address that received nothing for this many days is no longer watched (its card still works). */
@@ -138,7 +140,7 @@ export interface PublicConfig {
   routeChains: string[];
   evm: { chains: EvmChainConfig[]; walletConnect: boolean } & Pick<SampanConfig['evm'], 'receiptPollSeconds' | 'receiptWaitSeconds' | 'replanSeconds'>;
   limits: SampanConfig['limits'];
-  landing: Pick<SampanConfig['landing'], 'toleranceBps' | 'toleranceBpsDirect' | 'returnAfterBlocks' | 'validHours' | 'pagePollSeconds'>;
+  landing: Pick<SampanConfig['landing'], 'toleranceBps' | 'toleranceBpsDirect' | 'returnAfterBlocks' | 'validHours' | 'pagePollSeconds' | 'dustSats'>;
   compliance: { crossChainEnabled: boolean };
   banner: SampanConfig['banner'];
   site: SampanConfig['site'];
@@ -221,8 +223,8 @@ export function validateConfig(c: SampanConfig): string[] {
   need(c.rate.cloudflareCidrs.every((r) => /^[0-9a-fA-F:.]+\/\d{1,3}$/.test(r)), 'rate.cloudflareCidrs: CIDR ranges');
   const l = c.landing;
   need(
-    [l.convertFeeSats, l.validHours, l.pollSeconds, l.pagePollSeconds, l.finishAttempts, l.idleDays, l.tokenDustSats, l.returnAfterBlocks].every(posInt),
-    'landing: convertFeeSats, validHours, pollSeconds, pagePollSeconds, finishAttempts, idleDays, tokenDustSats, returnAfterBlocks: positive integers',
+    [l.convertFeeSats, l.validHours, l.pollSeconds, l.pagePollSeconds, l.finishAttempts, l.idleDays, l.tokenDustSats, l.returnAfterBlocks, l.dustSats].every(posInt),
+    'landing: convertFeeSats, validHours, pollSeconds, pagePollSeconds, finishAttempts, idleDays, tokenDustSats, returnAfterBlocks, dustSats: positive integers',
   );
   need(l.convertFeeSats + l.tokenDustSats < c.limits.localMinSats, 'landing: convertFeeSats + tokenDustSats below limits.localMinSats');
   need(posInt(c.ops.quotePayloadHours), 'ops.quotePayloadHours: positive integer');
@@ -293,6 +295,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
       returnAfterBlocks: c.landing.returnAfterBlocks,
       validHours: c.landing.validHours,
       pagePollSeconds: c.landing.pagePollSeconds,
+      dustSats: c.landing.dustSats,
     },
     compliance: { crossChainEnabled: c.compliance.crossChainEnabled },
     banner: c.banner,

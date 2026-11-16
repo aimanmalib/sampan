@@ -30,3 +30,4 @@ One line per step, newest last.
 - 2026-11-16: Soft launch: owner's phone test passed with Paytaca and Selene on iPhone; site opened to search engines; /how page (open flows, whole landing contract, verify and finish commands, what already exists, checked 16 Nov); Measured line from /api/stats with team-wallet runs counted as test; deployed 8960db1.
 - 2026-11-16: MEASURED Wallets checked: Paytaca and Selene on the owner's iPhone, as reported by the owner.
 - 2026-11-16: /terms and /risks pages in English and Malay, sections listed in config with cross-chain sections hidden while crossings are off; footer links; e2e on both engines (ADR 0016).
+- 2026-11-16: /risks states that a landing arrival below landing.dustSats (config, 2,000 sat) is too small to give back and stays in the contract, in both languages; unit and e2e checks.

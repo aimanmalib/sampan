@@ -16,6 +16,7 @@ export function LegalPage({ kind, config }: { kind: LegalKind; config: LoadedCon
     route: t(`route.${config.route.active}` as TextKey),
     symbol: config.tokens[config.defaultToken]?.symbol ?? '',
     blocks: String(config.landing.returnAfterBlocks),
+    dust: config.landing.dustSats.toLocaleString('en-US'),
   };
   const sections = config.legal[kind].filter((s) => !s.cross || cross);
   const key = (name: string, part: string): TextKey => `${kind}.${name}.${part}` as TextKey;
