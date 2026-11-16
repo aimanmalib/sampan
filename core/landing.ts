@@ -26,6 +26,12 @@ export interface LandingParams {
 }
 
 export const LANDING_RATE_DEN = 100_000_000n;
+/**
+ * Widest nonce a payment invoice may add to rateDen (config pay.maxNonce is at most this). A plain landing keeps
+ * rateDen at LANDING_RATE_DEN; an invoice uses LANDING_RATE_DEN + nonce so each invoice gets its own address
+ * from the same contract (docs/decisions/0027-sampan-pay-invoices.md).
+ */
+export const LANDING_NONCE_CEILING = 1_000_000;
 /** giveBack may keep at most this many satoshis as the miner fee (fixed in the contract source). */
 export const GIVE_BACK_MAX_FEE_SATS = 1000n;
 export const LANDING_FUNCTIONS = { convert: 0, giveBack: 1 } as const;
@@ -55,8 +61,11 @@ const BODY = landingBodyBytecode();
 /** Explorer order <-> transaction byte order (the order OP_OUTPUTTOKENCATEGORY pushes). */
 export const categoryToScriptOrder = (displayHex: string): Uint8Array => hexToBin(displayHex).reverse();
 
-/** Checks the parameters; returns a reason when they are not usable. */
-export function landingParamsProblem(p: LandingParams): string | undefined {
+/**
+ * Checks the parameters; returns a reason when they are not usable. rateDen must be LANDING_RATE_DEN, or
+ * LANDING_RATE_DEN + 1 to LANDING_RATE_DEN + `maxNonce` for an invoice address (maxNonce 0: plain landings only).
+ */
+export function landingParamsProblem(p: LandingParams, maxNonce = 0): string | undefined {
   const lock = p.ownerLockHex.toLowerCase();
   if (!HEX.test(lock)) return 'owner lock is not hex';
   const isP2pkh = lock.length === 50 && lock.startsWith('76a914') && lock.endsWith('88ac');
@@ -64,7 +73,10 @@ export function landingParamsProblem(p: LandingParams): string | undefined {
   if (!isP2pkh && !isP2sh20) return 'owner lock must be a full P2PKH or P2SH20 locking bytecode';
   if (!/^[0-9a-f]{64}$/.test(p.category.toLowerCase())) return 'token category must be 32 bytes of hex';
   if (p.rateNum <= 0n) return 'rateNum must be positive';
-  if (p.rateDen !== LANDING_RATE_DEN) return `rateDen must be ${LANDING_RATE_DEN}`;
+  const nonce = p.rateDen - LANDING_RATE_DEN;
+  const ceiling = BigInt(Math.min(Math.max(0, Math.floor(maxNonce)), LANDING_NONCE_CEILING));
+  if (nonce < 0n || nonce > ceiling)
+    return ceiling === 0n ? `rateDen must be ${LANDING_RATE_DEN}` : `rateDen must be ${LANDING_RATE_DEN} to ${LANDING_RATE_DEN + ceiling}`;
   if (!Number.isInteger(p.returnAfter) || p.returnAfter < 1 || p.returnAfter > 0xffff) return 'returnAfter must be 1..65535 blocks';
   return undefined;
 }
@@ -80,7 +92,8 @@ const encodedArgs = (p: LandingParams): Uint8Array[] => [
 
 /** Redeem script: arguments pushed last-first, then the compiled body. */
 export function landingRedeemScript(p: LandingParams): Uint8Array {
-  const problem = landingParamsProblem(p);
+  // Callers decide which nonces they accept (readCard, the invoice service); the script itself takes any in range.
+  const problem = landingParamsProblem(p, LANDING_NONCE_CEILING);
   if (problem) throw new Error(problem);
   const pushes = encodedArgs(p)
     .reverse()

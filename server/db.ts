@@ -127,6 +127,11 @@ export class Db {
     }
   }
 
+  /** The SQLite handle, for modules that keep their own tables in the same file (server/pay/store.ts). */
+  get handle(): DatabaseSync {
+    return this.db;
+  }
+
   /** 128-bit random id, hex. */
   static newId(): string {
     return randomBytes(16).toString('hex');

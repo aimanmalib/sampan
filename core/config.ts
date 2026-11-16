@@ -1,6 +1,7 @@
 // Shape of config/sampan.json and the checks run when it is loaded.
 // Pure: no I/O. The server reads the file; the page receives the public part from /api/config.
 import { validateBusiness, type BusinessConfig } from './business.js';
+import { validatePay, type PayConfig } from './pay/config.js';
 
 export type RouteId = 'near-intents' | 'thorchain';
 export type ActiveRoute = RouteId | 'none';
@@ -32,7 +33,7 @@ export interface SampanConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
   /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
-  features: { musd: boolean; swap: boolean; landing: boolean };
+  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean };
   route: { active: ActiveRoute; symbols: string[] };
   thorchain: {
     nodes: string[];
@@ -116,7 +117,7 @@ export interface SampanConfig {
     feeWarnBps: number;
   };
   fees: { satsPerByte: number; capSats: number };
-  rate: { quotesPerMinute: number; crossingsPerHour: number; cloudflareCidrs: string[] };
+  rate: { quotesPerMinute: number; crossingsPerHour: number; invoicesPerHour: number; cloudflareCidrs: string[] };
   compliance: { blockedCountries: string[]; crossChainEnabled: boolean };
   banner: { deckUrl: string; repoUrl: string; tokenAddress: string; note: boolean };
   /** `url` is the public origin; `ogImage` is the link preview picture under web/public; `proofRuns` = rows of the
@@ -135,6 +136,7 @@ export interface SampanConfig {
     quotePayloadHours: number;
   };
   business: BusinessConfig;
+  pay: PayConfig;
 }
 
 /** The part of the config the page needs. Everything else stays on the server. */
@@ -231,7 +233,7 @@ export function validateConfig(c: SampanConfig): string[] {
   );
   need(posInt(c.connect?.maxScanRounds), 'connect.maxScanRounds: positive integer');
   need(isHttpsUrl(c.connect?.explorerTxUrl ?? '') && c.connect.explorerTxUrl.includes('{txid}'), 'connect.explorerTxUrl: https URL with {txid}');
-  need(posInt(c.rate.quotesPerMinute) && posInt(c.rate.crossingsPerHour), 'rate: positive integers');
+  need(posInt(c.rate.quotesPerMinute) && posInt(c.rate.crossingsPerHour) && posInt(c.rate.invoicesPerHour), 'rate: positive integers');
   need(c.rate.cloudflareCidrs.every((r) => /^[0-9a-fA-F:.]+\/\d{1,3}$/.test(r)), 'rate.cloudflareCidrs: CIDR ranges');
   const l = c.landing;
   need(
@@ -262,6 +264,7 @@ export function validateConfig(c: SampanConfig): string[] {
     need(url === '' || isHttpsUrl(url) || url.startsWith('/'), `URL must be empty, a path or https: ${url}`);
   }
   errors.push(...validateBusiness(c.business));
+  errors.push(...validatePay(c.pay));
   return errors;
 }
 

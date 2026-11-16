@@ -19,14 +19,14 @@ async function main(argv: string[]): Promise<number> {
     console.error('usage: npx tsx scripts/finisher.ts <card.json> [--convert | --give-back] [--dry-run]');
     return 2;
   }
-  const read = readCard(JSON.parse(readFileSync(file, 'utf8')));
+  const config = loadConfig(CONFIG);
+  const read = readCard(JSON.parse(readFileSync(file, 'utf8')), config.pay.maxNonce);
   if (typeof read === 'string') {
     console.error(`card rejected: ${read}`);
     return 1;
   }
   const { card, params } = read;
   const mode: FinishMode = argv.includes('--give-back') ? 'giveBack' : argv.includes('--convert') ? 'convert' : 'auto';
-  const config = loadConfig(CONFIG);
   const servers = card.network === 'mainnet' ? config.electrum.servers : config.electrum.chipnetServers;
   const chain = new ElectrumChain(servers);
   const directory = new PoolDirectory({ indexers: config.cauldron.indexers, cacheSeconds: 0, fetchActive: httpFetchActive(), chain });

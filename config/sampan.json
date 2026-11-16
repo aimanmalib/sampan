@@ -19,7 +19,8 @@
   "features": {
     "musd": false,
     "swap": true,
-    "landing": true
+    "landing": true,
+    "pay": false
   },
   "route": {
     "active": "thorchain",
@@ -121,6 +122,7 @@
   "rate": {
     "quotesPerMinute": 30,
     "crossingsPerHour": 10,
+    "invoicesPerHour": 30,
     "cloudflareCidrs": [
       "173.245.48.0/20", "103.21.244.0/22", "103.22.200.0/22", "103.31.4.0/22", "141.101.64.0/18",
       "108.162.192.0/18", "190.93.240.0/20", "188.114.96.0/20", "197.234.240.0/22", "198.41.128.0/17",
@@ -209,5 +211,20 @@
         "read": "2026-11-16"
       }
     ]
+  },
+  "pay": {
+    "validMinutes": 30,
+    "underToleranceBps": 50,
+    "overToleranceBps": 100,
+    "minUsd": 0.2,
+    "maxUsd": 250,
+    "maxNonce": 1000000,
+    "maxOpenInvoices": 500,
+    "quoteBufferBps": 100,
+    "confirmations": 0,
+    "spreadBps": 0,
+    "scenarioSpreadBps": 50,
+    "webhook": { "retrySeconds": [10, 60, 300, 1800, 7200], "timeoutMs": 5000, "allowPrivate": false },
+    "demo": { "priceUsd": 0.2, "merchantAddress": "bitcoincash:zqyuz8zh06c8h39guuedjpfvnlvjeg394ulx685e5c" }
   }
 }

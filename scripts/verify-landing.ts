@@ -8,7 +8,7 @@ import { hexToBin } from '@bitauth/libauth';
 import { compileFile } from 'cashc';
 import { Contract, ElectrumNetworkProvider } from 'cashscript';
 import artifact from '../contracts/landing.json' with { type: 'json' };
-import { categoryToScriptOrder } from '../core/landing.js';
+import { categoryToScriptOrder, LANDING_NONCE_CEILING } from '../core/landing.js';
 import { readCard, type LandingCard } from '../core/landing-card.js';
 
 const SOURCE = fileURLToPath(new URL('../contracts/landing.cash', import.meta.url));
@@ -26,8 +26,9 @@ export function addressFromSource(card: LandingCard): string {
   return new Contract(compiled, args, { provider, contractType: 'p2sh20' }).address;
 }
 
+/** Plain landings and Sampan Pay invoice addresses (rateDen with a nonce) are checked the same way. */
 export function verifyCard(raw: unknown): Verdict {
-  const read = readCard(raw);
+  const read = readCard(raw, LANDING_NONCE_CEILING);
   if (typeof read === 'string') return { ok: false, lines: [`card rejected: ${read}`] };
   const { card } = read;
   const lines = [`card address:        ${card.address}`, `owner:               ${card.ownerAddress}`];

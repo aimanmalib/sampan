@@ -61,9 +61,10 @@ const DECIMAL = /^[0-9]{1,30}$/;
 
 /**
  * Reads a card from untrusted JSON. Returns the card and its parameters, or a reason. The stated address must
- * equal the one recomputed from the parameters, so a card cannot point at a different contract.
+ * equal the one recomputed from the parameters, so a card cannot point at a different contract. `maxNonce`
+ * (config pay.maxNonce) also accepts the cards of payment invoices; 0 accepts plain landings only.
  */
-export function readCard(raw: unknown): { card: LandingCard; params: LandingParams } | string {
+export function readCard(raw: unknown, maxNonce = 0): { card: LandingCard; params: LandingParams } | string {
   if (typeof raw !== 'object' || raw === null) return 'card is not a JSON object';
   const c = raw as Record<string, unknown>;
   if (c.kind !== CARD_KIND || c.version !== CARD_VERSION) return `not a ${CARD_KIND} card version ${CARD_VERSION}`;
@@ -75,7 +76,7 @@ export function readCard(raw: unknown): { card: LandingCard; params: LandingPara
   if (typeof c.returnAfter !== 'number') return 'returnAfter must be a number';
   const card = c as unknown as LandingCard;
   const params = paramsOf(card);
-  const problem = landingParamsProblem(params);
+  const problem = landingParamsProblem(params, maxNonce);
   if (problem) return problem;
   const prefix = prefixOf(card.network);
   const owner = lockingBytecodeToCashAddress({ bytecode: hexToBin(params.ownerLockHex), prefix, tokenSupport: true });

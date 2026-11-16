@@ -24,9 +24,10 @@ export interface FinishDeps {
   dryRun?: boolean;
 }
 
+/** `sats`: value of the coin at the landing address. `tokens`: what the owner received (converted only). */
 export type FinishResult =
-  | { coin: string; action: 'converted' | 'returned'; txid: string; hex: string; feeSats: bigint }
-  | { coin: string; action: 'waiting' | 'skipped'; reason: string };
+  | { coin: string; sats: bigint; action: 'converted' | 'returned'; txid: string; hex: string; feeSats: bigint; tokens?: bigint }
+  | { coin: string; sats: bigint; action: 'waiting' | 'skipped'; reason: string };
 
 /** Blocks still to wait before giveBack is valid for a coin (0 = valid in the next block). */
 export const blocksUntilReturn = (coin: ChainUtxo, tip: number, returnAfter: number): number => {
@@ -54,7 +55,8 @@ async function tryConvert(params: LandingParams, coin: LandingCoin, deps: Finish
     }
     try {
       const sent = await send(built, deps);
-      return { coin: `${coin.txid}:${coin.vout}`, action: 'converted', ...sent, feeSats: built.feeSats };
+      const tokens = built.transaction.outputs[0]?.token?.amount ?? 0n;
+      return { coin: `${coin.txid}:${coin.vout}`, sats: coin.sats, action: 'converted', ...sent, feeSats: built.feeSats, tokens };
     } catch (e) {
       if (!(e instanceof BroadcastError) || !e.staleInputs) throw e;
       last = e.message; // a pool moved: load the pools again and rebuild
@@ -69,7 +71,7 @@ export async function finishLanding(params: LandingParams, deps: FinishDeps, mod
   for (const u of coins) {
     const id = `${u.txid}:${u.vout}`;
     if (u.token) {
-      results.push({ coin: id, action: 'skipped', reason: 'coin carries tokens; the contract only finishes BCH' });
+      results.push({ coin: id, sats: u.sats, action: 'skipped', reason: 'coin carries tokens; the contract only finishes BCH' });
       continue;
     }
     const coin: LandingCoin = { txid: u.txid, vout: u.vout, sats: u.sats };
@@ -82,17 +84,17 @@ export async function finishLanding(params: LandingParams, deps: FinishDeps, mod
       }
       why = r;
       if (mode === 'convert') {
-        results.push({ coin: id, action: 'waiting', reason: why });
+        results.push({ coin: id, sats: u.sats, action: 'waiting', reason: why });
         continue;
       }
     }
     const wait = blocksUntilReturn(u, await deps.chain.tipHeight(), params.returnAfter);
     if (wait > 0) {
-      results.push({ coin: id, action: 'waiting', reason: `${why ? `${why}; ` : ''}giveBack possible in ${wait} more block(s)` });
+      results.push({ coin: id, sats: u.sats, action: 'waiting', reason: `${why ? `${why}; ` : ''}giveBack possible in ${wait} more block(s)` });
       continue;
     }
     const built = buildGiveBackTx(params, coin, deps.satsPerByte);
-    results.push({ coin: id, action: 'returned', ...(await send(built, deps)), feeSats: built.feeSats });
+    results.push({ coin: id, sats: u.sats, action: 'returned', ...(await send(built, deps)), feeSats: built.feeSats });
   }
   return results;
 }

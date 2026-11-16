@@ -11,6 +11,7 @@ import { ClientIp } from './client-ip.js';
 import { Db } from './db.js';
 import { LandingService } from './landing/service.js';
 import { LandingWatcher } from './landing/watcher.js';
+import { PayService } from './pay/service.js';
 import { httpFetchActive, PoolDirectory, type FetchActive, type IndexerPool } from './indexer.js';
 import { refreshPools } from './pools.js';
 import { RateLimiter } from './rate.js';
@@ -37,6 +38,8 @@ export interface Services {
   landings: LandingService;
   /** In-process finisher for landing addresses; started by the app. */
   watcher: LandingWatcher;
+  /** Sampan Pay invoices (landing addresses whose owner is a merchant); reads what the watcher reports. */
+  pay: PayService;
   db: Db;
   clientIp: ClientIp;
   limiter: RateLimiter;
@@ -124,6 +127,7 @@ export function createServices(o: ServiceOptions): Services {
   const swaps = new SwapService({ config, chain, pools, prefix });
   const route = createRoute(config, o.fake);
   const landings = new LandingService({ config, chain, pools, db, prefix, testLocks });
+  const pay = new PayService({ config, db, pools, prefix, testLocks });
   const category = config.tokens[config.defaultToken]!.category;
   const routeChains = publicConfig(config).routeChains;
   const health = new HealthMonitor({
@@ -150,7 +154,9 @@ export function createServices(o: ServiceOptions): Services {
       chain,
       loadPools: async (category) => refreshPools(chain, await pools.active(category)),
       log: o.log,
+      onResults: (row, results) => pay.observe(row, results),
     }),
+    pay,
     db,
     clientIp: new ClientIp({ trustedProxies: o.trustedProxies, cloudflareCidrs: config.rate.cloudflareCidrs, log: o.log }),
     limiter: new RateLimiter(),

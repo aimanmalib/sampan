@@ -5,6 +5,7 @@ import { registerCrossings } from './api/crossings.js';
 import { registerLanding } from './api/landing.js';
 import { registerIn } from './api/in.js';
 import { registerOut } from './api/out.js';
+import { registerPay } from './api/pay.js';
 import { registerSwap } from './api/swap.js';
 import { registerWallet } from './api/wallet.js';
 import { registerSecurityHeaders } from './security.js';
@@ -64,6 +65,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   registerOut(app, config, services);
   registerIn(app, config, services);
   registerCrossings(app, config, services);
+  registerPay(app, config, services);
   if (options.startWatcher ?? true) {
     services.watcher.start();
     services.health.start();

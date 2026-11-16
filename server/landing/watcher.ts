@@ -21,6 +21,8 @@ export interface LandingWatcherOptions {
   loadPools: (category: string) => Promise<PoolUtxo[]>;
   now?: () => number;
   log?: ((message: string) => void) | undefined;
+  /** Told what happened to the coins of a landing after each pass (Sampan Pay reads invoice payments from it). */
+  onResults?: ((row: LandingRow, results: FinishResult[]) => void) | undefined;
 }
 
 export class LandingWatcher {
@@ -76,7 +78,7 @@ export class LandingWatcher {
   }
 
   private params(row: LandingRow): LandingParams | undefined {
-    const read = readCard(JSON.parse(row.params_json));
+    const read = readCard(JSON.parse(row.params_json), this.o.config.pay.maxNonce);
     if (typeof read === 'string') {
       this.o.log?.(`landing ${row.address}: stored card is unusable (${read})`);
       return undefined;
@@ -130,6 +132,11 @@ export class LandingWatcher {
   }
 
   private record(row: LandingRow, results: FinishResult[]): void {
+    try {
+      this.o.onResults?.(row, results);
+    } catch (e) {
+      this.o.log?.(`landing ${row.address}: results listener failed (${e instanceof Error ? e.message : String(e)})`);
+    }
     const { db } = this.o;
     const t = this.now();
     const coins = results.filter((r) => r.action !== 'skipped');
