@@ -194,21 +194,32 @@ export class Db {
     this.db.prepare(`UPDATE landings SET ${sets}, updated_at = ? WHERE address = ?`).run(...values, this.now(), address);
   }
 
-  /** Counts for the "Measured" line: landings and crossings between chains (swaps are not crossings). */
-  stats(origin: Origin): StatsCounts {
+  /** Rows counted as other people's, with the user address each was made for. */
+  publicCrossings(): Array<{ id: string; address: string }> {
+    return this.db.prepare(`SELECT id, address FROM crossings WHERE origin = 'public'`).all() as Array<{ id: string; address: string }>;
+  }
+
+  setOrigin(id: string, origin: Origin): void {
+    this.db.prepare('UPDATE crossings SET origin = ? WHERE id = ?').run(origin, id);
+  }
+
+  /** Counts for the "Measured" line: landings and crossings between chains (swaps are not crossings). No origin = all rows. */
+  stats(origin?: Origin): StatsCounts {
+    const origins: Origin[] = origin ? [origin] : ['test', 'public'];
+    const om = origins.map(() => '?').join(',');
     const count = (statuses: string[]): number => {
       const marks = statuses.map(() => '?').join(',');
       const row = this.db
-        .prepare(`SELECT COUNT(*) AS n FROM crossings WHERE kind != 'swap' AND origin = ? AND status IN (${marks})`)
-        .get(origin, ...statuses) as { n: number };
+        .prepare(`SELECT COUNT(*) AS n FROM crossings WHERE kind != 'swap' AND origin IN (${om}) AND status IN (${marks})`)
+        .get(...origins, ...statuses) as { n: number };
       return Number(row.n);
     };
     const times = this.db
       .prepare(
         `SELECT l.finished_at - l.seen_at AS ms FROM landings l JOIN crossings c ON c.id = l.crossing_id
-         WHERE c.origin = ? AND c.status = 'converted' AND l.seen_at IS NOT NULL AND l.finished_at IS NOT NULL ORDER BY ms`,
+         WHERE c.origin IN (${om}) AND c.status = 'converted' AND l.seen_at IS NOT NULL AND l.finished_at IS NOT NULL ORDER BY ms`,
       )
-      .all(origin) as Array<{ ms: number }>;
+      .all(...origins) as Array<{ ms: number }>;
     return { completed: count(COMPLETED), returned: count(RETURNED), lost: count(['lost']), medianSeconds: median(times.map((t) => Number(t.ms) / 1000)) };
   }
 

@@ -19,6 +19,8 @@ export interface AppOptions {
   /** SQLite file; defaults to an in-memory database (tests). */
   dbFile?: string;
   trustedProxies?: string[];
+  /** Extra team wallet addresses (SAMPAN_TEST_ADDRESSES). */
+  testAddresses?: string[];
   /** Run the landing finisher in this process (default true; tests drive it by hand). */
   startWatcher?: boolean;
   /** Ready-made services (tests); otherwise built from the options above. */
@@ -36,6 +38,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
       fake: options.fake,
       dbFile: options.dbFile ?? ':memory:',
       trustedProxies: options.trustedProxies ?? [],
+      testAddresses: options.testAddresses ?? [],
       log: (m) => app.log.warn(m),
     });
   await services.clientIp.refresh();

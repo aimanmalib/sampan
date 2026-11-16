@@ -136,7 +136,12 @@ describe('landing API', () => {
     const owner = await services.chain.listUnspent(userLockHex);
     expect(owner.some((u) => u.txid === kicked.txid && u.token?.category === PUSD)).toBe(true);
 
-    const stats = (await app.inject({ method: 'GET', url: '/api/stats' })).json() as { public: { completed: number; medianSeconds: number }; test: { completed: number } };
+    const stats = (await app.inject({ method: 'GET', url: '/api/stats' })).json() as {
+      all: { completed: number };
+      public: { completed: number; medianSeconds: number };
+      test: { completed: number };
+    };
+    expect(stats.all.completed).toBe(1);
     expect(stats.public.completed).toBe(1);
     expect(stats.test.completed).toBe(0);
     expect(typeof stats.public.medianSeconds).toBe('number');

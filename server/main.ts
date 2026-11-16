@@ -11,6 +11,7 @@ const app = await buildApp({
   logger: true,
   dbFile: env.fake ? ':memory:' : env.dbFile,
   trustedProxies: env.trustedProxies,
+  testAddresses: env.testAddresses,
 });
 
 const stop = async (): Promise<void> => {

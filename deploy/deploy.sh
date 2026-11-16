@@ -15,7 +15,7 @@ cd "$(dirname "$0")"
 BUILD_CMD=${BUILD_CMD:-docker build}
 MIN_FREE_GB=${MIN_FREE_GB:-8}
 BROWSER_CMD=${BROWSER_CMD:-}
-export SAMPAN_NETWORK PROXY_CONTAINER   # compose reads the proxy name for SAMPAN_TRUSTED_PROXY
+export SAMPAN_NETWORK PROXY_CONTAINER SAMPAN_TEST_ADDRESSES   # compose reads these (proxy name, team wallet addresses)
 DC="docker compose -f compose.yaml"
 URL="https://$SAMPAN_DOMAIN"
 HOLDER=sampan-undo
@@ -36,7 +36,7 @@ hold_previous() {  # $1 = image ID the replaced container ran: keep it by ID in 
 }
 
 browser_check() {  # front page, two engines, against the public URL
-  (cd .. && E2E_BASE_URL="$URL" $BROWSER_CMD npx playwright test e2e/front.spec.ts --reporter=line)
+  (cd .. && E2E_BASE_URL="$URL" $BROWSER_CMD npx playwright test e2e/front.spec.ts e2e/how.spec.ts --reporter=line)
 }
 
 mode=${1:-deploy}

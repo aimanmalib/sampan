@@ -1,7 +1,7 @@
 // Wiring: one place decides between the real network and the fake one (SAMPAN_FAKE=1).
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { parseAddress, type CashPrefix } from '../core/address.js';
+import type { CashPrefix } from '../core/address.js';
 import type { SampanConfig } from '../core/config.js';
 import { poolV0LockingHex } from '../core/pools/template.js';
 import { ElectrumChain } from './chain/electrum.js';
@@ -20,6 +20,7 @@ import { createRoute } from './routes/index.js';
 import type { Route } from './routes/types.js';
 import { SwapService } from './swap.js';
 import { InService } from './in.js';
+import { markOwnRows, testLocksOf } from './origin.js';
 
 export interface Services {
   prefix: CashPrefix;
@@ -47,6 +48,8 @@ export interface ServiceOptions {
   /** File for SQLite, or ':memory:'. */
   dbFile: string;
   trustedProxies: string[];
+  /** Extra team wallet addresses from the host (SAMPAN_TEST_ADDRESSES). */
+  testAddresses?: string[];
   /** Frozen indexer capture used by the fake network. */
   fakeFixture?: string;
   log?: (message: string) => void;
@@ -106,13 +109,10 @@ export function createServices(o: ServiceOptions): Services {
     cacheSeconds: config.wallet.scanCacheSeconds,
     beforeFirstScan,
   });
-  const testLocks = new Set(
-    config.ops.testAddresses.flatMap((a) => {
-      const p = parseAddress(a, prefix);
-      return typeof p === 'string' ? [] : [p.lockingHex];
-    }),
-  );
+  const testLocks = testLocksOf([...config.ops.testAddresses, ...(o.testAddresses ?? [])], prefix);
   const db = new Db(o.dbFile);
+  const moved = markOwnRows(db, testLocks, prefix);
+  if (moved > 0) o.log?.(`origin: ${moved} rows from team wallets counted as test`);
   const swaps = new SwapService({ config, chain, pools, prefix });
   const route = createRoute(config, o.fake);
   const landings = new LandingService({ config, chain, pools, db, prefix, testLocks });

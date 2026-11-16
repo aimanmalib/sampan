@@ -1,5 +1,5 @@
 // GET /api/crossings/:id: what the status page shows. POST /api/crossings/:id/kick: try to finish now.
-// GET /api/stats: counts for the "Measured" line, split by origin. No owner addresses or quote payloads leave here;
+// GET /api/stats: counts for the "Measured" line, in total and split by origin. No owner addresses or quote payloads leave here;
 // the recovery card stays in the page's URL fragment.
 import type { FastifyInstance } from 'fastify';
 import type { SampanConfig } from '../../core/config.js';
@@ -80,5 +80,5 @@ export function registerCrossings(app: FastifyInstance, config: SampanConfig, s:
     }
   });
 
-  app.get('/api/stats', async () => ({ test: s.db.stats('test'), public: s.db.stats('public') }));
+  app.get('/api/stats', async () => ({ all: s.db.stats(), test: s.db.stats('test'), public: s.db.stats('public') }));
 }
