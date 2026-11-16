@@ -55,4 +55,14 @@ describe('lang files', () => {
     expect(en['banner.event']).toBe('BCH BLAZE 2026');
     expect(ms['banner.event']).toBe('BCH BLAZE 2026');
   });
+
+  it('claim no exchange or bursa sending to a landing address, a path that was never tested', () => {
+    // Only the terms may name an exchange, to say what Sampan is not.
+    for (const [lang, text] of [['en', en], ['ms', ms]] as const) {
+      for (const [key, value] of Object.entries(text)) {
+        if (key.startsWith('terms.')) continue;
+        expect(value, `${lang} ${key}`).not.toMatch(/\bexchanges?\b|\bbursa\b|binance/i);
+      }
+    }
+  });
 });
