@@ -42,11 +42,10 @@ export function App() {
         <button
           type="button"
           className="topbar__lang"
-          lang={lang === 'en' ? 'ms' : 'en'}
           aria-label={t('lang.switchLabel')}
           onClick={() => setLang(lang === 'en' ? 'ms' : 'en')}
         >
-          {t('lang.switch')}
+          <span lang={lang === 'en' ? 'ms' : 'en'}>{t('lang.switch')}</span>
         </button>
       </nav>
       {how ? (
