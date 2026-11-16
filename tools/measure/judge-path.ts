@@ -2,7 +2,7 @@
 // on screen, in WebKit on an iPhone 13 and in Chromium on a 1440x900 desktop.
 //   npx tsx tools/measure/judge-path.ts [--engine webkit-iphone13|chromium-desktop|both] [--path see|do|both]
 //     [--base https://sampan.sasateguh.com] [--commit <short hash>] [--write]
-// see: no wallet. Front page, then the "How it was measured" link, until the first transaction id link of the proof
+// see: no wallet. Front page, then the judge strip's "Or see the transactions already made" link, until the first transaction id link of the proof
 //      table is inside the viewport.
 // do:  the headless test wallet pairs through the page's own Copy link, then the page's default swap
 //      (limits.judgeSwapBch, BCH to PUSD) is sent, until "View on explorer" with the broadcast txid is on screen.
@@ -102,11 +102,17 @@ async function see(page: Page, clock: Clock): Promise<string> {
   clock.begin();
   await page.goto(BASE, { waitUntil: 'load' });
   await clock.step('load', 'front page loaded');
-  const how = page.getByRole('link', { name: en['measured.how'] });
-  await how.waitFor({ timeout: STEP_TIMEOUT_MS });
-  await bringIntoView(page, clock, how, `scroll to "${en['measured.how']}"`);
+  // The judge strip's proof link: folded under its title on phones (one tap to open), open on tall wide screens.
+  const strip = page.locator('.judge');
+  await strip.waitFor({ timeout: STEP_TIMEOUT_MS });
+  const how = strip.getByRole('link', { name: en['judge.proof'] });
+  if (!(await how.isVisible())) {
+    await page.locator('.judge__title').click();
+    await clock.step('click', `"${en['judge.title']}" (opens the steps)`);
+  }
+  await bringIntoView(page, clock, how, `scroll to "${en['judge.proof']}"`);
   await how.click();
-  await clock.step('click', `"${en['measured.how']}"`);
+  await clock.step('click', `"${en['judge.proof']}"`);
   // Each transaction id in the proof table is a link to an explorer, written in the mono face.
   const txid = page.locator('#proof .proof__table--flows a.mono').first();
   await txid.waitFor({ timeout: STEP_TIMEOUT_MS });

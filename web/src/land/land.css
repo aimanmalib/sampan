@@ -102,6 +102,14 @@
   display: grid;
   gap: 0.25rem;
 }
+.judge__proof {
+  margin: 0.25rem 0 0;
+}
+/* Padding keeps the link a 24 px target on its own line. */
+.judge__proof a {
+  display: inline-block;
+  padding: 0.25rem 0;
+}
 .judge__fill {
   flex: 0 0 auto;
   max-width: 100%;

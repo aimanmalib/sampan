@@ -98,6 +98,20 @@ test('opened judge steps at 320 px take the full row and Fill sits below them', 
   await noHorizontalOverflow(page);
 });
 
+test('the judge strip links to the proof table one tap from the first screen, with no scroll', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.goto('/');
+  await page.locator('.judge__title').click();
+  const proof = page.locator('.judge').getByRole('link', { name: en['judge.proof'] });
+  await expect(proof).toBeVisible();
+  await expect(proof).toHaveAttribute('href', '/how#proof');
+  const box = await proof.boundingBox();
+  expect(box!.y + box!.height).toBeLessThanOrEqual(640);
+  expect(box!.height).toBeGreaterThanOrEqual(24);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  await noHorizontalOverflow(page);
+});
+
 test('a pasted token address gets a landing address and a QR to pay from any wallet, also at 320 px', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   const errors = collectErrors(page);
