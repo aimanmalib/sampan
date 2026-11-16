@@ -45,18 +45,16 @@ test('front page: banner, one headline, one primary button, both banks, no conso
 
 test('headline, picture, card and primary button fit on the first screen', async ({ page }) => {
   await page.goto('/');
-  const viewport = page.viewportSize();
-  expect(viewport).toBeTruthy();
-  const boxes = {
-    h1: await page.getByRole('heading', { level: 1 }).boundingBox(),
-    scene: await page.locator('figure.scene').boundingBox(),
-    tabs: await page.getByRole('tablist').boundingBox(),
-    primary: await page.locator('.button--primary').boundingBox(),
+  // #root holds a static headline until the app mounts and replaces it, so a one-off measurement can catch the
+  // replaced node; toBeInViewport retries until the app's own element is fully on the first screen.
+  const parts = {
+    h1: page.getByRole('heading', { level: 1 }),
+    scene: page.locator('figure.scene'),
+    tabs: page.getByRole('tablist'),
+    primary: page.locator('.button--primary'),
   };
-  for (const [name, box] of Object.entries(boxes)) {
-    expect(box, name).toBeTruthy();
-    expect(box!.y, name).toBeGreaterThanOrEqual(0);
-    expect(box!.y + box!.height, name).toBeLessThanOrEqual(viewport!.height);
+  for (const [name, part] of Object.entries(parts)) {
+    await expect(part, name).toBeInViewport({ ratio: 1 });
   }
 });
 
