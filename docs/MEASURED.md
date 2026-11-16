@@ -31,6 +31,8 @@
 | 2026-11-16T06:42:44Z | swap | 0.40 PUSD to 0.00191467 BCH (Paytaca iOS, owner's phone) | 3e528db3e6fd4a65b713cde806e5ae444caa15f69c1fcc34ee79305dbebff19f | - | ok |
 | 2026-11-16T06:51:56Z | swap | 0.00096309 BCH to 0.20 PUSD (Selene iOS, owner's phone) | fdac791db778ff37640e7741a8578b30db95b0b963bd1b45ff5eeab271720944 | - | ok |
 | 2026-11-16T10:52:46Z | swap | 0.002 BCH to at least 0.4 PUSD · fee 30 bps | 2f3d3c9aac9bb00689c47d06074da707efdc2c6d72bc119228ffd192965a7f6e | 3.3 | ok |
+| 2026-11-16T11:20:39Z | swap | 0.001 BCH to at least 0.19 PUSD · judge path | 0ea316d91af1ad7b76f88d35f19fc6c2f7f58db99d7efc2783d98b0d3cfc2ec8 | 3.8 | ok |
+| 2026-11-16T11:21:13Z | swap | 0.001 BCH to at least 0.19 PUSD · judge path | 89886202943d6af7ceef74b89977882f8e67c16deb6bc63b8b2fdc1398b26595 | 3.7 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from
@@ -93,8 +95,17 @@ same BCH and token amounts.
 
 | Wallet | How | Result |
 |---|---|---|
-| Sampan test wallet (`@wizardconnect/wallet` 0.2.4, headless) | mainnet, paired through the page | 12 swaps broadcast (table above) |
+| Sampan test wallet (`@wizardconnect/wallet` 0.2.4, headless) | mainnet, paired through the page | 15 swaps broadcast (table above) |
 | Cashonize web (cashonize.com, 2026-11-15) | fresh wallet in automated Chromium, link pasted in its Connect tab | paired, xpubs shared, coins found; showed the page's one-sentence prompt and the balance change; signed both directions (2 swaps above) |
 | Selene web (app.selene.cash, version 2026.10.02, 2026-11-15) | fresh wallet in automated Chromium, link pasted in its WizardConnect app, against the live site | paired after its "Connect to Sampan?" question, coins found; the signature request showed the page's one-sentence prompt, the net balance change and every output, with PUSD shown by its short token id (2469ac) because its token metadata request failed in that browser; signed both directions (2 swaps above); the balance was then sent back to the test wallet |
 | Paytaca on iPhone (owner's phone, 2026-11-16) | live site in the phone browser, link copied with Copy link and pasted in the wallet; the page's button does not open the wallet by itself | paired; swapped BCH to 0.20 PUSD, paid 0.001 BCH to a landing address, which was converted to 0.20 PUSD with all four status steps done, then sold the 0.40 PUSD back to BCH (3 rows above) |
 | Selene on iPhone (owner's phone, 2026-11-16) | same, link pasted in the wallet | paired on the second try (the first stayed on "Waiting for your wallet"); swapped BCH to 0.20 PUSD (1 row above) |
+
+## Judge path
+
+| UTC | engine | path | seconds | actions | commit |
+|---|---|---|---|---|---|
+| 2026-11-16T11:20:16Z | webkit-iphone13 | see | 2.7 | 2 page actions | 324135c |
+| 2026-11-16T11:20:39Z | webkit-iphone13 | do | 11.9 | 3 page actions + 3 wallet actions | 324135c |
+| 2026-11-16T11:20:46Z | chromium-desktop | see | 2.5 | 1 page action | 324135c |
+| 2026-11-16T11:21:13Z | chromium-desktop | do | 15.7 | 3 page actions + 3 wallet actions | 324135c |

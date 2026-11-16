@@ -74,7 +74,9 @@ describe('proof from MEASURED.md', () => {
 
 describe('proof from the real docs/MEASURED.md', () => {
   const text = readFileSync(new URL('../docs/MEASURED.md', import.meta.url), 'utf8');
-  const table = text.split('\n').filter((l) => /^\| \d{4}-\d\d-\d\dT/.test(l));
+  // Dated rows of the Runs section only: the Judge path table further down also starts each row with a UTC time.
+  const runsSection = text.slice(text.indexOf('## Runs'), text.indexOf('\n## ', text.indexOf('## Runs') + 1));
+  const table = runsSection.split('\n').filter((l) => /^\| \d{4}-\d\d-\d\dT/.test(l));
 
   it('reads every Runs row and every wallet row', () => {
     const p = measuredJson();
