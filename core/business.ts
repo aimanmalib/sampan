@@ -26,6 +26,8 @@ export interface BusinessConfig {
   /** Shares of each source value the scenario table multiplies by (0 < share <= 1). */
   scenarioShares: number[];
   sources: BusinessSource[];
+  /** Public prices of crypto payment gateways, each read from the provider's own pricing page (Sampan Pay table). */
+  payPrices?: BusinessSource[];
 }
 
 /** The fee for a trade whose BCH side is `bchSats`: 0 when the fee is off or would be dust. */
@@ -68,6 +70,9 @@ export function validateBusiness(b: BusinessConfig | undefined): string[] {
     need(!keys.has(s.key), `business.sources.${s.key}: key used twice`);
     keys.add(s.key);
     if (s.scenario) need(typeof s.value === 'number' && s.value > 0, `business.sources.${s.key}: a scenario source needs a number above 0`);
+  }
+  for (const s of b.payPrices ?? []) {
+    need(/^https:\/\/\S+$/.test(s.url) && /^\d{4}-\d{2}-\d{2}$/.test(s.read), `business.payPrices.${s.key}: https url and read date`);
   }
   return errors;
 }

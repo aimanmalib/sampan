@@ -75,6 +75,44 @@ Scenario, arithmetic, not a forecast. Base: BCH traded across all markets in 24 
 | 10 % | USD 18,309 | USD 6,682,754 |
 <!-- business-model:end -->
 
+### Sampan Pay
+
+For merchants who want to be paid in BCH and keep dollars. Each invoice gets its own landing address from the same
+contract (only a nonce in the rate differs), priced in USD and paid in BCH from any wallet that can send to a P2SH
+address; exchange withdrawals not tested. The BCH becomes PUSD at the merchant's address, or after six blocks goes
+back to the merchant as BCH. Sampan does not hold it. A signed webhook (Standard Webhooks) reports the result.
+
+```
+POST /api/pay/invoice      {"usd": 12.5, "merchantAddress": "bitcoincash:z...", "webhookUrl": "https://...", "webhookSecret": "whsec_..."}
+GET  /api/pay/invoice/:id  status: open, paid, underpaid, overpaid, paid_late or expired
+webhook events             invoice.paid, invoice.underpaid, invoice.overpaid, invoice.paid_late
+```
+
+Button: `<script src="https://sampan.sasateguh.com/pay.js" defer></script>` and `<button data-sampan-invoice="<id>">`
+([example](https://sampan.sasateguh.com/pay/example.html)). A short payment is `underpaid` and only what it covers
+is converted; a payment after the invoice expires is `paid_late`. The webhook waits for the conversion to be on the
+network.
+
+Revenue: `pay.spreadBps` asks the payer that much more BCH. The merchant still gets exactly the invoice in PUSD, and
+the rest goes to `business.feeAddress` through one input and output pair the finisher adds; the contract does not
+change ([ADR 0031](docs/decisions/0031-sampan-pay-spread.md)). It needs a key for that small fee coin, so the public
+site runs at 0. Measured once on a local server at 50 bps: the merchant got 0.20 PUSD and 1331 sats reached the fee
+address, a test wallet address (the `spread 50 bps` row in [the measured runs](docs/MEASURED.md#runs)).
+
+<!-- pay-model:start (made by scripts/business-model.ts from config/sampan.json) -->
+Scenario, arithmetic, not a forecast. Base: BCH traded across all markets in 24 hours (USD 61,029,720 per day, read 2026-11-16) x share x a 50 bps spread. The spread today is 0 bps.
+
+| Share of that volume paid through Sampan Pay | Spread per day at 50 bps | Spread per year (365 days) |
+| --- | --- | --- |
+| 1 % | USD 3,051 | USD 1,113,792 |
+| 5 % | USD 15,257 | USD 5,568,962 |
+| 10 % | USD 30,515 | USD 11,137,924 |
+
+| Public price of a crypto payment gateway | Value | Read on | Source |
+| --- | --- | --- | --- |
+| BitPay crypto acceptance fee, under USD 500,000 a month | 2 % + USD 0.25 per transaction | 2026-11-16 | https://www.bitpay.com/pricing |
+<!-- pay-model:end -->
+
 ## How it works
 
 1. **Connect.** The page pairs with your wallet over WizardConnect (`web/src/wallet/wizard.ts`). The wallet shares extended

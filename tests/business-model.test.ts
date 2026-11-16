@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { BusinessConfig, BusinessSource } from '../core/business.js';
-import { README_FILE, businessModel, loadBusiness, replaceBlock, scenarioRows, START, END } from '../scripts/business-model.js';
+import { README_FILE, businessModel, loadBusiness, loadPaySpread, payModel, payRows, replaceBlock, scenarioRows, START, END, PAY_START, PAY_END } from '../scripts/business-model.js';
 
 // A frozen fixture, not the shipped config: the numbers in config/sampan.json are re-read and may change.
 const flow: BusinessSource = { key: 'flow', label: 'Coins traded in a day', value: 1_000_000, unit: 'USD per day', url: 'https://example.org/flow', read: '2026-11-16', scenario: true };
@@ -12,7 +12,9 @@ const fixture: BusinessConfig = {
   scenarioBps: 30,
   scenarioShares: [0.01, 0.1],
   sources: [flow, stock],
+  payPrices: [{ key: 'gw', label: 'A gateway fee', value: '1 % + USD 0.10', unit: 'per payment', url: 'https://example.org/pricing', read: '2026-11-16' }],
 };
+const spread = { spreadBps: 0, scenarioSpreadBps: 50 };
 
 describe('business model', () => {
   it('multiplies the scenario source by each share and the fee', () => {
@@ -48,5 +50,30 @@ describe('business model', () => {
   it('README.md carries the block made from config/sampan.json (run the script with --write after a config change)', () => {
     const readme = readFileSync(README_FILE, 'utf8');
     expect(readme).toContain(businessModel(loadBusiness()));
+    expect(readme).toContain(payModel(loadBusiness(), loadPaySpread()));
+    // The Pay block sits in the Sampan Pay section, under the business model.
+    expect(readme.indexOf('### Sampan Pay')).toBeGreaterThan(readme.indexOf('## Business model'));
+    expect(readme.indexOf(PAY_START)).toBeGreaterThan(readme.indexOf('### Sampan Pay'));
+  });
+});
+
+describe('Sampan Pay model', () => {
+  it('multiplies the scenario source by each share and the scenario spread', () => {
+    expect(payRows(fixture, spread).rows.map((r) => r.perDayUsd)).toEqual([50, 500]);
+  });
+
+  it('labels the scenario, states the live spread and lists each gateway price with its URL and read date', () => {
+    const md = payModel(fixture, spread);
+    expect(md.startsWith(PAY_START) && md.endsWith(PAY_END)).toBe(true);
+    expect(md).toMatch(/arithmetic, not a forecast/);
+    expect(md).toContain('The spread today is 0 bps.');
+    expect(md).toContain('| 10 % | USD 500 | USD 182,500 |');
+    expect(md).toContain('| A gateway fee | 1 % + USD 0.10 per payment | 2026-11-16 | https://example.org/pricing |');
+  });
+
+  it('refuses no gateway price, a price without a URL, and a zero scenario spread', () => {
+    expect(() => payModel({ ...fixture, payPrices: [] }, spread)).toThrow(/payPrices/);
+    expect(() => payModel({ ...fixture, payPrices: [{ ...fixture.payPrices![0]!, url: 'http://x' }] }, spread)).toThrow(/url and read date/);
+    expect(() => payModel(fixture, { ...spread, scenarioSpreadBps: 0 })).toThrow(/scenarioSpreadBps/);
   });
 });

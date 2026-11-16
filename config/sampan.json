@@ -210,6 +210,16 @@
         "url": "https://stablecoins.llama.fi/stablecoins?includePrices=false",
         "read": "2026-11-16"
       }
+    ],
+    "payPrices": [
+      {
+        "key": "bitpay",
+        "label": "BitPay crypto acceptance fee, under USD 500,000 a month",
+        "value": "2 % + USD 0.25",
+        "unit": "per transaction",
+        "url": "https://www.bitpay.com/pricing",
+        "read": "2026-11-16"
+      }
     ]
   },
   "pay": {
