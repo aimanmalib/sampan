@@ -14,6 +14,8 @@ import { buildApp } from '../server/app.js';
 import { createServices, type Services } from '../server/services.js';
 
 const base = normalizeConfig(shipped as unknown as SampanConfig);
+// The flag off whatever the shipped config says (it ships on once the measured runs exist).
+const off = patchConfig(base, JSON.stringify({ features: { pay: false } }));
 const on = patchConfig(base, JSON.stringify({ features: { pay: true }, rate: { invoicesPerHour: 1000, quotesPerMinute: 1000 } }));
 const DEMO_SECRET = `whsec_${Buffer.alloc(32, 5).toString('base64')}`;
 let app: FastifyInstance | undefined;
@@ -41,7 +43,7 @@ const get = (a: FastifyInstance, url: string) => a.inject({ method: 'GET', url }
 
 describe('demo shop', () => {
   it('is 404 with the flag off: checkout, order lookup, fake payment, merchant script and example page', async () => {
-    const a = await start(base);
+    const a = await start(off);
     expect((await post(a, '/api/pay/demo/order')).statusCode).toBe(404);
     expect((await get(a, `/api/pay/demo/order/${'a'.repeat(32)}`)).statusCode).toBe(404);
     expect((await post(a, `/api/pay/fake/pay/${'a'.repeat(32)}`)).statusCode).toBe(404);

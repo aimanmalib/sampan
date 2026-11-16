@@ -6,11 +6,11 @@ import { mkdirSync } from 'node:fs';
 
 const RATE_PATCH = { quotesPerMinute: 1000, crossingsPerHour: 1000 };
 
-export function startServer(o: { port: number; dataDir: string; patch: Record<string, unknown> }): ChildProcess {
+export function startServer(o: { port: number; dataDir: string; patch: Record<string, unknown>; env?: Record<string, string> }): ChildProcess {
   mkdirSync(o.dataDir, { recursive: true });
   const patch = { ...o.patch, rate: RATE_PATCH };
   return spawn('node', ['dist/server/main.js'], {
-    env: { ...process.env, PORT: String(o.port), HOST: '127.0.0.1', SAMPAN_DATA: o.dataDir, SAMPAN_CONFIG_PATCH: JSON.stringify(patch) },
+    env: { ...process.env, ...o.env, PORT: String(o.port), HOST: '127.0.0.1', SAMPAN_DATA: o.dataDir, SAMPAN_CONFIG_PATCH: JSON.stringify(patch) },
     stdio: ['ignore', 'ignore', 'inherit'],
   });
 }

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildProof, countWallets, median, parseRuns, parseTxids } from '../core/proof.js';
+import { buildProof, countWallets, median, parseRuns, parseTxids, PROOF_FLOWS } from '../core/proof.js';
 import { measuredJson } from '../scripts/measured-json.js';
 
 const A = 'a'.repeat(64);
@@ -76,7 +76,11 @@ describe('proof from the real docs/MEASURED.md', () => {
   const text = readFileSync(new URL('../docs/MEASURED.md', import.meta.url), 'utf8');
   // Dated rows of the Runs section only: the Judge path table further down also starts each row with a UTC time.
   const runsSection = text.slice(text.indexOf('## Runs'), text.indexOf('\n## ', text.indexOf('## Runs') + 1));
-  const table = runsSection.split('\n').filter((l) => /^\| \d{4}-\d\d-\d\dT/.test(l));
+  // Rows of the flows /how shows; Sampan Pay rows (measured on a local server) are not in that table.
+  const table = runsSection
+    .split('\n')
+    .filter((l) => /^\| \d{4}-\d\d-\d\dT/.test(l))
+    .filter((l) => (PROOF_FLOWS as readonly string[]).includes(l.split('|')[2]!.trim()));
 
   it('reads every Runs row and every wallet row', () => {
     const p = measuredJson();

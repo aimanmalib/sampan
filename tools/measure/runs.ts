@@ -2,7 +2,7 @@
 //   | UTC | flow | amount | txid | seconds | result |
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-export const FLOWS = ['swap', 'land', 'giveBack', 'out', 'in', 'g3a', 'refund'] as const;
+export const FLOWS = ['swap', 'land', 'giveBack', 'out', 'in', 'g3a', 'refund', 'pay'] as const;
 export type Flow = (typeof FLOWS)[number];
 
 export interface Run {
@@ -26,6 +26,7 @@ const BCH_TXID = /^[0-9a-f]{64}$/i;
 const EVM_TXID = /^0x[0-9a-f]{64}$/i;
 const SINGLE_TXID = /^(0x)?[0-9a-f]{64}$/i;
 const CROSSING_TXID = /^bch [0-9a-f]{64} · base 0x[0-9a-f]{64}( · convert [0-9a-f]{64})?$/i;
+const PAY_TXID = /^bch [0-9a-f]{64} · convert [0-9a-f]{64}$/i;
 
 /** The txid cell of a crossing row: both chains in full, plus the landing's conversion when there is one. */
 export function crossingTxid(ids: { bch: string; base: string; convert?: string }): string {
@@ -36,8 +37,14 @@ export function crossingTxid(ids: { bch: string; base: string; convert?: string 
   return `bch ${ids.bch.toLowerCase()} · base ${ids.base.toLowerCase()}${convert}`;
 }
 
+/** The txid cell of a Sampan Pay row: the customer's payment and the conversion that paid the merchant. */
+export function payTxid(ids: { pay: string; convert: string }): string {
+  for (const id of [ids.pay, ids.convert]) if (!BCH_TXID.test(id)) throw new Error(`not a BCH transaction id: ${id}`);
+  return `bch ${ids.pay.toLowerCase()} · convert ${ids.convert.toLowerCase()}`;
+}
+
 export function runRow(r: Run): string {
-  if (r.txid !== undefined && !SINGLE_TXID.test(r.txid) && !CROSSING_TXID.test(r.txid)) throw new Error(`not a transaction id: ${r.txid}`);
+  if (r.txid !== undefined && !SINGLE_TXID.test(r.txid) && !CROSSING_TXID.test(r.txid) && !PAY_TXID.test(r.txid)) throw new Error(`not a transaction id: ${r.txid}`);
   const utc = r.utc.toISOString().replace(/\.\d{3}Z$/, 'Z');
   const seconds = r.seconds === undefined ? '-' : r.seconds.toFixed(1);
   const result = r.ok ? 'ok' : r.note ? `fail (${cell(r.note)})` : 'fail';

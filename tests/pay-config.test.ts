@@ -1,15 +1,21 @@
-// The pay block of config/sampan.json: shipped off and without a spread, and the checks on every value.
+// The pay block of config/sampan.json: on only with the measured runs behind it, without a spread, and the checks
+// on every value.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { validateConfig, type SampanConfig } from '../core/config.js';
 import { LANDING_NONCE_CEILING } from '../core/landing.js';
+import { countOk } from '../tools/measure/runs.js';
 
 const shipped = JSON.parse(readFileSync(new URL('../config/sampan.json', import.meta.url), 'utf8')) as SampanConfig;
 const clone = (): SampanConfig => structuredClone(shipped);
 
 describe('config pay', () => {
-  it('ships with Sampan Pay hidden and no spread', () => {
-    expect(shipped.features.pay).toBe(false);
+  it('ships Sampan Pay on only after two measured plain payments, and with no spread (KP29, KP30, KP31)', () => {
+    if (shipped.features.pay) {
+      const measured = readFileSync(new URL('../docs/MEASURED.md', import.meta.url), 'utf8');
+      expect(countOk(measured, 'pay')).toBeGreaterThanOrEqual(2);
+      expect(measured).toMatch(/^\| [^|]+ \| pay \| [^|]*\bplain\b[^|]*\| bch [0-9a-f]{64} · convert [0-9a-f]{64} \| [0-9.]+ \| ok \|$/m);
+    }
     expect(shipped.pay.spreadBps).toBe(0);
     expect(validateConfig(shipped)).toEqual([]);
   });

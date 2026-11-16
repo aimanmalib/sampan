@@ -19,6 +19,8 @@ import { PUSD } from './helpers/pools.js';
 import { userAddress, userTokenAddress } from './helpers/wallet.js';
 
 const base = normalizeConfig(shipped as unknown as SampanConfig);
+// The flag off whatever the shipped config says (it ships on once the measured runs exist).
+const off = patchConfig(base, JSON.stringify({ features: { pay: false } }));
 const on = (extra: object = {}) =>
   patchConfig(base, JSON.stringify({ features: { pay: true }, rate: { invoicesPerHour: 1000, quotesPerMinute: 1000 }, ...extra }));
 let app: FastifyInstance;
@@ -92,7 +94,7 @@ const cardOf = (address: string) => {
 
 describe('Sampan Pay API', () => {
   it('answers 404 on every route while features.pay is off', async () => {
-    await restart(base);
+    await restart(off);
     expect((await post('/api/pay/invoice', { usd: 0.2, merchantAddress: userTokenAddress })).statusCode).toBe(404);
     expect((await app.inject({ method: 'GET', url: `/api/pay/invoice/${'a'.repeat(32)}` })).statusCode).toBe(404);
     expect((await app.inject({ method: 'GET', url: `/api/pay/invoice/${'a'.repeat(32)}/qr.svg` })).statusCode).toBe(404);
