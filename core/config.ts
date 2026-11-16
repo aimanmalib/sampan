@@ -124,6 +124,8 @@ export interface SampanConfig {
   legal: { operator: string; terms: LegalSection[]; risks: LegalSection[] };
   ops: {
     healthIntervalSeconds: number;
+    /** Sooner re-check while any health probe is down (a container start can race the first connections). */
+    healthRetrySeconds: number;
     /** Addresses of the project's own test wallet: their crossings are counted as `test`, not `public`. */
     testAddresses: string[];
     quotePayloadHours: number;
@@ -230,6 +232,10 @@ export function validateConfig(c: SampanConfig): string[] {
   need(posInt(c.ops.quotePayloadHours), 'ops.quotePayloadHours: positive integer');
   need(c.ops.testAddresses.every((a) => a.startsWith('bitcoincash:') || a.startsWith('bchtest:')), 'ops.testAddresses: cash addresses');
   need(c.ops.healthIntervalSeconds >= 30, 'ops.healthIntervalSeconds: at least 30');
+  need(
+    posInt(c.ops.healthRetrySeconds) && c.ops.healthRetrySeconds <= c.ops.healthIntervalSeconds,
+    'ops.healthRetrySeconds: positive integer, at most ops.healthIntervalSeconds',
+  );
   need(c.compliance.blockedCountries.every((cc) => /^[A-Z]{2}$/.test(cc)), 'compliance.blockedCountries: ISO codes');
   need(isHttpsUrl(c.site.url) && !c.site.url.endsWith('/'), 'site.url: https origin without a trailing slash');
   need(/^\/[\w.-]+\.png$/.test(c.site.ogImage), 'site.ogImage: a /name.png path under web/public');

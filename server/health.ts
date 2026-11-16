@@ -22,13 +22,17 @@ export interface HealthProbes {
   /** The active route's own view of BCH and the destination chains; absent while crossings are closed. */
   route?: { id: RouteId; open: () => Promise<boolean> };
   intervalMs: number;
+  /** Next check comes this soon while any probe is down. */
+  retryMs: number;
   now?: () => number;
+  log?: ((message: string) => void) | undefined;
 }
 
-const settle = async <T>(p: () => Promise<T>): Promise<T | null> => {
+const settle = async <T>(name: string, p: () => Promise<T>, log?: (m: string) => void): Promise<T | null> => {
   try {
     return await p();
-  } catch {
+  } catch (e) {
+    log?.(`health: ${name} probe failed: ${e instanceof Error ? e.message : String(e)}`);
     return null;
   }
 };
@@ -36,6 +40,7 @@ const settle = async <T>(p: () => Promise<T>): Promise<T | null> => {
 export class HealthMonitor {
   private report: HealthReport;
   private timer: NodeJS.Timeout | null = null;
+  private started = false;
   private running: Promise<HealthReport> | null = null;
 
   constructor(private readonly o: HealthProbes) {
@@ -62,9 +67,9 @@ export class HealthMonitor {
   private async run(): Promise<HealthReport> {
     const { route } = this.o;
     const [pools, height, open] = await Promise.all([
-      settle(this.o.pools),
-      settle(this.o.tipHeight),
-      route ? settle(route.open) : Promise.resolve(null),
+      settle('cauldron', this.o.pools, this.o.log),
+      settle('bch', this.o.tipHeight, this.o.log),
+      route ? settle('route', route.open, this.o.log) : Promise.resolve(null),
     ]);
     this.report = {
       checkedAt: (this.o.now ?? Date.now)(),
@@ -76,15 +81,29 @@ export class HealthMonitor {
     return this.report;
   }
 
+  /** True when every probe the monitor runs answered well. */
+  allOk(): boolean {
+    const r = this.report;
+    return r.cauldron === true && r.bch === true && (r.route === null || r.route.open === true);
+  }
+
+  /** Checks now, then every intervalMs, or every retryMs while something is down. */
   start(): void {
-    if (this.timer) return;
-    void this.check();
-    this.timer = setInterval(() => void this.check(), this.o.intervalMs);
-    this.timer.unref();
+    if (this.started) return;
+    this.started = true;
+    const tick = (): void => {
+      void this.check().then(() => {
+        if (!this.started) return;
+        this.timer = setTimeout(tick, this.allOk() ? this.o.intervalMs : this.o.retryMs);
+        this.timer.unref();
+      });
+    };
+    tick();
   }
 
   stop(): void {
-    if (this.timer) clearInterval(this.timer);
+    this.started = false;
+    if (this.timer) clearTimeout(this.timer);
     this.timer = null;
   }
 }

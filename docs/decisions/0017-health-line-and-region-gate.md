@@ -12,7 +12,9 @@ countries listed in `compliance.blockedCountries`.
 
 - `server/health.ts` checks every `ops.healthIntervalSeconds`: at least one pool for the default token, a tip height from the
   BCH servers, and, only while crossings are open, the route's own halt flags for BCH and its destination chains. A probe
-  that throws counts as down. `GET /api/health` returns the last report; nothing is stored.
+  that throws counts as down and is logged; while anything is down the next check comes after
+  `ops.healthRetrySeconds`, so a container start that races the first connections does not show a false state for a
+  whole interval. `GET /api/health` returns the last report; nothing is stored.
 - The footer shows one line from that report ("Cauldron ok · Bitcoin Cash ok · THORChain ok"). The route is listed only
   while crossings are open.
 - When the last check saw the route halted, `out` and `in` quote and plan endpoints answer 503 `route_paused`, and both

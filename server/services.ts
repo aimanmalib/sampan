@@ -126,6 +126,8 @@ export function createServices(o: ServiceOptions): Services {
     tipHeight: () => chain.tipHeight(),
     ...(route && config.compliance.crossChainEnabled ? { route: { id: route.id, open: () => route.open(routeChains) } } : {}),
     intervalMs: config.ops.healthIntervalSeconds * 1000,
+    retryMs: config.ops.healthRetrySeconds * 1000,
+    log: o.log,
   });
   return {
     prefix,

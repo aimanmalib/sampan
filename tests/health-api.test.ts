@@ -4,7 +4,7 @@ import type { FastifyInstance } from 'fastify';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import { normalizeConfig, patchConfig, type SampanConfig } from '../core/config.js';
 import { buildApp } from '../server/app.js';
@@ -40,7 +40,7 @@ const fail = async (): Promise<number> => {
 
 describe('HealthMonitor', () => {
   it('reports each probe and leaves the route out while crossings are closed', async () => {
-    const m = new HealthMonitor({ pools: async () => 3, tipHeight: async () => 900_000, intervalMs: 60_000, now: () => 5 });
+    const m = new HealthMonitor({ pools: async () => 3, tipHeight: async () => 900_000, intervalMs: 60_000, retryMs: 5_000, now: () => 5 });
     expect(m.current()).toEqual({ checkedAt: null, cauldron: null, bch: null, height: null, route: null });
     expect(await m.check()).toEqual({ checkedAt: 5, cauldron: true, bch: true, height: 900_000, route: null });
     expect(m.routeOpen()).toBe(true);
@@ -51,7 +51,7 @@ describe('HealthMonitor', () => {
       pools: async () => 0,
       tipHeight: fail,
       route: { id: 'thorchain', open: async () => false },
-      intervalMs: 60_000,
+      intervalMs: 60_000, retryMs: 5_000,
     });
     expect(m.routeOpen()).toBe(true);
     const r = await m.check();
@@ -60,8 +60,42 @@ describe('HealthMonitor', () => {
   });
 
   it('treats a route that cannot be asked as not open', async () => {
-    const m = new HealthMonitor({ pools: async () => 1, tipHeight: async () => 1, route: { id: 'thorchain', open: fail as never }, intervalMs: 60_000 });
+    const m = new HealthMonitor({ pools: async () => 1, tipHeight: async () => 1, route: { id: 'thorchain', open: fail as never }, intervalMs: 60_000, retryMs: 5_000 });
     expect((await m.check()).route).toEqual({ id: 'thorchain', open: false });
+  });
+});
+
+describe('HealthMonitor schedule', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('re-checks after retryMs while a probe is down (a start that races the first connection), then every intervalMs', async () => {
+    vi.useFakeTimers();
+    let calls = 0;
+    const logs: string[] = [];
+    const m = new HealthMonitor({
+      pools: async () => {
+        calls += 1;
+        if (calls === 1) throw new Error('not connected yet');
+        return 2;
+      },
+      tipHeight: async () => 1,
+      intervalMs: 60_000,
+      retryMs: 5_000,
+      log: (x) => logs.push(x),
+    });
+    m.start();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(m.current().cauldron).toBe(false);
+    expect(logs).toEqual(['health: cauldron probe failed: not connected yet']);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(m.current().cauldron).toBe(true);
+    await vi.advanceTimersByTimeAsync(59_000);
+    expect(calls).toBe(2);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(calls).toBe(3);
+    m.stop();
+    await vi.advanceTimersByTimeAsync(120_000);
+    expect(calls).toBe(3);
   });
 });
 
