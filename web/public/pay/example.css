@@ -1,0 +1,8 @@
+/* The example page only: plain and readable, no Sampan styles needed by pay.js. */
+body { margin: 0; font: 1rem/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif; color: #12261f; background: #f4f1ea; }
+main { max-width: 40rem; margin: 0 auto; padding: 1.5rem 1rem; }
+pre { overflow-x: auto; padding: 0.75rem; background: #e9e3d6; border-radius: 8px; }
+button { min-height: 44px; padding: 0 1.25rem; font: inherit; font-weight: 600; color: #f4f1ea; background: #0e6b5c; border: 0; border-radius: 999px; cursor: pointer; }
+button:focus-visible, a:focus-visible { outline: 3px solid #e8a23a; outline-offset: 2px; }
+button:disabled { opacity: 0.6; }
+a { color: #0e6b5c; display: inline-block; min-height: 44px; line-height: 44px; }

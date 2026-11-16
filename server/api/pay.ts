@@ -5,6 +5,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { SampanConfig } from '../../core/config.js';
 import { qrSvg } from '../../core/qr.js';
+import type { ErrorPages } from '../error-page.js';
 import type { Services } from '../services.js';
 import { ApiError, HOUR, limit, quoteLimit, sendError } from './guard.js';
 import { ADDRESS, HEX_ID } from './wire.js';
@@ -83,5 +84,16 @@ export function registerPay(app: FastifyInstance, config: SampanConfig, s: Servi
   app.options('/api/pay/*', async (_req, reply) => {
     if (!config.features.pay) return reply.code(404).send({ error: 'not_found', message: 'not found' });
     return reply.code(204).send();
+  });
+}
+
+/** The merchant button script and its example page (with its style sheet) are files in web/public; while features.pay is off they are the
+ *  same static 404 page as any missing file, so nothing points at a flow that is not open. */
+export const PAY_FILES = /^\/pay(\.js|\/[^/]+\.(html|css))(\?|$)/;
+
+export function registerPayFiles(app: FastifyInstance, config: SampanConfig, errorPages: ErrorPages): void {
+  if (config.features.pay) return;
+  app.addHook('onRequest', async (req, reply) => {
+    if (PAY_FILES.test(req.url)) return errorPages.notFound(reply);
   });
 }

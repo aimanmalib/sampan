@@ -10,6 +10,7 @@ import { CrossingPage } from './CrossingPage';
 import { HowPage } from './how/HowPage';
 import { LegalPage } from './legal/LegalPage';
 import { Measured } from './Measured';
+import { PayPages, payRoute } from './pay/PayPages';
 import { useWallet } from './wallet/useWallet';
 
 export function App() {
@@ -27,6 +28,9 @@ export function App() {
   const crossing = /^\/c\/([0-9a-f]{32})$/.exec(location.pathname)?.[1];
   const how = location.pathname === '/how';
   const legal = location.pathname === '/terms' ? 'terms' : location.pathname === '/risks' ? 'risks' : null;
+  // Sampan Pay pages exist only with features.pay; until the config says so nothing is drawn, then the front page.
+  const pay = payRoute(location.pathname);
+  const payShown = pay && (config ? config.features.pay : !serverDown) ? pay : null;
 
   useEffect(() => {
     fetchConfig().catch(() => setServerDown(true));
@@ -53,7 +57,11 @@ export function App() {
           <span lang={lang === 'en' ? 'ms' : 'en'}>{t('lang.switch')}</span>
         </button>
       </nav>
-      {how ? (
+      {payShown ? (
+        <main className="page">
+          <PayPages route={payShown} config={config} />
+        </main>
+      ) : how ? (
         <main>
           <HowPage config={config} />
         </main>

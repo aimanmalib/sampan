@@ -160,6 +160,8 @@ export interface PublicConfig {
   health: { intervalSeconds: number; retrySeconds: number; requestTimeoutSeconds: number };
   /** The page rebuilds the expected Sampan fee output from these two values. */
   business: Pick<BusinessConfig, 'feeBps' | 'feeAddress'>;
+  /** Sampan Pay as its pages show it: how long an invoice is open, the invoice range and the demo shop's price. */
+  pay: Pick<PayConfig, 'validMinutes' | 'minUsd' | 'maxUsd'> & { demoPriceUsd: number };
 }
 
 const HEX32 = /^[0-9a-fA-F]{64}$/;
@@ -326,5 +328,6 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     connect: { ...c.connect, gapLimit: c.wallet.gapLimit, feeCapSats: c.fees.capSats },
     health: { intervalSeconds: c.ops.healthIntervalSeconds, retrySeconds: c.ops.healthRetrySeconds, requestTimeoutSeconds: c.ops.requestTimeoutSeconds },
     business: { feeBps: c.business.feeBps, feeAddress: c.business.feeAddress },
+    pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
   };
 }

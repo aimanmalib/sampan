@@ -12,6 +12,7 @@ import { Db } from './db.js';
 import { LandingService } from './landing/service.js';
 import { LandingWatcher } from './landing/watcher.js';
 import { DemoOrders } from './pay/demo.js';
+import { fakeTransport } from './pay/fake.js';
 import { PayService } from './pay/service.js';
 import { httpsTransport, systemLookup, type Lookup, type Transport } from './pay/ssrf.js';
 import { WebhookDispatcher } from './pay/webhook.js';
@@ -54,7 +55,13 @@ export interface Services {
   health: HealthMonitor;
   /** Locking bytecodes (hex) of the project's own test wallet. */
   testLocks: Set<string>;
+  /** Fake network only: the app hands its in-process request function here so the demo shop's webhook is answered
+   *  by the demo hook of the same server (server/pay/fake.ts). Nothing leaves the machine. */
+  fakeDelivery: { inject?: LocalPost };
 }
+
+/** POST to a path of this same server; resolves to the HTTP status. */
+export type LocalPost = (path: string, headers: Record<string, string>, body: string) => Promise<number>;
 
 export interface ServiceOptions {
   config: SampanConfig;
@@ -137,9 +144,11 @@ export function createServices(o: ServiceOptions): Services {
   const swaps = new SwapService({ config, chain, pools, prefix });
   const route = createRoute(config, o.fake);
   const landings = new LandingService({ config, chain, pools, db, prefix, testLocks });
-  // The fake network sends no webhook anywhere: names resolve to TEST-NET-3 and the transport answers 503 (nothing leaves).
+  // The fake network sends no webhook anywhere: names resolve to TEST-NET-3 and the transport answers 503 (nothing
+  // leaves), except the demo shop's own hook, which goes to this server in-process (server/pay/fake.ts).
+  const fakeDelivery: Services['fakeDelivery'] = {};
   const webhookLookup: Lookup = o.webhookLookup ?? (o.fake ? async () => ['203.0.113.10'] : systemLookup);
-  const webhookTransport: Transport = o.webhookTransport ?? (o.fake ? async () => 503 : httpsTransport);
+  const webhookTransport: Transport = o.webhookTransport ?? (o.fake ? fakeTransport(config, fakeDelivery) : httpsTransport);
   const pay = new PayService({ config, db, pools, prefix, testLocks, lookup: webhookLookup });
   const category = config.tokens[config.defaultToken]!.category;
   const routeChains = publicConfig(config).routeChains;
@@ -172,6 +181,7 @@ export function createServices(o: ServiceOptions): Services {
     pay,
     webhooks: new WebhookDispatcher({ config, db: db.handle, pay, chain, prefix, lookup: webhookLookup, transport: webhookTransport, log: o.log }),
     demoOrders: new DemoOrders(db.handle),
+    fakeDelivery,
     db,
     clientIp: new ClientIp({ trustedProxies: o.trustedProxies, cloudflareCidrs: config.rate.cloudflareCidrs, log: o.log }),
     limiter: new RateLimiter(),

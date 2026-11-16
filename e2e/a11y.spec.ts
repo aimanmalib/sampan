@@ -5,6 +5,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { encodeLockingBytecodeP2pkh, lockingBytecodeToCashAddress } from '@bitauth/libauth';
 import { expect, test, type Page } from '@playwright/test';
 import en from '../lang/en.json' with { type: 'json' };
+import { PAY_PORT_OFFSET } from '../playwright.config.js';
 
 const PAGES = ['/', '/how', '/terms', '/risks'];
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
@@ -95,6 +96,24 @@ test.describe('landing address panel and its status page', () => {
     const follow = await page.getByRole('link', { name: en['land.follow'] }).getAttribute('href');
     await page.goto(follow!);
     await expect(page.locator('.crossing__status')).toBeVisible();
+    await axeClean(page);
+    expect(await smallTargets(page, 'body', isMobile)).toEqual([]);
+  });
+});
+
+test.describe('Sampan Pay pages', () => {
+  // Fake server with features.pay on (playwright.config.ts PAY_PORT_OFFSET).
+  test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server with Sampan Pay on');
+  test.use({ baseURL: `http://127.0.0.1:${Number(process.env.E2E_PORT ?? 4173) + PAY_PORT_OFFSET}` });
+
+  test('/pay and an invoice page: no WCAG AA failures, targets large enough to hit', async ({ page, isMobile }) => {
+    await page.goto('/pay');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    await axeClean(page);
+    expect(await smallTargets(page, 'body', isMobile)).toEqual([]);
+    await page.getByRole('button', { name: en['pay.shop.buy'] }).click();
+    await expect(page.locator('.payinv__address')).toBeVisible({ timeout: 20_000 });
     await axeClean(page);
     expect(await smallTargets(page, 'body', isMobile)).toEqual([]);
   });

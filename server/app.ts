@@ -5,8 +5,9 @@ import { registerCrossings } from './api/crossings.js';
 import { registerLanding } from './api/landing.js';
 import { registerIn } from './api/in.js';
 import { registerOut } from './api/out.js';
-import { registerPay } from './api/pay.js';
-import { registerDemoHook } from './pay/demo.js';
+import { registerPay, registerPayFiles } from './api/pay.js';
+import { registerDemoHook, registerDemoShop } from './pay/demo.js';
+import { registerFakePay } from './pay/fake.js';
 import { registerSwap } from './api/swap.js';
 import { registerWallet } from './api/wallet.js';
 import { registerSecurityHeaders } from './security.js';
@@ -56,6 +57,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   await services.clientIp.refresh();
   registerSecurityHeaders(app, config);
   const errorPages = registerErrorPages(app, config, options.webDist);
+  registerPayFiles(app, config, errorPages);
   registerOutage(app, options.fake ? (options.outage ?? null) : null);
 
   app.get('/healthz', async () => ({ ok: true }));
@@ -70,6 +72,8 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   registerCrossings(app, config, services);
   registerPay(app, config, services);
   registerDemoHook(app, config, services.demoOrders, options.payDemoSecret);
+  registerDemoShop(app, config, services, options.payDemoSecret);
+  if (options.fake) registerFakePay(app, config, services);
   if (options.startWatcher ?? true) {
     services.watcher.start();
     services.health.start();

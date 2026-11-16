@@ -38,6 +38,9 @@ export interface PayConfig {
   demo: { priceUsd: number; merchantAddress: string };
 }
 
+/** Order ids of the demo shop on /pay start with this; the status page then asks the demo shop about the order. */
+export const DEMO_ORDER_PREFIX = 'demo-';
+
 const posInt = (v: number): boolean => Number.isInteger(v) && v > 0;
 const bpsIn = (v: number, max: number): boolean => Number.isInteger(v) && v >= 0 && v <= max;
 const cents = (v: number): boolean => Number.isFinite(v) && Math.abs(Math.round(v * 100) - v * 100) < 1e-6;

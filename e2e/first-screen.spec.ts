@@ -5,6 +5,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import en from '../lang/en.json' with { type: 'json' };
 import ms from '../lang/ms.json' with { type: 'json' };
+import { PAY_PORT_OFFSET } from '../playwright.config.js';
 
 test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server with the landing flow on');
 const landingPort = Number(process.env.E2E_PORT ?? 4173) + 1;
@@ -63,3 +64,25 @@ for (const [lang, text] of Object.entries(LANGS)) {
     }
   });
 }
+
+// Sampan Pay (fake server with features.pay on): the shop's heading and its one primary button, and on an invoice
+// the heading, the amount and "Open in wallet", are in view without scrolling.
+test.describe('Sampan Pay first screens', () => {
+  test.use({ baseURL: `http://127.0.0.1:${Number(process.env.E2E_PORT ?? 4173) + PAY_PORT_OFFSET}` });
+  for (const [lang, text] of Object.entries(LANGS)) {
+    test(`/pay and /pay/i/:id hold the heading and the one primary button (${lang})`, async ({ page }, info) => {
+      await page.addInitScript((value) => localStorage.setItem('sampan.lang', value), lang);
+      await page.goto('/pay');
+      await expect(page.locator('h1')).toHaveText(text['pay.shop.title']);
+      await expect(page.locator('.button--primary')).toHaveCount(1);
+      for (const selector of ['h1', '.button--primary']) await inView(page, selector, `${info.project.name} /pay ${lang}`);
+      await shot(page, `${info.project.name}-pay-${lang}`);
+      await page.locator('.button--primary').click();
+      await expect(page.locator('.payinv__bch')).toBeVisible({ timeout: 20_000 });
+      await expect(page.locator('.button--primary')).toHaveCount(1);
+      for (const selector of ['h1', '.payinv__bch', '.button--primary']) await inView(page, selector, `${info.project.name} invoice ${lang}`);
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      await shot(page, `${info.project.name}-invoice-${lang}`);
+    });
+  }
+});

@@ -112,6 +112,11 @@ export function HowPage({ config }: { config: LoadedConfig | null }) {
           {flows.land ? <li>{t('how.adds.land', v)}</li> : null}
           {flows.cross ? <li>{t('how.adds.cross', v)}</li> : null}
         </ul>
+        {config.features.pay ? (
+          <p className="how__pay">
+            {t('how.pay.text')} <a href="/pay">{t('how.pay.link')}</a>
+          </p>
+        ) : null}
       </section>
       <Measured />
       <ProofTable config={config} />

@@ -1,0 +1,189 @@
+/* Sampan Pay: /pay (merchants, demo shop) and /pay/i/:id (an invoice). One reading column, like /how. */
+.payshop,
+.payinv {
+  max-width: var(--measure);
+  width: 100%;
+  margin: 0 auto;
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.payshop > *,
+.payinv > * {
+  min-width: 0;
+  margin: 0;
+}
+.payshop__title,
+.payinv__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.75rem, 6vw, 2.75rem);
+  line-height: 1.1;
+  text-wrap: balance;
+}
+.payshop__lead,
+.payinv__lead {
+  font-size: 1.0625rem;
+  color: var(--ink-soft);
+}
+.payshop__limits {
+  color: var(--ink-soft);
+}
+.payshop__h2 {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  margin-top: 0.5rem;
+}
+.payshop__product {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  font-weight: 600;
+}
+.payshop__price {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+}
+.payshop__api {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 1rem;
+}
+.payshop__api > li {
+  min-width: 0;
+}
+.payshop__api p {
+  margin: 0 0 0.5rem;
+}
+.payshop__code {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: var(--paper-deep);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.payshop__code:focus-visible {
+  outline: var(--focus);
+  outline-offset: 2px;
+}
+
+/* Invoice */
+.payinv__badge {
+  justify-self: start;
+  padding: 0.125rem 0.625rem;
+  border: 1px solid var(--lamp);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.payinv__box {
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: center;
+  padding: var(--gap);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.payinv__details {
+  display: grid;
+  gap: 0.625rem;
+  justify-items: start;
+  min-width: 0;
+}
+.payinv__details > p {
+  margin: 0;
+}
+.payinv__amount {
+  display: grid;
+  gap: 0.125rem;
+}
+.payinv__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.payinv__bch {
+  font-size: 1.375rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.payinv__address {
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.payinv__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+.payinv__open {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.payinv__time {
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.payinv__status {
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--line);
+  background: var(--card);
+  border-radius: 0 8px 8px 0;
+}
+.payinv__status--paid,
+.payinv__status--overpaid,
+.payinv__status--paid_late {
+  border-left-color: var(--river);
+}
+.payinv__status--converting,
+.payinv__status--underpaid,
+.payinv__status--open {
+  border-left-color: var(--lamp);
+}
+.payinv__status--expired,
+.payinv__status--underpaidLate {
+  border-left-color: var(--danger);
+}
+.payinv__order {
+  font-weight: 600;
+}
+.payinv__order--done {
+  color: var(--river);
+}
+.payinv__tx {
+  overflow-wrap: anywhere;
+}
+.payinv__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+}
+@media (max-width: 30rem) {
+  .payinv__box {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  /* On a phone the wallet is usually on the same phone: amount and "Open in wallet" first, the QR code after. */
+  .payinv__box .payqr {
+    max-width: 14rem;
+    order: 2;
+  }
+  .payinv__details {
+    justify-items: stretch;
+    width: 100%;
+  }
+}

@@ -14,6 +14,7 @@ export function Footer() {
         <a href="/how">{t('footer.how')}</a>
         <a href="/terms">{t('footer.terms')}</a>
         <a href="/risks">{t('footer.risks')}</a>
+        {config?.features.pay ? <a href="/pay">{t('footer.merchants')}</a> : null}
         {config?.banner.repoUrl ? <a href={config.banner.repoUrl}>{t('footer.repo')}</a> : null}
         {config?.site.feedbackUrl ? <a href={config.site.feedbackUrl}>{t('footer.feedback')}</a> : null}
       </p>

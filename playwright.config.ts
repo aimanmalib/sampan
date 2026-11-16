@@ -15,12 +15,17 @@ const outPatch = { ...e2ePatch, compliance: { crossChainEnabled: true } };
 /** One fake server per SAMPAN_FAKE_OUTAGE mode, on the ports after the three above (e2e/outage.spec.ts). */
 export const OUTAGE_MODES = ['indexer', 'electrum', 'api', 'chunk', 'render', 'app'] as const;
 const outagePort = (i: number) => port + 3 + i;
-const fakeServer = (p: number, patch: unknown, outage?: string) => ({
+/** A fake server with Sampan Pay on (e2e/pay.spec.ts), after the outage servers. */
+export const PAY_PORT_OFFSET = 3 + OUTAGE_MODES.length;
+const payPatch = { ...e2ePatch, features: { swap: true, landing: true, pay: true }, rate: { ...e2ePatch.rate, invoicesPerHour: 1000 } };
+/** Test-only secret of the demo shop's hook on the local fake server (the public site's secret lives on the host). */
+const payEnv = { SAMPAN_PAY_DEMO_SECRET: `whsec_${Buffer.alloc(32, 3).toString('base64')}` };
+const fakeServer = (p: number, patch: unknown, outage?: string, extra: Record<string, string> = {}) => ({
   command: 'node dist/server/main.js',
   url: `http://127.0.0.1:${p}/healthz`,
   reuseExistingServer: false,
   timeout: 30_000,
-  env: { PORT: String(p), HOST: '127.0.0.1', SAMPAN_FAKE: '1', SAMPAN_CONFIG_PATCH: JSON.stringify(patch), ...(outage ? { SAMPAN_FAKE_OUTAGE: outage } : {}) },
+  env: { PORT: String(p), HOST: '127.0.0.1', SAMPAN_FAKE: '1', SAMPAN_CONFIG_PATCH: JSON.stringify(patch), ...(outage ? { SAMPAN_FAKE_OUTAGE: outage } : {}), ...extra },
 });
 
 export default defineConfig({
@@ -41,6 +46,7 @@ export default defineConfig({
           fakeServer(landingPort, landingPatch),
           fakeServer(outPort, outPatch),
           ...OUTAGE_MODES.map((mode, i) => fakeServer(outagePort(i), e2ePatch, mode)),
+          fakeServer(port + PAY_PORT_OFFSET, payPatch, undefined, payEnv),
         ],
       }),
 });
