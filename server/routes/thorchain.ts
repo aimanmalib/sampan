@@ -126,10 +126,11 @@ export class ThorchainRoute implements Route {
     return { kind: 'router-deposit', router: q.router, vault: q.vault, asset: q.asset, amount: q.amount, memo: q.memo, expiry: q.expiry };
   }
 
+  /** `txid` of the inbound: a BCH txid, or an EVM hash with or without 0x (THORNode wants it without). */
   async status(txid: string): Promise<CrossingStatus> {
     let s: StatusBody;
     try {
-      s = await this.o.node.request<StatusBody>(`/thorchain/tx/status/${txid.toUpperCase()}`);
+      s = await this.o.node.request<StatusBody>(`/thorchain/tx/status/${txid.replace(/^0x/i, '').toUpperCase()}`);
     } catch {
       throw new RouteError('route_unavailable', 'THORChain is not answering');
     }

@@ -145,9 +145,14 @@ export class ElectrumChain implements Chain {
   }
 
   async historyCount(lockingHex: string): Promise<number> {
+    return (await this.historyTxids(lockingHex)).length;
+  }
+
+  /** Every transaction that touched this locking bytecode (confirmed and mempool), lower-case txids. */
+  async historyTxids(lockingHex: string): Promise<string[]> {
     const res = await this.request('blockchain.scripthash.get_history', scriptHash(lockingHex));
     if (!Array.isArray(res)) throw new ChainUnavailableError('get_history did not return a list');
-    return res.length;
+    return res.map((h: { tx_hash?: unknown }) => String(h.tx_hash ?? '').toLowerCase());
   }
 
   async broadcast(txHex: string): Promise<string> {

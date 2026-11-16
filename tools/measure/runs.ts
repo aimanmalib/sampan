@@ -10,7 +10,7 @@ export interface Run {
   flow: Flow;
   /** What moved, e.g. "0.001 BCH to 0.52 PUSD". */
   amount: string;
-  /** Full transaction id, or undefined when the run failed before one existed. */
+  /** Full transaction id (or a crossing's ids from crossingTxid), undefined when the run failed before one existed. */
   txid?: string;
   seconds?: number;
   ok: boolean;
@@ -22,8 +22,22 @@ export const RUNS_HEADER = ['| UTC | flow | amount | txid | seconds | result |',
 
 const cell = (s: string): string => s.replace(/[|\n]/g, ' ').trim();
 
+const BCH_TXID = /^[0-9a-f]{64}$/i;
+const EVM_TXID = /^0x[0-9a-f]{64}$/i;
+const SINGLE_TXID = /^(0x)?[0-9a-f]{64}$/i;
+const CROSSING_TXID = /^bch [0-9a-f]{64} · base 0x[0-9a-f]{64}( · convert [0-9a-f]{64})?$/i;
+
+/** The txid cell of a crossing row: both chains in full, plus the landing's conversion when there is one. */
+export function crossingTxid(ids: { bch: string; base: string; convert?: string }): string {
+  if (!BCH_TXID.test(ids.bch)) throw new Error(`not a BCH transaction id: ${ids.bch}`);
+  if (!EVM_TXID.test(ids.base)) throw new Error(`not a Base transaction id: ${ids.base}`);
+  if (ids.convert !== undefined && !BCH_TXID.test(ids.convert)) throw new Error(`not a BCH transaction id: ${ids.convert}`);
+  const convert = ids.convert ? ` · convert ${ids.convert.toLowerCase()}` : '';
+  return `bch ${ids.bch.toLowerCase()} · base ${ids.base.toLowerCase()}${convert}`;
+}
+
 export function runRow(r: Run): string {
-  if (r.txid !== undefined && !/^(0x)?[0-9a-f]{64}$/i.test(r.txid)) throw new Error(`not a transaction id: ${r.txid}`);
+  if (r.txid !== undefined && !SINGLE_TXID.test(r.txid) && !CROSSING_TXID.test(r.txid)) throw new Error(`not a transaction id: ${r.txid}`);
   const utc = r.utc.toISOString().replace(/\.\d{3}Z$/, 'Z');
   const seconds = r.seconds === undefined ? '-' : r.seconds.toFixed(1);
   const result = r.ok ? 'ok' : r.note ? `fail (${cell(r.note)})` : 'fail';

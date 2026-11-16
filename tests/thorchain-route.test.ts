@@ -50,6 +50,14 @@ describe('THORChain route', () => {
     expect((await route(refunding).status('ab'.repeat(32))).stage).toBe('refunded');
   });
 
+  it('asks THORNode for an EVM hash without its 0x prefix', async () => {
+    const fake = fakeThornode(dir, () => NOW);
+    const asked: string[] = [];
+    const spy: HttpGet = async (url, t) => (asked.push(url), fake(url, t));
+    expect((await route(spy).status(`0x${'ab'.repeat(32)}`)).stage).toBe('done');
+    expect(asked[0]).toMatch(new RegExp(`/thorchain/tx/status/${'AB'.repeat(32)}$`));
+  });
+
   it('fails over to the next node when one does not answer, and stops on a THORChain refusal', async () => {
     const fake = fakeThornode(dir, () => NOW);
     const seen: string[] = [];
