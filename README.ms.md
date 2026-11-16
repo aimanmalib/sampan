@@ -217,7 +217,9 @@ Selepas `npm ci` dalam klon, tambahkannya kepada klien MCP. Dalam `.mcp.json` pr
 atau dengan Claude Code: `claude mcp add sampan -- npm --prefix /path/to/sampan run --silent mcp`. Tetapkan `SAMPAN_URL` untuk
 pelayan Sampan lain (lalai: `site.url` dalam config). [`mcp/tools.test.ts`](mcp/tools.test.ts) memulakannya dengan arahan ini
 dari folder lain dan berhubung dengannya melalui klien SDK MCP; ia juga menyemak bahawa alamat pendaratan yang tidak sepadan
-dengan kadnya ditolak. SDK MCP dan `zod` ialah kebergantungan pembangunan, jadi imej produksi tidak membawanya.
+dengan kadnya ditolak. Di laman hidup, `quote_swap`, `create_landing_address` dan `get_crossing_status` diuji dengan klien
+SDK MCP, dan `quote_swap` diuji dengan Claude Code (`claude -p` dengan hanya alat itu dibenarkan); lihat
+[AI agent](docs/MEASURED.md#ai-agent). SDK MCP dan `zod` ialah kebergantungan pembangunan, jadi imej produksi tidak membawanya.
 
 ## Seni bina
 

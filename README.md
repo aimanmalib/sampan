@@ -287,7 +287,9 @@ After `npm ci` in a clone, add it to an MCP client. In a project `.mcp.json`:
 or with Claude Code: `claude mcp add sampan -- npm --prefix /path/to/sampan run --silent mcp`. Set `SAMPAN_URL` to use
 another Sampan server (default: `site.url` in the config). [`mcp/tools.test.ts`](mcp/tools.test.ts) starts it with this
 command from another folder and talks to it through the MCP SDK client; it also checks that a landing address that does not
-match its card is refused. The MCP SDK and `zod` are development dependencies, so the production image does not carry them.
+match its card is refused. On the live site, `quote_swap`, `create_landing_address` and `get_crossing_status` were
+tested with the MCP SDK client, and `quote_swap` was tested with Claude Code (`claude -p` with only that tool allowed); see
+[AI agent](docs/MEASURED.md#ai-agent). The MCP SDK and `zod` are development dependencies, so the production image does not carry them.
 
 ## Architecture
 

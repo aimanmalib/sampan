@@ -160,3 +160,14 @@ The boat on the status page (`/c/:id`) with `ui.ferryMotion` on: `data-step` of 
 | 2026-11-16T19:26:30Z | WebKit iPhone 13 · local fake | land | 1 moving (+0.3 s) → 2 moving (+6.4 s) → 4 arrived (+12.2 s); alive 36 s after | none (fake network) | ok |
 | 2026-11-16T19:27:20Z | Chromium desktop 1440×900 · local fake | land | 1 moving (+0.2 s) → 2 moving (+6.3 s) → 4 arrived (+12.1 s); alive 34 s after | none (fake network) | ok |
 | 2026-11-16T19:39:03Z | WebKit iPhone 13 · mainnet, live site (bdedcd8) | land | 1 moving (before payment) → 4 arrived (+3.1 s after the payment); converted within one poll, so 2 was not shown; alive 35 s after | payment 8b46bf00cf6e3e5c14d09b095728b593d33711494f9c3d272fd6de49684db1fb, conversion a9ceff4389d276597f2c6e958c01f31d580ad4573191ea2c17f7e7142400f0b7 | ok |
+
+## AI agent
+
+The MCP server in `mcp/` started with the README command (`npm --prefix <repo> run --silent mcp`, from another folder, no `SAMPAN_URL`, so it talks to the live site). `MCP SDK client` rows: one call per tool through the SDK `Client` over stdio; ms = time of that tool call. The landing owner is a token address of the test wallet (counted as a test address, not public). `Claude Code` row: one `claude -p --strict-mcp-config` run in which only `mcp__sampan__quote_swap` was allowed; the run called that tool once with `{"side":"buy","amount":"0.001"}`; ms = the whole run. No transaction was made. Commit = the MCP code; the live site ran 6b1db61.
+
+| UTC | client | tool | ms | commit | result |
+|---|---|---|---|---|---|
+| 2026-11-16T20:49:46Z | MCP SDK client | quote_swap: buy with 0.001 BCH → 0.2 PUSD (at least 0.19) | 2207 | 92a6496 | ok |
+| 2026-11-16T20:49:48Z | MCP SDK client | create_landing_address: test wallet receive/13 → bitcoincash:pzl6a7f26y4mrzx7h8j9dlagpvs8wzum2y77e8dufw, id 48cd5364afee0a833c86f0786241037b, address recomputed from the card again by the measuring script: same | 390 | 92a6496 | ok |
+| 2026-11-16T20:49:49Z | MCP SDK client | get_crossing_status: id 48cd5364afee0a833c86f0786241037b → open (land) | 93 | 92a6496 | ok |
+| 2026-11-16T20:51:04Z | Claude Code 2.1.325 | quote_swap: buy with 0.001 BCH → answered "0.2 PUSD" | 10508 | 92a6496 | ok |
