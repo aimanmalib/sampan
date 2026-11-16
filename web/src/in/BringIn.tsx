@@ -6,11 +6,13 @@ import type { LoadedConfig } from '../config';
 import { useText } from '../i18n';
 import { LandPanel } from '../land/LandPanel';
 import type { Wallet } from '../wallet/useWallet';
+import { RoutePaused } from '../cross/RoutePaused';
 import { InPanel } from './InPanel';
 
 type Source = 'land' | 'cross';
 
-export function BringIn({ config, wallet }: { config: LoadedConfig; wallet: Wallet }) {
+/** `halted`: the route reports a halt, so the cross-chain source shows "Paused by the route" instead of its form. */
+export function BringIn({ config, wallet, halted }: { config: LoadedConfig; wallet: Wallet; halted: boolean }) {
   const { t } = useText();
   const flows = openFlows(config);
   const sources: Source[] = [...(flows.land ? (['land'] as const) : []), ...(flows.cross ? (['cross'] as const) : [])];
@@ -30,7 +32,13 @@ export function BringIn({ config, wallet }: { config: LoadedConfig; wallet: Wall
           ))}
         </div>
       ) : null}
-      {source === 'land' ? <LandPanel config={config} wallet={wallet} /> : <InPanel config={config} wallet={wallet} />}
+      {source === 'land' ? (
+        <LandPanel config={config} wallet={wallet} />
+      ) : halted ? (
+        <RoutePaused config={config} />
+      ) : (
+        <InPanel config={config} wallet={wallet} />
+      )}
     </>
   );
 }

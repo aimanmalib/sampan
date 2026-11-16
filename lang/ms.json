@@ -336,5 +336,13 @@
   "risks.server.funds": "Syiling di alamat pendaratan kekal dalam kontrak, yang membayar ke alamat anda dan tidak ke mana-mana tempat lain. Dengan kad pemulihan dari halaman status, sesiapa pun boleh menyelesaikan pendaratan atau memulangkan syiling menggunakan skrip dalam kod sumber. Cara ia berfungsi menunjukkan langkahnya.",
   "risks.approval.title": "Kelulusan token di rantaian EVM",
   "risks.approval.text": "Membawa masuk token dari rantaian EVM mungkin memerlukan kelulusan yang membenarkan kontrak memindahkan token itu dari dompet anda.",
-  "risks.approval.funds": "Sampan meminta amaun tepat bagi setiap lintasan, tidak pernah kelulusan tanpa had. Untuk membatalkan kelulusan, luluskan sifar bagi kontrak yang sama dalam dompet anda atau dalam penyemak kelulusan penjelajah blok."
+  "risks.approval.funds": "Sampan meminta amaun tepat bagi setiap lintasan, tidak pernah kelulusan tanpa had. Untuk membatalkan kelulusan, luluskan sifar bagi kontrak yang sama dalam dompet anda atau dalam penyemak kelulusan penjelajah blok.",
+  "health.label": "Status perkhidmatan",
+  "health.cauldron": "Cauldron",
+  "health.bch": "Bitcoin Cash",
+  "health.ok": "ok",
+  "health.down": "tidak menjawab",
+  "health.halted": "dihentikan",
+  "paused.route.title": "Dihentikan oleh laluan",
+  "paused.route.body": "{route} melaporkan bahawa Bitcoin Cash atau rantaian satu lagi dihentikan, jadi tiada apa yang baharu dihantar melalui jalan ini. Tab ini dibuka semula dengan sendirinya apabila {route} dibuka semula."
 }

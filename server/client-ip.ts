@@ -45,6 +45,13 @@ export function inCidr(ipRaw: string, cidr: string): boolean {
   return false;
 }
 
+type Headers = Record<string, string | string[] | undefined>;
+
+const header = (headers: Headers, k: string): string => {
+  const v = headers[k];
+  return (Array.isArray(v) ? v[v.length - 1] : v) ?? '';
+};
+
 export interface ClientIpOptions {
   /** Host names or IPs of the reverse proxy. Empty = forwarded headers are never read. */
   trustedProxies: string[];
@@ -75,20 +82,31 @@ export class ClientIp {
     else if (this.o.trustedProxies.length > 0) this.o.log?.('trusted proxy did not resolve; forwarded headers are ignored');
   }
 
-  of(peer: string | undefined, headers: Record<string, string | string[] | undefined>): string {
+  of(peer: string | undefined, headers: Headers): string {
+    const v = this.view(peer, headers);
+    if (!v) return bare(peer ?? '') || 'unknown';
+    const cf = header(headers, 'cf-connecting-ip').trim();
+    if (cf && isIP(cf) && v.cloudflare) return bare(cf);
+    return v.seen;
+  }
+
+  /** Two-letter country from cf-ipcountry, believed only when the request came through Cloudflare; else null. */
+  country(peer: string | undefined, headers: Headers): string | null {
+    const v = this.view(peer, headers);
+    if (!v?.cloudflare) return null;
+    const cc = header(headers, 'cf-ipcountry').trim().toUpperCase();
+    return /^[A-Z]{2}$/.test(cc) ? cc : null;
+  }
+
+  /** What the trusted proxy saw, or null when the socket peer is not the proxy. */
+  private view(peer: string | undefined, headers: Headers): { seen: string; cloudflare: boolean } | null {
     const sock = bare(peer ?? '');
     if (!this.trusted.has(sock)) {
       if (this.o.trustedProxies.length > 0 && Date.now() - this.resolvedAt > 10_000) void this.refresh();
-      return sock || 'unknown';
+      return null;
     }
-    const header = (k: string): string => {
-      const v = headers[k];
-      return (Array.isArray(v) ? v[v.length - 1] : v) ?? '';
-    };
-    const xff = header('x-forwarded-for').split(',').map((s) => s.trim()).filter(Boolean);
+    const xff = header(headers, 'x-forwarded-for').split(',').map((s) => s.trim()).filter(Boolean);
     const seen = bare(xff[xff.length - 1] ?? sock);
-    const cf = header('cf-connecting-ip').trim();
-    if (cf && isIP(cf) && this.o.cloudflareCidrs.some((c) => inCidr(seen, c))) return bare(cf);
-    return seen;
+    return { seen, cloudflare: this.o.cloudflareCidrs.some((c) => inCidr(seen, c)) };
   }
 }

@@ -336,5 +336,13 @@
   "risks.server.funds": "Coins at a landing address stay in the contract, which pays to your address and nowhere else. With the recovery card from the status page, anyone can finish the landing or give the coins back using the script in the source code. How it works shows the steps.",
   "risks.approval.title": "Token approvals on EVM chains",
   "risks.approval.text": "Bringing in a token from an EVM chain can need an approval that lets a contract move that token from your wallet.",
-  "risks.approval.funds": "Sampan asks for the exact amount of each crossing, never an unlimited approval. To cancel an approval, approve zero for the same contract in your wallet or in a block explorer's approval checker."
+  "risks.approval.funds": "Sampan asks for the exact amount of each crossing, never an unlimited approval. To cancel an approval, approve zero for the same contract in your wallet or in a block explorer's approval checker.",
+  "health.label": "Service status",
+  "health.cauldron": "Cauldron",
+  "health.bch": "Bitcoin Cash",
+  "health.ok": "ok",
+  "health.down": "not answering",
+  "health.halted": "paused",
+  "paused.route.title": "Paused by the route",
+  "paused.route.body": "{route} reports that Bitcoin Cash or the other chain is halted, so nothing new is sent this way. This tab opens again by itself when {route} reopens."
 }

@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { CashPrefix } from '../core/address.js';
-import type { SampanConfig } from '../core/config.js';
+import { publicConfig, type SampanConfig } from '../core/config.js';
 import { poolV0LockingHex } from '../core/pools/template.js';
 import { ElectrumChain } from './chain/electrum.js';
 import { FakeChain } from './chain/fake.js';
@@ -20,6 +20,7 @@ import { createRoute } from './routes/index.js';
 import type { Route } from './routes/types.js';
 import { SwapService } from './swap.js';
 import { InService } from './in.js';
+import { HealthMonitor } from './health.js';
 import { markOwnRows, testLocksOf } from './origin.js';
 
 export interface Services {
@@ -38,6 +39,8 @@ export interface Services {
   db: Db;
   clientIp: ClientIp;
   limiter: RateLimiter;
+  /** Last health check of the indexer, the BCH servers and the route (started by the app). */
+  health: HealthMonitor;
   /** Locking bytecodes (hex) of the project's own test wallet. */
   testLocks: Set<string>;
 }
@@ -116,6 +119,14 @@ export function createServices(o: ServiceOptions): Services {
   const swaps = new SwapService({ config, chain, pools, prefix });
   const route = createRoute(config, o.fake);
   const landings = new LandingService({ config, chain, pools, db, prefix, testLocks });
+  const category = config.tokens[config.defaultToken]!.category;
+  const routeChains = publicConfig(config).routeChains;
+  const health = new HealthMonitor({
+    pools: async () => (await pools.active(category)).length,
+    tipHeight: () => chain.tipHeight(),
+    ...(route && config.compliance.crossChainEnabled ? { route: { id: route.id, open: () => route.open(routeChains) } } : {}),
+    intervalMs: config.ops.healthIntervalSeconds * 1000,
+  });
   return {
     prefix,
     chain,
@@ -136,6 +147,7 @@ export function createServices(o: ServiceOptions): Services {
     db,
     clientIp: new ClientIp({ trustedProxies: o.trustedProxies, cloudflareCidrs: config.rate.cloudflareCidrs, log: o.log }),
     limiter: new RateLimiter(),
+    health,
     testLocks,
   };
 }

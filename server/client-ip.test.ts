@@ -33,6 +33,14 @@ describe('ClientIp', () => {
     expect(c.of('10.0.0.2', { 'x-forwarded-for': '9.9.9.9, 1.2.3.4' })).toBe('1.2.3.4');
   });
 
+  it('reads cf-ipcountry only through Cloudflare via the proxy', async () => {
+    const c = await ip();
+    expect(c.country('10.0.0.2', { 'x-forwarded-for': CF, 'cf-ipcountry': 'kp' })).toBe('KP');
+    expect(c.country('10.0.0.2', { 'x-forwarded-for': '1.2.3.4', 'cf-ipcountry': 'KP' })).toBeNull();
+    expect(c.country('10.0.0.9', { 'x-forwarded-for': CF, 'cf-ipcountry': 'KP' })).toBeNull();
+    expect(c.country('10.0.0.2', { 'x-forwarded-for': CF, 'cf-ipcountry': 'XX1' })).toBeNull();
+  });
+
   it('believes cf-connecting-ip only when the proxy saw a Cloudflare address', async () => {
     const c = await ip();
     expect(c.of('10.0.0.2', { 'x-forwarded-for': CF, 'cf-connecting-ip': '5.6.7.8' })).toBe('5.6.7.8');

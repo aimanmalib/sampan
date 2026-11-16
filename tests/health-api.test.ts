@@ -1,0 +1,123 @@
+// Health: the monitor's report from its probes, GET /api/health on the fake network, the 451 answer for blocked
+// countries (through Cloudflare only) and new crossings paused while the route reports a halt.
+import type { FastifyInstance } from 'fastify';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
+import shipped from '../config/sampan.json' with { type: 'json' };
+import { normalizeConfig, patchConfig, type SampanConfig } from '../core/config.js';
+import { buildApp } from '../server/app.js';
+import { HealthMonitor } from '../server/health.js';
+import { createServices, type Services } from '../server/services.js';
+
+const base = normalizeConfig(shipped as unknown as SampanConfig);
+const crossOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }));
+const CF = '104.16.1.2';
+const PROXY = '10.0.0.2';
+const BLOCKED = base.compliance.blockedCountries[0]!;
+const quote = { source: 'BCH', amount: '1000000', symbol: 'USDC', chain: 'BASE', destination: '0x1a877169bB03400fA69EC4813889E78994D194Cb' };
+
+let app: FastifyInstance | undefined;
+let services: Services;
+let dist: string | undefined;
+
+const start = async (c: SampanConfig) => {
+  dist = mkdtempSync(path.join(tmpdir(), 'sampan-health-'));
+  services = createServices({ config: c, fake: true, dbFile: ':memory:', trustedProxies: [PROXY], fakeFixture: path.resolve('tests/fixtures/cauldron-pusd-pools.json') });
+  app = await buildApp({ config: c, webDist: dist, fake: true, services, startWatcher: false });
+  return app;
+};
+afterEach(async () => {
+  await app?.close();
+  if (dist) rmSync(dist, { recursive: true, force: true });
+  app = undefined;
+});
+
+const fail = async (): Promise<number> => {
+  throw new Error('down');
+};
+
+describe('HealthMonitor', () => {
+  it('reports each probe and leaves the route out while crossings are closed', async () => {
+    const m = new HealthMonitor({ pools: async () => 3, tipHeight: async () => 900_000, intervalMs: 60_000, now: () => 5 });
+    expect(m.current()).toEqual({ checkedAt: null, cauldron: null, bch: null, height: null, route: null });
+    expect(await m.check()).toEqual({ checkedAt: 5, cauldron: true, bch: true, height: 900_000, route: null });
+    expect(m.routeOpen()).toBe(true);
+  });
+
+  it('marks failing probes false, no pools as not ok, and a halted route as paused', async () => {
+    const m = new HealthMonitor({
+      pools: async () => 0,
+      tipHeight: fail,
+      route: { id: 'thorchain', open: async () => false },
+      intervalMs: 60_000,
+    });
+    expect(m.routeOpen()).toBe(true);
+    const r = await m.check();
+    expect([r.cauldron, r.bch, r.height, r.route]).toEqual([false, false, null, { id: 'thorchain', open: false }]);
+    expect(m.routeOpen()).toBe(false);
+  });
+
+  it('treats a route that cannot be asked as not open', async () => {
+    const m = new HealthMonitor({ pools: async () => 1, tipHeight: async () => 1, route: { id: 'thorchain', open: fail as never }, intervalMs: 60_000 });
+    expect((await m.check()).route).toEqual({ id: 'thorchain', open: false });
+  });
+});
+
+describe('GET /api/health', () => {
+  it('answers the last check on the fake network; no route while crossings are off', async () => {
+    await start(base);
+    await services.health.check();
+    const h = (await app!.inject({ method: 'GET', url: '/api/health' })).json();
+    expect(h).toMatchObject({ cauldron: true, bch: true, route: null });
+    expect(typeof h.checkedAt).toBe('number');
+  });
+
+  it('includes the active route while crossings are on', async () => {
+    await start(crossOn);
+    await services.health.check();
+    const h = (await app!.inject({ method: 'GET', url: '/api/health' })).json();
+    expect(h.route).toEqual({ id: crossOn.route.active, open: true });
+  });
+});
+
+describe('new crossings: region and route pause', () => {
+  const post = (url: string, headers: Record<string, string>) =>
+    app!.inject({ method: 'POST', url, payload: quote, remoteAddress: PROXY, headers });
+
+  it('answers 451 to a blocked country seen through Cloudflare, on out and in', async () => {
+    await start(crossOn);
+    const res = await post('/api/out/quote', { 'x-forwarded-for': CF, 'cf-ipcountry': BLOCKED });
+    expect(res.statusCode).toBe(451);
+    expect(res.json().error).toBe('restricted_region');
+    const inRes = await app!.inject({
+      method: 'POST',
+      url: '/api/in/quote',
+      payload: { symbol: 'USDC', chain: 'BASE', amount: '500000000', receive: 'PUSD', address: 'bitcoincash:qqyuz8zh06c8h39guuedjpfvnlvjeg394ucvfe6ltt' },
+      remoteAddress: PROXY,
+      headers: { 'x-forwarded-for': CF, 'cf-ipcountry': BLOCKED },
+    });
+    expect(inRes.statusCode).toBe(451);
+  });
+
+  it('ignores cf-ipcountry that did not come through Cloudflare', async () => {
+    await start(crossOn);
+    const res = await post('/api/out/quote', { 'x-forwarded-for': '1.2.3.4', 'cf-ipcountry': BLOCKED });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it('pauses new crossings after the route reports a halt, and reopens after it clears', async () => {
+    await start(crossOn);
+    const route = services.route!;
+    const open = route.open.bind(route);
+    route.open = async () => false;
+    await services.health.check();
+    const res = await post('/api/out/quote', {});
+    expect(res.statusCode).toBe(503);
+    expect(res.json().error).toBe('route_paused');
+    route.open = open;
+    await services.health.check();
+    expect((await post('/api/out/quote', {})).statusCode).toBe(200);
+  });
+});

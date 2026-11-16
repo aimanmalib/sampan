@@ -9,7 +9,7 @@ import type { Origin } from '../db.js';
 import type { InService, InView } from '../in.js';
 import { RouteError } from '../routes/types.js';
 import type { Services } from '../services.js';
-import { ApiError, crossingLimit, quoteLimit, sendError } from './guard.js';
+import { ApiError, crossingGate, crossingLimit, quoteLimit, sendError } from './guard.js';
 import { ADDRESS, AMOUNT, HEX_ID, jsonSafe } from './wire.js';
 
 interface QuoteBody {
@@ -51,6 +51,7 @@ export function registerIn(app: FastifyInstance, config: SampanConfig, s: Servic
     async (req, reply) => {
       try {
         const ins = service(config, s);
+        crossingGate(s, config, req);
         quoteLimit(s, config, req);
         return { quote: inViewToWire(await ins.quote(read(req.body))) };
       } catch (e) {
@@ -69,6 +70,7 @@ export function registerIn(app: FastifyInstance, config: SampanConfig, s: Servic
     async (req, reply) => {
       try {
         const ins = service(config, s);
+        crossingGate(s, config, req);
         quoteLimit(s, config, req);
         crossingLimit(s, config, req);
         const b = req.body;

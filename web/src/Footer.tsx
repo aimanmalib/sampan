@@ -1,4 +1,5 @@
 import { useConfig } from './config';
+import { HealthStrip } from './HealthStrip';
 import { useText } from './i18n';
 
 export function Footer() {
@@ -6,6 +7,7 @@ export function Footer() {
   const config = useConfig();
   return (
     <footer className="footer">
+      <HealthStrip />
       <p className="footer__lead">{t('footer.sampan')}</p>
       <p className="footer__meta">
         <span>{t('footer.built')}</span> <span>{t('footer.license')}</span>

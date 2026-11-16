@@ -29,6 +29,18 @@ export const quoteLimit = (s: Services, c: SampanConfig, req: FastifyRequest): v
 export const crossingLimit = (s: Services, c: SampanConfig, req: FastifyRequest): void =>
   limit(s, req, 'crossing', c.rate.crossingsPerHour, HOUR);
 
+/**
+ * Before a new crossing is quoted or planned: visitors from compliance.blockedCountries get 451 (country from
+ * cf-ipcountry, believed only through Cloudflare), and a route the last health check saw halted is paused.
+ * Static pages, the Swap tab and landing addresses never pass through here.
+ */
+export function crossingGate(s: Services, c: SampanConfig, req: FastifyRequest): void {
+  const cc = s.clientIp.country(req.socket.remoteAddress, req.headers);
+  if (cc && c.compliance.blockedCountries.includes(cc))
+    throw new ApiError(451, 'restricted_region', 'crossings to and from other chains are not offered in your region');
+  if (!s.health.routeOpen()) throw new RouteError('route_paused', 'the route reports this chain halted; crossings are paused');
+}
+
 const SWAP_STATUS: Record<SwapError['code'], number> = {
   bad_request: 400,
   below_min: 400,

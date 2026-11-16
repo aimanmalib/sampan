@@ -45,6 +45,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   registerSecurityHeaders(app, config);
 
   app.get('/healthz', async () => ({ ok: true }));
+  app.get('/api/health', async () => services.health.current());
   app.get('/api/config', async () => ({ ...publicConfig(config), fake: options.fake }));
   registerWallet(app, config, services);
   registerSwap(app, config, services);
@@ -53,13 +54,17 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   registerOut(app, config, services);
   registerIn(app, config, services);
   registerCrossings(app, config, services);
-  if (options.startWatcher ?? true) services.watcher.start();
+  if (options.startWatcher ?? true) {
+    services.watcher.start();
+    services.health.start();
+  }
 
   const purge = setInterval(() => services.db.purgeQuotes(config.ops.quotePayloadHours), 3_600_000);
   purge.unref();
   app.addHook('onClose', async () => {
     clearInterval(purge);
     services.watcher.stop();
+    services.health.stop();
     await services.chain.close();
     services.db.close();
   });

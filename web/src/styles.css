@@ -294,6 +294,20 @@ a {
   font-size: 0.875rem;
   color: var(--ink-soft);
 }
+.health {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+.health__part--ok {
+  color: var(--river);
+}
+.health__part--down,
+.health__part--halted {
+  color: var(--danger);
+}
 .footer__lead {
   font-family: var(--font-display);
   font-size: 1.0625rem;

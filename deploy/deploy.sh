@@ -36,7 +36,7 @@ hold_previous() {  # $1 = image ID the replaced container ran: keep it by ID in 
 }
 
 browser_check() {  # front page, two engines, against the public URL
-  (cd .. && E2E_BASE_URL="$URL" $BROWSER_CMD npx playwright test e2e/front.spec.ts e2e/how.spec.ts e2e/legal.spec.ts --reporter=line)
+  (cd .. && E2E_BASE_URL="$URL" $BROWSER_CMD npx playwright test e2e/front.spec.ts e2e/how.spec.ts e2e/legal.spec.ts e2e/health.spec.ts --reporter=line)
 }
 
 mode=${1:-deploy}
