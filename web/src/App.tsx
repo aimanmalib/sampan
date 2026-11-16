@@ -7,6 +7,8 @@ import { JudgeStrip } from './JudgeStrip';
 import { setLang, useText } from './i18n';
 import { Scene } from './Scene';
 import { CrossingPage } from './CrossingPage';
+import { HowPage } from './how/HowPage';
+import { Measured } from './Measured';
 import { useWallet } from './wallet/useWallet';
 
 export function App() {
@@ -21,6 +23,7 @@ export function App() {
   const [fill, setFill] = useState(0);
   const judge = config && flows.land && cardTabs(config).includes('in') ? config : null;
   const crossing = /^\/c\/([0-9a-f]{32})$/.exec(location.pathname)?.[1];
+  const how = location.pathname === '/how';
 
   useEffect(() => {
     document.title = `${t('meta.title')} · ${t('banner.event')}`;
@@ -44,7 +47,11 @@ export function App() {
           {t('lang.switch')}
         </button>
       </nav>
-      {crossing ? (
+      {how ? (
+        <main>
+          <HowPage config={config} />
+        </main>
+      ) : crossing ? (
         <main className="page">
           <CrossingPage id={crossing} config={config} />
         </main>
@@ -66,6 +73,7 @@ export function App() {
           />
         ) : null}
         <ActionCard config={config} wallet={wallet} chosen={chosen} onChoose={setChosen} fill={fill} />
+        <Measured />
       </main>
       )}
       <Footer />
