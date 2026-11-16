@@ -118,6 +118,18 @@ export class LandingService {
     return { crossingId, card, minSats: rate.minSats, tokensMin: rate.tokensMin, reused: false };
   }
 
+  /**
+   * limits.maxUsd, priced at the address's own minimum rate (the tokens the contract pays at least). The pools usually
+   * pay a little more, so a payment can land slightly above the cap; the check stops the large ones.
+   */
+  private checkMax(card: LandingCard, sats: bigint): void {
+    const { limits, tokens } = this.o.config;
+    const decimals = tokens[card.token]?.decimals ?? 0;
+    const floorTokens = (sats * BigInt(card.rateNum)) / BigInt(card.rateDen);
+    if (Number(floorTokens) / 10 ** decimals > limits.maxUsd)
+      throw new SwapError('above_max', `at most ${limits.maxUsd} USD per landing payment`);
+  }
+
   /** Plain payment of `sats` to the landing address from the listed wallet addresses, change to `changeAddress`. */
   async buildPayment(r: {
     crossingId: string;
@@ -130,6 +142,7 @@ export class LandingService {
     const card = JSON.parse(row.params_json) as LandingCard;
     if (r.sats < BigInt(this.o.config.limits.localMinSats))
       throw new SwapError('below_min', `pay at least ${this.o.config.limits.localMinSats} sats to a landing address`);
+    this.checkMax(card, r.sats);
     const wallet = r.addresses.map((a) => ({ ...a, lock: this.ownerLock(a.address) }));
     const change = this.ownerLock(r.changeAddress);
     if (!wallet.some((w) => w.lock === change)) throw new SwapError('bad_request', 'change must go to a wallet address');

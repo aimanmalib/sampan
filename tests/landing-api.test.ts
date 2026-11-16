@@ -155,4 +155,19 @@ describe('landing API', () => {
     const unknown = await post('/api/land/pay/build', { ...body, crossingId: 'f'.repeat(32), amount: '100000' });
     expect(unknown.statusCode).toBe(404);
   });
+
+  it('refuses a payment worth more than limits.maxUsd at the address rate', async () => {
+    const o = await openLanding();
+    const body = { addresses: [{ address: userAddress, path: 'receive/0' }], changeAddress: userAddress };
+    const read = readCard(o.card);
+    if (typeof read === 'string') throw new Error(read);
+    const { card } = read;
+    const capTokens = BigInt(Math.round(open.limits.maxUsd * 10 ** open.tokens.PUSD!.decimals));
+    const atCap = (capTokens * BigInt(card.rateDen)) / BigInt(card.rateNum);
+    const over = await post('/api/land/pay/build', { ...body, crossingId: o.crossingId, amount: String(atCap + atCap / 100n) });
+    expect(over.statusCode).toBe(400);
+    expect(over.json()).toMatchObject({ error: 'above_max' });
+    const under = await post('/api/land/pay/build', { ...body, crossingId: o.crossingId, amount: String(atCap - atCap / 100n) });
+    expect(under.json()).not.toMatchObject({ error: 'above_max' });
+  });
 });
