@@ -55,4 +55,37 @@ test.describe('with crossings on', () => {
     await noHorizontalOverflow(page);
     expect(errors).toEqual([]);
   });
+
+  test('the form comes back without a reload when the route reopens (timer and tab visible)', async ({ page }) => {
+    const errors = collectErrors(page);
+    let open = false;
+    await page.route('**/api/health', (r) =>
+      r.fulfill({ json: { checkedAt: Date.now(), cauldron: true, bch: true, height: 900000, route: { id: 'thorchain', open } } }),
+    );
+    await page.clock.install();
+    await page.goto('/');
+    const retry = (await (await page.request.get('/api/config')).json()).health.retrySeconds as number;
+    await page.getByRole('tab', { name: en['tabs.out'] }).click();
+    await expect(page.locator('[data-paused="route"]')).toBeVisible();
+    open = true;
+    await page.clock.runFor(retry * 1000 + 1000);
+    await expect(page.locator('[data-health="route"]')).toHaveText(`${en['route.thorchain']} ${en['health.ok']}`);
+    await expect(page.locator('[data-paused="route"]')).toHaveCount(0);
+    await expect(page.getByPlaceholder('0x…')).toBeVisible();
+    open = false;
+    await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    await expect(page.locator('[data-paused="route"]')).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  test('a route that does not answer reads "not answering", and the form stays', async ({ page }) => {
+    await page.route('**/api/health', (r) =>
+      r.fulfill({ json: { checkedAt: Date.now(), cauldron: true, bch: true, height: 900000, route: { id: 'thorchain', open: null } } }),
+    );
+    await page.goto('/');
+    await expect(page.locator('[data-health="route"]')).toHaveText(`${en['route.thorchain']} ${en['health.down']}`);
+    await page.getByRole('tab', { name: en['tabs.out'] }).click();
+    await expect(page.locator('[data-paused="route"]')).toHaveCount(0);
+    await expect(page.getByPlaceholder('0x…')).toBeVisible();
+  });
 });

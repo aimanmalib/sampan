@@ -23,6 +23,11 @@ describe('healthParts', () => {
     ]);
     expect(parts[2]!.text).toBe(`${en['route.thorchain']} ${en['health.halted']}`);
   });
+
+  it('shows a route that could not be asked as not answering, not as paused', () => {
+    const parts = healthParts(report({ route: { id: 'thorchain', open: null } }), t, name);
+    expect(parts[2]).toMatchObject({ id: 'route', state: 'down', text: `${en['route.thorchain']} ${en['health.down']}` });
+  });
 });
 
 describe('routeHalted', () => {

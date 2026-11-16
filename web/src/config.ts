@@ -5,7 +5,7 @@ export type LoadedConfig = PublicConfig & { fake: boolean };
 
 let pending: Promise<LoadedConfig> | null = null;
 
-function fetchConfig(): Promise<LoadedConfig> {
+export function fetchConfig(): Promise<LoadedConfig> {
   pending ??= fetch('/api/config', { headers: { accept: 'application/json' } }).then((res) => {
     if (!res.ok) throw new Error(`config ${res.status}`);
     return res.json() as Promise<LoadedConfig>;

@@ -28,7 +28,7 @@ export function healthParts(h: HealthReport | null, t: (key: HealthKey) => strin
   if (!h || h.checkedAt === null) return [];
   const part = (id: HealthPart['id'], name: string, state: HealthState): HealthPart => ({ id, name, state, text: `${name} ${t(STATE_KEY[state])}` });
   const parts = [part('cauldron', t('health.cauldron'), h.cauldron ? 'ok' : 'down'), part('bch', t('health.bch'), h.bch ? 'ok' : 'down')];
-  if (h.route) parts.push(part('route', routeName(h.route.id), h.route.open ? 'ok' : 'halted'));
+  if (h.route) parts.push(part('route', routeName(h.route.id), h.route.open === null ? 'down' : h.route.open ? 'ok' : 'halted'));
   return parts;
 }
 

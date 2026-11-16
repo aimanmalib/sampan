@@ -148,6 +148,8 @@ export interface PublicConfig {
   site: SampanConfig['site'];
   legal: SampanConfig['legal'];
   connect: SampanConfig['connect'] & { gapLimit: number; feeCapSats: number };
+  /** How often the page asks GET /api/health again: intervalSeconds, or retrySeconds while something is not ok. */
+  health: { intervalSeconds: number; retrySeconds: number };
 }
 
 const HEX32 = /^[0-9a-fA-F]{64}$/;
@@ -308,5 +310,6 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     site: c.site,
     legal: c.legal,
     connect: { ...c.connect, gapLimit: c.wallet.gapLimit, feeCapSats: c.fees.capSats },
+    health: { intervalSeconds: c.ops.healthIntervalSeconds, retrySeconds: c.ops.healthRetrySeconds },
   };
 }

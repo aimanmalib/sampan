@@ -59,9 +59,11 @@ describe('HealthMonitor', () => {
     expect(m.routeOpen()).toBe(false);
   });
 
-  it('treats a route that cannot be asked as not open', async () => {
+  it('keeps a route that cannot be asked unknown, so crossings stay open and the next check comes after retryMs', async () => {
     const m = new HealthMonitor({ pools: async () => 1, tipHeight: async () => 1, route: { id: 'thorchain', open: fail as never }, intervalMs: 60_000, retryMs: 5_000 });
-    expect((await m.check()).route).toEqual({ id: 'thorchain', open: false });
+    expect((await m.check()).route).toEqual({ id: 'thorchain', open: null });
+    expect(m.routeOpen()).toBe(true);
+    expect(m.allOk()).toBe(false);
   });
 });
 

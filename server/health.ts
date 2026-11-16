@@ -76,7 +76,8 @@ export class HealthMonitor {
       cauldron: pools !== null && pools > 0,
       bch: height !== null && height > 0,
       height: height !== null && height > 0 ? height : null,
-      route: route ? { id: route.id, open: open === true } : null,
+      // A route that cannot be asked stays unknown (null): shown as not answering, never as paused.
+      route: route ? { id: route.id, open } : null,
     };
     return this.report;
   }

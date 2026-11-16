@@ -32,3 +32,4 @@ One line per step, newest last.
 - 2026-11-16: /terms and /risks pages in English and Malay, sections listed in config with cross-chain sections hidden while crossings are off; footer links; e2e on both engines (ADR 0016).
 - 2026-11-16: /risks states that a landing arrival below landing.dustSats (config, 2,000 sat) is too small to give back and stays in the contract, in both languages; unit and e2e checks.
 - 2026-11-16: Health line in the footer from GET /api/health (indexer, BCH servers, route while crossings are open); "Paused by the route" on both cross-chain forms and 503 on new crossings when the route reports a halt; 451 for blocked countries via cf-ipcountry through Cloudflare only (ADR 0017).
+- 2026-11-16: The page asks /api/health again on a timer (ops.healthIntervalSeconds, retry while not ok) and when the tab becomes visible, so the paused note clears without a reload; a route probe that fails reads "not answering" and keeps crossings open (ADR 0017).

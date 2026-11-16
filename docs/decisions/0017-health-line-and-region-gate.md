@@ -19,7 +19,11 @@ countries listed in `compliance.blockedCountries`.
   while crossings are open.
 - When the last check saw the route halted, `out` and `in` quote and plan endpoints answer 503 `route_paused`, and both
   cross-chain forms show "Paused by the route". Recording a source transaction already sent is never blocked. An unknown
-  state (before the first check) counts as open; the route's own quote still refuses a halted chain.
+  state (before the first check, or a route probe that threw) counts as open and the footer shows the route as "not
+  answering"; the route's own quote still refuses a halted chain.
+- The page asks `GET /api/health` again every `ops.healthIntervalSeconds` (`ops.healthRetrySeconds` while something is
+  not ok, both exposed in `/api/config` as `health`) and when the tab becomes visible, so the paused note and the form
+  swap without a reload.
 - `cf-ipcountry` is read only when the reverse proxy saw a Cloudflare address (same rule as `cf-connecting-ip`). A country
   in `compliance.blockedCountries` gets 451 `restricted_region` on new crossings. Static pages, Swap and landing
   addresses are not gated.
