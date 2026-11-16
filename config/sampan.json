@@ -144,6 +144,30 @@
     "feedbackUrl": "",
     "ogImage": "/og.png"
   },
+  "legal": {
+    "operator": "Aiman, Sasateguh (Malaysia)",
+    "terms": [
+      { "key": "experiment" },
+      { "key": "operator" },
+      { "key": "role" },
+      { "key": "parties" },
+      { "key": "route", "cross": true },
+      { "key": "warranty" },
+      { "key": "final" },
+      { "key": "costs" },
+      { "key": "wallet" },
+      { "key": "restricted" },
+      { "key": "data" }
+    ],
+    "risks": [
+      { "key": "price" },
+      { "key": "route", "cross": true },
+      { "key": "address" },
+      { "key": "network" },
+      { "key": "server" },
+      { "key": "approval", "cross": true }
+    ]
+  },
   "ops": {
     "healthIntervalSeconds": 600,
     "testAddresses": ["bitcoincash:qqyuz8zh06c8h39guuedjpfvnlvjeg394ucvfe6ltt"],

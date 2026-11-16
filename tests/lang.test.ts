@@ -21,6 +21,24 @@ describe('lang files', () => {
     }
   });
 
+  it('have the text of every /terms and /risks section listed in config, with no word the terms page must avoid', () => {
+    const config = JSON.parse(readFileSync(new URL('../config/sampan.json', import.meta.url), 'utf8')) as {
+      legal: Record<'terms' | 'risks', { key: string }[]>;
+    };
+    const avoid = /\b(legal|compliant|licensed|regulated|guaranteed?|safe|secure|trustless|instant|seamless)\b/i;
+    for (const kind of ['terms', 'risks'] as const) {
+      const parts = kind === 'risks' ? ['title', 'text', 'funds'] : ['title', 'text'];
+      for (const { key } of config.legal[kind]) {
+        for (const part of parts) {
+          const id = `${kind}.${key}.${part}`;
+          expect(en[id], id).toBeTruthy();
+          expect(ms[id], id).toBeTruthy();
+          expect(en[id], id).not.toMatch(avoid);
+        }
+      }
+    }
+  });
+
   it('keep the event name exact in both languages', () => {
     expect(en['banner.event']).toBe('BCH BLAZE 2026');
     expect(ms['banner.event']).toBe('BCH BLAZE 2026');

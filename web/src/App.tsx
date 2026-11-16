@@ -8,6 +8,7 @@ import { setLang, useText } from './i18n';
 import { Scene } from './Scene';
 import { CrossingPage } from './CrossingPage';
 import { HowPage } from './how/HowPage';
+import { LegalPage } from './legal/LegalPage';
 import { Measured } from './Measured';
 import { useWallet } from './wallet/useWallet';
 
@@ -24,6 +25,7 @@ export function App() {
   const judge = config && flows.land && cardTabs(config).includes('in') ? config : null;
   const crossing = /^\/c\/([0-9a-f]{32})$/.exec(location.pathname)?.[1];
   const how = location.pathname === '/how';
+  const legal = location.pathname === '/terms' ? 'terms' : location.pathname === '/risks' ? 'risks' : null;
 
   useEffect(() => {
     document.title = `${t('meta.title')} · ${t('banner.event')}`;
@@ -50,6 +52,10 @@ export function App() {
       {how ? (
         <main>
           <HowPage config={config} />
+        </main>
+      ) : legal ? (
+        <main>
+          <LegalPage kind={legal} config={config} />
         </main>
       ) : crossing ? (
         <main className="page">

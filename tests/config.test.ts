@@ -15,7 +15,7 @@ describe('config/sampan.json', () => {
   it('has every top-level section the code reads', () => {
     const sections = [
       'tokens', 'defaultToken', 'features', 'route', 'thorchain', 'oneClick', 'evm', 'cauldron', 'electrum', 'wallet', 'connect',
-      'landing', 'limits', 'fees', 'rate', 'compliance', 'banner', 'site', 'ops',
+      'landing', 'limits', 'fees', 'rate', 'compliance', 'banner', 'site', 'legal', 'ops',
     ];
     expect(Object.keys(shipped).sort()).toEqual([...sections].sort());
   });
@@ -44,6 +44,17 @@ describe('validateConfig', () => {
     const errors = validateConfig(c).join();
     expect(errors).toMatch(/site\.url/);
     expect(errors).toMatch(/site\.ogImage/);
+  });
+
+  it('rejects an empty operator name and legal sections with a bad or repeated key', () => {
+    const c = clone();
+    c.legal.operator = ' ';
+    c.legal.terms = [{ key: 'final' }, { key: 'final' }];
+    c.legal.risks = [{ key: 'bad-key' }];
+    const errors = validateConfig(c).join('\n');
+    expect(errors).toMatch(/legal\.operator/);
+    expect(errors.match(/legal\.terms, legal\.risks/g)).toHaveLength(2);
+    expect(validateConfig({ ...clone(), legal: { ...clone().legal, risks: [] } }).join()).toMatch(/legal\.terms/);
   });
 
   it('rejects an unknown route and a default token that is not configured', () => {

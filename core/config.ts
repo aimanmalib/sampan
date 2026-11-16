@@ -21,6 +21,12 @@ export interface EvmChainConfig {
   tokens: Record<string, string>;
 }
 
+/** One section of /terms or /risks. `cross`: shown only while cross-chain flows are open. */
+export interface LegalSection {
+  key: string;
+  cross?: boolean;
+}
+
 export interface SampanConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
@@ -112,6 +118,8 @@ export interface SampanConfig {
   banner: { deckUrl: string; repoUrl: string; tokenAddress: string; note: boolean };
   /** `url` is the public origin; `ogImage` is the link preview picture under web/public. */
   site: { url: string; noindex: boolean; feedbackUrl: string; ogImage: string };
+  /** /terms and /risks: who runs the site and which sections to show (text in lang/ under terms.<key>.* and risks.<key>.*). */
+  legal: { operator: string; terms: LegalSection[]; risks: LegalSection[] };
   ops: {
     healthIntervalSeconds: number;
     /** Addresses of the project's own test wallet: their crossings are counted as `test`, not `public`. */
@@ -134,6 +142,7 @@ export interface PublicConfig {
   compliance: { crossChainEnabled: boolean };
   banner: SampanConfig['banner'];
   site: SampanConfig['site'];
+  legal: SampanConfig['legal'];
   connect: SampanConfig['connect'] & { gapLimit: number; feeCapSats: number };
 }
 
@@ -222,6 +231,13 @@ export function validateConfig(c: SampanConfig): string[] {
   need(c.compliance.blockedCountries.every((cc) => /^[A-Z]{2}$/.test(cc)), 'compliance.blockedCountries: ISO codes');
   need(isHttpsUrl(c.site.url) && !c.site.url.endsWith('/'), 'site.url: https origin without a trailing slash');
   need(/^\/[\w.-]+\.png$/.test(c.site.ogImage), 'site.ogImage: a /name.png path under web/public');
+  need(typeof c.legal?.operator === 'string' && c.legal.operator.trim() !== '', 'legal.operator: who runs the site');
+  for (const list of [c.legal?.terms, c.legal?.risks]) {
+    need(
+      Array.isArray(list) && list.length > 0 && list.every((x) => /^[a-z][a-zA-Z]*$/.test(x?.key ?? '')) && new Set(list.map((x) => x.key)).size === list.length,
+      'legal.terms, legal.risks: lists of unique { key } in camelCase',
+    );
+  }
   for (const url of [c.banner.deckUrl, c.banner.repoUrl, c.site.feedbackUrl]) {
     need(url === '' || isHttpsUrl(url) || url.startsWith('/'), `URL must be empty, a path or https: ${url}`);
   }
@@ -281,6 +297,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     compliance: { crossChainEnabled: c.compliance.crossChainEnabled },
     banner: c.banner,
     site: c.site,
+    legal: c.legal,
     connect: { ...c.connect, gapLimit: c.wallet.gapLimit, feeCapSats: c.fees.capSats },
   };
 }
