@@ -37,6 +37,7 @@
 | 2026-11-16T12:03:26Z | swap | 0.001 BCH to at least 0.19 PUSD · judge path | 310060b0d26ad0c90b1103863010a4d44094b0477f4da821f60d9720553dcc84 | 3.3 | ok |
 | 2026-11-16T17:35:58Z | pay | 0.20 USD · plain · local | bch 804fab080d114060b2921bec052d815cc9584c3b0de1ec80d2d3ed6235fab4c2 · convert d36313a2193a7e0c37e050ec75f6499258d5c95764d637e8fc993eee517c738e | 29.2 | ok |
 | 2026-11-16T17:36:32Z | pay | 0.20 USD · plain · local | bch 4900070fe14d7e328248655c388620faedc43f54b66a9f5f72e0abf5db8840f9 · convert 8b25336475466f9b976a940ef74d5abdf299049061dc112a97d78e6864472f3c | 25.9 | ok |
+| 2026-11-16T18:13:10Z | pay | 0.20 USD · plain · live | bch db5b2fd2e3257f6b7b0a09e87509f7954543707721f53d111039758fab25fe36 · convert 8d6a12d19f6124fec8da04bb5dbb6690aedd70140068cfcb10b24bfd5c574f44 | 16.1 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from
@@ -83,6 +84,7 @@ at the merchant address, and the receiver accepted the signature of an `invoice.
 "local" means the server ran on our machine, not on the live site. Exchange withdrawals were not tested.
 - 2026-11-16 17:35Z invoice `751bb0d247c2892fad715203bfb1da9f`: paid, webhook delivered after 1 attempt (invoice.paid, signature checked by the receiver).
 - 2026-11-16 17:36Z invoice `cf6124e2825d08c4093bec5c387cc1ca`: paid, webhook delivered after 1 attempt (invoice.paid, signature checked by the receiver).
+- 2026-11-16 18:13Z invoice `d62d6c646d2a535ecb3a21859e1ee9bf`: paid, webhook delivered after 1 attempt (invoice.paid, signature checked by the site's demo shop, which then handed the order over).
 
 ### Notes on failed runs
 
