@@ -26,3 +26,4 @@ One line per step, newest last.
 - 2026-11-15: Bring in refuses a plan altered between server and page (memo address, limit, token, amount, landing card terms) before any wallet call; each check pinned by a test.
 - 2026-11-15: Selene web checked against the live site: paired through WizardConnect and signed one swap each way on mainnet; rows and a Wallets checked entry in MEASURED.
 - 2026-11-16: README assets: brand/logo.svg with 512 and 64 px PNGs, and live-site screenshots (desktop Chromium, iPhone 13 WebKit, English and Malay) from tools/readme/.
+- 2026-11-16: README for judges: header with logo and links, try-it steps, live screenshots, the measured mainnet table with explorer links, judging criteria, limits, a run command checked from a clean clone, third-party licences; Malay translation in README.ms.md (ADR 0015).
