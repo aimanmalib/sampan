@@ -141,9 +141,25 @@ the number of blocks after which the BCH may be returned.
 - No key of the service appears in the contract. Anyone may run either path, and both pay the owner.
 
 To check a landing yourself: `npm run verify-landing -- <card.json>` compiles the source with `cashc`, derives the address
-with CashScript and compares it with the recovery card. `npm run finisher -- <card.json>` finishes a landing from the card
-against public Electrum servers and the public Cauldron indexer, with no Sampan server. The giveBack row in the table below was
-made that way. Decisions and tests: [ADR 0008](docs/decisions/0008-landing-contract.md), `contracts/landing.test.ts`.
+with CashScript and compares it with the recovery card. Decisions and tests: [ADR 0008](docs/decisions/0008-landing-contract.md),
+`contracts/landing.test.ts`.
+
+### Anyone can run the finisher
+
+For a landing, Sampan's server is optional. The status page gives a recovery card (a small JSON file), and from a clean clone
+of this repository one command finishes the landing from it:
+
+```bash
+npm ci && npm run finisher -- card.json
+```
+
+The finisher ([`scripts/finisher-cli.ts`](scripts/finisher-cli.ts)) reads the coins at the landing address from the public
+Electrum servers and the pools from the public Cauldron indexer listed in [`config/sampan.json`](config/sampan.json), and
+nothing else: it never calls the Sampan site or its API (`tests/finisher-cli.test.ts` checks this). It converts when the pools
+meet the contract minimum, otherwise it gives the BCH back once the coin is old enough. `--dry-run` builds and checks the
+transaction without sending it; `--help` lists the options. The giveBack row
+[`5671fd92`](https://explorer.salemkode.com/tx/5671fd920b3a3c74d322b23250d31a33326452e28528236227f0c89f3a585ba6) in the table
+below was made this way. Swaps and crossings still need the server, for the quote and to build the transaction.
 
 ## What is measured
 

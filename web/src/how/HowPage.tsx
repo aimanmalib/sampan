@@ -91,10 +91,12 @@ export function HowPage({ config }: { config: LoadedConfig | null }) {
           </section>
           <section>
             <h2>{t('how.finish.title')}</h2>
+            <p>{t('how.finish.optional')}</p>
             <p>{t('how.finish.text', v)}</p>
             <pre className="how__command">
               <code>{'npm run finisher -- card.json'}</code>
             </pre>
+            <p>{t('how.finish.after')}</p>
           </section>
         </>
       ) : null}

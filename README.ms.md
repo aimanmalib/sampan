@@ -76,9 +76,25 @@ bilangan blok sebelum BCH boleh dipulangkan.
 - Tiada kunci perkhidmatan dalam kontrak. Sesiapa pun boleh menjalankan mana-mana laluan, dan kedua-duanya membayar pemilik.
 
 Untuk menyemak pendaratan sendiri: `npm run verify-landing -- <card.json>` menyusun sumber dengan `cashc`, menerbitkan alamat
-dengan CashScript dan membandingkannya dengan kad pemulihan. `npm run finisher -- <card.json>` menyelesaikan pendaratan dari
-kad itu melalui pelayan Electrum awam dan pengindeks Cauldron awam, tanpa pelayan Sampan. Baris giveBack dalam jadual di bawah
-dibuat dengan cara itu. Keputusan dan ujian: [ADR 0008](docs/decisions/0008-landing-contract.md), `contracts/landing.test.ts`.
+dengan CashScript dan membandingkannya dengan kad pemulihan. Keputusan dan ujian: [ADR 0008](docs/decisions/0008-landing-contract.md),
+`contracts/landing.test.ts`.
+
+### Sesiapa sahaja boleh menjalankan penyelesai
+
+Untuk pendaratan, pelayan Sampan adalah pilihan. Halaman status memberi kad pemulihan (fail JSON kecil), dan dari klon bersih
+repositori ini satu arahan menyelesaikan pendaratan daripadanya:
+
+```bash
+npm ci && npm run finisher -- card.json
+```
+
+Penyelesai ([`scripts/finisher-cli.ts`](scripts/finisher-cli.ts)) membaca syiling di alamat pendaratan dari pelayan Electrum
+awam dan kolam dari pengindeks Cauldron awam yang disenaraikan dalam [`config/sampan.json`](config/sampan.json), dan tiada yang
+lain: ia tidak pernah memanggil laman Sampan atau APInya (`tests/finisher-cli.test.ts` menyemak perkara ini). Ia menukar apabila
+kolam memenuhi minimum kontrak, jika tidak ia memulangkan BCH apabila syiling sudah cukup usia. `--dry-run` membina dan menyemak
+transaksi tanpa menghantarnya; `--help` menyenaraikan pilihan. Baris giveBack
+[`5671fd92`](https://explorer.salemkode.com/tx/5671fd920b3a3c74d322b23250d31a33326452e28528236227f0c89f3a585ba6) dalam jadual
+di bawah dibuat dengan cara ini. Tukaran dan lintasan masih memerlukan pelayan, untuk sebut harga dan membina transaksi.
 
 ## Apa yang diukur
 

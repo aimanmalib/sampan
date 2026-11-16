@@ -23,6 +23,9 @@ test('/how shows the open flows, the whole contract, the checks anyone can run a
   await expect(page.locator('.how__source')).toContainText('function giveBack()');
   await expect(page.getByText('npm run verify-landing -- card.json')).toBeVisible();
   await expect(page.getByText('npm run finisher -- card.json')).toBeVisible();
+  await expect(page.getByRole('heading', { name: en['how.finish.title'], exact: true })).toBeVisible();
+  await expect(page.getByText(en['how.finish.optional'])).toBeVisible();
+  await expect(page.getByText(en['how.finish.after'])).toBeVisible();
   await expect(page.getByRole('heading', { name: en['how.exists.title'] })).toBeVisible();
   await expect(page.locator('.measured__line')).toContainText(/\d+ landings and crossings completed/);
   const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
