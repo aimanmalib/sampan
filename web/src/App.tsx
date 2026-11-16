@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { descriptionKey, heroSubKey, openFlows, symbolList, type TabId } from '../../core/flows';
 import { ActionCard, cardTabs } from './ActionCard';
-import { useConfig } from './config';
+import { fetchConfig, useConfig } from './config';
 import { Footer } from './Footer';
 import { JudgeStrip } from './JudgeStrip';
 import { setLang, useText } from './i18n';
@@ -22,10 +22,15 @@ export function App() {
   const wallet = useWallet(config, t('wallet.fakeName'));
   const [chosen, setChosen] = useState<TabId | null>(null);
   const [fill, setFill] = useState(0);
+  const [serverDown, setServerDown] = useState(false);
   const judge = config && flows.land && cardTabs(config).includes('in') ? config : null;
   const crossing = /^\/c\/([0-9a-f]{32})$/.exec(location.pathname)?.[1];
   const how = location.pathname === '/how';
   const legal = location.pathname === '/terms' ? 'terms' : location.pathname === '/risks' ? 'risks' : null;
+
+  useEffect(() => {
+    fetchConfig().catch(() => setServerDown(true));
+  }, []);
 
   useEffect(() => {
     document.title = `${t('meta.title')} · ${t('banner.event')}`;
@@ -68,6 +73,11 @@ export function App() {
           {flows.cross && route !== 'none' ? <p className="hero__honest">{t('hero.honest', { route: t(`route.${route}`) })}</p> : null}
         </section>
         <Scene />
+        {serverDown ? (
+          <p className="server-down" role="alert">
+            {t('error.server')}
+          </p>
+        ) : null}
         {judge ? (
           <JudgeStrip
             config={judge}

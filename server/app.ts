@@ -10,11 +10,15 @@ import { registerWallet } from './api/wallet.js';
 import { registerSecurityHeaders } from './security.js';
 import { createServices, type Services } from './services.js';
 import { registerWeb } from './static.js';
+import { registerOutage, type Outage } from './outage.js';
+import { registerErrorPages } from './error-page.js';
 
 export interface AppOptions {
   config: SampanConfig;
   webDist: string;
   fake: boolean;
+  /** SAMPAN_FAKE_OUTAGE, honoured only with the fake network (server/outage.ts). */
+  outage?: Outage | null;
   logger?: boolean;
   /** SQLite file; defaults to an in-memory database (tests). */
   dbFile?: string;
@@ -42,10 +46,13 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
       trustedProxies: options.trustedProxies ?? [],
       testAddresses: options.testAddresses ?? [],
       teamTxids: options.teamTxids ?? [],
+      outage: options.fake ? (options.outage ?? null) : null,
       log: (m) => app.log.warn(m),
     });
   await services.clientIp.refresh();
   registerSecurityHeaders(app, config);
+  const errorPages = registerErrorPages(app, config, options.webDist);
+  registerOutage(app, options.fake ? (options.outage ?? null) : null);
 
   app.get('/healthz', async () => ({ ok: true }));
   app.get('/api/health', async () => services.health.current());
@@ -72,6 +79,6 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
     services.db.close();
   });
 
-  await registerWeb(app, options.webDist);
+  await registerWeb(app, options.webDist, errorPages);
   return app;
 }

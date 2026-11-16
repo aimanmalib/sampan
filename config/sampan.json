@@ -173,6 +173,7 @@
   "ops": {
     "healthIntervalSeconds": 600,
     "healthRetrySeconds": 30,
+    "requestTimeoutSeconds": 45,
     "testAddresses": ["bitcoincash:qqyuz8zh06c8h39guuedjpfvnlvjeg394ucvfe6ltt"],
     "quotePayloadHours": 24
   },

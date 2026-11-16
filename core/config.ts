@@ -128,6 +128,8 @@ export interface SampanConfig {
     healthIntervalSeconds: number;
     /** Sooner re-check while any health probe is down (a container start can race the first connections). */
     healthRetrySeconds: number;
+    /** The page gives up on an API request after this long and says the server is not answering. */
+    requestTimeoutSeconds: number;
     /** Addresses of the project's own test wallet: their crossings are counted as `test`, not `public`. */
     testAddresses: string[];
     quotePayloadHours: number;
@@ -151,8 +153,9 @@ export interface PublicConfig {
   site: SampanConfig['site'];
   legal: SampanConfig['legal'];
   connect: SampanConfig['connect'] & { gapLimit: number; feeCapSats: number };
-  /** How often the page asks GET /api/health again: intervalSeconds, or retrySeconds while something is not ok. */
-  health: { intervalSeconds: number; retrySeconds: number };
+  /** How often the page asks GET /api/health again: intervalSeconds, or retrySeconds while something is not ok;
+   *  and how long it waits on any API request before it says the server is not answering. */
+  health: { intervalSeconds: number; retrySeconds: number; requestTimeoutSeconds: number };
   /** The page rebuilds the expected Sampan fee output from these two values. */
   business: Pick<BusinessConfig, 'feeBps' | 'feeAddress'>;
 }
@@ -243,6 +246,7 @@ export function validateConfig(c: SampanConfig): string[] {
     posInt(c.ops.healthRetrySeconds) && c.ops.healthRetrySeconds <= c.ops.healthIntervalSeconds,
     'ops.healthRetrySeconds: positive integer, at most ops.healthIntervalSeconds',
   );
+  need(posInt(c.ops.requestTimeoutSeconds) && c.ops.requestTimeoutSeconds >= 10, 'ops.requestTimeoutSeconds: integer, at least 10');
   need(c.compliance.blockedCountries.every((cc) => /^[A-Z]{2}$/.test(cc)), 'compliance.blockedCountries: ISO codes');
   need(isHttpsUrl(c.site.url) && !c.site.url.endsWith('/'), 'site.url: https origin without a trailing slash');
   need(/^\/[\w.-]+\.png$/.test(c.site.ogImage), 'site.ogImage: a /name.png path under web/public');
@@ -317,7 +321,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     site: c.site,
     legal: c.legal,
     connect: { ...c.connect, gapLimit: c.wallet.gapLimit, feeCapSats: c.fees.capSats },
-    health: { intervalSeconds: c.ops.healthIntervalSeconds, retrySeconds: c.ops.healthRetrySeconds },
+    health: { intervalSeconds: c.ops.healthIntervalSeconds, retrySeconds: c.ops.healthRetrySeconds, requestTimeoutSeconds: c.ops.requestTimeoutSeconds },
     business: { feeBps: c.business.feeBps, feeAddress: c.business.feeAddress },
   };
 }

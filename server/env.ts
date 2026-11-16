@@ -1,5 +1,6 @@
 // Process settings that differ between a laptop, CI and the host. Product values live in config/sampan.json.
 import path from 'node:path';
+import { parseOutage, type Outage } from './outage.js';
 
 export interface ServerEnv {
   host: string;
@@ -8,6 +9,8 @@ export interface ServerEnv {
   webDist: string;
   /** SAMPAN_FAKE=1: providers answer from fixtures; nothing leaves the machine. */
   fake: boolean;
+  /** SAMPAN_FAKE_OUTAGE (fake network only): one provider or part of the page fails on purpose (server/outage.ts). */
+  fakeOutage: Outage | null;
   /** SQLite file inside SAMPAN_DATA (the volume in production). */
   dbFile: string;
   /** SAMPAN_TRUSTED_PROXY: comma-separated names or IPs of the reverse proxy allowed to set X-Forwarded-For. */
@@ -30,6 +33,7 @@ export function readEnv(env: NodeJS.ProcessEnv = process.env, cwd = process.cwd(
     configPath: path.resolve(cwd, env.SAMPAN_CONFIG ?? 'config/sampan.json'),
     webDist: path.resolve(cwd, env.SAMPAN_WEB_DIST ?? 'web/dist'),
     fake: env.SAMPAN_FAKE === '1',
+    fakeOutage: env.SAMPAN_FAKE === '1' ? parseOutage(env.SAMPAN_FAKE_OUTAGE) : null,
     dbFile: path.resolve(cwd, env.SAMPAN_DATA ?? 'data', 'sampan.db'),
     trustedProxies: list(env.SAMPAN_TRUSTED_PROXY),
     testAddresses: list(env.SAMPAN_TEST_ADDRESSES),

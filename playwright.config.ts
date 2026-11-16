@@ -12,12 +12,15 @@ const live = process.env.E2E_BASE_URL;
 const e2ePatch = { features: { swap: true, landing: false }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } };
 const landingPatch = { ...e2ePatch, features: { swap: true, landing: true } };
 const outPatch = { ...e2ePatch, compliance: { crossChainEnabled: true } };
-const fakeServer = (p: number, patch: unknown) => ({
+/** One fake server per SAMPAN_FAKE_OUTAGE mode, on the ports after the three above (e2e/outage.spec.ts). */
+export const OUTAGE_MODES = ['indexer', 'electrum', 'api', 'chunk', 'render'] as const;
+const outagePort = (i: number) => port + 3 + i;
+const fakeServer = (p: number, patch: unknown, outage?: string) => ({
   command: 'node dist/server/main.js',
   url: `http://127.0.0.1:${p}/healthz`,
   reuseExistingServer: false,
   timeout: 30_000,
-  env: { PORT: String(p), HOST: '127.0.0.1', SAMPAN_FAKE: '1', SAMPAN_CONFIG_PATCH: JSON.stringify(patch) },
+  env: { PORT: String(p), HOST: '127.0.0.1', SAMPAN_FAKE: '1', SAMPAN_CONFIG_PATCH: JSON.stringify(patch), ...(outage ? { SAMPAN_FAKE_OUTAGE: outage } : {}) },
 });
 
 export default defineConfig({
@@ -33,6 +36,11 @@ export default defineConfig({
   ...(live
     ? {}
     : {
-        webServer: [fakeServer(port, e2ePatch), fakeServer(landingPort, landingPatch), fakeServer(outPort, outPatch)],
+        webServer: [
+          fakeServer(port, e2ePatch),
+          fakeServer(landingPort, landingPatch),
+          fakeServer(outPort, outPatch),
+          ...OUTAGE_MODES.map((mode, i) => fakeServer(outagePort(i), e2ePatch, mode)),
+        ],
       }),
 });

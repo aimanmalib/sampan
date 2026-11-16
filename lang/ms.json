@@ -389,5 +389,16 @@
   "health.down": "tidak menjawab",
   "health.halted": "dihentikan",
   "paused.route.title": "Dihentikan oleh laluan",
-  "paused.route.body": "{route} melaporkan bahawa Bitcoin Cash atau rantaian satu lagi dihentikan, jadi tiada apa yang baharu dihantar melalui jalan ini. Tab ini dibuka semula dengan sendirinya apabila {route} dibuka semula."
+  "paused.route.body": "{route} melaporkan bahawa Bitcoin Cash atau rantaian satu lagi dihentikan, jadi tiada apa yang baharu dihantar melalui jalan ini. Tab ini dibuka semula dengan sendirinya apabila {route} dibuka semula.",
+  "boot.text": "Halaman sedang dimuatkan. Jika baris ini kekal, muat semula halaman.",
+  "error.title": "Bahagian halaman ini berhenti berfungsi.",
+  "error.body": "Satu kerosakan dalam halaman menghalangnya daripada dipaparkan. Muat semula untuk mencuba lagi. Jika anda sudah memulakan bayaran, semak dompet anda sebelum membayar lagi.",
+  "error.reload": "Muat semula halaman",
+  "error.server": "Pelayan Sampan tidak menjawab, jadi harga dan tab tidak dapat dimuatkan. Cuba lagi dalam seminit.",
+  "error.provider": "Tidak menjawab sekarang: {names}. Langkah yang memerlukannya tidak dapat diselesaikan sehingga ia kembali; baris status di kaki halaman menunjukkan bila ia kembali.",
+  "error.page.failed": "Sampan mengalami ralat.",
+  "error.page.failedBody": "Pelayan tidak dapat membina halaman ini. Cuba lagi dalam seminit.",
+  "error.page.notFound": "Halaman ini tidak wujud.",
+  "error.page.notFoundBody": "Alamat mungkin tersalah taip, atau halaman telah berpindah.",
+  "error.page.home": "Pergi ke muka depan Sampan"
 }

@@ -1,0 +1,37 @@
+/* What stays on screen when part of the page fails (errors/ErrorBoundary.tsx, ProviderNote.tsx, App's server notice). */
+.crash,
+.server-down {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--danger);
+  border-radius: var(--radius);
+  max-width: var(--measure);
+  padding: var(--gap);
+  margin: 0;
+}
+.crash {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+}
+.crash__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+.crash__body {
+  margin: 0;
+  color: var(--ink-soft);
+}
+.provider-note {
+  margin: 0;
+  padding: 0.75rem var(--gap);
+  border-top: 1px solid var(--line);
+  color: var(--danger);
+  font-size: 0.9375rem;
+  overflow-wrap: anywhere;
+}
+.boot {
+  color: var(--ink-soft);
+}

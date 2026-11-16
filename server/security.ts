@@ -21,7 +21,8 @@ export function contentSecurityPolicy(config: SampanConfig): string {
 export function registerSecurityHeaders(app: FastifyInstance, config: SampanConfig): void {
   const csp = contentSecurityPolicy(config);
   app.addHook('onSend', async (_request, reply, payload) => {
-    reply.header('Content-Security-Policy', csp);
+    // The static error page sets its own policy (the site policy plus its one inline style hash).
+    if (!reply.hasHeader('Content-Security-Policy')) reply.header('Content-Security-Policy', csp);
     reply.header('X-Content-Type-Options', 'nosniff');
     reply.header('Referrer-Policy', 'no-referrer');
     reply.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');

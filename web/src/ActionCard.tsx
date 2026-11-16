@@ -3,6 +3,8 @@ import { openFlows, openTabs, type TabId } from '../../core/flows';
 import type { LoadedConfig } from './config';
 import { routeHalted } from '../../core/client/health';
 import { RoutePaused } from './cross/RoutePaused';
+import { ErrorBoundary, ErrorCard } from './errors/ErrorBoundary';
+import { ProviderNote } from './errors/ProviderNote';
 import { useHealth } from './health';
 import { useText, type TextKey } from './i18n';
 import { BringIn } from './in/BringIn';
@@ -72,8 +74,11 @@ export function ActionCard({
         ))}
       </div>
       <div className="card__body" role="tabpanel" id="tab-panel" aria-labelledby={`tab-${tab}`}>
-        <Body config={config} wallet={wallet} fill={fill} halted={halted} onChoose={onChoose} />
+        <ErrorBoundary key={tab} fallback={<ErrorCard />}>
+          <Body config={config} wallet={wallet} fill={fill} halted={halted} onChoose={onChoose} />
+        </ErrorBoundary>
       </div>
+      <ProviderNote />
       {wallet.status === 'connecting' && wallet.uri && wallet.qrUri ? (
         <ConnectDialog uri={wallet.uri} qrUri={wallet.qrUri} onClose={() => void wallet.disconnect()} />
       ) : null}

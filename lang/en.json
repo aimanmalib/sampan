@@ -389,5 +389,16 @@
   "health.down": "not answering",
   "health.halted": "paused",
   "paused.route.title": "Paused by the route",
-  "paused.route.body": "{route} reports that Bitcoin Cash or the other chain is halted, so nothing new is sent this way. This tab opens again by itself when {route} reopens."
+  "paused.route.body": "{route} reports that Bitcoin Cash or the other chain is halted, so nothing new is sent this way. This tab opens again by itself when {route} reopens.",
+  "boot.text": "Loading the page. If this line stays, reload the page.",
+  "error.title": "This part of the page stopped working.",
+  "error.body": "A fault in the page stopped it from drawing. Reload to try again. If you had started a payment, check your wallet before paying again.",
+  "error.reload": "Reload the page",
+  "error.server": "The Sampan server is not answering, so prices and tabs cannot load. Try again in a minute.",
+  "error.provider": "Not answering right now: {names}. Steps that need it cannot finish until it is back; the status line at the foot of the page shows when it is.",
+  "error.page.failed": "Sampan hit an error.",
+  "error.page.failedBody": "The server could not build this page. Try again in a minute.",
+  "error.page.notFound": "This page does not exist.",
+  "error.page.notFoundBody": "The address may be mistyped, or the page has moved.",
+  "error.page.home": "Go to the Sampan front page"
 }

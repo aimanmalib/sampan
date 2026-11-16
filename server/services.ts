@@ -22,6 +22,7 @@ import { SwapService } from './swap.js';
 import { InService } from './in.js';
 import { HealthMonitor } from './health.js';
 import { markOwnRows, testLocksOf } from './origin.js';
+import { downChain, downIndexer, type Outage } from './outage.js';
 
 export interface Services {
   prefix: CashPrefix;
@@ -57,6 +58,8 @@ export interface ServiceOptions {
   teamTxids?: string[];
   /** Frozen indexer capture used by the fake network. */
   fakeFixture?: string;
+  /** SAMPAN_FAKE_OUTAGE: with the fake network, the indexer or the BCH servers fail (server/outage.ts). */
+  outage?: Outage | null;
   log?: (message: string) => void;
 }
 
@@ -98,8 +101,8 @@ export function createServices(o: ServiceOptions): Services {
   let beforeFirstScan: ((lock: string) => void) | undefined;
   if (o.fake) {
     const fake = fakeNetwork(config, o.fakeFixture ?? path.resolve('tests/fixtures/cauldron-pusd-pools.json'));
-    chain = fake.chain;
-    fetchActive = fake.fetchActive;
+    chain = o.outage === 'electrum' ? downChain() : fake.chain;
+    fetchActive = o.outage === 'indexer' ? downIndexer : fake.fetchActive;
     beforeFirstScan = fake.fund;
   } else {
     chain = new ElectrumChain(config.electrum.servers, { log: o.log });
