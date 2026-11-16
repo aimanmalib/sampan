@@ -168,6 +168,42 @@ describe('landing contract: convert', () => {
   });
 });
 
+describe('landing contract: convert with a fee pair (Sampan Pay spread)', () => {
+  // The finisher lends a plain coin of the fee wallet as the last input and takes it back, with the BCH the floor
+  // trade did not use, on the last output (core/tx/spread.ts). The contract is unchanged.
+  const FEE = keyOf('sampan landing fee wallet');
+  const feeSigner = new SignatureTemplate(FEE.priv);
+  let feeCoin: SpendableUtxo;
+  beforeEach(() => {
+    feeCoin = provider.addUtxo(binToHex(FEE.lock), randomUtxo({ satoshis: 5_000n }));
+  });
+
+  /** [landing, pool, fee coin] -> [floor tokens to owner, pool, fee coin + spread]. The pool takes 60,000 sats. */
+  const pairTx = (s: { tokens?: bigint; noFeeInput?: boolean } = {}) => {
+    const tokens = s.tokens ?? MIN_TOKENS;
+    const tb = new TransactionBuilder({ provider }).addInput(coin, landing.unlock.convert!()).addInput(pool, poolSigner.unlockP2PKH());
+    if (!s.noFeeInput) tb.addInput(feeCoin, feeSigner.unlockP2PKH());
+    tb.addOutput({ to: OWNER.lock, amount: DUST, token: { category: CATEGORY, amount: tokens } });
+    tb.addOutput({ to: POOL.lock, amount: 10_000_000n + 60_000n, token: { category: CATEGORY, amount: 1_000_000n - tokens } });
+    tb.addOutput({ to: FEE.lock, amount: (s.noFeeInput ? 0n : 5_000n) + COIN - 60_000n - DUST - 2_000n });
+    return tb;
+  };
+
+  it('passes when the pair is the fee wallet\'s own coin in and out', async () => {
+    await expect(pairTx().send()).resolves.toBeDefined();
+    const kept = (await provider.getUtxosForLockingBytecode(FEE.lock)).reduce((s, u) => s + u.satoshis, 0n);
+    expect(kept).toBe(5_000n + COIN - 60_000n - DUST - 2_000n);
+  });
+
+  it('fails when output 0 is one base unit below the floor', async () => {
+    await expect(pairTx({ tokens: MIN_TOKENS - 1n }).send()).rejects.toThrow(/tokenAmount \* rateDen >= tx\.inputs\[0\]\.value \* rateNum/);
+  });
+
+  it('fails when the pair adds an output without an input', async () => {
+    await expect(pairTx({ noFeeInput: true }).send()).rejects.toThrow(/tx\.outputs\.length == tx\.inputs\.length/);
+  });
+});
+
 describe('landing contract: giveBack', () => {
   it('fails before the coin is returnAfter blocks old', async () => {
     await expect(giveBackTx({ sequence: RETURN_AFTER - 1 }).send()).rejects.toThrow(/this\.age >= returnAfter/);

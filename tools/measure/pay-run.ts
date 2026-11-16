@@ -33,9 +33,12 @@ export interface PayFacts {
   onChain: { pay: boolean; convert: boolean };
   /** PUSD units in output 0 of the conversion at the merchant's address; undefined when not found. */
   tokensAtMerchant?: bigint;
+  /** Local runs with pay.spreadBps > 0: the spread and what the fee address gained over the run. */
+  spread?: { bps: number; sats?: bigint };
 }
 
-export const payAmount = (f: Pick<PayFacts, 'usd' | 'how' | 'where'>): string => `${f.usd.toFixed(2)} USD · ${f.how} · ${f.where}`;
+export const payAmount = (f: Pick<PayFacts, 'usd' | 'how' | 'where' | 'spread'>): string =>
+  `${f.usd.toFixed(2)} USD · ${f.how} · ${f.where}${f.spread ? ` · spread ${f.spread.bps} bps` : ''}`;
 
 /** Why the run is not ok, or null when it is. */
 export function payProblem(f: PayFacts): string | null {
@@ -52,6 +55,7 @@ export function payProblem(f: PayFacts): string | null {
   if (!f.hook.verified) return 'the webhook signature did not check';
   if (f.hook.invoiceId !== f.view.id) return 'the webhook names another invoice';
   if (f.hook.type !== 'invoice.paid') return `webhook event ${f.hook.type}`;
+  if (f.spread && !((f.spread.sats ?? 0n) > 0n)) return 'nothing reached the fee address';
   return null;
 }
 
@@ -74,7 +78,8 @@ export function payNote(f: PayFacts): string {
   const w = f.view.webhook;
   const by = f.where === 'live' ? "the site's demo shop, which then handed the order over" : 'the receiver';
   const hook = f.hook ? `${f.hook.type}, signature ${f.hook.verified ? 'checked' : 'refused'} by ${by}` : 'nothing received';
-  return `- ${utc} invoice \`${f.view.id}\`: ${f.view.status}, webhook ${w.state} after ${w.attempts} attempt${w.attempts === 1 ? '' : 's'} (${hook}).`;
+  const spread = f.spread ? `; spread ${f.spread.bps} bps: ${f.spread.sats ?? 0n} sats to the fee address (a test wallet address), merchant got ${f.tokensAtMerchant ?? 0n} PUSD units` : '';
+  return `- ${utc} invoice \`${f.view.id}\`: ${f.view.status}, webhook ${w.state} after ${w.attempts} attempt${w.attempts === 1 ? '' : 's'} (${hook})${spread}.`;
 }
 
 export const PAY_SECTION = '### Sampan Pay runs';

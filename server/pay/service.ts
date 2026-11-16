@@ -150,6 +150,7 @@ export class PayService {
       bufferBps: config.pay.quoteBufferBps,
       convertFeeSats: config.landing.convertFeeSats,
       tokenDustSats: config.landing.tokenDustSats,
+      spreadBps: config.pay.spreadBps,
     });
     const network = this.o.prefix === 'bitcoincash' ? 'mainnet' : 'chipnet';
     for (let draw = 0; draw < NONCE_DRAWS; draw++) {

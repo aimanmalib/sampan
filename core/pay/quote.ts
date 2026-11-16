@@ -18,13 +18,21 @@ export interface RequiredSatsInput {
   /** Miner fee of the convert transaction and the dust kept on its token output (config landing.*). */
   convertFeeSats: number;
   tokenDustSats: number;
+  /** Sampan's spread on the trade (pay.spreadBps); 0 or absent asks exactly what it asked before the spread existed. */
+  spreadBps?: number;
 }
 
-/** What the payer is asked to send: the trade with a margin, plus what the convert transaction spends on itself. */
+/** Satoshis `bps` basis points of `sats` come to, rounded up. */
+export const bpsOf = (sats: bigint, bps: number): bigint => (sats * BigInt(bps) + 9_999n) / 10_000n;
+
+/**
+ * What the payer is asked to send: the trade with a margin, plus what the convert transaction spends on itself,
+ * plus the spread. The contract floor stays the invoice's tokens, so the spread is BCH left over after the convert.
+ */
 export function requiredSatsFor(i: RequiredSatsInput): bigint {
   if (i.tradeSats <= 0n) throw new RangeError('tradeSats must be positive');
   const buffered = (i.tradeSats * BigInt(10_000 + i.bufferBps) + 9_999n) / 10_000n;
-  return buffered + BigInt(i.convertFeeSats) + BigInt(i.tokenDustSats);
+  return buffered + BigInt(i.convertFeeSats) + BigInt(i.tokenDustSats) + bpsOf(i.tradeSats, i.spreadBps ?? 0);
 }
 
 /**

@@ -19,6 +19,8 @@ export interface ServerEnv {
   testAddresses: string[];
   /** SAMPAN_PAY_DEMO_SECRET: Standard Webhooks secret of the demo shop's own hook (host only). */
   payDemoSecret: string | undefined;
+  /** SAMPAN_SPREAD_KEY: hex key of business.feeAddress, read only when pay.spreadBps > 0 (never on the public site). */
+  spreadKey: string | undefined;
 }
 
 export function readEnv(env: NodeJS.ProcessEnv = process.env, cwd = process.cwd()): ServerEnv {
@@ -40,5 +42,6 @@ export function readEnv(env: NodeJS.ProcessEnv = process.env, cwd = process.cwd(
     trustedProxies: list(env.SAMPAN_TRUSTED_PROXY),
     testAddresses: list(env.SAMPAN_TEST_ADDRESSES),
     payDemoSecret: env.SAMPAN_PAY_DEMO_SECRET || undefined,
+    spreadKey: env.SAMPAN_SPREAD_KEY || undefined,
   };
 }

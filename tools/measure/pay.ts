@@ -1,6 +1,7 @@
 // Measured Sampan Pay invoices on mainnet (PAY4, KP30), against the built server on this host.
 //   npx tsx tools/measure/pay.ts [--runs 2] [--port 4186]
 //   npx tsx tools/measure/pay.ts --live [--runs 1]
+//   npx tsx tools/measure/pay.ts --spread 50 [--runs 1]
 // Starts dist/ with features.pay on and private webhook targets allowed (local only), and a small HTTPS webhook
 // receiver on 127.0.0.1 with a throwaway self-signed certificate that only the spawned server trusts. Each run makes
 // an invoice of pay.demo.priceUsd for pay.demo.merchantAddress (a test wallet address), pays the exact amount from
@@ -10,12 +11,17 @@
 // /api/pay/demo/order, the button on /pay), so the webhook goes out through the public URL to the site's own demo
 // hook, which hands the order over only after checking the signature; the run reads that hand-over (time and event)
 // from GET /api/pay/demo/order/:id.
+// --spread N (PAY6, KP31; local only): the local server runs with pay.spreadBps N, business.feeAddress = a receive
+// address of the test wallet that send.ts never spends from (FEE_INDEX) and that address's key as SAMPAN_SPREAD_KEY,
+// so the finisher pays the merchant the invoice floor and the rest to the test wallet. A fee coin is sent there first
+// when the address is empty. The public config keeps spreadBps 0.
 import { execFileSync, spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { createServer } from 'node:https';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { binToHex } from '@bitauth/libauth';
 import { parseAddress } from '../../core/address.js';
 import { hdKeysFromPhrase } from '../../core/client/session.js';
 import { deriveAddress, formatUnits } from '../../core/wallet.js';
@@ -32,6 +38,11 @@ const arg = (name: string, fallback: string): string => {
   return i > 0 ? process.argv[i + 1]! : fallback;
 };
 const LIVE = process.argv.includes('--live');
+const SPREAD = Number(arg('--spread', '0'));
+if (!Number.isInteger(SPREAD) || SPREAD < 0 || (SPREAD > 0 && LIVE)) throw new Error('--spread takes whole basis points and runs locally only');
+/** Above the 25 addresses per path tools/test-wallet/send.ts pays from, so a payment never spends the fee coin. */
+const FEE_INDEX = 30;
+const FEE_COIN_BCH = '0.00002';
 const RUNS = Number(arg('--runs', LIVE ? '1' : '2'));
 const PORT = Number(arg('--port', '4186'));
 const HOOK_PORT = PORT + 1;
@@ -54,6 +65,7 @@ if (!phrase) throw new Error(`${SECRET_KEYS.bchMainnet} is missing from the env 
 const keys = hdKeysFromPhrase(phrase);
 const receive = Array.from({ length: 25 }, (_, i) => deriveAddress(keys.publicKey('receive', i), 'receive', i, 'bitcoincash'));
 const merchantKey = receive.find((a) => a.tokenAddress === merchant);
+const feeWallet = deriveAddress(keys.publicKey('receive', FEE_INDEX), 'receive', FEE_INDEX, 'bitcoincash');
 if (!merchantKey) throw new Error('pay.demo.merchantAddress is not a receive address of the test wallet');
 
 const secret = `whsec_${randomBytes(32).toString('base64')}`;
@@ -137,7 +149,8 @@ async function tokensAtMerchant(chain: ElectrumChain, txid: string | undefined):
 }
 
 async function oneRun(chain: ElectrumChain, n: number): Promise<PayFacts> {
-  const facts: PayFacts = { usd, how: 'plain', where: LIVE ? 'live' : 'local', utc: new Date(), onChain: { pay: false, convert: false } };
+  const facts: PayFacts = { usd, how: 'plain', where: LIVE ? 'live' : 'local', utc: new Date(), onChain: { pay: false, convert: false }, ...(SPREAD ? { spread: { bps: SPREAD } } : {}) };
+  const feeBefore = SPREAD ? await feeSats(chain) : 0n;
   const post = (url: string, body: unknown) => json<{ id: string }>(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const made = LIVE
     ? await post(`${BASE}/api/pay/demo/order`, {})
@@ -154,13 +167,28 @@ async function oneRun(chain: ElectrumChain, n: number): Promise<PayFacts> {
   facts.paidAt = Date.now();
   const { view, hook } = await waitDone(inv.id);
   const convert = view.convert[0]?.txid;
+  const spread = SPREAD ? { spread: { bps: SPREAD, sats: (await feeSats(chain)) - feeBefore } } : {};
   return {
     ...facts,
+    ...spread,
     view,
     ...(hook ? { hook } : {}),
     onChain: { pay: await onChain(chain, txid), convert: await onChain(chain, convert) },
     ...(await tokensAtMerchant(chain, convert).then((t) => (t === undefined ? {} : { tokensAtMerchant: t }))),
   };
+}
+
+const feeSats = async (chain: ElectrumChain): Promise<bigint> =>
+  (await chain.listUnspent(feeWallet.lockingHex)).reduce((s, u) => s + (u.token ? 0n : u.sats), 0n);
+
+/** The spread run needs one plain coin at the fee address for the finisher to lend (server/pay/spread.ts). */
+async function ensureFeeCoin(chain: ElectrumChain): Promise<void> {
+  if ((await feeSats(chain)) > 0n) return;
+  const send = spawn(process.execPath, ['--import', 'tsx', 'tools/test-wallet/send.ts', feeWallet.address, FEE_COIN_BCH, '--usd', '0.01', '--why', 'Fee coin for the Sampan Pay spread measurement (stays in the test wallet)'], {
+    stdio: ['ignore', 'inherit', 'inherit'],
+  });
+  const code = await new Promise((r) => send.on('exit', r));
+  if (code !== 0) throw new Error('could not send the fee coin');
 }
 
 /** Local: a built server with private webhook targets allowed and an HTTPS receiver. Live: nothing to start. */
@@ -173,10 +201,11 @@ function startLocal(): { stop: () => void } {
     dataDir: 'state/measure-pay',
     patch: {
       features: { pay: true },
-      pay: { webhook: { allowPrivate: true } },
-      ops: { testAddresses: receive.map((a) => a.address) },
+      pay: { webhook: { allowPrivate: true }, ...(SPREAD ? { spreadBps: SPREAD } : {}) },
+      ops: { testAddresses: [...receive.map((a) => a.address), feeWallet.address] },
+      ...(SPREAD ? { business: { feeAddress: feeWallet.address } } : {}),
     },
-    env: { NODE_EXTRA_CA_CERTS: tls.certFile },
+    env: { NODE_EXTRA_CA_CERTS: tls.certFile, ...(SPREAD ? { SAMPAN_SPREAD_KEY: binToHex(keys.privateKey('receive', FEE_INDEX)) } : {}) },
   });
   return {
     stop: () => {
@@ -188,8 +217,9 @@ function startLocal(): { stop: () => void } {
 }
 
 async function main(): Promise<void> {
-  const local = LIVE ? undefined : startLocal();
   const chain = new ElectrumChain(config.electrum.servers);
+  if (SPREAD) await ensureFeeCoin(chain);
+  const local = LIVE ? undefined : startLocal();
   try {
     if (local) await waitHealthy(BASE);
     for (let n = 1; n <= RUNS; n++) {

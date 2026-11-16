@@ -72,6 +72,17 @@ describe('Sampan Pay measured row', () => {
     expect(payNote(live)).toContain("signature checked by the site's demo shop, which then handed the order over");
   });
 
+  it('writes a spread row only when the fee address gained something (PAY6, KP31)', () => {
+    const spread: PayFacts = { ...good(), spread: { bps: 50, sats: 812n } };
+    const row = runRow(payRun(spread));
+    expect(row).toContain('| 0.20 USD · plain · local · spread 50 bps |');
+    expect(gateCount(row)).toBe(1);
+    expect(payNote(spread)).toContain('spread 50 bps: 812 sats to the fee address (a test wallet address), merchant got 20 PUSD units');
+    const none = payRun({ ...good(), spread: { bps: 50, sats: 0n } });
+    expect(none.ok).toBe(false);
+    expect(none.note).toMatch(/nothing reached the fee address/);
+  });
+
   it('records an unsent payment without a transaction id', () => {
     const unsent = good();
     delete unsent.payTxid;

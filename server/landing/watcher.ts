@@ -9,7 +9,8 @@ import { landingLockingHex, type LandingParams } from '../../core/landing.js';
 import type { PoolUtxo } from '../../core/pools/trade.js';
 import type { Chain } from '../chain/types.js';
 import type { Db, LandingRow } from '../db.js';
-import { finishLanding, type FinishResult } from './finish.js';
+import { isInvoiceLanding } from '../pay/spread.js';
+import { finishLanding, type FinishResult, type SpreadDeps } from './finish.js';
 
 const DAY_MS = 86_400_000;
 const ERROR_CHARS = 500;
@@ -23,6 +24,8 @@ export interface LandingWatcherOptions {
   log?: ((message: string) => void) | undefined;
   /** Told what happened to the coins of a landing after each pass (Sampan Pay reads invoice payments from it). */
   onResults?: ((row: LandingRow, results: FinishResult[]) => void) | undefined;
+  /** The fee wallet when pay.spreadBps > 0: invoice addresses then keep the spread (server/pay/spread.ts). */
+  spread?: SpreadDeps | null | undefined;
 }
 
 export class LandingWatcher {
@@ -118,6 +121,7 @@ export class LandingWatcher {
         satsPerByte: BigInt(config.fees.satsPerByte),
         tokenDustSats: BigInt(config.landing.tokenDustSats),
         attempts: config.landing.finishAttempts,
+        spread: this.o.spread && isInvoiceLanding(params) ? this.o.spread : undefined,
       });
     } catch (e) {
       const crossing = db.getCrossing(row.crossing_id);

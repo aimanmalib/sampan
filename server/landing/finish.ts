@@ -5,7 +5,8 @@ import { binToHex, encodeTransaction } from '@bitauth/libauth';
 import { landingLockingHex, type LandingParams } from '../../core/landing.js';
 import type { PoolUtxo } from '../../core/pools/trade.js';
 import { buildGiveBackTx, LandingBuildError, planConvert, type LandingCoin } from '../../core/tx/landing.js';
-import type { BuiltTx } from '../../core/tx/types.js';
+import { planSpreadConvert, spreadOf, type FeeCoin } from '../../core/tx/spread.js';
+import type { BuiltTx, Tx } from '../../core/tx/types.js';
 import { verifyTransaction } from '../../core/tx/verify.js';
 import { BroadcastError, type Chain, type ChainUtxo } from '../chain/types.js';
 
@@ -22,11 +23,22 @@ export interface FinishDeps {
   attempts: number;
   /** Build and check only; print instead of broadcasting. */
   dryRun?: boolean;
+  /** Sampan's spread on this landing (invoice addresses with pay.spreadBps > 0 only); absent = the whole coin to the owner. */
+  spread?: SpreadDeps | undefined;
 }
 
-/** `sats`: value of the coin at the landing address. `tokens`: what the owner received (converted only). */
+/** The fee wallet side of a spread convert (server/pay/spread.ts). */
+export interface SpreadDeps {
+  feeLockHex: string;
+  /** Lends one fee coin at a time to `use`: concurrent converts would spend the same coin. */
+  withFeeCoin<T>(use: (coin: FeeCoin | undefined) => Promise<T>): Promise<T>;
+  /** Signs the fee coin input of a spread convert. */
+  sign(built: BuiltTx): Tx;
+}
+
+/** `sats`: value of the coin at the landing address. `tokens`: what the owner received, `spreadSats`: what the fee address kept (converted only). */
 export type FinishResult =
-  | { coin: string; sats: bigint; action: 'converted' | 'returned'; txid: string; hex: string; feeSats: bigint; tokens?: bigint }
+  | { coin: string; sats: bigint; action: 'converted' | 'returned'; txid: string; hex: string; feeSats: bigint; tokens?: bigint; spreadSats?: bigint }
   | { coin: string; sats: bigint; action: 'waiting' | 'skipped'; reason: string };
 
 /** Blocks still to wait before giveBack is valid for a coin (0 = valid in the next block). */
@@ -43,20 +55,40 @@ async function send(built: BuiltTx, deps: FinishDeps): Promise<{ txid: string; h
   return { txid: await deps.chain.broadcast(hex), hex };
 }
 
+/** The spread convert when there is a fee coin and the coin covers it; otherwise the ordinary convert (all to the owner). */
+function plan(params: LandingParams, coin: LandingCoin, pools: PoolUtxo[], deps: FinishDeps, feeCoin: FeeCoin | undefined): BuiltTx {
+  const o = { params, coin, pools, maxPools: deps.maxPools, satsPerByte: deps.satsPerByte, tokenDustSats: deps.tokenDustSats };
+  if (deps.spread && feeCoin) {
+    try {
+      const built = planSpreadConvert({ ...o, feeCoin, feeLockHex: deps.spread.feeLockHex });
+      return { ...built, transaction: deps.spread.sign(built) };
+    } catch (e) {
+      if (!(e instanceof LandingBuildError)) throw e;
+    }
+  }
+  return planConvert(o);
+}
+
 async function tryConvert(params: LandingParams, coin: LandingCoin, deps: FinishDeps): Promise<FinishResult | string> {
+  const lend = deps.spread ? deps.spread.withFeeCoin.bind(deps.spread) : <T>(use: (c: FeeCoin | undefined) => Promise<T>) => use(undefined);
+  return lend((feeCoin) => convertAttempts(params, coin, deps, feeCoin));
+}
+
+async function convertAttempts(params: LandingParams, coin: LandingCoin, deps: FinishDeps, feeCoin: FeeCoin | undefined): Promise<FinishResult | string> {
   let last = 'no attempt';
   for (let i = 0; i < Math.max(1, deps.attempts); i++) {
     const pools = await deps.loadPools(params.category);
     let built: BuiltTx;
     try {
-      built = planConvert({ params, coin, pools, maxPools: deps.maxPools, satsPerByte: deps.satsPerByte, tokenDustSats: deps.tokenDustSats });
+      built = plan(params, coin, pools, deps, feeCoin);
     } catch (e) {
       return e instanceof Error ? e.message : String(e);
     }
     try {
       const sent = await send(built, deps);
       const tokens = built.transaction.outputs[0]?.token?.amount ?? 0n;
-      return { coin: `${coin.txid}:${coin.vout}`, sats: coin.sats, action: 'converted', ...sent, feeSats: built.feeSats, tokens };
+      const spreadSats = built.userInputIndexes.length > 0 ? spreadOf(built) : undefined;
+      return { coin: `${coin.txid}:${coin.vout}`, sats: coin.sats, action: 'converted', ...sent, feeSats: built.feeSats, tokens, ...(spreadSats === undefined ? {} : { spreadSats }) };
     } catch (e) {
       if (!(e instanceof BroadcastError) || !e.staleInputs) throw e;
       last = e.message; // a pool moved: load the pools again and rebuild

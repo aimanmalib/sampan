@@ -14,6 +14,7 @@ import { LandingWatcher } from './landing/watcher.js';
 import { DemoOrders } from './pay/demo.js';
 import { fakeTransport } from './pay/fake.js';
 import { PayService } from './pay/service.js';
+import { feeWalletFrom } from './pay/spread.js';
 import { httpsTransport, systemLookup, type Lookup, type Transport } from './pay/ssrf.js';
 import { WebhookDispatcher } from './pay/webhook.js';
 import { httpFetchActive, PoolDirectory, type FetchActive, type IndexerPool } from './indexer.js';
@@ -77,6 +78,8 @@ export interface ServiceOptions {
   fakeFixture?: string;
   /** SAMPAN_FAKE_OUTAGE: with the fake network, the indexer or the BCH servers fail (server/outage.ts). */
   outage?: Outage | null;
+  /** The fee wallet key, used only when pay.spreadBps > 0. */
+  spreadKey?: string | undefined;
   log?: (message: string) => void;
   /** Webhook DNS and sending (tests). The fake network answers every name with a documentation address and sends nothing. */
   webhookLookup?: Lookup;
@@ -177,6 +180,7 @@ export function createServices(o: ServiceOptions): Services {
       loadPools: async (category) => refreshPools(chain, await pools.active(category)),
       log: o.log,
       onResults: (row, results) => pay.observe(row, results),
+      spread: feeWalletFrom(config, chain, o.spreadKey),
     }),
     pay,
     webhooks: new WebhookDispatcher({ config, db: db.handle, pay, chain, prefix, lookup: webhookLookup, transport: webhookTransport, log: o.log }),

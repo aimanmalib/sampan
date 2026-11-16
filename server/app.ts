@@ -32,6 +32,8 @@ export interface AppOptions {
   teamTxids?: string[];
   /** SAMPAN_PAY_DEMO_SECRET: the demo shop's webhook secret; without it /api/pay/demo-hook is 404. */
   payDemoSecret?: string | undefined;
+  /** SAMPAN_SPREAD_KEY: the fee wallet key, used only when pay.spreadBps > 0 (server/pay/spread.ts). */
+  spreadKey?: string | undefined;
   /** Run the landing finisher in this process (default true; tests drive it by hand). */
   startWatcher?: boolean;
   /** Ready-made services (tests); otherwise built from the options above. */
@@ -52,6 +54,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
       testAddresses: options.testAddresses ?? [],
       teamTxids: options.teamTxids ?? [],
       outage: options.fake ? (options.outage ?? null) : null,
+      spreadKey: options.spreadKey,
       log: (m) => app.log.warn(m),
     });
   await services.clientIp.refresh();
