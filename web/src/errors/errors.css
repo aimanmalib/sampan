@@ -1,4 +1,4 @@
-/* What stays on screen when part of the page fails (errors/ErrorBoundary.tsx, ProviderNote.tsx, App's server notice). */
+/* What stays on screen when part of the page fails (ErrorBoundary.tsx, errors/ProviderNote.tsx, App's server notice). */
 .crash,
 .server-down {
   background: var(--card);

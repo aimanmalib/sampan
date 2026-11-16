@@ -1,8 +1,8 @@
 // Keeps a fault in one part of the page from blanking the rest: the whole app has one boundary and every tab its own,
 // so a broken tab leaves the headline, the picture and the other tabs in place. A failed script load reloads once.
 import { Component, type ReactNode } from 'react';
-import { useText } from '../i18n';
-import { browserReload, isChunkError, reloadOnce } from './reload-once';
+import { useText } from './i18n';
+import { browserReload, isChunkError, reloadOnce } from './errors/reload-once';
 
 /** The card shown in place of the part that failed. */
 export function ErrorCard() {

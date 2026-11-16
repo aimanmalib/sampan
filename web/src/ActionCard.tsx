@@ -3,7 +3,7 @@ import { openFlows, openTabs, type TabId } from '../../core/flows';
 import type { LoadedConfig } from './config';
 import { routeHalted } from '../../core/client/health';
 import { RoutePaused } from './cross/RoutePaused';
-import { ErrorBoundary, ErrorCard } from './errors/ErrorBoundary';
+import { ErrorBoundary, ErrorCard } from './ErrorBoundary';
 import { ProviderNote } from './errors/ProviderNote';
 import { useHealth } from './health';
 import { useText, type TextKey } from './i18n';

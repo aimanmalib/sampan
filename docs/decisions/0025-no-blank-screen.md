@@ -10,7 +10,7 @@ whether Sampan is broken, a provider is down, or their own connection failed.
 
 ## Decision
 
-- `web/src/errors/ErrorBoundary.tsx` wraps the whole app and, separately, the body of every tab. A tab that throws
+- `web/src/ErrorBoundary.tsx` wraps the whole app and, separately, the body of every tab. A tab that throws
   shows a short card (`error.title`, `error.body`, a reload button) in its place; the headline, picture and other
   tabs stay. The banner has its own boundary.
 - A script that fails to load (a tab left open across a deploy) reloads the page once per tab session, guarded by a
