@@ -30,7 +30,7 @@ test('/how shows the open flows, the whole contract, the checks anyone can run a
   await expect(page.locator('.measured__line')).toContainText(/\d+ landings and crossings completed/);
   const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
   expect(scroll).toBeLessThanOrEqual(client);
-  await page.getByRole('button', { name: en['lang.switchLabel'] }).click();
+  await page.getByRole('combobox', { name: en['lang.label'] }).selectOption('ms');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(ms['how.title']);
   expect(errors).toEqual([]);
 });

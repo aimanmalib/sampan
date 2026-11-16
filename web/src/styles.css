@@ -132,13 +132,23 @@ a {
 }
 .topbar__lang {
   min-height: var(--touch);
-  padding: 0 0.875rem;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 2.25rem 0 0.875rem;
   font: inherit;
-  font-size: 0.875rem;
+  /* 16px: iOS zooms the page when a smaller select takes focus. */
+  font-size: 1rem;
   color: var(--ink);
-  background: transparent;
+  /* The chevron is two gradient strokes, so it needs no image and follows the ink token. */
+  background:
+    linear-gradient(45deg, transparent 50%, var(--ink) 50%) calc(100% - 1.125rem) 50% / 0.375rem 0.375rem no-repeat,
+    linear-gradient(135deg, var(--ink) 50%, transparent 50%) calc(100% - 0.75rem) 50% / 0.375rem 0.375rem no-repeat,
+    transparent;
   border: 1px solid var(--line);
   border-radius: 999px;
+  appearance: none;
+  -webkit-appearance: none;
+  text-overflow: ellipsis;
   cursor: pointer;
 }
 

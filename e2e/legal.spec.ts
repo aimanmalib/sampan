@@ -23,7 +23,7 @@ for (const kind of ['terms', 'risks'] as const) {
     if (kind === 'risks') await expect(page.locator('.legal__funds')).toHaveCount(shown.length);
     const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
     expect(scroll).toBeLessThanOrEqual(client);
-    await page.getByRole('button', { name: en['lang.switchLabel'] }).click();
+    await page.getByRole('combobox', { name: en['lang.label'] }).selectOption('ms');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText((ms as Record<string, string>)[`legal.${kind}.title`]!);
     expect(errors).toEqual([]);
   });

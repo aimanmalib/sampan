@@ -15,7 +15,7 @@ describe('config/sampan.json', () => {
   it('has every top-level section the code reads', () => {
     const sections = [
       'tokens', 'defaultToken', 'features', 'route', 'thorchain', 'oneClick', 'evm', 'cauldron', 'electrum', 'wallet', 'connect',
-      'landing', 'limits', 'fees', 'rate', 'compliance', 'banner', 'site', 'legal', 'ops', 'business', 'pay', 'ui',
+      'landing', 'limits', 'fees', 'rate', 'compliance', 'banner', 'site', 'legal', 'ops', 'business', 'pay', 'ui', 'i18n',
     ];
     expect(Object.keys(shipped).sort()).toEqual([...sections].sort());
   });
@@ -122,5 +122,27 @@ describe('ui.ferryMotion', () => {
     expect(publicConfig(shipped).ui).toEqual({ ferryMotion: shipped.ui.ferryMotion });
     const bad = { ...shipped, ui: { ferryMotion: 'yes' } } as unknown as typeof shipped;
     expect(validateConfig(bad)).toContain('ui.ferryMotion: true or false');
+  });
+});
+
+describe('i18n', () => {
+  it('reaches the page as the language list and default', () => {
+    expect(publicConfig(shipped).i18n).toEqual(shipped.i18n);
+    expect(shipped.i18n.languages.map((l) => l.code)).toContain(shipped.i18n.default);
+  });
+
+  it('rejects a default it does not list, a code twice, a list without en and a language with no name', () => {
+    const c = clone();
+    c.i18n.default = 'zz';
+    expect(validateConfig(c)).toContain('i18n.default: one of the i18n.languages codes');
+    const twice = clone();
+    twice.i18n.languages.push({ ...twice.i18n.languages[0]! });
+    expect(validateConfig(twice).join()).toMatch(/no code twice/);
+    const noEn = clone();
+    noEn.i18n = { default: 'ms', languages: [{ code: 'ms', name: 'Bahasa Melayu' }] };
+    expect(validateConfig(noEn).join()).toMatch(/and en/);
+    const unnamed = clone();
+    unnamed.i18n.languages[0]!.name = ' ';
+    expect(validateConfig(unnamed).join()).toMatch(/i18n.languages: \{ code, name \}/);
   });
 });

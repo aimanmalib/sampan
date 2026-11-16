@@ -139,6 +139,13 @@ export interface SampanConfig {
   pay: PayConfig;
   /** How the status pages draw; not a flow. ferryMotion: the ferry on every status page and the landing card, moving while a step is under way. */
   ui: { ferryMotion: boolean };
+  /** Languages the page offers, in menu order, each by its own name; every code has a lang/<code>.json. default: shown until a visitor picks one. */
+  i18n: I18nConfig;
+}
+
+export interface I18nConfig {
+  default: string;
+  languages: { code: string; name: string }[];
 }
 
 /** The part of the config the page needs. Everything else stays on the server. */
@@ -165,6 +172,7 @@ export interface PublicConfig {
   /** Sampan Pay as its pages show it: how long an invoice is open, the invoice range and the demo shop's price. */
   pay: Pick<PayConfig, 'validMinutes' | 'minUsd' | 'maxUsd'> & { demoPriceUsd: number };
   ui: SampanConfig['ui'];
+  i18n: I18nConfig;
 }
 
 const HEX32 = /^[0-9a-fA-F]{64}$/;
@@ -254,6 +262,14 @@ export function validateConfig(c: SampanConfig): string[] {
     'ops.healthRetrySeconds: positive integer, at most ops.healthIntervalSeconds',
   );
   need(typeof c.ui?.ferryMotion === 'boolean', 'ui.ferryMotion: true or false');
+  const langs = Array.isArray(c.i18n?.languages) ? c.i18n.languages : [];
+  const codes = langs.map((x) => x?.code);
+  need(
+    langs.length > 0 && langs.every((x) => /^[a-z]{2,3}$/.test(x?.code ?? '') && typeof x.name === 'string' && x.name.trim() !== ''),
+    'i18n.languages: { code, name } with a 2 or 3 letter lower-case code and a name',
+  );
+  need(new Set(codes).size === codes.length && codes.includes('en'), 'i18n.languages: no code twice, and en (every key falls back to it)');
+  need(codes.includes(c.i18n?.default), 'i18n.default: one of the i18n.languages codes');
   need(posInt(c.ops.requestTimeoutSeconds) && c.ops.requestTimeoutSeconds >= 10, 'ops.requestTimeoutSeconds: integer, at least 10');
   need(c.compliance.blockedCountries.every((cc) => /^[A-Z]{2}$/.test(cc)), 'compliance.blockedCountries: ISO codes');
   need(isHttpsUrl(c.site.url) && !c.site.url.endsWith('/'), 'site.url: https origin without a trailing slash');
@@ -334,5 +350,6 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     business: { feeBps: c.business.feeBps, feeAddress: c.business.feeAddress },
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
     ui: { ferryMotion: c.ui.ferryMotion },
+    i18n: { default: c.i18n.default, languages: c.i18n.languages.map(({ code, name }) => ({ code, name })) },
   };
 }

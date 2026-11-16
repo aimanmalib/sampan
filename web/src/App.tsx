@@ -4,7 +4,8 @@ import { ActionCard, cardTabs } from './ActionCard';
 import { fetchConfig, useConfig } from './config';
 import { Footer } from './Footer';
 import { JudgeStrip } from './JudgeStrip';
-import { setLang, useText } from './i18n';
+import { applyLanguages, useText } from './i18n';
+import { LangPicker } from './LangPicker';
 import { Scene } from './Scene';
 import { CrossingPage } from './CrossingPage';
 import { HowPage } from './how/HowPage';
@@ -14,7 +15,7 @@ import { PayPages, payRoute } from './pay/PayPages';
 import { useWallet } from './wallet/useWallet';
 
 export function App() {
-  const { lang, t } = useText();
+  const { t } = useText();
   const config = useConfig();
   const route = config?.route.active ?? 'none';
   const flows = openFlows(config);
@@ -37,6 +38,10 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    if (config) applyLanguages(config.i18n);
+  }, [config]);
+
+  useEffect(() => {
     document.title = `${t('meta.title')} · ${t('banner.event')}`;
   }, [t]);
 
@@ -48,14 +53,7 @@ export function App() {
     <>
       <nav className="topbar">
         <span className="wordmark">Sampan</span>
-        <button
-          type="button"
-          className="topbar__lang"
-          aria-label={t('lang.switchLabel')}
-          onClick={() => setLang(lang === 'en' ? 'ms' : 'en')}
-        >
-          <span lang={lang === 'en' ? 'ms' : 'en'}>{t('lang.switch')}</span>
-        </button>
+        <LangPicker config={config} />
       </nav>
       {payShown ? (
         <main className="page">

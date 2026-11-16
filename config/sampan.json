@@ -239,5 +239,12 @@
   },
   "ui": {
     "ferryMotion": true
+  },
+  "i18n": {
+    "default": "en",
+    "languages": [
+      { "code": "en", "name": "English" },
+      { "code": "ms", "name": "Bahasa Melayu" }
+    ]
   }
 }

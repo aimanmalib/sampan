@@ -71,12 +71,25 @@ test('touch targets are at least 44 px tall', async ({ page }) => {
 
 test('language switch shows Malay text and keeps the event name', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: en['lang.switchLabel'] }).click();
+  await page.getByRole('combobox', { name: en['lang.label'] }).selectOption('ms');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(ms['hero.title']);
   await expect(page.locator('html')).toHaveAttribute('lang', 'ms');
   await expect(page.locator('.banner__event')).toHaveText('BCH BLAZE 2026');
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(ms['hero.title']);
+});
+
+test('language menu lists the languages config offers, in order, and sets html lang', async ({ page, request }) => {
+  const config = (await (await request.get('/api/config')).json()) as { i18n: { default: string; languages: { code: string; name: string }[] } };
+  // A stored code the config does not offer falls back to the config default.
+  await page.addInitScript(() => localStorage.setItem('sampan.lang', 'xx'));
+  await page.goto('/');
+  const menu = page.getByRole('combobox', { name: en['lang.label'] });
+  await expect(menu.locator('option')).toHaveText(config.i18n.languages.map((l) => l.name));
+  await expect(menu).toHaveValue(config.i18n.default);
+  await expect(page.locator('html')).toHaveAttribute('lang', config.i18n.default);
+  const box = await menu.boundingBox();
+  expect(box?.height).toBeGreaterThanOrEqual(44);
 });
 
 test('no horizontal overflow at 320 px', async ({ page }) => {
