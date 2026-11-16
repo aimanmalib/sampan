@@ -262,6 +262,33 @@ This was checked on 16 November 2026 from `git archive HEAD` in an empty folder.
 mainnet Electrum servers and the Cauldron indexer listed in the config. `npm test` runs the unit tests and
 `bash scripts/gerbang-ujian.sh` runs the whole gate.
 
+## Use Sampan from an AI agent
+
+[`mcp/`](mcp/) is a small Model Context Protocol server over stdio, a thin client of the public Sampan API. It holds no
+private key and never signs: your wallet signs. Its tools:
+
+- `quote_swap`: price a BCH and stablecoin swap in the Cauldron pools (read only).
+- `create_landing_address`: open a landing address for an owner. The server sends the recovery card; the MCP server recomputes
+  the address from the card with [`core/landing.ts`](core/landing.ts), the same check the page runs, and refuses it when it
+  differs or pays someone else. It returns the address, the status page link and the card.
+- `get_crossing_status`: what the status page shows for an id (read only).
+- `create_invoice`: a Sampan Pay invoice, listed only when the site has Sampan Pay on.
+
+After `npm ci` in a clone, add it to an MCP client. In a project `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "sampan": { "command": "npm", "args": ["--prefix", "/path/to/sampan", "run", "--silent", "mcp"] }
+  }
+}
+```
+
+or with Claude Code: `claude mcp add sampan -- npm --prefix /path/to/sampan run --silent mcp`. Set `SAMPAN_URL` to use
+another Sampan server (default: `site.url` in the config). [`mcp/tools.test.ts`](mcp/tools.test.ts) starts it with this
+command from another folder and talks to it through the MCP SDK client; it also checks that a landing address that does not
+match its card is refused. The MCP SDK and `zod` are development dependencies, so the production image does not carry them.
+
 ## Architecture
 
 - `core/` pure TypeScript: pool math, transaction builders, the browser check, the landing address. No I/O.
@@ -269,6 +296,7 @@ mainnet Electrum servers and the Cauldron indexer listed in the config. `npm tes
 - `server/` Fastify API, Electrum and indexer clients, SQLite (`node:sqlite`), the landing finisher. It never holds a private key.
 - `web/` Vite and React page; all text comes from `lang/en.json` and `lang/ms.json`.
 - `config/sampan.json` holds every value that may change: limits, servers, timings, flags.
+- `mcp/` the MCP server for AI agents (no keys, no signing).
 - `tools/` measuring scripts and the headless test wallet; `docs/decisions/` records each design decision.
 
 More in [`AGENTS.md`](AGENTS.md).
@@ -286,6 +314,7 @@ More in [`AGENTS.md`](AGENTS.md).
 | `react`, `react-dom` | MIT | page |
 | `viem` | MIT | EVM wallet code (behind the cross-chain flag) |
 | `qrcode-generator` | MIT | QR codes |
+| `@modelcontextprotocol/sdk`, `zod` | MIT | the MCP server (development only) |
 | `@playwright/test`, `typescript` | Apache-2.0 | browser tests, types |
 
 Services used at run time: public Electrum (Fulcrum) servers, the Cauldron indexer, and the WizardConnect relays named in the

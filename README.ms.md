@@ -192,6 +192,33 @@ Ini disemak pada 16 November 2026 dari `git archive HEAD` dalam folder kosong. T
 pelayan Electrum mainnet dan pengindeks Cauldron yang disenaraikan dalam config. `npm test` menjalankan ujian unit dan
 `bash scripts/gerbang-ujian.sh` menjalankan seluruh gerbang.
 
+## Guna Sampan dari ejen AI
+
+[`mcp/`](mcp/) ialah pelayan Model Context Protocol kecil melalui stdio, klien nipis kepada API awam Sampan. Ia tidak memegang
+kunci peribadi dan tidak pernah menandatangani: dompet anda yang menandatangani. Alatnya:
+
+- `quote_swap`: sebut harga tukaran BCH dan stablecoin dalam kolam Cauldron (baca sahaja).
+- `create_landing_address`: buka alamat pendaratan untuk pemilik. Pelayan menghantar kad pemulihan; pelayan MCP mengira semula
+  alamat dari kad dengan [`core/landing.ts`](core/landing.ts), semakan sama yang dijalankan halaman, dan menolaknya bila ia
+  berbeza atau membayar orang lain. Ia memulangkan alamat, pautan halaman status dan kad.
+- `get_crossing_status`: apa yang halaman status tunjukkan untuk satu id (baca sahaja).
+- `create_invoice`: invois Sampan Pay, disenaraikan hanya bila laman menghidupkan Sampan Pay.
+
+Selepas `npm ci` dalam klon, tambahkannya kepada klien MCP. Dalam `.mcp.json` projek:
+
+```json
+{
+  "mcpServers": {
+    "sampan": { "command": "npm", "args": ["--prefix", "/path/to/sampan", "run", "--silent", "mcp"] }
+  }
+}
+```
+
+atau dengan Claude Code: `claude mcp add sampan -- npm --prefix /path/to/sampan run --silent mcp`. Tetapkan `SAMPAN_URL` untuk
+pelayan Sampan lain (lalai: `site.url` dalam config). [`mcp/tools.test.ts`](mcp/tools.test.ts) memulakannya dengan arahan ini
+dari folder lain dan berhubung dengannya melalui klien SDK MCP; ia juga menyemak bahawa alamat pendaratan yang tidak sepadan
+dengan kadnya ditolak. SDK MCP dan `zod` ialah kebergantungan pembangunan, jadi imej produksi tidak membawanya.
+
 ## Seni bina
 
 - `core/` TypeScript tulen: matematik kolam, pembina transaksi, semakan pelayar, alamat pendaratan. Tiada I/O.
@@ -200,6 +227,7 @@ pelayan Electrum mainnet dan pengindeks Cauldron yang disenaraikan dalam config.
   memegang kunci peribadi.
 - `web/` laman Vite dan React; semua teks datang dari `lang/en.json` dan `lang/ms.json`.
 - `config/sampan.json` memegang setiap nilai yang mungkin berubah: had, pelayan, masa, bendera.
+- `mcp/` pelayan MCP untuk ejen AI (tiada kunci, tiada tandatangan).
 - `tools/` skrip pengukuran dan dompet ujian tanpa kepala; `docs/decisions/` merekod setiap keputusan reka bentuk.
 
 Lebih lanjut dalam [`AGENTS.md`](AGENTS.md) (Bahasa Inggeris).
@@ -217,6 +245,7 @@ Lebih lanjut dalam [`AGENTS.md`](AGENTS.md) (Bahasa Inggeris).
 | `react`, `react-dom` | MIT | laman |
 | `viem` | MIT | kod dompet EVM (di sebalik bendera rentas rantaian) |
 | `qrcode-generator` | MIT | kod QR |
+| `@modelcontextprotocol/sdk`, `zod` | MIT | pelayan MCP (pembangunan sahaja) |
 | `@playwright/test`, `typescript` | Apache-2.0 | ujian pelayar, jenis |
 
 Perkhidmatan yang digunakan semasa berjalan: pelayan Electrum (Fulcrum) awam, pengindeks Cauldron, dan geganti WizardConnect
