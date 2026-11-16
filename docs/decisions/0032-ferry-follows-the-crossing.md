@@ -22,8 +22,8 @@ honest if it moves when the chain moves, and it must not drift from the words in
   is no transition and no loop. The ferry is `aria-hidden`; the timeline carries the meaning.
 - `ui.ferryMotion` in `config/sampan.json` (default `false`, sent in `/api/config`) is a display setting, not a flow.
   Off: the landing status page shows the ferry still, as before. On: the ferry with motion on every status page and a
-  still ferry on the opened landing address card. It stays off until it has been measured in WebKit on an iPhone 13
-  and on the live site.
+  still ferry on the opened landing address card. It stayed off until it had been measured in WebKit on an iPhone 13
+  and on the live site; it was switched on on 16 November 2026 after both (`docs/MEASURED.md`, `## Ferry`).
 
 ## Consequences
 

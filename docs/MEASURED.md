@@ -39,6 +39,7 @@
 | 2026-11-16T17:36:32Z | pay | 0.20 USD · plain · local | bch 4900070fe14d7e328248655c388620faedc43f54b66a9f5f72e0abf5db8840f9 · convert 8b25336475466f9b976a940ef74d5abdf299049061dc112a97d78e6864472f3c | 25.9 | ok |
 | 2026-11-16T18:13:10Z | pay | 0.20 USD · plain · live | bch db5b2fd2e3257f6b7b0a09e87509f7954543707721f53d111039758fab25fe36 · convert 8d6a12d19f6124fec8da04bb5dbb6690aedd70140068cfcb10b24bfd5c574f44 | 16.1 | ok |
 | 2026-11-16T18:30:32Z | pay | 0.20 USD · plain · local · spread 50 bps | bch e0b2ad16f1ec8b933d4d2ac7769bf17e458a14a6c477d3bce5a731e139dd65db · convert 21fbd3217c58a2a44ddd8dd0a7f6a0a91f12432f3ed74f599ed097628f125039 | 28.9 | ok |
+| 2026-11-16T19:39:41Z | land | 0.001 BCH to 0.20 PUSD (plain payment · live site, ferry watched in WebKit iPhone 13) | a9ceff4389d276597f2c6e958c01f31d580ad4573191ea2c17f7e7142400f0b7 | 3.1 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from
@@ -152,9 +153,10 @@ Measured with `tools/measure/failover.ts`: the built server on the host, the rea
 
 ## Ferry
 
-The boat on the status page (`/c/:id`) with `ui.ferryMotion` on: `data-step` of `.ferry` read every 200 ms, one screenshot per step, then the page kept open 30 s after the last step (no crash event, no page error, no console error, no sideways scroll). `local fake` rows: built server with the fake network and the landing flow on, the crossing answers held back as `open` then `seen` before the real `converted` answer, page poll 2 s. `mainnet` rows: the live site, a real landing paid from the test wallet, page poll as configured.
+The boat on the status page (`/c/:id`) with `ui.ferryMotion` on: `data-step` of `.ferry` read every 200 ms, one screenshot per step, then the page kept open 30 s after the last step (no crash event, no page error, no console error, no sideways scroll). `local fake` rows: built server with the fake network and the landing flow on, the crossing answers held back as `open` then `seen` before the real `converted` answer, page poll 2 s. `mainnet` rows: the live site, a real landing paid from the test wallet, page poll as configured (10 s), so a step that starts and ends between two polls is not shown.
 
 | UTC | engine | kind | steps seen | txid | result |
 |---|---|---|---|---|---|
-| 2026-11-16T19:26:30Z | webkit-iphone13 · local fake | land | 1 moving (+0.3 s) → 2 moving (+6.4 s) → 4 arrived (+12.2 s); alive 36 s after | none (fake network) | ok |
-| 2026-11-16T19:27:20Z | chromium-desktop 1440×900 · local fake | land | 1 moving (+0.2 s) → 2 moving (+6.3 s) → 4 arrived (+12.1 s); alive 34 s after | none (fake network) | ok |
+| 2026-11-16T19:26:30Z | WebKit iPhone 13 · local fake | land | 1 moving (+0.3 s) → 2 moving (+6.4 s) → 4 arrived (+12.2 s); alive 36 s after | none (fake network) | ok |
+| 2026-11-16T19:27:20Z | Chromium desktop 1440×900 · local fake | land | 1 moving (+0.2 s) → 2 moving (+6.3 s) → 4 arrived (+12.1 s); alive 34 s after | none (fake network) | ok |
+| 2026-11-16T19:39:03Z | WebKit iPhone 13 · mainnet, live site (bdedcd8) | land | 1 moving (before payment) → 4 arrived (+3.1 s after the payment); converted within one poll, so 2 was not shown; alive 35 s after | payment 8b46bf00cf6e3e5c14d09b095728b593d33711494f9c3d272fd6de49684db1fb, conversion a9ceff4389d276597f2c6e958c01f31d580ad4573191ea2c17f7e7142400f0b7 | ok |
