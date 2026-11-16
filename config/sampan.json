@@ -140,7 +140,7 @@
   },
   "site": {
     "url": "https://sampan.sasateguh.com",
-    "noindex": true,
+    "noindex": false,
     "feedbackUrl": "",
     "ogImage": "/og.png"
   },

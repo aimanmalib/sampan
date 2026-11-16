@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import en from '../lang/en.json' with { type: 'json' };
 import ms from '../lang/ms.json' with { type: 'json' };
+import repoConfig from '../config/sampan.json' with { type: 'json' };
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -22,7 +23,9 @@ async function noHorizontalOverflow(page: Page): Promise<void> {
 test('front page: banner, one headline, one primary button, both banks, no console errors', async ({ page }) => {
   const errors = collectErrors(page);
   const res = await page.goto('/');
-  expect(res?.headers()['x-robots-tag']).toContain('noindex');
+  // noindex until the soft launch (config site.noindex), then no robots header at all.
+  if (repoConfig.site.noindex) expect(res?.headers()['x-robots-tag']).toContain('noindex');
+  else expect(res?.headers()['x-robots-tag']).toBeUndefined();
   await expect(page).toHaveTitle(/BCH BLAZE 2026/);
   await expect(page.locator('.banner__event')).toHaveText('BCH BLAZE 2026');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(en['hero.title']);
