@@ -1,6 +1,7 @@
 // The swap as the page runs it: quote, build on the server, check the built transaction in the browser
 // against what the user was shown, then ask the wallet to sign and send it through the server. A transaction
 // that fails the check never reaches the wallet.
+import { feeLockingHex, prefixOf, sampanFeeSats, type BusinessConfig } from '../business.js';
 import { BCH, checkTransaction, type Expectation } from '../check.js';
 import type { TradeSide } from '../pools/trade.js';
 import { expectationFromWire, outputFromWire, txFromHex, type WireExpectation, type WireOutput } from '../wire.js';
@@ -15,6 +16,7 @@ export interface WireQuote {
   supply: string;
   demand: string;
   minReceive: string;
+  sampanFeeSats: string;
   pools: number;
   usd: number;
 }
@@ -29,6 +31,8 @@ export interface SwapIntent {
   category: string;
   feeCapSats: bigint;
   userPrompt: string;
+  /** Sampan fee as this page's config states it; the check rebuilds the fee output from it. */
+  business: Pick<BusinessConfig, 'feeBps' | 'feeAddress'>;
 }
 
 export type SwapStep = 'building' | 'checking' | 'signing' | 'sending';
@@ -59,13 +63,17 @@ export const quoteSwap = async (api: Api, q: { token: string; side: TradeSide; a
  */
 export function browserExpectation(build: BuildReply, wallet: WalletView, intent: SwapIntent): Expectation {
   const server = expectationFromWire(build.expectation);
+  const { feeBps, feeAddress } = intent.business;
+  const feeLock = feeLockingHex(intent.business, prefixOf(feeAddress));
+  const buyFee = intent.side === 'buy' ? sampanFeeSats(intent.amount, feeBps) : 0n;
   return {
     userLockingBytecodes: wallet.derived.map((a) => a.lockingHex),
     inputPaths: build.inputPaths,
     poolOwnerPkhs: server.poolOwnerPkhs,
-    spend: intent.side === 'buy' ? { sats: intent.amount, tokens: {} } : { sats: 0n, tokens: { [intent.category.toLowerCase()]: intent.amount } },
+    spend: intent.side === 'buy' ? { sats: intent.amount + buyFee, tokens: {} } : { sats: 0n, tokens: { [intent.category.toLowerCase()]: intent.amount } },
     feeCapSats: intent.feeCapSats,
     receive: { category: intent.side === 'buy' ? intent.category.toLowerCase() : BCH, min: intent.minReceive },
+    ...(feeLock ? { sampanFee: { lockingBytecode: feeLock, bps: feeBps } } : {}),
   };
 }
 

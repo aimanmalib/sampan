@@ -1,13 +1,16 @@
 // Measured mainnet swaps through the real page and the headless test wallet (G1, KP3 flow "swap").
-//   npx tsx tools/measure/swap.ts [--rounds 3] [--bch 0.001] [--port 4183]
+//   npx tsx tools/measure/swap.ts [--rounds 3] [--bch 0.001] [--port 4183] [--fee-bps 30 --fee-address bitcoincash:q...] [--buy-only]
 // Starts the built server (dist/) against the real network with the swap tab switched on, opens the page in
 // Chromium, pairs the test wallet through the page's own WizardConnect link, then per round buys PUSD for the
 // given BCH and sells the whole PUSD balance back. Each swap appends one row to docs/MEASURED.md, failures
 // included, and the run stops at the first failure. The test wallet signs only what passes checkTransaction
-// against what the page showed and stays inside state/budget.json.
+// against what the page showed and stays inside state/budget.json. --fee-bps switches the Sampan fee on in this
+// local server only (business.feeBps; the public config stays 0); point --fee-address at the test wallet's own
+// address so the fee never leaves the test wallet. Rows then say "fee N bps".
 import { spawn, type ChildProcess } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { chromium, type Page } from '@playwright/test';
+import { feeLockingHex, prefixOf, sampanFeeSats } from '../../core/business.js';
 import { BCH } from '../../core/check.js';
 import { formatUnits, parseUnits } from '../../core/wallet.js';
 import { loadConfig } from '../../server/config.js';
@@ -30,8 +33,14 @@ const config = loadConfig('config/sampan.json');
 const token = config.tokens[config.defaultToken]!;
 const category = token.category.toLowerCase();
 
-// Swap tab on.
-const SERVER_PATCH = { features: { swap: true } };
+const FEE_BPS = Number(arg('--fee-bps', '0'));
+const FEE_ADDRESS = arg('--fee-address', config.business.feeAddress);
+const BUY_ONLY = process.argv.includes('--buy-only');
+const business = { feeBps: FEE_BPS, feeAddress: FEE_ADDRESS };
+const feeLock = feeLockingHex(business, prefixOf(FEE_ADDRESS));
+
+// Swap tab on; the Sampan fee only when asked for.
+const SERVER_PATCH = { features: { swap: true }, ...(FEE_BPS > 0 ? { business } : {}) };
 
 async function quote(side: 'buy' | 'sell', amount: bigint): Promise<{ usd: number; minReceive: string }> {
   const res = await fetch(`${BASE}/api/swap/quote`, {
@@ -82,15 +91,16 @@ async function swapOnce(page: Page, side: 'buy' | 'sell', amount: bigint): Promi
   };
   const min = await shownMinimum(page, side === 'buy' ? token.symbol : 'BCH', getDecimals, fresh);
   const intent = {
-    spend: side === 'buy' ? { sats: amount.toString() } : { sats: '0', tokens: { [category]: amount.toString() } },
+    spend: side === 'buy' ? { sats: (amount + sampanFeeSats(amount, FEE_BPS)).toString() } : { sats: '0', tokens: { [category]: amount.toString() } },
     receive: { category: side === 'buy' ? category : BCH, min: min.toString() },
     usd: Math.round(usd * 100) / 100,
+    ...(feeLock ? { sampanFee: { lockingBytecode: feeLock, bps: FEE_BPS } } : {}),
   };
   writeFileSync(INTENT_FILE, JSON.stringify(intent));
   const label =
-    side === 'buy'
+    (side === 'buy'
       ? `${formatUnits(amount, 8)} BCH to at least ${formatUnits(min, token.decimals)} ${token.symbol}`
-      : `${formatUnits(amount, token.decimals)} ${token.symbol} to at least ${formatUnits(min, 8)} BCH`;
+      : `${formatUnits(amount, token.decimals)} ${token.symbol} to at least ${formatUnits(min, 8)} BCH`) + (FEE_BPS > 0 ? ` · fee ${FEE_BPS} bps` : '');
   const started = Date.now();
   await primary(page).click();
   const done = page.locator('.swap__done');
@@ -131,7 +141,7 @@ async function main(): Promise<void> {
       const buy = await swapOnce(page, 'buy', buySats);
       appendRuns(MEASURED, [buy]);
       console.log(`round ${round} buy: ${buy.ok ? 'ok' : 'fail'} ${buy.txid ?? buy.note ?? ''} ${buy.seconds?.toFixed(1)} s`);
-      if (!buy.ok) break;
+      if (!buy.ok || BUY_ONLY) break;
       await page.getByRole('button', { name: 'Swap again' }).click();
       await page.locator('.swap__wallet').filter({ hasNotText: `and ${formatUnits(tokensBefore, token.decimals, token.decimals)} ${token.symbol}` }).waitFor({ timeout: 60_000 });
       const sell = await swapOnce(page, 'sell', await walletTokens(page));

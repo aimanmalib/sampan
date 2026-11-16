@@ -8,7 +8,7 @@ import { outputFromWire, txFromHex, type WireOutput } from '../wire.js';
 import type { Api } from './api.js';
 import type { WalletView } from './scan.js';
 import type { WalletSession } from './session.js';
-import { CheckFailure, runSwap, type SwapStep, type WireQuote } from './swap.js';
+import { CheckFailure, runSwap, type SwapIntent, type SwapStep, type WireQuote } from './swap.js';
 
 export interface WireOutQuote {
   source: string;
@@ -46,6 +46,7 @@ export interface OutIntent {
   /** Step 1 minimum BCH shown (token source only). */
   swapMinReceive?: bigint;
   feeCapSats: bigint;
+  business: SwapIntent['business'];
   prompts: { swap: string; deposit: string };
 }
 
@@ -131,6 +132,7 @@ export async function runOut(o: {
         category: intent.category,
         feeCapSats: intent.feeCapSats,
         userPrompt: intent.prompts.swap,
+        business: intent.business,
       },
       onStep: (phase) => o.onStep?.({ step: 1, phase }),
     });

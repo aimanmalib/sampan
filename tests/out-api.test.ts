@@ -95,6 +95,7 @@ describe('POST /api/out/*', () => {
       minOut: BigInt(q.minOut),
       category: PUSD,
       feeCapSats: BigInt(base.fees.capSats),
+      business: base.business,
       prompts: { swap: '', deposit: '' },
     };
     const tx = txFromHex(build.tx);

@@ -59,7 +59,7 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
         api,
         session: wallet.session,
         wallet: view,
-        intent: { token: token.symbol, side, amount, minReceive, category: token.category, feeCapSats: BigInt(config.connect.feeCapSats), userPrompt: prompt },
+        intent: { token: token.symbol, side, amount, minReceive, category: token.category, feeCapSats: BigInt(config.connect.feeCapSats), userPrompt: prompt, business: config.business },
         onStep: (step) => setRun({ phase: 'running', step }),
       });
       setRun({ phase: 'done', txid: res.txid, crossingId: res.crossingId });
@@ -169,6 +169,12 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
         <summary>{t('swap.fees')}</summary>
         <p>{t('swap.poolFee', { pct: pct(POOL_V0_FEE_NUMERATOR, POOL_V0_FEE_DENOMINATOR) })}</p>
         <p>{t('swap.networkFee', { fee: formatUnits(BigInt(config.connect.feeCapSats), BCH_DECIMALS) })}</p>
+        <p>
+          {config.business.feeBps > 0 ? t('swap.sampanFee', { pct: pct(BigInt(config.business.feeBps), 10000n) }) : t('swap.sampanFeeNone')}
+          {quote.status === 'ok' && BigInt(quote.quote.sampanFeeSats) > 0n
+            ? ` ${t('swap.sampanFeeQuote', { fee: formatUnits(BigInt(quote.quote.sampanFeeSats), BCH_DECIMALS) })}`
+            : null}
+        </p>
       </details>
     </div>
   );

@@ -42,7 +42,7 @@ export function expectationOf(b: BuiltSwap, feeCapSats: number): unknown {
     userLockingBytecodes: b.userLockingBytecodes,
     inputPaths: b.inputPaths,
     poolOwnerPkhs: b.poolOwnerPkhs,
-    spend: quote.side === 'buy' ? { sats: quote.supply, tokens: {} } : { sats: 0n, tokens: { [quote.category]: quote.supply } },
+    spend: quote.side === 'buy' ? { sats: quote.supply + quote.sampanFeeSats, tokens: {} } : { sats: 0n, tokens: { [quote.category]: quote.supply } },
     feeCapSats: BigInt(feeCapSats),
     receive: quote.side === 'buy' ? { category: quote.category, min: quote.minReceive } : { category: BCH, min: quote.minReceive },
   });

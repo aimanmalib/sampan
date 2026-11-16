@@ -1,7 +1,8 @@
 // Builder for a BCH <-> token swap against Cauldron pools. Pure: no I/O, no keys.
 // Layout: pool inputs at 0..n-1 and their new pool outputs at the same indexes, then the user's coins,
 // then the payout output and an optional change output. Version 2, locktime 0. Fee: estimate the size
-// with signature-sized placeholders, build, measure, correct once.
+// with signature-sized placeholders, build, measure, correct once. An optional Sampan fee is one plain BCH
+// output placed last; without it the bytes are exactly those of a swap without a fee.
 import { encodeTransaction, hexToBin, type Input, type Output } from '@bitauth/libauth';
 import { poolV0ExchangeUnlocking, poolV0LockingBytecode } from '../pools/template.js';
 import type { SelectedTrade } from '../pools/trade.js';
@@ -16,6 +17,8 @@ export interface SwapParams {
   changeLockingBytecode: Uint8Array;
   satsPerByte: bigint;
   tokenDustSats: bigint;
+  /** Sampan fee output (business.feeBps), paid from the user's BCH change (buy) or proceeds (sell). */
+  sampanFee?: { lockingBytecode: Uint8Array; sats: bigint };
 }
 
 export class SwapBuildError extends Error {}
@@ -58,8 +61,10 @@ const assemble = (p: SwapParams, fee: bigint, placeholder: boolean): { tx: Built
   if (coins.some((c) => c.token && c.token.category !== trade.category)) throw new SwapBuildError('coin carries another token');
 
   const extra: Output[] = [];
+  const sampanFee = p.sampanFee && p.sampanFee.sats > 0n ? p.sampanFee : undefined;
+  const feeSats = sampanFee?.sats ?? 0n;
   if (trade.side === 'buy') {
-    const change = satsIn - trade.supply - p.tokenDustSats - fee;
+    const change = satsIn - trade.supply - p.tokenDustSats - fee - feeSats;
     extra.push({ lockingBytecode: p.payoutLockingBytecode, valueSatoshis: p.tokenDustSats, token: tokenOf(trade.category, trade.demand + tokensIn) });
     if (change < 0n) throw new SwapBuildError('not enough BCH for this swap');
     if (change >= BCH_DUST_SATS) extra.push({ lockingBytecode: p.changeLockingBytecode, valueSatoshis: change });
@@ -67,11 +72,12 @@ const assemble = (p: SwapParams, fee: bigint, placeholder: boolean): { tx: Built
     const leftTokens = tokensIn - trade.supply;
     if (leftTokens < 0n) throw new SwapBuildError('not enough tokens for this swap');
     const tokenChangeSats = leftTokens > 0n ? p.tokenDustSats : 0n;
-    const payout = satsIn + trade.demand - tokenChangeSats - fee;
+    const payout = satsIn + trade.demand - tokenChangeSats - fee - feeSats;
     if (payout < BCH_DUST_SATS) throw new SwapBuildError('swap is too small to pay its fee');
     extra.push({ lockingBytecode: p.payoutLockingBytecode, valueSatoshis: payout });
     if (leftTokens > 0n) extra.push({ lockingBytecode: p.changeLockingBytecode, valueSatoshis: tokenChangeSats, token: tokenOf(trade.category, leftTokens) });
   }
+  if (sampanFee) extra.push({ lockingBytecode: sampanFee.lockingBytecode, valueSatoshis: sampanFee.sats });
   const tx = {
     version: 2,
     locktime: 0,

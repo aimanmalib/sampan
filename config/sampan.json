@@ -175,5 +175,12 @@
     "healthRetrySeconds": 30,
     "testAddresses": ["bitcoincash:qqyuz8zh06c8h39guuedjpfvnlvjeg394ucvfe6ltt"],
     "quotePayloadHours": 24
+  },
+  "business": {
+    "feeBps": 0,
+    "feeAddress": "bitcoincash:qplrydnf2z4pj4z9rv7uhmwsuxyrm8hj7u3nqeslpn",
+    "scenarioBps": 30,
+    "scenarioShares": [0.01, 0.05, 0.1],
+    "sources": []
   }
 }

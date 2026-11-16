@@ -86,7 +86,7 @@ async function swapThroughTestWallet(intentFor: (min: bigint) => Intent, spentBe
     api,
     session,
     wallet: view,
-    intent: { token: 'PUSD', ...trade, minReceive: BigInt(quote.minReceive), category: PUSD, feeCapSats: BigInt(config.fees.capSats), userPrompt: 'Swap 0.001 BCH' },
+    intent: { token: 'PUSD', ...trade, minReceive: BigInt(quote.minReceive), category: PUSD, feeCapSats: BigInt(config.fees.capSats), userPrompt: 'Swap 0.001 BCH', business: config.business },
   });
   return { run, ledger };
 }

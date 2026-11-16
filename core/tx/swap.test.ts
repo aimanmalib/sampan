@@ -1,6 +1,6 @@
-import { binToHex, hexToBin } from '@bitauth/libauth';
+import { binToHex, encodeTransaction, hexToBin, sha256 } from '@bitauth/libauth';
 import { describe, expect, it } from 'vitest';
-import { PUSD, coin, otherKey, pools, testKey, userLock } from '../../tests/helpers/pools.js';
+import { PUSD, coin, otherKey, otherLock, pools, testKey, userLock } from '../../tests/helpers/pools.js';
 import { signP2pkhInputs } from './sign.js';
 import { poolV0LockingBytecode } from '../pools/template.js';
 import { selectTrade } from '../pools/trade.js';
@@ -63,4 +63,45 @@ describe('buildSwapTx', () => {
     expect(() => buildSwapTx({ ...base, trade: buyTrade(), coins: [coin(0, 500_000n)] })).toThrow(SwapBuildError);
     expect(() => buildSwapTx({ ...base, trade: sellTrade(), coins: [coin(0, 2_000n, 10n)] })).toThrow(SwapBuildError);
   });
+
+  // Bytes of these two fixture swaps before the Sampan fee existed (sha256 of the encoded transaction).
+  const GOLDEN = {
+    buy: '9bfbba0115d342e0fcfc536f8258c29d0115c7356b41959d9a728b5dcbd7ad2f',
+    sell: '6e9e2a8f8e255587a07625026e4bcc86ae7f36b9c8456276b9f78799e86a237a',
+  };
+  const digest = (b: { transaction: Parameters<typeof encodeTransaction>[0] }): string => binToHex(sha256.hash(encodeTransaction(b.transaction)));
+
+  it('golden: no fee, or a fee of 0, builds the same bytes as before the fee existed', () => {
+    const coinsBuy = [coin(0, 2_000_000n)];
+    const coinsSell = [coin(0, 2_000n, 1_000n)];
+    expect(digest(buildSwapTx({ ...base, trade: buyTrade(), coins: coinsBuy }))).toBe(GOLDEN.buy);
+    expect(digest(buildSwapTx({ ...base, trade: sellTrade(), coins: coinsSell }))).toBe(GOLDEN.sell);
+    const zero = { sampanFee: { lockingBytecode: otherLock, sats: 0n } };
+    expect(digest(buildSwapTx({ ...base, ...zero, trade: buyTrade(), coins: coinsBuy }))).toBe(GOLDEN.buy);
+    expect(digest(buildSwapTx({ ...base, ...zero, trade: sellTrade(), coins: coinsSell }))).toBe(GOLDEN.sell);
+  });
+
+  it('fee: one plain output last, paid from the change (buy) or the proceeds (sell), and the VM accepts it', () => {
+    const sampanFee = { lockingBytecode: otherLock, sats: 3_000n };
+    for (const [trade, coins] of [
+      [buyTrade(), [coin(0, 2_000_000n)]],
+      [sellTrade(), [coin(0, 2_000n, 1_000n)]],
+    ] as const) {
+      const plain = buildSwapTx({ ...base, trade, coins: [...coins] });
+      const withFee = buildSwapTx({ ...base, trade, coins: [...coins], sampanFee });
+      const outs = withFee.transaction.outputs;
+      const last = outs[outs.length - 1]!;
+      expect(binToHex(last.lockingBytecode)).toBe(binToHex(otherLock));
+      expect(last.valueSatoshis).toBe(3_000n);
+      expect(last.token).toBeUndefined();
+      expect(outs.length).toBe(plain.transaction.outputs.length + 1);
+      const userSats = (b: typeof plain): bigint =>
+        b.transaction.outputs.filter((o) => binToHex(o.lockingBytecode) === binToHex(userLock)).reduce((a, o) => a + o.valueSatoshis, 0n);
+      // The user gets the fee less, give or take the network fee of the 34-byte extra output.
+      expect(userSats(plain) - userSats(withFee) - 3_000n).toBe(withFee.feeSats - plain.feeSats);
+      const signed = signP2pkhInputs(withFee.transaction, withFee.sourceOutputs, withFee.userInputIndexes, testKey);
+      expect(verifyTransaction(signed, withFee.sourceOutputs)).toEqual({ ok: true });
+    }
+  });
 });
+

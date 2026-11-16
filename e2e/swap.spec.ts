@@ -72,3 +72,9 @@ test('an unknown status link says so', async ({ page }) => {
   await page.goto(`/c/${'0'.repeat(32)}`);
   await expect(page.getByText(en['crossing.missing'])).toBeVisible();
 });
+
+test('the Fees panel names the Sampan fee, none while business.feeBps is 0', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.swap__fees summary').click();
+  await expect(page.locator('.swap__fees')).toContainText(en['swap.sampanFeeNone']);
+});

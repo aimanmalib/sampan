@@ -2,6 +2,7 @@
 // Pure, rules 1-6 of the product spec. Source outputs come from the server too, but wallets sign with
 // SIGHASH_UTXOS, so a lie about them makes every signature invalid rather than moving funds.
 import { binToHex, type Output } from '@bitauth/libauth';
+import { sampanFeeSats } from './business.js';
 import { poolV0LockingHex } from './pools/template.js';
 import type { Tx } from './tx/types.js';
 
@@ -20,6 +21,11 @@ export interface Expectation {
   opReturn?: string;
   /** THORChain deposit (rule 6): vault, change to input 0's address, memo; plain user coins only. */
   thorDeposit?: boolean;
+  /**
+   * Sampan fee (business config, as the page received it): exactly one plain output to this address worth
+   * `bps` of the BCH the pools take in or pay out, recomputed here from the pool outputs. Absent or 0 = no fee output.
+   */
+  sampanFee?: { lockingBytecode: string; bps: number };
   /** What the user was shown as leaving the wallet. */
   spend: { sats: bigint; tokens: Record<string, bigint> };
   feeCapSats: bigint;
@@ -62,6 +68,13 @@ function depositShape(tx: Tx, sourceOutputs: Output[], e: Expectation, signed: M
   return undefined;
 }
 
+/** BCH the quoted pools gain (buy) or pay out (sell): the BCH side of the trade the fee is taken from. */
+function poolBchMoved(tx: Tx, sourceOutputs: Output[], poolIndexes: Set<number>): bigint {
+  let delta = 0n;
+  for (const i of poolIndexes) delta += (tx.outputs[i]?.valueSatoshis ?? 0n) - (sourceOutputs[i] as Output).valueSatoshis;
+  return delta < 0n ? -delta : delta;
+}
+
 export const checkTransaction = (tx: Tx, sourceOutputs: Output[], e: Expectation): CheckResult => {
   if (tx.version !== 2) return fail(5, 'transaction version is not 2');
   if (tx.locktime !== 0) return fail(5, 'locktime is not 0');
@@ -96,6 +109,8 @@ export const checkTransaction = (tx: Tx, sourceOutputs: Output[], e: Expectation
 
   // Rule 1 and 3: every output is a pool continuation, the user's own, an expected deposit or the memo.
   const deposits = new Map((e.deposits ?? []).map((d) => [d.lockingBytecode.toLowerCase(), d.sats]));
+  const feeLock = e.sampanFee && e.sampanFee.bps > 0 ? e.sampanFee.lockingBytecode.toLowerCase() : undefined;
+  let feeDue = feeLock ? sampanFeeSats(poolBchMoved(tx, sourceOutputs, poolIndexes), e.sampanFee!.bps) : 0n;
   const userFlow: Flow = { sats: 0n, tokens: new Map() };
   for (const [i, out] of tx.outputs.entries()) {
     const lock = hex(out.lockingBytecode);
@@ -104,6 +119,10 @@ export const checkTransaction = (tx: Tx, sourceOutputs: Output[], e: Expectation
       if (lock !== hex(src.lockingBytecode) || catOf(out) !== catOf(src))
         return fail(1, `output ${i} does not continue the pool spent at the same index`);
       if (out.token?.nft || src.token?.nft) return fail(1, `output ${i} moves an NFT`);
+      continue;
+    }
+    if (feeDue > 0n && lock === feeLock && !out.token && out.valueSatoshis === feeDue) {
+      feeDue = 0n;
       continue;
     }
     if (user.has(lock)) {
@@ -117,10 +136,12 @@ export const checkTransaction = (tx: Tx, sourceOutputs: Output[], e: Expectation
       continue;
     }
     if (e.opReturn !== undefined && lock === e.opReturn.toLowerCase() && out.valueSatoshis === 0n && !out.token) continue;
+    if (lock === feeLock) return fail(3, `output ${i} to the fee address is not the Sampan fee for this trade`);
     return fail(1, `output ${i} pays an address that is not part of this action`);
   }
   for (const i of poolIndexes) if (i >= tx.outputs.length) return fail(1, `pool input ${i} has no output at the same index`);
   if (deposits.size > 0) return fail(3, 'an expected deposit output is missing');
+  if (feeDue > 0n) return fail(3, 'the Sampan fee output is missing');
 
   // Rule 2: what leaves the wallet is no more than what was shown, plus a capped fee.
   for (const i of signed.keys()) addFlow(userFlow, sourceOutputs[i] as Output, -1n);

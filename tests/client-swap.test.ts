@@ -54,7 +54,7 @@ const counting = (inner: WalletSession): WalletSession & { calls: SignRequest[] 
 
 const intentFor = async (api: Api, side: 'buy' | 'sell', amount: bigint): Promise<SwapIntent> => {
   const q = await quoteSwap(api, { token: 'PUSD', side, amount });
-  return { token: 'PUSD', side, amount, minReceive: BigInt(q.minReceive), category, feeCapSats: BigInt(config.fees.capSats), userPrompt: 'Swap' };
+  return { token: 'PUSD', side, amount, minReceive: BigInt(q.minReceive), category, feeCapSats: BigInt(config.fees.capSats), userPrompt: 'Swap', business: config.business };
 };
 
 describe('page swap client on the fake network', { timeout: 30_000 }, () => {

@@ -11,6 +11,8 @@ export interface Intent {
   receive: { category: string; min: string };
   /** Exact plain BCH outputs the page showed, e.g. the landing address it computed (lock hex, satoshis). */
   deposits?: Array<{ lockingBytecode: string; sats: string }>;
+  /** Sampan fee the page showed (business.feeBps to this locking bytecode); absent = no fee output. */
+  sampanFee?: { lockingBytecode: string; bps: number };
   usd: number;
 }
 
@@ -58,6 +60,7 @@ export function review(
     },
     feeCapSats: ctx.feeCapSats,
     receive: { category: intent.receive.category === BCH ? BCH : intent.receive.category.toLowerCase(), min: BigInt(intent.receive.min) },
+    ...(intent.sampanFee ? { sampanFee: intent.sampanFee } : {}),
   };
   const res = checkTransaction(tx, ask.sourceOutputs.map(outputFromWire), expectation);
   return res.ok ? res : { ok: false, reason: `checkTransaction rule ${res.rule}: ${res.reason}` };

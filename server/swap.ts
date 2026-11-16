@@ -3,6 +3,7 @@
 // run through the libauth VM before anything is returned. Limits from config are enforced here.
 import { hexToBin } from '@bitauth/libauth';
 import { parseAddress, type CashPrefix } from '../core/address.js';
+import { feeLockingHex, sampanFeeSats } from '../core/business.js';
 import type { SampanConfig } from '../core/config.js';
 import { selectTrade, type SelectedTrade, type TradeSide } from '../core/pools/trade.js';
 import { buildSwapTx, SwapBuildError } from '../core/tx/swap.js';
@@ -34,8 +35,10 @@ export interface Quote {
   side: TradeSide;
   supply: bigint;
   demand: bigint;
-  /** Lowest amount the build will accept after slippage. */
+  /** Lowest amount the build will accept after slippage (for a sell: after the Sampan fee). */
   minReceive: bigint;
+  /** Sampan fee in satoshis (business.feeBps of the BCH side; 0 when off or dust). */
+  sampanFeeSats: bigint;
   pools: number;
   usd: number;
 }
@@ -95,8 +98,9 @@ export class SwapService {
     const usd = Number(tokens) / 10 ** decimals;
     if (sats < BigInt(limits.localMinSats)) throw new SwapError('below_min', `the BCH side must be at least ${limits.localMinSats} sats`);
     if (usd > limits.maxUsd) throw new SwapError('above_max', `at most ${limits.maxUsd} USD per swap`);
-    const minReceive = (t.demand * BigInt(10_000 - cauldron.slippageBps)) / 10_000n;
-    return { token, category: t.category, side: t.side, supply: t.supply, demand: t.demand, minReceive, pools: t.legs.length, usd };
+    const fee = sampanFeeSats(sats, this.o.config.business.feeBps);
+    const minReceive = (netDemand(t, fee) * BigInt(10_000 - cauldron.slippageBps)) / 10_000n;
+    return { token, category: t.category, side: t.side, supply: t.supply, demand: t.demand, minReceive, sampanFeeSats: fee, pools: t.legs.length, usd };
   }
 
   async quote(r: QuoteRequest): Promise<Quote> {
@@ -129,8 +133,9 @@ export class SwapService {
       const fresh = await refreshPools(this.o.chain, await this.o.pools.active(category));
       const trade = this.trade(fresh, category, r);
       const quote = this.toQuote(r.token, decimals, trade);
-      if (trade.demand < r.minReceive) throw new SwapError('price_moved', 'the price moved past the quoted minimum; get a new quote');
-      const margin = BigInt(this.o.config.landing.tokenDustSats + this.o.config.fees.capSats);
+      if (netDemand(trade, quote.sampanFeeSats) < r.minReceive) throw new SwapError('price_moved', 'the price moved past the quoted minimum; get a new quote');
+      const margin = BigInt(this.o.config.landing.tokenDustSats + this.o.config.fees.capSats) + quote.sampanFeeSats;
+      const feeLock = feeLockingHex(this.o.config.business, this.o.prefix);
       const picked = pickCoins(coins, r.side, category, trade.supply, margin);
       let built: BuiltTx;
       try {
@@ -141,6 +146,7 @@ export class SwapService {
           changeLockingBytecode: hex(change),
           satsPerByte: BigInt(this.o.config.fees.satsPerByte),
           tokenDustSats: BigInt(this.o.config.landing.tokenDustSats),
+          ...(feeLock && quote.sampanFeeSats > 0n ? { sampanFee: { lockingBytecode: hex(feeLock), sats: quote.sampanFeeSats } } : {}),
         });
       } catch (e) {
         if (e instanceof SwapBuildError) throw new SwapError('not_enough_funds', e.message);
@@ -176,6 +182,9 @@ export interface PathCoin {
 }
 
 const hex = hexToBin;
+
+/** What the user receives from the pools: for a sell, the BCH proceeds less the Sampan fee. */
+const netDemand = (t: SelectedTrade, fee: bigint): bigint => (t.side === 'sell' ? t.demand - fee : t.demand);
 
 /** Plain BCH coins and coins carrying only the swapped token; NFTs and other tokens are never touched. */
 const usable = (u: ChainUtxo, category: string): Array<Omit<UserCoin, 'lockingBytecode'>> => {

@@ -136,4 +136,66 @@ describe('checkTransaction', () => {
       }
     }
   });
+
+  describe('Sampan fee', () => {
+    const FEE_LOCK = `76a914${'11'.repeat(20)}88ac`;
+    const BPS = 30;
+    const withFee = (side: 'buy' | 'sell') => {
+      const trade = side === 'buy'
+        ? selectTrade(pools, PUSD, { side: 'buy', target: 'supply', amount: 1_000_000n, maxPools: 3, satsPerByte: 1n })
+        : selectTrade(pools, PUSD, { side: 'sell', target: 'supply', amount: 300n, maxPools: 2, satsPerByte: 1n });
+      const bchSide = side === 'buy' ? trade.supply : trade.demand;
+      const fee = (bchSide * BigInt(BPS)) / 10_000n;
+      const coins = side === 'buy' ? [coin(0, 2_000_000n)] : [coin(0, 200_000n, 1_000n)];
+      const built = buildSwapTx({ ...base, trade, coins, sampanFee: { lockingBytecode: hexToBin(FEE_LOCK), sats: fee } });
+      const e: Expectation = {
+        userLockingBytecodes: [binToHex(userLock)],
+        inputPaths: built.userInputIndexes.map((inputIndex) => ({ inputIndex, path: '0/0' })),
+        poolOwnerPkhs: trade.legs.map((l) => l.pool.ownerPkh),
+        spend: side === 'buy' ? { sats: trade.supply + fee, tokens: {} } : { sats: 0n, tokens: { [PUSD]: trade.supply } },
+        feeCapSats: FEE_CAP,
+        receive: side === 'buy' ? { category: PUSD, min: trade.demand } : { category: BCH, min: trade.demand - fee - built.feeSats },
+        sampanFee: { lockingBytecode: FEE_LOCK, bps: BPS },
+      };
+      return { built, e, fee, feeIndex: built.transaction.outputs.length - 1 };
+    };
+
+    it('accepts the fee output of the trade, buy and sell', () => {
+      for (const side of ['buy', 'sell'] as const) {
+        const { built, e, fee } = withFee(side);
+        expect(fee).toBeGreaterThanOrEqual(546n);
+        expect(run(built.transaction, built.sourceOutputs, e)).toEqual({ ok: true });
+      }
+    });
+
+    it('sabotage: the fee paid to another address is refused', () => {
+      const { built, e, feeIndex } = withFee('buy');
+      const tx = structuredClone(built.transaction);
+      tx.outputs[feeIndex]!.lockingBytecode = otherLock;
+      expect(ruleOf(run(tx, built.sourceOutputs, e))).toBe(1);
+    });
+
+    it('sabotage: a larger or smaller fee is refused, and so is a missing one', () => {
+      const { built, e, feeIndex } = withFee('buy');
+      for (const delta of [1n, -1n]) {
+        const tx = structuredClone(built.transaction);
+        tx.outputs[feeIndex]!.valueSatoshis += delta;
+        tx.outputs[feeIndex - 1]!.valueSatoshis -= delta;
+        expect(ruleOf(run(tx, built.sourceOutputs, e))).toBe(3);
+      }
+      const tx = structuredClone(built.transaction);
+      const dropped = tx.outputs.pop()!;
+      tx.outputs[tx.outputs.length - 1]!.valueSatoshis += dropped.valueSatoshis;
+      expect(ruleOf(run(tx, built.sourceOutputs, e))).toBe(3);
+    });
+
+    it('sabotage: a fee output while the page has the fee off is refused', () => {
+      const { built, e } = withFee('sell');
+      const off: Expectation = { ...e, receive: { category: BCH, min: 0n } };
+      delete off.sampanFee;
+      expect(ruleOf(run(built.transaction, built.sourceOutputs, off))).toBe(1);
+      expect(ruleOf(run(built.transaction, built.sourceOutputs, { ...e, sampanFee: { lockingBytecode: FEE_LOCK, bps: 0 } }))).toBe(1);
+    });
+  });
 });
+

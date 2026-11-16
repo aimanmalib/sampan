@@ -80,6 +80,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
           category: token.category,
           ...(q.swap ? { swapMinReceive: BigInt(q.swap.minReceive) } : {}),
           feeCapSats: BigInt(config.connect.feeCapSats),
+          business: config.business,
           prompts: {
             swap: t('out.prompt.swap', { pay, min: q.swap ? formatUnits(BigInt(q.swap.minReceive), BCH_DECIMALS) : '' }),
             deposit: t('out.prompt.deposit', { ...vars, pay, about: shown(q.expectedOut, q.outDecimals), to: short(destination.trim()) }),

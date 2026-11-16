@@ -1,5 +1,6 @@
 // Shape of config/sampan.json and the checks run when it is loaded.
 // Pure: no I/O. The server reads the file; the page receives the public part from /api/config.
+import { validateBusiness, type BusinessConfig } from './business.js';
 
 export type RouteId = 'near-intents' | 'thorchain';
 export type ActiveRoute = RouteId | 'none';
@@ -131,6 +132,7 @@ export interface SampanConfig {
     testAddresses: string[];
     quotePayloadHours: number;
   };
+  business: BusinessConfig;
 }
 
 /** The part of the config the page needs. Everything else stays on the server. */
@@ -151,6 +153,8 @@ export interface PublicConfig {
   connect: SampanConfig['connect'] & { gapLimit: number; feeCapSats: number };
   /** How often the page asks GET /api/health again: intervalSeconds, or retrySeconds while something is not ok. */
   health: { intervalSeconds: number; retrySeconds: number };
+  /** The page rebuilds the expected Sampan fee output from these two values. */
+  business: Pick<BusinessConfig, 'feeBps' | 'feeAddress'>;
 }
 
 const HEX32 = /^[0-9a-fA-F]{64}$/;
@@ -253,6 +257,7 @@ export function validateConfig(c: SampanConfig): string[] {
   for (const url of [c.banner.deckUrl, c.banner.repoUrl, c.site.feedbackUrl]) {
     need(url === '' || isHttpsUrl(url) || url.startsWith('/'), `URL must be empty, a path or https: ${url}`);
   }
+  errors.push(...validateBusiness(c.business));
   return errors;
 }
 
@@ -313,5 +318,6 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     legal: c.legal,
     connect: { ...c.connect, gapLimit: c.wallet.gapLimit, feeCapSats: c.fees.capSats },
     health: { intervalSeconds: c.ops.healthIntervalSeconds, retrySeconds: c.ops.healthRetrySeconds },
+    business: { feeBps: c.business.feeBps, feeAddress: c.business.feeAddress },
   };
 }
