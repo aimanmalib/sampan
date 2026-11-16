@@ -59,6 +59,8 @@ test('indexer down: the card names Cauldron as not answering', async ({ page }, 
 test('Bitcoin Cash servers down: the card names Bitcoin Cash as not answering', async ({ page }, info) => {
   const uncaught = await open(page, 'electrum');
   await expect(page.locator('.provider-note')).toContainText(en['health.bch'], { timeout: 15_000 });
+  // The pools are checked on the Bitcoin Cash servers: with those down, Cauldron is not blamed.
+  await expect(page.locator('.provider-note')).not.toContainText(en['health.cauldron']);
   await fits(page, 'electrum', info.project.name);
   expect(uncaught).toEqual([]);
 });

@@ -27,7 +27,10 @@ const STATE_KEY: Record<HealthState, HealthKey> = { ok: 'health.ok', down: 'heal
 export function healthParts(h: HealthReport | null, t: (key: HealthKey) => string, routeName: (id: string) => string): HealthPart[] {
   if (!h || h.checkedAt === null) return [];
   const part = (id: HealthPart['id'], name: string, state: HealthState): HealthPart => ({ id, name, state, text: `${name} ${t(STATE_KEY[state])}` });
-  const parts = [part('cauldron', t('health.cauldron'), h.cauldron ? 'ok' : 'down'), part('bch', t('health.bch'), h.bch ? 'ok' : 'down')];
+  // Cauldron unknown after a check = the Bitcoin Cash servers are down and the pools could not be checked: only
+  // Bitcoin Cash is named then, so the page does not blame a provider that may be answering.
+  const parts = h.cauldron === null ? [] : [part('cauldron', t('health.cauldron'), h.cauldron ? 'ok' : 'down')];
+  parts.push(part('bch', t('health.bch'), h.bch ? 'ok' : 'down'));
   if (h.route) parts.push(part('route', routeName(h.route.id), h.route.open === null ? 'down' : h.route.open ? 'ok' : 'halted'));
   return parts;
 }

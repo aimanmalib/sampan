@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import { normalizeConfig, patchConfig, type SampanConfig } from '../core/config.js';
 import { buildApp } from '../server/app.js';
+import { ChainUnavailableError } from '../server/chain/types.js';
 import { HealthMonitor } from '../server/health.js';
 import { createServices, type Services } from '../server/services.js';
 
@@ -57,6 +58,18 @@ describe('HealthMonitor', () => {
     const r = await m.check();
     expect([r.cauldron, r.bch, r.height, r.route]).toEqual([false, false, null, { id: 'thorchain', open: false }]);
     expect(m.routeOpen()).toBe(false);
+  });
+
+  it('leaves Cauldron unknown when the pools cannot be checked because the Bitcoin Cash servers are down', async () => {
+    const chainDown = async (): Promise<number> => {
+      throw new ChainUnavailableError('Bitcoin Cash servers unavailable');
+    };
+    const m = new HealthMonitor({ pools: chainDown, tipHeight: fail, intervalMs: 60_000, retryMs: 5_000 });
+    const r = await m.check();
+    expect([r.cauldron, r.bch]).toEqual([null, false]);
+    expect(m.allOk()).toBe(false);
+    const indexerDown = new HealthMonitor({ pools: fail, tipHeight: async () => 1, intervalMs: 60_000, retryMs: 5_000 });
+    expect((await indexerDown.check()).cauldron).toBe(false);
   });
 
   it('keeps a route that cannot be asked unknown, so crossings stay open and the next check comes after retryMs', async () => {

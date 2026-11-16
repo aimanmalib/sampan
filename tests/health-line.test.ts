@@ -24,6 +24,11 @@ describe('healthParts', () => {
     expect(parts[2]!.text).toBe(`${en['route.thorchain']} ${en['health.halted']}`);
   });
 
+  it('names only Bitcoin Cash when the server could not check the pools (Cauldron unknown after a check)', () => {
+    const parts = healthParts(report({ cauldron: null, bch: false }), t, name);
+    expect(parts.map((p) => [p.id, p.state])).toEqual([['bch', 'down']]);
+  });
+
   it('shows a route that could not be asked as not answering, not as paused', () => {
     const parts = healthParts(report({ route: { id: 'thorchain', open: null } }), t, name);
     expect(parts[2]).toMatchObject({ id: 'route', state: 'down', text: `${en['route.thorchain']} ${en['health.down']}` });

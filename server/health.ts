@@ -4,10 +4,12 @@
 // page; a route that reports a halt pauses new crossings on the server and shows "Paused by the route" on the page.
 // Alerts are sent from the host (deploy/uptime.sh), not from this process.
 import type { RouteId } from '../core/config.js';
+import { ChainUnavailableError } from './chain/types.js';
 
 export interface HealthReport {
   /** Unix milliseconds of the last finished check, or null before the first one. */
   checkedAt: number | null;
+  /** Null before the first check, and while the Bitcoin Cash servers are down (pools cannot be checked then). */
   cauldron: boolean | null;
   bch: boolean | null;
   height: number | null;
@@ -66,14 +68,24 @@ export class HealthMonitor {
 
   private async run(): Promise<HealthReport> {
     const { route } = this.o;
+    // Pools are checked against the Bitcoin Cash servers; with those down the indexer's own state is unknown.
+    let poolsUnknown = false;
+    const pools0 = async (): Promise<number> => {
+      try {
+        return await this.o.pools();
+      } catch (e) {
+        poolsUnknown = e instanceof ChainUnavailableError;
+        throw e;
+      }
+    };
     const [pools, height, open] = await Promise.all([
-      settle('cauldron', this.o.pools, this.o.log),
+      settle('cauldron', pools0, this.o.log),
       settle('bch', this.o.tipHeight, this.o.log),
       route ? settle('route', route.open, this.o.log) : Promise.resolve(null),
     ]);
     this.report = {
       checkedAt: (this.o.now ?? Date.now)(),
-      cauldron: pools !== null && pools > 0,
+      cauldron: poolsUnknown ? null : pools !== null && pools > 0,
       bch: height !== null && height > 0,
       height: height !== null && height > 0 ? height : null,
       // A route that cannot be asked stays unknown (null): shown as not answering, never as paused.
