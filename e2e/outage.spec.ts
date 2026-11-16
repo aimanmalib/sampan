@@ -17,6 +17,22 @@ async function open(page: Page, mode: (typeof OUTAGE_MODES)[number]): Promise<st
   return uncaught;
 }
 
+/** The reload button is the one way back, so it must look like a button that works: the primary colour, not the browser grey. */
+async function reloadLooksActive(page: Page): Promise<void> {
+  const reload = page.getByRole('button', { name: en['error.reload'] });
+  await expect(reload).toBeVisible();
+  await expect(reload).toBeEnabled();
+  const [actual, primary] = await reload.evaluate((el) => {
+    const probe = document.createElement('span');
+    probe.className = 'button button--primary';
+    document.body.append(probe);
+    const want = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return [getComputedStyle(el).backgroundColor, want];
+  });
+  expect(actual).toBe(primary);
+}
+
 async function bodyText(page: Page): Promise<string> {
   return (await page.locator('body').innerText()).trim();
 }
@@ -67,7 +83,18 @@ test('one tab breaks: the error card stands in that tab, the rest of the page st
   await expect(page.locator('#tab-panel .crash__title')).toHaveText(en['error.title']);
   await expect(page.locator('.topbar')).toBeVisible();
   await expect(page.locator('figure.scene')).toBeVisible();
-  await expect(page.getByRole('button', { name: en['error.reload'] })).toBeVisible();
+  await reloadLooksActive(page);
   await fits(page, 'render', info.project.name);
+  expect(uncaught).toEqual([]);
+});
+
+test('the page itself breaks: the headline and the error card replace the app', async ({ page }, info) => {
+  const uncaught = await open(page, 'app');
+  await expect(page.locator('main.page > .crash')).toBeVisible();
+  await expect(page.locator('.crash__title')).toHaveText(en['error.title']);
+  await expect(page.locator('.wordmark')).toBeVisible();
+  await expect(page.locator('#tab-panel')).toHaveCount(0);
+  await reloadLooksActive(page);
+  await fits(page, 'app', info.project.name);
   expect(uncaught).toEqual([]);
 });

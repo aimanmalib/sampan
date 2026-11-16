@@ -11,7 +11,7 @@ export function ErrorCard() {
     <div className="crash" role="alert">
       <p className="crash__title">{t('error.title')}</p>
       <p className="crash__body">{t('error.body')}</p>
-      <button type="button" className="button" onClick={() => location.reload()}>
+      <button type="button" className="button button--primary" onClick={() => location.reload()}>
         {t('error.reload')}
       </button>
     </div>
@@ -22,12 +22,17 @@ export function ErrorCard() {
 export function PageCrash() {
   const { t } = useText();
   return (
-    <main className="page">
-      <section className="hero">
-        <h1 className="hero__title">{t('hero.title')}</h1>
-      </section>
-      <ErrorCard />
-    </main>
+    <>
+      <nav className="topbar">
+        <span className="wordmark">Sampan</span>
+      </nav>
+      <main className="page">
+        <section className="hero">
+          <h1 className="hero__title">{t('hero.title')}</h1>
+        </section>
+        <ErrorCard />
+      </main>
+    </>
   );
 }
 

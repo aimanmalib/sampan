@@ -5,11 +5,12 @@
 //   api      - every /api/ path answers 503, /api/config included (what a crashed or unreachable server looks like)
 //   chunk    - every script under /assets/ answers 404 (a tab left open across a deploy, or a broken upload)
 //   render   - /api/config sends a config the Swap tab cannot draw (a page bug in one tab)
+//   app      - /api/config sends a config without its route, which the page itself reads (a bug outside every tab)
 import type { FastifyInstance } from 'fastify';
 import { ChainUnavailableError, type Chain } from './chain/types.js';
 import type { FetchActive } from './indexer.js';
 
-export const OUTAGES = ['indexer', 'electrum', 'api', 'chunk', 'render'] as const;
+export const OUTAGES = ['indexer', 'electrum', 'api', 'chunk', 'render', 'app'] as const;
 export type Outage = (typeof OUTAGES)[number];
 
 /** Reads SAMPAN_FAKE_OUTAGE; an unknown value is an error so a typo cannot pass as "no outage". */
@@ -35,7 +36,7 @@ export function downChain(): Chain {
 /** An indexer that never answers. */
 export const downIndexer: FetchActive = () => Promise.reject(new Error('fake outage: the Cauldron indexer does not answer'));
 
-/** Request-level outages (api, chunk, render). The provider outages are wired in createServices. */
+/** Request-level outages (api, chunk, render, app). The provider outages are wired in createServices. */
 export function registerOutage(app: FastifyInstance, outage: Outage | null): void {
   if (outage === 'api') {
     app.addHook('onRequest', async (request, reply) => {
@@ -53,6 +54,14 @@ export function registerOutage(app: FastifyInstance, outage: Outage | null): voi
     app.addHook('onSend', async (request, _reply, payload) => {
       if (request.url !== '/api/config' || typeof payload !== 'string') return payload;
       return JSON.stringify({ ...(JSON.parse(payload) as object), tokens: {} });
+    });
+  }
+  if (outage === 'app') {
+    app.addHook('onSend', async (request, _reply, payload) => {
+      if (request.url !== '/api/config' || typeof payload !== 'string') return payload;
+      const body = JSON.parse(payload) as Record<string, unknown>;
+      delete body.route;
+      return JSON.stringify(body);
     });
   }
 }

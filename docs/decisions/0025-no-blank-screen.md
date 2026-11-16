@@ -26,7 +26,7 @@ whether Sampan is broken, a provider is down, or their own connection failed.
   page elsewhere, with the text of every language from `lang/*.json` and the colour tokens of the built stylesheet.
   Its one inline style is allowed by a sha256 hash in that response's CSP only. A missing file outside `/api/`
   gets the same page as a 404. 4xx answers are unchanged.
-- `SAMPAN_FAKE_OUTAGE=indexer|electrum|api|chunk|render` (fake network only; unknown values refuse to start)
+- `SAMPAN_FAKE_OUTAGE=indexer|electrum|api|chunk|render|app` (fake network only; unknown values refuse to start)
   makes one part fail on purpose. `e2e/outage.spec.ts` runs each mode in Chromium and WebKit on an iPhone 13.
 
 ## Consequences

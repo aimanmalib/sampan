@@ -122,6 +122,13 @@ describe('fake outages (SAMPAN_FAKE_OUTAGE)', () => {
     expect((await a.inject('/api/config')).json().tokens).toEqual({});
   });
 
+  it('app: /api/config comes without the route the page reads', async () => {
+    const a = await start('app');
+    const body = (await a.inject('/api/config')).json();
+    expect(body).not.toHaveProperty('route');
+    expect(body).toHaveProperty('tokens');
+  });
+
   it('indexer and electrum: health names the provider that is down', async () => {
     for (const [outage, down] of [['indexer', 'cauldron'], ['electrum', 'bch']] as const) {
       const services = createServices({ config, fake: true, dbFile: ':memory:', trustedProxies: [], fakeFixture: fixture, outage });

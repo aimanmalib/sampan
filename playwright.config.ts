@@ -13,7 +13,7 @@ const e2ePatch = { features: { swap: true, landing: false }, rate: { quotesPerMi
 const landingPatch = { ...e2ePatch, features: { swap: true, landing: true } };
 const outPatch = { ...e2ePatch, compliance: { crossChainEnabled: true } };
 /** One fake server per SAMPAN_FAKE_OUTAGE mode, on the ports after the three above (e2e/outage.spec.ts). */
-export const OUTAGE_MODES = ['indexer', 'electrum', 'api', 'chunk', 'render'] as const;
+export const OUTAGE_MODES = ['indexer', 'electrum', 'api', 'chunk', 'render', 'app'] as const;
 const outagePort = (i: number) => port + 3 + i;
 const fakeServer = (p: number, patch: unknown, outage?: string) => ({
   command: 'node dist/server/main.js',
