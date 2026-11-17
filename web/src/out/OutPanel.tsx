@@ -38,6 +38,11 @@ type Run =
 /** Route amounts (1e8 units) shown with two decimals, rounded down. */
 const shown = (v: string | bigint, decimals: number): string =>
   formatUnits(BigInt(v) / 10n ** BigInt(Math.max(0, decimals - SHOWN_DECIMALS)), Math.min(decimals, SHOWN_DECIMALS), SHOWN_DECIMALS);
+/** The expected amount, rounded to the nearest like the cost card's "receive about" (the minimum stays rounded down). */
+const about = (v: string | bigint, decimals: number): string => {
+  const step = 10n ** BigInt(Math.max(0, decimals - SHOWN_DECIMALS));
+  return formatUnits((BigInt(v) + step / 2n) / step, Math.min(decimals, SHOWN_DECIMALS), SHOWN_DECIMALS);
+};
 const short = (a: string): string => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
 export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wallet: Wallet; onSwap: () => void }) {
@@ -94,7 +99,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
           business: config.business,
           prompts: {
             swap: t('out.prompt.swap', { pay, min: q.swap ? formatUnits(BigInt(q.swap.minReceive), BCH_DECIMALS) : '' }),
-            deposit: t('out.prompt.deposit', { ...vars, pay, about: shown(q.expectedOut, q.outDecimals), to: short(destination.trim()) }),
+            deposit: t('out.prompt.deposit', { ...vars, pay, about: about(q.expectedOut, q.outDecimals), to: short(destination.trim()) }),
           },
         },
         onStep: (at) => setRun({ phase: 'running', at }),
@@ -203,7 +208,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
       ) : null}
       <p className="swap__receive" aria-live="polite">
         {q
-          ? t('out.receive', { ...vars, about: shown(q.expectedOut, q.outDecimals), min: shown(q.minOut, q.outDecimals) })
+          ? t('out.receive', { ...vars, about: about(q.expectedOut, q.outDecimals), min: shown(q.minOut, q.outDecimals) })
           : quote.status === 'loading'
             ? t('swap.quoting')
             : quote.status === 'error'

@@ -80,6 +80,8 @@ test('Send out from BCH: the route fees of the capture, named, and a total that 
   await headline(page, expected);
   // One statement of the cost: the older fee line and fee details are not shown next to the card.
   await expect(page.locator('.out .swap__fees')).toBeHidden();
+  // The receive line above the card rounds the same way as the card.
+  await expect(page.locator('.out .swap__receive')).toContainText(`about ${cardText(expected).receive.replace('USD ', '')} `);
   await expect(page.locator('.out')).not.toContainText(en['out.feeHigh'].split('{pct}')[0]!);
   await expect(page.getByTestId('cost-clock')).toContainText(/holds for [0-9]+:[0-5][0-9]/);
   await fitsAndPasses(page);
