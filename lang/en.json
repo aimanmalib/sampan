@@ -46,6 +46,8 @@
   "wallet.copyLink": "Copy link",
   "wallet.copied": "Link copied",
   "wallet.pasteHint": "Paste it in your wallet's WizardConnect screen.",
+  "wallet.retryHint": "Still waiting? Your wallet may have closed this connection. Start again with a new link.",
+  "wallet.startAgain": "Start again",
   "wallet.scanning": "Looking for your coins",
   "wallet.scanFailed": "Could not read your wallet's coins. Disconnect and connect again.",
   "wallet.balance": "In your wallet: {bch} BCH and {token} {symbol}",

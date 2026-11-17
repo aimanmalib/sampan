@@ -2,6 +2,7 @@
 // SAMPAN_FAKE=1. After connecting, the wallet's coins are found with /api/wallet/scan.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useWizardConnect, type UseWizardConnectResult } from '@wizardconnect/react';
+import { clearSession, DEFAULT_SESSION_KEY } from '@wizardconnect/dapp';
 import { scanWallet, type WalletView } from '../../../core/client/scan';
 import type { WalletSession } from '../../../core/client/session';
 import { api } from '../api';
@@ -21,6 +22,10 @@ export interface Wallet {
   disconnect(): Promise<void>;
   /** Scan again (after a swap). */
   refresh(): void;
+  /** True once "Waiting for your wallet" has lasted connect.retryHintSeconds. */
+  waitingLong: boolean;
+  /** Drop the stored pairing and reload, so the next connect starts with a new link. */
+  startAgain(): void;
 }
 
 export function useWallet(config: LoadedConfig | null, fakeName: string): Wallet {
@@ -88,5 +93,30 @@ export function useWallet(config: LoadedConfig | null, fakeName: string): Wallet
       ? 'connecting'
       : 'idle';
 
-  return { status, session, view, uri: wiz.uri, qrUri: wiz.qrUri, connect, disconnect, refresh };
+  const waitingLong = useLongWait(status === 'connecting', config?.connect.retryHintSeconds ?? null);
+
+  return { status, session, view, uri: wiz.uri, qrUri: wiz.qrUri, connect, disconnect, refresh, waitingLong, startAgain };
+}
+
+/** True after `seconds` of `active`; false again as soon as `active` ends. */
+function useLongWait(active: boolean, seconds: number | null): boolean {
+  const [long, setLong] = useState(false);
+  useEffect(() => {
+    if (!active || seconds === null) return;
+    const id = setTimeout(() => setLong(true), seconds * 1000);
+    return () => {
+      clearTimeout(id);
+      setLong(false);
+    };
+  }, [active, seconds]);
+  return active && long;
+}
+
+/**
+ * A stored pairing whose wallet never answers keeps the library reconnecting, and its disconnect waits for a
+ * relay that may never be ready. Clearing the stored pairing and reloading is the one exit that always works.
+ */
+function startAgain(): void {
+  clearSession(DEFAULT_SESSION_KEY);
+  location.reload();
 }

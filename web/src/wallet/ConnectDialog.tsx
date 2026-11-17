@@ -1,6 +1,6 @@
 // WizardConnect pairing: the library's QR code inside Sampan's own dialog (translated labels, 44 px targets,
 // Escape to close, no blurred backdrop), plus "Copy link" for a wallet on the same phone.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AlphanumericQRCode } from '@wizardconnect/react';
 import { useText } from '../i18n';
 
@@ -12,7 +12,7 @@ function qrColours(): { foreground: string; background: string } {
   return { foreground: css.getPropertyValue('--ink').trim(), background: css.getPropertyValue('--card').trim() };
 }
 
-export function ConnectDialog(props: { uri: string; qrUri: string; onClose: () => void }) {
+export function ConnectDialog(props: { uri: string; qrUri: string; onClose: () => void; children?: ReactNode }) {
   const { t } = useText();
   const colours = useMemo(() => qrColours(), []);
   const [copied, setCopied] = useState(false);
@@ -55,6 +55,7 @@ export function ConnectDialog(props: { uri: string; qrUri: string; onClose: () =
           {copied ? t('wallet.copied') : t('wallet.copyLink')}
         </button>
         <p className="connect__text">{t('wallet.pasteHint')}</p>
+        {props.children}
       </div>
     </div>
   );

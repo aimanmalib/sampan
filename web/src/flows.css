@@ -135,6 +135,12 @@
   text-underline-offset: 0.18em;
   cursor: pointer;
 }
+.retry-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
 .button--quiet {
   background: var(--paper);
   color: var(--ink);

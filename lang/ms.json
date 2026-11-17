@@ -46,6 +46,8 @@
   "wallet.copyLink": "Salin pautan",
   "wallet.copied": "Pautan disalin",
   "wallet.pasteHint": "Tampalkannya di skrin WizardConnect dompet anda.",
+  "wallet.retryHint": "Masih menunggu? Dompet anda mungkin telah menutup sambungan ini. Mula semula dengan pautan baharu.",
+  "wallet.startAgain": "Mula semula",
   "wallet.scanning": "Mencari syiling anda",
   "wallet.scanFailed": "Syiling dompet anda tidak dapat dibaca. Putuskan dan sambung semula.",
   "wallet.balance": "Dalam dompet anda: {bch} BCH dan {token} {symbol}",

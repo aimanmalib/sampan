@@ -83,7 +83,13 @@ export interface SampanConfig {
   /** Wallet scan: stop after `gapLimit` unused addresses in a row; results are kept in memory only. */
   wallet: { gapLimit: number; maxAddressesPerScan: number; scanCacheSeconds: number };
   /** Page side of the BCH wallet connection: WizardConnect relays, scan rounds and the explorer link. */
-  connect: { relayUrls: string[]; maxScanRounds: number; explorerTxUrl: string };
+  connect: {
+    relayUrls: string[];
+    maxScanRounds: number;
+    explorerTxUrl: string;
+    /** Seconds of "Waiting for your wallet" before the page offers to start again with a new link. */
+    retryHintSeconds: number;
+  };
   landing: {
     toleranceBps: number;
     toleranceBpsDirect: number;
@@ -246,6 +252,7 @@ export function validateConfig(c: SampanConfig): string[] {
     'connect.relayUrls: wss URLs (host and port only)',
   );
   need(posInt(c.connect?.maxScanRounds), 'connect.maxScanRounds: positive integer');
+  need(posInt(c.connect?.retryHintSeconds), 'connect.retryHintSeconds: positive integer');
   need(isHttpsUrl(c.connect?.explorerTxUrl ?? '') && c.connect.explorerTxUrl.includes('{txid}'), 'connect.explorerTxUrl: https URL with {txid}');
   need(posInt(c.rate.quotesPerMinute) && posInt(c.rate.crossingsPerHour) && posInt(c.rate.invoicesPerHour), 'rate: positive integers');
   need(c.rate.cloudflareCidrs.every((r) => /^[0-9a-fA-F:.]+\/\d{1,3}$/.test(r)), 'rate.cloudflareCidrs: CIDR ranges');

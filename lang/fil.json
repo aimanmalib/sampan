@@ -46,6 +46,8 @@
   "wallet.copyLink": "Kopyahin ang link",
   "wallet.copied": "Nakopya ang link",
   "wallet.pasteHint": "I-paste ito sa WizardConnect screen ng iyong wallet.",
+  "wallet.retryHint": "Naghihintay pa rin? Maaaring isinara ng iyong wallet ang koneksyong ito. Magsimula muli gamit ang bagong link.",
+  "wallet.startAgain": "Magsimula muli",
   "wallet.scanning": "Hinahanap ang iyong coins",
   "wallet.scanFailed": "Hindi mabasa ang coins ng iyong wallet. Mag-disconnect at kumonekta ulit.",
   "wallet.balance": "Nasa iyong wallet: {bch} BCH at {token} {symbol}",

@@ -46,6 +46,8 @@
   "wallet.copyLink": "Salin tautan",
   "wallet.copied": "Tautan tersalin",
   "wallet.pasteHint": "Tempel di layar WizardConnect dompet Anda.",
+  "wallet.retryHint": "Masih menunggu? Dompet Anda mungkin telah menutup koneksi ini. Mulai lagi dengan tautan baru.",
+  "wallet.startAgain": "Mulai lagi",
   "wallet.scanning": "Mencari koin Anda",
   "wallet.scanFailed": "Tidak dapat membaca koin di dompet Anda. Putuskan lalu hubungkan lagi.",
   "wallet.balance": "Di dompet Anda: {bch} BCH dan {token} {symbol}",

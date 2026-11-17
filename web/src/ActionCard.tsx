@@ -11,6 +11,7 @@ import { BringIn } from './in/BringIn';
 import { OutPanel } from './out/OutPanel';
 import { SwapPanel } from './swap/SwapPanel';
 import { ConnectDialog } from './wallet/ConnectDialog';
+import { RetryHint } from './wallet/RetryHint';
 import type { Wallet } from './wallet/useWallet';
 
 const LABELS: Record<TabId, TextKey> = { swap: 'tabs.swap', out: 'tabs.out', in: 'tabs.in' };
@@ -80,8 +81,12 @@ export function ActionCard({
       </div>
       <ProviderNote />
       {wallet.status === 'connecting' && wallet.uri && wallet.qrUri ? (
-        <ConnectDialog uri={wallet.uri} qrUri={wallet.qrUri} onClose={() => void wallet.disconnect()} />
-      ) : null}
+        <ConnectDialog uri={wallet.uri} qrUri={wallet.qrUri} onClose={() => void wallet.disconnect()}>
+          <RetryHint wallet={wallet} />
+        </ConnectDialog>
+      ) : (
+        <RetryHint wallet={wallet} />
+      )}
     </section>
   );
 }

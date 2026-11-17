@@ -90,6 +90,15 @@ describe('validateConfig', () => {
     c.wallet.scanCacheSeconds = 600;
     expect(validateConfig(c).join()).toMatch(/scanCacheSeconds/);
   });
+
+  it('rejects a missing or non-positive wait before the wallet retry hint, and sends it to the page', () => {
+    expect(publicConfig(clone()).connect.retryHintSeconds).toBeGreaterThan(0);
+    for (const bad of [0, -1, 1.5, undefined]) {
+      const c = clone();
+      (c.connect as { retryHintSeconds?: number | undefined }).retryHintSeconds = bad;
+      expect(validateConfig(c).join()).toMatch(/retryHintSeconds/);
+    }
+  });
 });
 
 describe('publicConfig', () => {
