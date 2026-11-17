@@ -111,7 +111,7 @@ test.describe('with the 1Click route on', () => {
       await expect(page.locator('#oneclick .legal__verbatim')).toHaveText(uk);
       await expect(page.locator('#oneclick .legal__verbatim')).toHaveAttribute('lang', 'en');
       await expect(page.locator('#oneclick .legal__verbatim-translation')).toContainText((dict as Record<string, string>)['terms.oneclick.uk']!);
-      await page.getByRole('combobox', { name: (dict as Record<string, string>)['lang.label'] }).selectOption('en');
+      await page.getByRole('combobox', { name: (dict as Record<string, string>)['lang.label']! }).selectOption('en');
     }
     const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
     expect(scroll).toBeLessThanOrEqual(client);
