@@ -23,6 +23,8 @@ export interface ServerEnv {
   payDemoSecret: string | undefined;
   /** SAMPAN_SPREAD_KEY: hex key of business.feeAddress, read only when pay.spreadBps > 0 (never on the public site). */
   spreadKey: string | undefined;
+  /** ONECLICK_JWT: the 1Click API key, sent as X-API-Key by the server only; absent = the API adds its own 0.25 %. */
+  oneClickKey: string | undefined;
 }
 
 /** A capture file name under tests/fixtures/thorchain; anything else is an error so a typo cannot pass silently. */
@@ -53,5 +55,6 @@ export function readEnv(env: NodeJS.ProcessEnv = process.env, cwd = process.cwd(
     testAddresses: list(env.SAMPAN_TEST_ADDRESSES),
     payDemoSecret: env.SAMPAN_PAY_DEMO_SECRET || undefined,
     spreadKey: env.SAMPAN_SPREAD_KEY || undefined,
+    oneClickKey: env.ONECLICK_JWT || undefined,
   };
 }

@@ -38,6 +38,8 @@ export interface AppOptions {
   payDemoSecret?: string | undefined;
   /** SAMPAN_SPREAD_KEY: the fee wallet key, used only when pay.spreadBps > 0 (server/pay/spread.ts). */
   spreadKey?: string | undefined;
+  /** ONECLICK_JWT (server env only; never logged). */
+  oneClickKey?: string | undefined;
   /** Run the landing finisher in this process (default true; tests drive it by hand). */
   startWatcher?: boolean;
   /** Ready-made services (tests); otherwise built from the options above. */
@@ -60,6 +62,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
       outage: options.fake ? (options.outage ?? null) : null,
       ...(options.fake && options.fakeInbound ? { fakeInbound: options.fakeInbound } : {}),
       spreadKey: options.spreadKey,
+      oneClickKey: options.oneClickKey,
       log: (m) => app.log.warn(m),
     });
   await services.clientIp.refresh();

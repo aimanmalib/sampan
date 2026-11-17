@@ -1,0 +1,24 @@
+{
+  "note": "synthetic: written by hand from the shapes in the 1Click OpenAPI (QuoteResponse, GetExecutionStatusResponse, SubmitDepositTxResponse). Not a recorded API response; every value is made up.",
+  "rates": {
+    "outUnitsPerBch": "180000000",
+    "inSatsPerWholeToken": "479000",
+    "withdrawFeeUnits": "300000",
+    "withdrawFeeSats": "500"
+  },
+  "depositAddresses": {
+    "bch": "bitcoincash:qpd95kj6tfd95kj6tfd95kj6tfd95kj6tgcnendkh2",
+    "evm": "0x5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a"
+  },
+  "timeEstimate": { "out": 120, "in": 160 },
+  "status": {
+    "status": "SUCCESS",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "swapDetails": {
+      "intentHashes": [],
+      "nearTxHashes": [],
+      "originChainTxHashes": [{ "hash": "synthetic-origin", "explorerUrl": "" }],
+      "destinationChainTxHashes": [{ "hash": "0x1111111111111111111111111111111111111111111111111111111111111111", "explorerUrl": "" }]
+    }
+  }
+}

@@ -7,6 +7,7 @@ declare const __SAMPAN_TEAM_TXIDS__: string[] | undefined;
 
 const env = readEnv();
 delete process.env.SAMPAN_SPREAD_KEY; // kept in env.spreadKey only
+delete process.env.ONECLICK_JWT; // kept in env.oneClickKey only
 const config = loadConfig(env.configPath, process.env.SAMPAN_CONFIG_PATCH);
 const app = await buildApp({
   config,
@@ -20,6 +21,7 @@ const app = await buildApp({
   testAddresses: env.testAddresses,
   payDemoSecret: env.payDemoSecret,
   spreadKey: env.spreadKey,
+  oneClickKey: env.oneClickKey,
   teamTxids: typeof __SAMPAN_TEAM_TXIDS__ === 'undefined' ? [] : __SAMPAN_TEAM_TXIDS__,
 });
 

@@ -8,6 +8,7 @@ import { waitIndexed } from '../chain/settle.js';
 import { BroadcastError } from '../chain/types.js';
 import type { Services } from '../services.js';
 import { ApiError, quoteLimit, sendError } from './guard.js';
+import { submitDeposit } from './route-deposit.js';
 import { HEX_ID, outputFromWire, type WireOutput } from './wire.js';
 
 interface Body {
@@ -62,6 +63,7 @@ export function registerBroadcast(app: FastifyInstance, config: SampanConfig, s:
           await waitIndexed(s.chain, txid, tx, { waitMs: config.electrum.indexWaitMs, pollMs: config.electrum.indexPollMs });
           s.scanner.forget([...record.sourceOutputs.map((o) => o.lockingBytecode), ...tx.outputs.map((o) => binToHex(o.lockingBytecode))]);
           if (row.kind === 'land') void s.watcher.kick(row.id);
+          if (row.kind === 'out') await submitDeposit(s, row, txid);
           return { crossingId: row.id, txid };
         } catch (e) {
           if (!(e instanceof BroadcastError)) throw e;

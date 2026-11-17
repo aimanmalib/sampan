@@ -5,19 +5,21 @@ import type { FastifyInstance } from 'fastify';
 import type { SampanConfig } from '../../core/config.js';
 import type { Services } from '../services.js';
 import { ApiError, quoteLimit, sendError } from './guard.js';
+import { depositAddressOf, routeOf } from './route-deposit.js';
 import { splitRowAsset } from './wire.js';
 
 const ID_PARAMS = { type: 'object', required: ['id'], properties: { id: { type: 'string', pattern: '^[0-9a-f]{32}$' } } } as const;
 
-const STAGE_STATUS = { done: 'completed', refunded: 'refunded' } as const;
+const STAGE_STATUS = { done: 'completed', refunded: 'refunded', failed: 'failed' } as const;
 
 /** A crossing out: ask the route how far it got and keep a final answer on the row. */
 async function outStage(s: Services, id: string): Promise<Record<string, unknown> | undefined> {
   const row = s.db.getCrossing(id);
-  if (!row?.txid || !s.route) return undefined;
+  const route = row ? routeOf(s, row) : null;
+  if (!row?.txid || !route) return undefined;
   try {
-    const st = await s.route.status(row.txid);
-    const final = st.stage === 'done' || st.stage === 'refunded' ? STAGE_STATUS[st.stage] : undefined;
+    const st = await route.status(row.txid, depositAddressOf(row));
+    const final = st.stage === 'done' || st.stage === 'refunded' || st.stage === 'failed' ? STAGE_STATUS[st.stage] : undefined;
     if (final && row.status !== final) s.db.updateCrossing(id, { status: final });
     return { stage: st.stage, outTxid: st.outTxid ?? null, outChain: st.outChain ?? null };
   } catch {

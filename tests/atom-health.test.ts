@@ -21,7 +21,7 @@ let n = 0;
 function config(on = true): Pick<PublicConfig, 'features' | 'atom'> {
   n += 1;
   return {
-    features: { musd: false, swap: true, landing: true, pay: true, atom: on },
+    features: { musd: false, swap: true, landing: true, pay: true, atom: on, oneClick: false },
     atom: {
       // A new URL per test: the loader keeps one module per URL.
       clientUrl: `/vendor/atom-client-test${n}.min.js`,

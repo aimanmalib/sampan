@@ -1,12 +1,12 @@
-// One internal interface for the cross-chain route, one module per route. Only the active route is built
-// (config route.active); the other route has no code that can reach its provider.
+// One internal interface for a cross-chain route, one module per route. The active route (config route.active) is
+// always built; the 1Click route is built next to it while features.oneClick is on (server/routes/index.ts).
 import type { RouteId } from '../../core/config.js';
 import type { OpenMap } from '../../core/route-assets.js';
 import type { Payment, WalletCoin } from '../../core/tx/payment.js';
 
 export class RouteError extends Error {
   constructor(
-    readonly code: 'route_unavailable' | 'route_paused' | 'chain_halted' | 'below_route_min' | 'bad_request',
+    readonly code: 'route_unavailable' | 'route_paused' | 'chain_halted' | 'below_route_min' | 'bad_request' | 'placeholder_address',
     message: string,
   ) {
     super(message);
@@ -69,17 +69,12 @@ export interface InQuote {
 }
 
 /** What an EVM wallet signs to bring tokens in (calldata is built in the page from these, P4b). */
-export interface InPlan {
-  kind: 'router-deposit';
-  router: string;
-  vault: string;
-  asset: string;
-  amount: bigint;
-  memo: string;
-  expiry: number;
-}
+export type InPlan =
+  | { kind: 'router-deposit'; router: string; vault: string; asset: string; amount: bigint; memo: string; expiry: number }
+  /** One plain ERC-20 transfer of `amount` (token units) to a one-time deposit address; no approve, no memo. */
+  | { kind: 'transfer'; vault: string; asset: string; amount: bigint; expiry: number };
 
-export type CrossingStage = 'unseen' | 'pending' | 'done' | 'refunded';
+export type CrossingStage = 'unseen' | 'pending' | 'done' | 'refunded' | 'failed';
 
 export interface CrossingStatus {
   stage: CrossingStage;
@@ -93,6 +88,8 @@ export interface OutRequest {
   /** Route form of the destination asset. */
   asset: string;
   destination: string;
+  /** Present only for the quote the wallet signs against: the user's own BCH address (input 0) refunds go to. */
+  refundTo?: string;
 }
 
 export interface InRequest {
@@ -100,6 +97,8 @@ export interface InRequest {
   amount: bigint;
   /** BCH address (with prefix) that receives the BCH: the user's own or a landing address. */
   destination: string;
+  /** Present only for the quote the wallet signs against: the user's own EVM address refunds go to. */
+  refundTo?: string;
 }
 
 export interface Route {
@@ -109,7 +108,10 @@ export interface Route {
   buildOut(q: OutQuote, coins: WalletCoin[]): Payment;
   quoteIn(r: InRequest): Promise<InQuote>;
   buildIn(q: InQuote): InPlan;
-  status(txid: string): Promise<CrossingStatus>;
+  /** `depositAddress`: the one-time address of a route that names deposits by address (1Click). */
+  status(txid: string, depositAddress?: string): Promise<CrossingStatus>;
+  /** Tells the route a deposit was sent, where the route asks for it; failures are the caller's to ignore. */
+  submit?(txid: string, depositAddress: string): Promise<void>;
   /** Open state per chain key (BCH included); throws when the route cannot be asked. */
   open(): Promise<OpenMap>;
   /** USD per whole coin of a chain's gas asset, 8 decimals, from the route's own pool; null when it has none. */

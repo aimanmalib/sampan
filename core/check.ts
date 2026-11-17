@@ -24,6 +24,8 @@ export interface Expectation {
   opReturn?: string;
   /** THORChain deposit (rule 6): vault, change to input 0's address, memo; plain user coins only. */
   thorDeposit?: boolean;
+  /** 1Click deposit (rule 6): the quoted deposit address, change to input 0's address, nothing else; plain user coins only. */
+  oneClickDeposit?: boolean;
   /**
    * Sampan fee (business config, as the page received it): exactly one plain output to this address worth
    * `bps` of the BCH the pools take in or pay out, recomputed here from the pool outputs. Absent or 0 = no fee output.
@@ -54,15 +56,19 @@ const addFlow = (f: Flow, o: Output, sign: 1n | -1n): void => {
   if (c && o.token) f.tokens.set(c, (f.tokens.get(c) ?? 0n) + sign * o.token.amount);
 };
 
-/** Rule 6: the exact output order THORChain reads, and nothing but plain coins of this user going in. */
-function depositShape(tx: Tx, sourceOutputs: Output[], e: Expectation, signed: Map<number, string>): string | undefined {
-  if (tx.outputs.length !== 3) return 'a deposit has exactly three outputs';
-  const [vault, change, memo] = tx.outputs as [Output, Output, Output];
+/**
+ * Rule 6: the exact output order the route reads, and nothing but plain coins of this user going in. THORChain: vault,
+ * change, memo. 1Click (`memo` false): deposit address, change, and no third output.
+ */
+function depositShape(tx: Tx, sourceOutputs: Output[], e: Expectation, signed: Map<number, string>, memo: boolean): string | undefined {
+  const count = memo ? 3 : 2;
+  if (tx.outputs.length !== count) return `a deposit has exactly ${count === 3 ? 'three' : 'two'} outputs`;
+  const [vault, change, memoOut] = tx.outputs as [Output, Output, Output | undefined];
   const first = sourceOutputs[0];
   if (!first || !(e.deposits ?? []).some((d) => d.lockingBytecode.toLowerCase() === hex(vault.lockingBytecode)))
     return 'output 0 is not the quoted vault';
   if (hex(change.lockingBytecode) !== hex(first.lockingBytecode)) return "output 1 does not return change to input 0's address";
-  if (e.opReturn === undefined || hex(memo.lockingBytecode) !== e.opReturn.toLowerCase()) return 'output 2 is not the expected memo';
+  if (memo && (e.opReturn === undefined || !memoOut || hex(memoOut.lockingBytecode) !== e.opReturn.toLowerCase())) return 'output 2 is not the expected memo';
   for (const [i, src] of sourceOutputs.entries()) {
     if (!signed.has(i)) return `input ${i} is not the user's own coin`;
     if (src.token) return `input ${i} carries a token`;
@@ -91,8 +97,8 @@ export const checkTransaction = (tx: Tx, sourceOutputs: Output[], e: Expectation
     signed.set(p.inputIndex, p.path);
   }
 
-  if (e.thorDeposit) {
-    const shape = depositShape(tx, sourceOutputs, e, signed);
+  if (e.thorDeposit || e.oneClickDeposit) {
+    const shape = depositShape(tx, sourceOutputs, e, signed, Boolean(e.thorDeposit));
     if (shape) return fail(6, shape);
   }
 

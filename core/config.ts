@@ -1,6 +1,7 @@
 // Shape of config/sampan.json and the checks run when it is loaded.
 // Pure: no I/O. The server reads the file; the page receives the public part from /api/config.
 import { validateAtom, type AtomConfig } from './atom-config.js';
+import { validateOneClick, type OneClickConfig } from './oneclick-config.js';
 import { validateBusiness, type BusinessConfig } from './business.js';
 import { validatePay, type PayConfig } from './pay/config.js';
 import { chainsOf, liveAssets, symbolsOf, validateAssets, validateEvmChain, type EvmChain, type RouteAsset } from './route-assets.js';
@@ -28,7 +29,7 @@ export interface SampanConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
   /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
-  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean };
+  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean };
   /** symbols: the symbols of the live thorchain.assets, repeated here and checked against them (texts name them). */
   route: { active: ActiveRoute; symbols: string[] };
   thorchain: {
@@ -42,15 +43,8 @@ export interface SampanConfig {
     affiliate: string;
     affiliateBps: number;
   };
-  oneClick: {
-    baseUrl: string;
-    chains: string[];
-    inMinUsdByChain: Record<string, number>;
-    disabledChains: string[];
-    slippageBps: number;
-    deadlineMinutes: { out: number; in: number };
-    appFeeBps: number;
-  };
+  /** NEAR Intents 1Click as a second route (core/oneclick-config.ts); the server only, shown while features.oneClick is true. */
+  oneClick: OneClickConfig;
   evm: {
     chains: EvmChainConfig[];
     /** Reown project id for WalletConnect; empty = the option is not offered and its code is never loaded. */
@@ -226,7 +220,7 @@ export function validateConfig(c: SampanConfig): string[] {
   need(ROUTES.includes(c.route?.active), 'route.active: none, near-intents or thorchain');
   need(c.thorchain.nodes.length > 0 && c.thorchain.nodes.every(isHttpsUrl), 'thorchain.nodes: https URLs');
   need(posInt(c.thorchain.timeoutMs) && posInt(c.thorchain.maxGasRate), 'thorchain.timeoutMs, maxGasRate: positive integers');
-  need(c.oneClick.baseUrl === '' || isHttpsUrl(c.oneClick.baseUrl), 'oneClick.baseUrl: empty or an https URL');
+  errors.push(...validateOneClick(c.oneClick, c.evm.chains));
   need(c.route.active !== 'near-intents' || c.oneClick.baseUrl !== '', 'oneClick.baseUrl: required for near-intents');
   need(c.cauldron.indexers.length > 0 && c.cauldron.indexers.every(isHttpsUrl), 'cauldron.indexers: https URLs');
   need(c.electrum.servers.length >= 3, 'electrum.servers: at least three servers');
@@ -327,6 +321,8 @@ export function validateConfig(c: SampanConfig): string[] {
   errors.push(...validatePay(c.pay));
   errors.push(...validateAtom(c.atom));
   need(typeof c.features?.atom === 'boolean', 'features.atom: true or false');
+  need(typeof c.features?.oneClick === 'boolean', 'features.oneClick: true or false');
+  need(!c.features?.oneClick || c.oneClick.baseUrl !== '', 'oneClick.baseUrl: required while features.oneClick is true');
   return errors;
 }
 

@@ -2,7 +2,7 @@
 // transaction with what the page needs for checkTransaction (rule 6 for THORChain) and records the crossing.
 // Both answer 503 while compliance.crossChainEnabled is false: the tab is hidden and nothing is offered.
 import type { FastifyInstance } from 'fastify';
-import type { SampanConfig } from '../../core/config.js';
+import type { RouteId, SampanConfig } from '../../core/config.js';
 import { opReturnHex } from '../../core/routes/memo.js';
 import { depositSize } from '../../core/tx/deposit.js';
 import { parseAddress } from '../../core/address.js';
@@ -19,6 +19,7 @@ interface QuoteBody {
   symbol: string;
   chain: string;
   destination: string;
+  route?: RouteId;
 }
 
 interface BuildBody extends QuoteBody {
@@ -34,6 +35,8 @@ const quoteProps = {
   chain: { type: 'string', pattern: '^[A-Z]{2,10}$' },
   destination: { type: 'string', pattern: '^0x[0-9a-fA-F]{40}$' },
 } as const;
+/** Optional: the route to quote (the active one when absent). */
+export const ROUTE_PROP = { route: { type: 'string', enum: ['thorchain', 'near-intents'] } } as const;
 const PATH = { type: 'string', pattern: '^(receive|change|defi)/[0-9]{1,6}$' } as const;
 
 /** The quote as the page shows it: amounts as decimal strings, no raw provider payload. */
@@ -67,7 +70,7 @@ function service(config: SampanConfig, s: Services): OutService {
 export function registerOut(app: FastifyInstance, config: SampanConfig, s: Services): void {
   app.post<{ Body: QuoteBody }>(
     '/api/out/quote',
-    { schema: { body: { type: 'object', required: Object.keys(quoteProps), additionalProperties: false, properties: quoteProps } } },
+    { schema: { body: { type: 'object', required: Object.keys(quoteProps), additionalProperties: false, properties: { ...quoteProps, ...ROUTE_PROP } } } },
     async (req, reply) => {
       try {
         const outs = service(config, s);
@@ -92,6 +95,7 @@ export function registerOut(app: FastifyInstance, config: SampanConfig, s: Servi
           additionalProperties: false,
           properties: {
             ...quoteProps,
+            ...ROUTE_PROP,
             minOut: AMOUNT,
             addresses: {
               type: 'array',
@@ -135,7 +139,8 @@ export function registerOut(app: FastifyInstance, config: SampanConfig, s: Servi
           inputPaths: payment.inputPaths,
           feeSats: payment.feeSats.toString(),
           quote: record.quote,
-          deposit: { lockingBytecode: vault.lockingHex, sats: view.quote.sats.toString(), opReturn: opReturnHex(view.quote.memo) },
+          // A route without a memo (1Click) has no OP_RETURN output: opReturn is '' (checkTransaction rule 6, two outputs).
+          deposit: { lockingBytecode: vault.lockingHex, sats: view.quote.sats.toString(), opReturn: view.quote.memo === '' ? '' : opReturnHex(view.quote.memo) },
         };
       } catch (e) {
         return sendError(reply, e);

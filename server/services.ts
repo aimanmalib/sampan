@@ -22,7 +22,7 @@ import { refreshPools } from './pools.js';
 import { RateLimiter } from './rate.js';
 import { Scanner } from './scan.js';
 import { OutService } from './out.js';
-import { createRoute } from './routes/index.js';
+import { createRoutes } from './routes/index.js';
 import type { Route } from './routes/types.js';
 import { SwapService } from './swap.js';
 import { InService } from './in.js';
@@ -38,6 +38,8 @@ export interface Services {
   swaps: SwapService;
   /** The active cross-chain route and "Send out", or null when route.active is none. */
   route: Route | null;
+  /** Every route built: the active one first, then 1Click while features.oneClick is on (status and submit look here). */
+  routes: Route[];
   outs: OutService | null;
   ins: InService | null;
   landings: LandingService;
@@ -80,6 +82,8 @@ export interface ServiceOptions {
   outage?: Outage | null;
   /** The frozen inbound_addresses capture the fake THORNode answers with (fake network only). */
   fakeInbound?: string;
+  /** ONECLICK_JWT from the server env: sent to 1Click as X-API-Key, nowhere else. */
+  oneClickKey?: string | undefined;
   /** The fee wallet key, used only when pay.spreadBps > 0. */
   spreadKey?: string | undefined;
   log?: (message: string) => void;
@@ -147,7 +151,9 @@ export function createServices(o: ServiceOptions): Services {
   const moved = markOwnRows(db, testLocks, prefix, new Set(o.teamTxids ?? []));
   if (moved > 0) o.log?.(`origin: ${moved} rows from team wallets counted as test`);
   const swaps = new SwapService({ config, chain, pools, prefix });
-  const route = createRoute(config, o.fake, o.fakeInbound);
+  const routes = createRoutes(config, o.fake, o.fakeInbound, o.oneClickKey);
+  const route = routes.find((r) => r.id === config.route.active) ?? null;
+  const others = routes.filter((r) => r !== route);
   const landings = new LandingService({ config, chain, pools, db, prefix, testLocks });
   // The fake network sends no webhook anywhere: names resolve to TEST-NET-3 and the transport answers 503 (nothing
   // leaves), except the demo shop's own hook, which goes to this server in-process (server/pay/fake.ts).
@@ -172,8 +178,9 @@ export function createServices(o: ServiceOptions): Services {
     scanner,
     swaps,
     route,
-    outs: route ? new OutService({ config, route, swaps, chain, prefix, chainOpen: (c) => health.chainOpen(c) }) : null,
-    ins: route ? new InService({ config, route, landings, swaps, prefix, chainOpen: (c) => health.chainOpen(c) }) : null,
+    routes,
+    outs: route ? new OutService({ config, route, others, swaps, chain, prefix, chainOpen: (c) => health.chainOpen(c) }) : null,
+    ins: route ? new InService({ config, route, others, landings, swaps, prefix, chainOpen: (c) => health.chainOpen(c) }) : null,
     landings,
     watcher: new LandingWatcher({
       config,

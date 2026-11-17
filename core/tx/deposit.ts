@@ -2,6 +2,7 @@
 // rule 6: output 0 pays the vault exactly the quoted amount, output 1 returns change to the address of input 0
 // (THORChain treats that address as the sender and refunds there), output 2 is the OP_RETURN memo. No other
 // outputs. Inputs are plain P2PKH coins of the user, never token coins. The first coin given is input 0.
+// A 1Click deposit (memo '') has the same first two outputs and no OP_RETURN (checkTransaction rule 6, two outputs).
 import { encodeTransaction, hexToBin, type Output } from '@bitauth/libauth';
 import { opReturnHex } from '../routes/memo.js';
 import type { Payment, WalletCoin } from './payment.js';
@@ -28,7 +29,7 @@ export function buildDeposit(p: DepositParams): Payment {
     if (c.hasToken) throw new DepositBuildError('a deposit never spends token coins');
     if (!P2PKH.test(c.lockingHex)) throw new DepositBuildError('a deposit spends plain P2PKH coins only');
   }
-  const memoLock = hexToBin(opReturnHex(p.memo));
+  const memoOutputs = (): Output[] => (p.memo === '' ? [] : [{ lockingBytecode: hexToBin(opReturnHex(p.memo)), valueSatoshis: 0n }]);
   const changeLock = hexToBin(p.coins[0]!.lockingHex);
   const picked: WalletCoin[] = [];
   let total = 0n;
@@ -44,7 +45,7 @@ export function buildDeposit(p: DepositParams): Payment {
     outputs: [
       { lockingBytecode: hexToBin(p.vaultLockingHex), valueSatoshis: p.sats },
       { lockingBytecode: changeLock, valueSatoshis: change },
-      { lockingBytecode: memoLock, valueSatoshis: 0n },
+      ...memoOutputs(),
     ],
   });
   for (const coin of p.coins) {
@@ -76,7 +77,7 @@ export function depositSize(inputs: number, memo: string): number {
     outputs: [
       { lockingBytecode: hexToBin(coin.lockingHex), valueSatoshis: 1n },
       { lockingBytecode: hexToBin(coin.lockingHex), valueSatoshis: 1n },
-      { lockingBytecode: hexToBin(opReturnHex(memo)), valueSatoshis: 0n },
+      ...(memo === '' ? [] : [{ lockingBytecode: hexToBin(opReturnHex(memo)), valueSatoshis: 0n }]),
     ],
   };
   return encodeTransaction(tx).length;

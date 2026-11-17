@@ -3,13 +3,15 @@
 // landing address, recomputes the address before asking the wallet. The server only records the source tx hash.
 // All answer 503 while compliance.crossChainEnabled is false.
 import type { FastifyInstance } from 'fastify';
-import type { SampanConfig } from '../../core/config.js';
+import type { RouteId, SampanConfig } from '../../core/config.js';
 import { parseAddress } from '../../core/address.js';
 import type { Origin } from '../db.js';
 import type { InService, InView } from '../in.js';
 import { RouteError } from '../routes/types.js';
 import type { Services } from '../services.js';
 import { ApiError, crossingGate, crossingLimit, quoteLimit, sendError } from './guard.js';
+import { submitDeposit } from './route-deposit.js';
+import { ROUTE_PROP } from './out.js';
 import { ADDRESS, AMOUNT, HEX_ID, jsonSafe, rowAsset } from './wire.js';
 
 interface QuoteBody {
@@ -18,10 +20,14 @@ interface QuoteBody {
   amount: string;
   receive: string;
   address: string;
+  route?: RouteId;
+  /** The connected EVM address: where 1Click refunds go (required to plan on that route). */
+  from?: string;
 }
 
 const SYMBOL = { type: 'string', pattern: '^[A-Z]{2,10}$' } as const;
 const quoteProps = { symbol: SYMBOL, chain: SYMBOL, amount: AMOUNT, receive: SYMBOL, address: ADDRESS } as const;
+const optionalProps = { ...ROUTE_PROP, from: { type: 'string', pattern: '^0x[0-9a-fA-F]{40}$' } } as const;
 
 const inViewToWire = (v: InView): unknown =>
   jsonSafe({
@@ -51,7 +57,7 @@ export function registerIn(app: FastifyInstance, config: SampanConfig, s: Servic
   const required = Object.keys(quoteProps);
   app.post<{ Body: QuoteBody }>(
     '/api/in/quote',
-    { schema: { body: { type: 'object', required, additionalProperties: false, properties: quoteProps } } },
+    { schema: { body: { type: 'object', required, additionalProperties: false, properties: { ...quoteProps, ...optionalProps } } } },
     async (req, reply) => {
       try {
         const ins = service(config, s);
@@ -68,7 +74,7 @@ export function registerIn(app: FastifyInstance, config: SampanConfig, s: Servic
     '/api/in/plan',
     {
       schema: {
-        body: { type: 'object', required: [...required, 'minSats'], additionalProperties: false, properties: { ...quoteProps, minSats: AMOUNT } },
+        body: { type: 'object', required: [...required, 'minSats'], additionalProperties: false, properties: { ...quoteProps, ...optionalProps, minSats: AMOUNT } },
       },
     },
     async (req, reply) => {
@@ -91,14 +97,20 @@ export function registerIn(app: FastifyInstance, config: SampanConfig, s: Servic
           depositAddress: plan.landing?.card.address ?? b.address,
           route: plan.quote.route,
           origin,
-          quote: { quote, landing: plan.landing?.crossingId ?? null },
+          // vault: the one-time deposit address a 1Click status is asked by.
+          quote: { quote, landing: plan.landing?.crossingId ?? null, vault: plan.quote.vault },
         });
         if (plan.landing) void s.watcher.kick(plan.landing.crossingId);
-        const q = plan.quote;
+        const p = plan.plan;
+        // THORChain: the router deposit as before. 1Click: one plain transfer of `amount` token units to `vault`.
+        const deposit =
+          p.kind === 'transfer'
+            ? { kind: p.kind, vault: p.vault, token: plan.token, amount: p.amount, expiry: p.expiry }
+            : { router: p.router, vault: p.vault, token: plan.token, amount: p.amount, memo: p.memo, expiry: p.expiry };
         return jsonSafe({
           crossingId,
           quote,
-          deposit: { router: q.router, vault: q.vault, token: plan.token, amount: q.amount, memo: q.memo, expiry: q.expiry },
+          deposit,
           ...(plan.landing ? { landing: plan.landing } : {}),
         });
       } catch (e) {
@@ -122,6 +134,11 @@ export function registerIn(app: FastifyInstance, config: SampanConfig, s: Servic
         const row = s.db.getCrossing(req.params.id);
         if (!row || row.kind !== 'in') throw new ApiError(404, 'not_found', 'unknown crossing');
         if (row.txid) throw new ApiError(409, 'already_sent', 'this crossing already has its transaction');
+        if (row.route === 'near-intents') {
+          s.db.updateCrossing(row.id, { status: 'sent', txid: req.body.txHash.toLowerCase() });
+          await submitDeposit(s, row, req.body.txHash);
+          return { ok: true };
+        }
         // THORChain names EVM transactions in upper-case hex without 0x.
         s.db.updateCrossing(row.id, { status: 'sent', txid: req.body.txHash.slice(2).toUpperCase() });
         return { ok: true };

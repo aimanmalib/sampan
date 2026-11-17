@@ -21,7 +21,8 @@
     "swap": true,
     "landing": true,
     "pay": true,
-    "atom": false
+    "atom": false,
+    "oneClick": false
   },
   "route": {
     "active": "thorchain",
@@ -46,10 +47,17 @@
     "affiliateBps": 0
   },
   "oneClick": {
-    "baseUrl": "",
-    "chains": ["base"],
-    "inMinUsdByChain": { "tron": 100 },
-    "disabledChains": ["bsc"],
+    "baseUrl": "https://1click.chaindefuser.com",
+    "userAgent": "sampan/0.1 (+https://sampan.sasateguh.com)",
+    "timeoutMs": 10000,
+    "bchAsset": "nep141:bch.omft.near",
+    "assets": [
+      { "id": "nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near", "chain": "ETH", "symbol": "USDC", "decimals": 6, "live": { "out": false, "in": false } }
+    ],
+    "placeholders": { "bch": "bitcoincash:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqfnhks603", "evm": "0x0000000000000000000000000000000000000001" },
+    "cacheSeconds": 20,
+    "statusPollSeconds": 15,
+    "dryDebounceMs": 600,
     "slippageBps": 100,
     "deadlineMinutes": { "out": 30, "in": 60 },
     "appFeeBps": 0
