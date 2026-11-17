@@ -105,7 +105,8 @@ export interface CompareInput {
 
 /** The atom flow that serves this request, or null when the atom route has nothing to offer for it. */
 export function atomFlowFor(flow: CompareFlow, token: string): AtomFlow | null {
-  if (flow.chain !== ATOM_OTHER.chain || flow.symbol !== ATOM_OTHER.symbol) return null;
+  // Config names chains in upper case (evm.chains[].key "BASE"); the atom service in lower case.
+  if (flow.chain.toLowerCase() !== ATOM_OTHER.chain || flow.symbol !== ATOM_OTHER.symbol) return null;
   if (flow.kind === 'out') return flow.source === token ? 'pusd-to-usdc' : null;
   return flow.receive === token ? 'usdc-to-pusd' : null;
 }

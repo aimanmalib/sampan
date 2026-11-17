@@ -3,6 +3,7 @@
 // against the numbers shown here, including the memo, before the wallet is asked to sign.
 import { useState } from 'react';
 import { runOut, StoppedAfterStep1, type OutProgress } from '../../../core/client/out';
+import { thorFromOut } from '../../../core/routes/compare';
 import { thorAsset } from '../../../core/routes/memo';
 import { formatUnits, parseUnits } from '../../../core/wallet';
 import { api } from '../api';
@@ -14,6 +15,7 @@ import { useOutQuote } from './useOutQuote';
 import { useDisclosure } from '../cross/disclosure';
 import { EvmWallets } from '../evm/EvmWallets';
 import { shortEvm, useEvm } from '../evm/store';
+import { useRouteChoice } from '../atom/RouteChoice';
 
 const BCH = 'BCH';
 const BCH_DECIMALS = 8;
@@ -55,6 +57,13 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
   const routeName = t(`route.${config.route.active}` as TextKey);
   const evm = useEvm();
   const gate = useDisclosure(routeName);
+  const q = quote.status === 'ok' ? quote.quote : null;
+  const choice = useRouteChoice(
+    config,
+    pick && amount !== undefined && amount > 0n ? { kind: 'out', amount: formatUnits(amount, decimals), source, chain: pick.chain.key, symbol: pick.symbol } : null,
+    q ? thorFromOut(q) : { error: quote.status === 'error' ? quote.code : 'pending' },
+  );
+  const atom = choice.route === 'atom';
   if (!pick) return null;
   const vars = { symbol: pick.symbol, chain: pick.chain.name, route: routeName, token: token.symbol };
   const badAddress = destination.trim() !== '' && !/^0x[0-9a-fA-F]{40}$/.test(destination.trim());
@@ -124,7 +133,6 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
     if (wallet.status === 'scanning') return { label: t('wallet.scanning'), disabled: true, onClick: () => {} };
     return { label: t('out.go'), disabled: quote.status !== 'ok' || lacking || !view, onClick: () => gate.run(() => void send()) };
   })();
-  const q = quote.status === 'ok' ? quote.quote : null;
   const feePct = q ? (q.fees.totalBps / 100).toFixed(1) : '';
   const limitVars = { min: String(Math.max(config.limits.minUsd, config.limits.routeMinUsd[config.route.active as 'thorchain'] ?? 0)), max: String(config.limits.maxUsd), ...vars };
 
@@ -207,7 +215,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
               : t('out.enter', vars)}
       </p>
       {q && q.fees.totalBps > config.limits.feeWarnBps ? <p className="swap__error">{t('out.feeHigh', { pct: feePct })}</p> : null}
-      {source !== BCH ? <p className="card__note">{t('out.twoSteps', vars)}</p> : null}
+      {source !== BCH && !atom ? <p className="card__note">{t('out.twoSteps', vars)}</p> : null}
       {lacking ? <p className="swap__error">{t('swap.err.short')}</p> : null}
       {run.phase === 'stopped' ? (
         <div className="swap__error" role="alert">
@@ -223,10 +231,17 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
           {t(run.key, limitVars)}
         </p>
       ) : null}
-      <button type="button" className="button button--primary" disabled={primary.disabled} onClick={primary.onClick}>
-        {primary.label}
-      </button>
-      <details className="swap__fees">
+      {choice.card}
+      {atom ? (
+        <button type="button" className="button button--primary" disabled>
+          {t('atom.go')}
+        </button>
+      ) : (
+        <button type="button" className="button button--primary" disabled={primary.disabled} onClick={primary.onClick}>
+          {primary.label}
+        </button>
+      )}
+      <details className="swap__fees" hidden={atom}>
         <summary>{t('swap.fees')}</summary>
         {q ? <p>{t('out.routeFee', { ...vars, fee: shown(q.fees.total, q.outDecimals), pct: feePct })}</p> : null}
         <p>{t('swap.networkFee', { fee: formatUnits(BigInt(config.connect.feeCapSats), BCH_DECIMALS) })}</p>

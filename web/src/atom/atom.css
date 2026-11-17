@@ -1,0 +1,107 @@
+/* "Choose a route" card in Send out and Bring in. Rows read like the side pickers above them: paper ground, river
+   border on the chosen row; an unavailable row is muted and keeps its reason readable. */
+.routes {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.routes__title {
+  padding: 0;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+.routes__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.routes__row {
+  min-width: 0;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem 0.25rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) / 2);
+  overflow-wrap: anywhere;
+}
+.routes__row:has(input:checked) {
+  border-color: var(--river);
+  background: var(--river-pale);
+}
+.routes__row--off {
+  color: var(--ink-soft);
+  background: var(--card);
+  border-style: dashed;
+}
+.routes__pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--touch);
+  cursor: pointer;
+}
+.routes__row--off .routes__pick {
+  cursor: not-allowed;
+}
+.routes__pick input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--river);
+}
+.routes__pick input:focus-visible {
+  outline: var(--focus);
+  outline-offset: 2px;
+}
+.routes__name {
+  font-weight: 600;
+  color: var(--ink);
+}
+.routes__row--off .routes__name {
+  color: var(--ink-soft);
+}
+.routes__more {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--river);
+  border: 1px solid var(--river);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+}
+.routes__receive,
+.routes__fact,
+.routes__reason {
+  margin: 0;
+}
+.routes__receive {
+  color: var(--ink);
+}
+.routes__fact,
+.routes__reason,
+.routes__how {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+.routes__how summary {
+  cursor: pointer;
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  width: fit-content;
+}
+.routes__how summary:focus-visible {
+  outline: var(--focus);
+  outline-offset: 2px;
+}
+.routes__how p {
+  margin: 0 0 0.5rem;
+}

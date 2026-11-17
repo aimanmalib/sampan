@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { parseAddress } from '../../../core/address';
 import { ApiFailure } from '../../../core/client/api';
 import { InStop, runIn, type InStep } from '../../../core/client/in';
+import { thorFromIn } from '../../../core/routes/compare';
 import { thorAsset } from '../../../core/routes/memo';
 import { formatUnits, parseUnits } from '../../../core/wallet';
 import { api } from '../api';
@@ -18,6 +19,7 @@ import { outCodeKey } from '../out/errors';
 import { errorKey } from '../swap/errors';
 import type { Wallet } from '../wallet/useWallet';
 import { useInQuote } from './useInQuote';
+import { useRouteChoice } from '../atom/RouteChoice';
 
 const BCH = 'BCH';
 const ROUTE_DECIMALS = 8;
@@ -52,6 +54,11 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
   const addressOk = address !== '' && typeof parseAddress(address, 'bitcoincash') !== 'string';
   const amount = parseUnits(amountText, ROUTE_DECIMALS);
   const quote = useInQuote({ symbol: src?.symbol ?? '', chain: src?.chain.key ?? '', amount, receive, address, addressOk }, QUOTE_PAUSE_MS);
+  const choice = useRouteChoice(
+    config,
+    src && amount !== undefined && amount > 0n ? { kind: 'in', amount: formatUnits(amount, ROUTE_DECIMALS), chain: src.chain.key, symbol: src.symbol, receive } : null,
+    quote.status === 'ok' ? thorFromIn(quote.quote, ROUTE_DECIMALS) : { error: quote.status === 'error' ? quote.code : 'pending' },
+  );
   if (!src) return null;
   const vars = { symbol: src.symbol, chain: src.chain.name, route, token: token.symbol, pct: (config.landing.toleranceBps / 100).toFixed(1) };
   const q = quote.status === 'ok' ? quote.quote : null;
@@ -149,9 +156,16 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
           {t(run.key, limitVars)}
         </p>
       ) : null}
-      <button type="button" className="button button--primary" disabled={busy || !q || !evm.connected} onClick={() => gate.run(send)}>
-        {label}
-      </button>
+      {choice.card}
+      {choice.route === 'atom' ? (
+        <button type="button" className="button button--primary" disabled>
+          {t('atom.go')}
+        </button>
+      ) : (
+        <button type="button" className="button button--primary" disabled={busy || !q || !evm.connected} onClick={() => gate.run(send)}>
+          {label}
+        </button>
+      )}
       {gate.dialog}
     </div>
   );

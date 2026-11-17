@@ -52,6 +52,11 @@ describe('route comparison', () => {
     expect(atomFlowFor({ ...OUT, symbol: 'USDT' }, 'PUSD')).toBeNull();
   });
 
+  it('matches the chain key as config writes it (BASE), not only in lower case', () => {
+    expect(atomFlowFor({ ...OUT, chain: 'BASE' }, 'PUSD')).toBe('pusd-to-usdc');
+    expect(atomFlowFor({ ...IN, chain: 'BASE' }, 'PUSD')).toBe('usdc-to-pusd');
+  });
+
   it('shows both routes for the same amount, with fees as each reports them and measured times', () => {
     const c = compareRoutes(input({}));
     const [thor, at] = c.rows;
