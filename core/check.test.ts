@@ -94,7 +94,7 @@ describe('checkTransaction', () => {
 
   it('rule 4: fewer tokens than the minimum shown is refused', () => {
     const { built, e } = buy();
-    expect(ruleOf(run(built.transaction, built.sourceOutputs, { ...e, receive: { category: PUSD, min: e.receive.min + 1n } }))).toBe(4);
+    expect(ruleOf(run(built.transaction, built.sourceOutputs, { ...e, receive: { category: PUSD, min: e.receive!.min + 1n } }))).toBe(4);
   });
 
   it('rule 5: an unlisted user input, a foreign input, version 1 and a locktime are refused', () => {
@@ -132,7 +132,7 @@ describe('checkTransaction', () => {
       if (r.ok) {
         for (const o of tx.outputs) expect(allowed.has(binToHex(o.lockingBytecode))).toBe(true);
         const toUser = tx.outputs.filter((o) => binToHex(o.lockingBytecode) === binToHex(userLock));
-        expect(toUser.reduce((s, o) => s + (o.token?.amount ?? 0n), 0n)).toBeGreaterThanOrEqual(e.receive.min);
+        expect(toUser.reduce((s, o) => s + (o.token?.amount ?? 0n), 0n)).toBeGreaterThanOrEqual(e.receive!.min);
       }
     }
   });

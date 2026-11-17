@@ -46,7 +46,7 @@ export async function payContract(o: {
   if (!lock) throw new CheckFailure(3, 'the swap contract address is not a token-aware P2SH32 address');
   const category = payment.category.toLowerCase();
   const built = buildTokenPayment({
-    coins: wallet.coins.map((c) => ({ txid: c.txid, vout: c.vout, sats: c.sats, lockingHex: c.address.lockingHex, path: `${c.address.path}/${c.address.index}`, token: c.token })),
+    coins: wallet.coins.map((c) => ({ txid: c.txid, vout: c.vout, sats: c.sats, lockingHex: c.address.lockingHex, path: `${c.address.path}/${c.address.index}`, ...(c.token ? { token: c.token } : {}) })),
     to: { lockingHex: lock, sats: payment.sats, category, amount: payment.tokenUnits },
     tokenChangeLockingHex: wallet.change.lockingHex,
     tokenDustSats: o.tokenDustSats,
