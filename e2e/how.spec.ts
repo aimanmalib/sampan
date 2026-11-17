@@ -27,7 +27,7 @@ test('/how shows the open flows, the whole contract, the checks anyone can run a
   await expect(page.getByText(en['how.finish.optional'])).toBeVisible();
   await expect(page.getByText(en['how.finish.after'])).toBeVisible();
   await expect(page.getByRole('heading', { name: en['how.exists.title'] })).toBeVisible();
-  await expect(page.getByText(en['how.exists.bchbull'].split('{symbol}')[0])).toBeVisible();
+  await expect(page.getByText(en['how.exists.bchbull'].slice(0, en['how.exists.bchbull'].indexOf('{symbol}')))).toBeVisible();
   await expect(page.locator('.measured__line')).toContainText(/\d+ landings and crossings completed/);
   const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
   expect(scroll).toBeLessThanOrEqual(client);
