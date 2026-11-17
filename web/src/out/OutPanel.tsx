@@ -20,6 +20,8 @@ import { shortAmount } from '../atom/run';
 import { useRouteChoice } from '../atom/RouteChoice';
 import { NetworkPicker } from '../cross/NetworkPicker';
 import { useNetworks } from '../cross/useNetworks';
+import { CostCard } from '../cost/CostCard';
+import { outCard } from '../cost/inputs';
 
 const BCH = 'BCH';
 const BCH_DECIMALS = 8;
@@ -134,6 +136,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
     return { label: t('out.go'), disabled: quote.status !== 'ok' || lacking || !view, onClick: () => gate.run(() => void send()) };
   })();
   const feePct = q ? (q.fees.totalBps / 100).toFixed(1) : '';
+  const cost = q && amount !== undefined ? outCard(config, q, source, amount, pick.chain.key) : null;
   const limitVars = { min: String(Math.max(config.limits.minUsd, config.limits.routeMinUsd[config.route.active as 'thorchain'] ?? 0)), max: String(config.limits.maxUsd), ...vars };
 
   return (
@@ -223,6 +226,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
         </p>
       ) : null}
       {choice.card}
+      {q && amount !== undefined && !atom && cost ? <CostCard card={cost} vars={vars} warnBps={config.limits.feeWarnBps} /> : null}
       {atom && choice.atom ? (
         <AtomSwap
           config={config}

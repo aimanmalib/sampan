@@ -22,6 +22,9 @@ import { AtomSwap } from '../atom/AtomSwap';
 import { useRouteChoice } from '../atom/RouteChoice';
 import { NetworkPicker } from '../cross/NetworkPicker';
 import { useNetworks } from '../cross/useNetworks';
+import { CostCard } from '../cost/CostCard';
+import { inCard } from '../cost/inputs';
+import { useGas } from '../cost/useGas';
 
 const BCH = 'BCH';
 const ROUTE_DECIMALS = 8;
@@ -58,9 +61,20 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
     src && amount !== undefined && amount > 0n ? { kind: 'in', amount: formatUnits(amount, ROUTE_DECIMALS), chain: src.chain.key, symbol: src.symbol, receive } : null,
     quote.status === 'ok' ? thorFromIn(quote.quote, ROUTE_DECIMALS) : { error: quote.status === 'error' ? quote.code : 'pending' },
   );
+  const q0 = quote.status === 'ok' ? quote.quote : null;
+  const gas = useGas({
+    enabled: !config.fake,
+    chain: src?.chain ?? config.evm.chains[0]!,
+    nativeUsdE8: q0?.gasAssetUsdE8,
+    router: q0?.router,
+    amount,
+    wallet: evm.connected ? { address: evm.connected.address, provider: evm.connected.wallet.provider } : null,
+    token: src?.token ?? { address: '', decimals: 0 },
+  });
   if (!src) return null;
   const vars = { symbol: src.symbol, chain: src.chain.name, route, token: token.symbol, pct: (config.landing.toleranceBps / 100).toFixed(1) };
-  const q = quote.status === 'ok' ? quote.quote : null;
+  const q = q0;
+  const cost = q ? inCard(config, q, src.chain, receive !== BCH, gas) : null;
   const busy = run.phase === 'running';
   const limitVars = { min: String(Math.max(config.limits.minUsd, config.limits.routeMinUsd[config.route.active as 'thorchain'] ?? 0)), max: String(config.limits.maxUsd), ...vars };
 
@@ -162,6 +176,9 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
         </p>
       ) : null}
       {choice.card}
+      {cost && choice.route !== 'atom' ? (
+        <CostCard card={cost} vars={{ ...vars, native: src.chain.native.symbol }} warnBps={config.limits.feeWarnBps} gas={gas ? (gas.approve ? 'approve' : 'deposit') : 'extra'} />
+      ) : null}
       {choice.route === 'atom' && choice.atom ? (
         <AtomSwap
           config={config}
