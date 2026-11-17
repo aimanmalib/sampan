@@ -18,9 +18,12 @@ export function fakeThornode(dir = path.resolve('tests/fixtures/thorchain'), now
   const rows = JSON.parse(readFileSync(path.join(dir, inbound), 'utf8')) as unknown;
   const done = read(dir, 'status-done.json');
   const unseen = read(dir, 'status-unseen.json');
+  const gasPools = read(dir, 'pool-gas.json');
   return async (url) => {
     const u = new URL(url);
     if (u.pathname.endsWith('/thorchain/inbound_addresses')) return { status: 200, body: rows };
+    const pool = /\/thorchain\/pool\/([A-Z0-9.]+)$/.exec(u.pathname);
+    if (pool) return gasPools[pool[1]!] ? { status: 200, body: gasPools[pool[1]!] } : { status: 404, body: { message: 'pool not found' } };
     const status = /\/thorchain\/tx\/status\/([0-9A-F]{64})$/.exec(u.pathname);
     // A txid ending in 00 has not been seen yet; any other is finished (enough for the status page).
     if (status) return { status: 200, body: status[1]!.endsWith('00') ? unseen : { ...done, tx: { ...(done.tx as object), id: status[1] } } };

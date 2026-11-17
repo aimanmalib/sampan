@@ -30,6 +30,8 @@ export interface EvmChain {
   explorer: string;
   /** The chain's gas coin, as a wallet is told when the chain is added. */
   native: { name: string; symbol: string };
+  /** Gas units of one approve and one router deposit (measured medians, ADR 0041) and the block time, for the cost card. */
+  gas: { approve: number; deposit: number; blockSeconds: number };
   tokens: Record<string, EvmToken>;
 }
 
@@ -106,6 +108,8 @@ export function validateEvmChain(ch: EvmChain, isHttpsUrl: (u: string) => boolea
   if (!Array.isArray(ch.rpc) || ch.rpc.length < 2 || !ch.rpc.every(isHttpsUrl)) errors.push(`${at}.rpc: at least two https URLs`);
   if (!isHttpsUrl(ch.explorer ?? '')) errors.push(`${at}.explorer: an https URL`);
   if (!ch.native?.name || !ch.native?.symbol) errors.push(`${at}.native: name and symbol`);
+  const g = ch.gas;
+  if (!g || ![g.approve, g.deposit, g.blockSeconds].every((v) => Number.isInteger(v) && v > 0)) errors.push(`${at}.gas: approve, deposit and blockSeconds as positive integers`);
   for (const [sym, t] of Object.entries(ch.tokens ?? {})) {
     if (!/^0x[0-9a-fA-F]{40}$/.test(t?.address ?? '')) errors.push(`${at}.tokens.${sym}.address: 20-byte hex address`);
     if (!Number.isInteger(t?.decimals) || t.decimals < 0 || t.decimals > 36) errors.push(`${at}.tokens.${sym}.decimals: 0 to 36`);

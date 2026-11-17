@@ -88,6 +88,8 @@ export interface SampanConfig {
     explorerTxUrl: string;
     /** Seconds of "Waiting for your wallet" before the page offers to start again with a new link. */
     retryHintSeconds: number;
+    /** Average BCH block time, for the cost card's time estimate. */
+    bchBlockSeconds: number;
   };
   landing: {
     toleranceBps: number;
@@ -167,7 +169,7 @@ export interface PublicConfig {
   routeChains: string[];
   evm: { chains: EvmChainConfig[]; walletConnect: boolean } & Pick<SampanConfig['evm'], 'receiptPollSeconds' | 'receiptWaitSeconds' | 'replanSeconds'>;
   limits: SampanConfig['limits'];
-  landing: Pick<SampanConfig['landing'], 'toleranceBps' | 'toleranceBpsDirect' | 'returnAfterBlocks' | 'validHours' | 'pagePollSeconds' | 'dustSats'>;
+  landing: Pick<SampanConfig['landing'], 'toleranceBps' | 'toleranceBpsDirect' | 'returnAfterBlocks' | 'validHours' | 'pagePollSeconds' | 'dustSats' | 'convertFeeSats'>;
   compliance: { crossChainEnabled: boolean };
   banner: SampanConfig['banner'];
   site: SampanConfig['site'];
@@ -262,6 +264,7 @@ export function validateConfig(c: SampanConfig): string[] {
   );
   need(posInt(c.connect?.maxScanRounds), 'connect.maxScanRounds: positive integer');
   need(posInt(c.connect?.retryHintSeconds), 'connect.retryHintSeconds: positive integer');
+  need(posInt(c.connect?.bchBlockSeconds), 'connect.bchBlockSeconds: positive integer');
   need(isHttpsUrl(c.connect?.explorerTxUrl ?? '') && c.connect.explorerTxUrl.includes('{txid}'), 'connect.explorerTxUrl: https URL with {txid}');
   need(posInt(c.rate.quotesPerMinute) && posInt(c.rate.crossingsPerHour) && posInt(c.rate.invoicesPerHour), 'rate: positive integers');
   need(c.rate.cloudflareCidrs.every((r) => /^[0-9a-fA-F:.]+\/\d{1,3}$/.test(r)), 'rate.cloudflareCidrs: CIDR ranges');
@@ -365,6 +368,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
       validHours: c.landing.validHours,
       pagePollSeconds: c.landing.pagePollSeconds,
       dustSats: c.landing.dustSats,
+      convertFeeSats: c.landing.convertFeeSats,
     },
     compliance: { crossChainEnabled: c.compliance.crossChainEnabled },
     banner: c.banner,

@@ -109,3 +109,13 @@ export const buildSwapTx = (p: SwapParams): BuiltTx => {
     sizeBytes: finalSize,
   };
 };
+
+/** Bytes of this swap from one P2PKH wallet coin, signed (for the cost card before a build picks real coins). */
+export const swapSizeEstimate = (trade: SelectedTrade, tokenDustSats: bigint): number => {
+  const lock = hexToBin(`76a914${'00'.repeat(20)}88ac`);
+  const coin: UserCoin =
+    trade.side === 'sell'
+      ? { txid: '00'.repeat(32), vout: 0, sats: tokenDustSats, lockingBytecode: lock, token: { category: trade.category, amount: trade.supply } }
+      : { txid: '00'.repeat(32), vout: 0, sats: trade.supply + tokenDustSats + 100_000n, lockingBytecode: lock };
+  return buildSwapTx({ trade, coins: [coin], payoutLockingBytecode: lock, changeLockingBytecode: lock, satsPerByte: 1n, tokenDustSats }).sizeBytes;
+};

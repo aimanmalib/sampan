@@ -4,6 +4,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { SampanConfig } from '../../core/config.js';
 import { opReturnHex } from '../../core/routes/memo.js';
+import { depositSize } from '../../core/tx/deposit.js';
 import { parseAddress } from '../../core/address.js';
 import type { Origin } from '../db.js';
 import type { OutService, OutView } from '../out.js';
@@ -52,6 +53,8 @@ export const outViewToWire = (v: OutView): unknown =>
     minOut: v.quote.minOut,
     outDecimals: v.quote.outDecimals,
     fees: v.quote.fees,
+    // The deposit's own network fee from one coin at the quote's rate (the cost card; the build measures it again).
+    depositNetworkSats: BigInt(depositSize(1, v.quote.memo)) * v.quote.satsPerByte,
     expiry: v.quote.expiry,
     seconds: v.quote.seconds,
   });

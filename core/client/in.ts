@@ -9,6 +9,8 @@ import { readCall, readResult, routerDepositCalls, toTokenUnits, type EvmCall, t
 import { checkInPlan } from '../evm/check-in.js';
 import type { Api } from './api.js';
 import { acceptCard } from './land.js';
+import type { WireFees } from './out.js';
+import type { WireQuote } from './swap.js';
 
 /** The part of an EIP-1193 provider this flow uses. */
 export interface Eip1193 {
@@ -173,6 +175,11 @@ export interface WireInQuote {
   destination: string;
   expectedSats: string;
   minSats: string;
+  /** EVM router the deposit goes through (the allowance the cost card checks). Older servers leave these out. */
+  router?: string;
+  fees?: WireFees;
+  convert?: WireQuote;
+  gasAssetUsdE8?: string | null;
   expiry: number;
   seconds: number;
   usd: number;

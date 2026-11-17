@@ -63,6 +63,7 @@
         "rpc": ["https://ethereum-rpc.publicnode.com", "https://eth.drpc.org"],
         "explorer": "https://etherscan.io",
         "native": { "name": "Ether", "symbol": "ETH" },
+        "gas": { "approve": 56361, "deposit": 68758, "blockSeconds": 12 },
         "tokens": {
           "USDC": { "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "decimals": 6 },
           "USDT": { "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7", "decimals": 6 }
@@ -75,6 +76,7 @@
         "rpc": ["https://bsc-dataseed.bnbchain.org", "https://bsc-dataseed.defibit.io"],
         "explorer": "https://bscscan.com",
         "native": { "name": "BNB", "symbol": "BNB" },
+        "gas": { "approve": 54235, "deposit": 58150, "blockSeconds": 3 },
         "tokens": {
           "USDC": { "address": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d", "decimals": 18 },
           "USDT": { "address": "0x55d398326f99059fF775485246999027B3197955", "decimals": 18 }
@@ -87,6 +89,7 @@
         "rpc": ["https://api.avax.network/ext/bc/C/rpc", "https://avalanche-c-chain-rpc.publicnode.com"],
         "explorer": "https://snowtrace.io",
         "native": { "name": "Avalanche", "symbol": "AVAX" },
+        "gas": { "approve": 56216, "deposit": 80000, "blockSeconds": 2 },
         "tokens": {
           "USDC": { "address": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", "decimals": 6 },
           "USDT": { "address": "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7", "decimals": 6 }
@@ -99,6 +102,7 @@
         "rpc": ["https://mainnet.base.org", "https://base-rpc.publicnode.com"],
         "explorer": "https://basescan.org",
         "native": { "name": "Ether", "symbol": "ETH" },
+        "gas": { "approve": 56216, "deposit": 100000, "blockSeconds": 2 },
         "tokens": {
           "USDC": { "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "decimals": 6 }
         }
@@ -156,6 +160,7 @@
     "relayUrls": ["wss://relay.riften.net:443", "wss://relay.cauldron.quest:443"],
     "maxScanRounds": 10,
     "retryHintSeconds": 20,
+    "bchBlockSeconds": 600,
     "explorerTxUrl": "https://blockchair.com/bitcoin-cash/transaction/{txid}"
   },
   "landing": {

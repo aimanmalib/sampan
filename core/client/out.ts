@@ -24,9 +24,21 @@ export interface WireOutQuote {
   expectedOut: string;
   minOut: string;
   outDecimals: number;
-  fees: { total: string; totalBps: number };
+  fees: WireFees;
+  /** Network fee of the deposit (one coin), satoshis. Older servers leave it out. */
+  depositNetworkSats?: string;
   expiry: number;
   seconds: number;
+}
+
+/** The route's fees as the server sends them; the named parts are left out by older servers. */
+export interface WireFees {
+  total: string;
+  totalBps: number;
+  liquidity?: string;
+  outbound?: string;
+  affiliate?: string;
+  slippageBps?: number;
 }
 
 export interface OutIntent {

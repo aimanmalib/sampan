@@ -173,7 +173,7 @@ export function createServices(o: ServiceOptions): Services {
     swaps,
     route,
     outs: route ? new OutService({ config, route, swaps, chain, prefix, chainOpen: (c) => health.chainOpen(c) }) : null,
-    ins: route ? new InService({ config, route, landings, prefix, chainOpen: (c) => health.chainOpen(c) }) : null,
+    ins: route ? new InService({ config, route, landings, swaps, prefix, chainOpen: (c) => health.chainOpen(c) }) : null,
     landings,
     watcher: new LandingWatcher({
       config,

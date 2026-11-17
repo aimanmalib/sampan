@@ -31,9 +31,13 @@ const inViewToWire = (v: InView): unknown =>
     destination: v.quote.destination,
     expectedSats: v.quote.expectedSats,
     minSats: v.quote.minSats,
+    router: v.quote.router,
+    fees: v.quote.fees,
     expiry: v.quote.expiry,
     seconds: v.quote.seconds,
     usd: v.usd,
+    ...(v.convert ? { convert: v.convert } : {}),
+    gasAssetUsdE8: v.gasAssetUsdE8,
   });
 
 function service(config: SampanConfig, s: Services): InService {

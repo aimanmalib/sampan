@@ -6,7 +6,8 @@ import { parseAddress, type CashPrefix } from '../core/address.js';
 import { feeLockingHex, sampanFeeSats } from '../core/business.js';
 import type { SampanConfig } from '../core/config.js';
 import { selectTrade, type SelectedTrade, type TradeSide } from '../core/pools/trade.js';
-import { buildSwapTx, SwapBuildError } from '../core/tx/swap.js';
+import { tradeCost } from '../core/cost.js';
+import { buildSwapTx, swapSizeEstimate, SwapBuildError } from '../core/tx/swap.js';
 import { BCH_DUST_SATS, type BuiltTx, type UserCoin } from '../core/tx/types.js';
 import { verifyInputs } from '../core/tx/verify.js';
 import type { Chain, ChainUtxo } from './chain/types.js';
@@ -41,6 +42,11 @@ export interface Quote {
   sampanFeeSats: bigint;
   pools: number;
   usd: number;
+  /** Cauldron's pool fee in satoshis and the trade's price impact (pool math), for the cost card. */
+  poolFeeSats: bigint;
+  impactBps: number;
+  /** Network fee of this swap from one wallet coin at the site's rate (an estimate before coins are picked). */
+  networkSats: bigint;
 }
 
 export interface BuildRequest extends QuoteRequest {
@@ -100,7 +106,9 @@ export class SwapService {
     if (usd > limits.maxUsd) throw new SwapError('above_max', `at most ${limits.maxUsd} USD per swap`);
     const fee = sampanFeeSats(sats, this.o.config.business.feeBps);
     const minReceive = (netDemand(t, fee) * BigInt(10_000 - cauldron.slippageBps)) / 10_000n;
-    return { token, category: t.category, side: t.side, supply: t.supply, demand: t.demand, minReceive, sampanFeeSats: fee, pools: t.legs.length, usd };
+    const { poolFeeSats, impactBps } = tradeCost(t);
+    const networkSats = BigInt(swapSizeEstimate(t, BigInt(this.o.config.landing.tokenDustSats))) * BigInt(this.o.config.fees.satsPerByte);
+    return { token, category: t.category, side: t.side, supply: t.supply, demand: t.demand, minReceive, sampanFeeSats: fee, pools: t.legs.length, usd, poolFeeSats, impactBps, networkSats };
   }
 
   async quote(r: QuoteRequest): Promise<Quote> {

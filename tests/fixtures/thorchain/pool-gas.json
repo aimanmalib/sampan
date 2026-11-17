@@ -1,0 +1,6 @@
+{
+  "ETH.ETH": { "asset": "ETH.ETH", "asset_tor_price": "183060000000" },
+  "BSC.BNB": { "asset": "BSC.BNB", "asset_tor_price": "59360000000" },
+  "AVAX.AVAX": { "asset": "AVAX.AVAX", "asset_tor_price": "717000000" },
+  "BASE.ETH": { "asset": "BASE.ETH", "asset_tor_price": "183060000000" }
+}

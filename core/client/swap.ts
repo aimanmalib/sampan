@@ -19,6 +19,10 @@ export interface WireQuote {
   sampanFeeSats: string;
   pools: number;
   usd: number;
+  /** Cost card parts; older servers leave them out. */
+  poolFeeSats?: string;
+  impactBps?: number;
+  networkSats?: string;
 }
 
 export interface SwapIntent {

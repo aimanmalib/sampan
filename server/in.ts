@@ -9,7 +9,7 @@ import type { LandingService } from './landing/service.js';
 import { routeTarget } from './route-target.js';
 import type { InQuote, Route } from './routes/types.js';
 import { RouteError } from './routes/types.js';
-import { SwapError } from './swap.js';
+import { SwapError, type Quote, type SwapService } from './swap.js';
 
 export const BCH = 'BCH';
 
@@ -30,6 +30,10 @@ export interface InView {
   /** Token contract on the source chain. */
   token: string;
   usd: number;
+  /** Receiving the stablecoin: the Cauldron trade the landing address would make with the expected BCH (cost card). */
+  convert?: Quote;
+  /** USD per whole gas coin of the source chain, 8 decimals, from the route's pool; null when unknown. */
+  gasAssetUsdE8: bigint | null;
 }
 
 export interface InPlanView extends InView {
@@ -39,7 +43,7 @@ export interface InPlanView extends InView {
 
 export class InService {
   constructor(
-    private readonly o: { config: SampanConfig; route: Route; landings: LandingService; prefix: CashPrefix; chainOpen?: (chain: string) => boolean },
+    private readonly o: { config: SampanConfig; route: Route; landings: LandingService; swaps?: SwapService; prefix: CashPrefix; chainOpen?: (chain: string) => boolean },
   ) {}
 
   private source(r: InRequest): { asset: string; token: string } {
@@ -65,7 +69,23 @@ export class InService {
   /** What the user would receive, quoted to their own address (no landing address is made while typing). */
   async quote(r: InRequest): Promise<InView> {
     const { asset, token } = this.source(r);
-    return { ...(await this.ask(r, asset, r.address)), token };
+    const asked = await this.ask(r, asset, r.address);
+    const [convert, gasAssetUsdE8] = await Promise.all([this.convertEstimate(r, asked.quote.expectedSats), this.gasPrice(r.chain)]);
+    return { ...asked, token, ...(convert ? { convert } : {}), gasAssetUsdE8 };
+  }
+
+  /** The trade a landing address would make with `sats`, or nothing when it cannot be quoted now. */
+  private async convertEstimate(r: InRequest, sats: bigint): Promise<Quote | undefined> {
+    const { landing } = this.o.config;
+    if (r.receive === BCH || !this.o.swaps) return undefined;
+    const supply = sats - BigInt(landing.tokenDustSats) - BigInt(landing.convertFeeSats);
+    if (supply <= 0n) return undefined;
+    return this.o.swaps.quote({ token: r.receive, side: 'buy', amount: supply }).catch(() => undefined);
+  }
+
+  private async gasPrice(chain: string): Promise<bigint | null> {
+    const native = this.o.config.evm.chains.find((c) => c.key === chain)?.native.symbol;
+    return native ? this.o.route.gasAssetUsd(chain, native) : null;
   }
 
   /** A fresh quote to the final destination. The minimum may not fall below what the page showed. */
@@ -73,13 +93,13 @@ export class InService {
     const { asset, token } = this.source(r);
     const first = await this.ask(r, asset, r.address);
     if (first.quote.minSats < r.minSats) throw new SwapError('price_moved', 'the price moved past the minimum shown; check the new amount');
-    if (r.receive === BCH) return { ...first, token };
+    if (r.receive === BCH) return { ...first, token, gasAssetUsdE8: null };
     const opened = await this.o.landings.open(
       { ownerAddress: r.address, token: r.receive },
       { minSats: first.quote.minSats, toleranceBps: this.o.config.landing.toleranceBps },
     );
     const again = await this.ask(r, asset, opened.card.address);
     if (again.quote.minSats < r.minSats) throw new SwapError('price_moved', 'the price moved past the minimum shown; check the new amount');
-    return { ...again, token, landing: { crossingId: opened.crossingId, card: opened.card, tokensMin: opened.tokensMin } };
+    return { ...again, token, gasAssetUsdE8: null, landing: { crossingId: opened.crossingId, card: opened.card, tokensMin: opened.tokensMin } };
   }
 }

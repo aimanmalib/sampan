@@ -7,7 +7,7 @@ import { buildDeposit } from '../../core/tx/deposit.js';
 import { openMapOf, type InboundRow, type OpenMap } from '../../core/route-assets.js';
 import type { WalletCoin } from '../../core/tx/payment.js';
 import { ThornodeError, type Thornode } from './thornode.js';
-import { RouteError, type CrossingStatus, type InQuote, type InPlan, type InRequest, type OutQuote, type OutRequest, type Route } from './types.js';
+import { RouteError, type CrossingStatus, type InQuote, type InPlan, type InRequest, type OutQuote, type OutRequest, type Route, type RouteFees } from './types.js';
 
 export const BCH_ASSET = 'BCH.BCH';
 
@@ -20,7 +20,7 @@ interface QuoteBody {
   recommended_gas_rate?: string;
   expiry?: number;
   total_swap_seconds?: number;
-  fees?: { total?: string; total_bps?: number };
+  fees?: { total?: string; total_bps?: number; liquidity?: string; outbound?: string; affiliate?: string; slippage_bps?: number };
 }
 
 interface StatusBody {
@@ -43,6 +43,19 @@ export interface ThorchainOptions {
 const num = (v: string | undefined, what: string): bigint => {
   if (v === undefined || !/^[0-9]+$/.test(v)) throw new RouteError('route_unavailable', `THORChain quote has no ${what}`);
   return BigInt(v);
+};
+
+/** Fees as THORNode names them; a missing part counts as 0, the total must be there. */
+const feesOf = (q: QuoteBody): RouteFees => {
+  const part = (v: string | undefined): bigint => (v !== undefined && /^[0-9]+$/.test(v) ? BigInt(v) : 0n);
+  return {
+    total: num(q.fees?.total, 'fee total'),
+    totalBps: q.fees?.total_bps ?? 0,
+    liquidity: part(q.fees?.liquidity),
+    outbound: part(q.fees?.outbound),
+    affiliate: part(q.fees?.affiliate),
+    slippageBps: q.fees?.slippage_bps ?? 0,
+  };
 };
 
 export class ThorchainRoute implements Route {
@@ -81,7 +94,7 @@ export class ThorchainRoute implements Route {
       expectedOut,
       minOut,
       outDecimals: THOR_DECIMALS,
-      fees: { total: num(q.fees?.total, 'fee total'), totalBps: q.fees?.total_bps ?? 0 },
+      fees: feesOf(q),
       recommendedMinSats: num(q.recommended_min_amount_in, 'minimum amount'),
       satsPerByte: gas > this.o.minSatsPerByte ? gas : this.o.minSatsPerByte,
       expiry: this.fresh(q),
@@ -111,6 +124,7 @@ export class ThorchainRoute implements Route {
       router: q.router,
       vault: q.inbound_address,
       memo: withLimit(q.memo ?? '', minSats),
+      fees: feesOf(q),
       expiry: this.fresh(q),
       seconds: q.total_swap_seconds ?? 0,
     };
@@ -148,5 +162,14 @@ export class ThorchainRoute implements Route {
     }
     if (!Array.isArray(inbound)) throw new RouteError('route_unavailable', 'THORChain sent no chain list');
     return openMapOf(inbound);
+  }
+
+  async gasAssetUsd(chain: string, symbol: string): Promise<bigint | null> {
+    try {
+      const pool = await this.o.node.request<{ asset_tor_price?: string }>(`/thorchain/pool/${chain}.${symbol}`);
+      return pool.asset_tor_price && /^[0-9]+$/.test(pool.asset_tor_price) ? BigInt(pool.asset_tor_price) : null;
+    } catch {
+      return null;
+    }
   }
 }

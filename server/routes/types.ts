@@ -13,6 +13,17 @@ export class RouteError extends Error {
   }
 }
 
+/** The route's fees as it names them, in the output asset's 1e8 units (BCH: satoshis). */
+export interface RouteFees {
+  total: bigint;
+  totalBps: number;
+  liquidity: bigint;
+  outbound: bigint;
+  affiliate: bigint;
+  /** The route's own price impact. */
+  slippageBps: number;
+}
+
 /** A quote to send BCH out to another chain. Amounts in THORChain-style 1e8 units for the output side. */
 export interface OutQuote {
   route: RouteId;
@@ -28,7 +39,7 @@ export interface OutQuote {
   expectedOut: bigint;
   minOut: bigint;
   outDecimals: number;
-  fees: { total: bigint; totalBps: number };
+  fees: RouteFees;
   /** Smallest deposit the route recommends, in satoshis. */
   recommendedMinSats: bigint;
   satsPerByte: bigint;
@@ -52,6 +63,7 @@ export interface InQuote {
   router: string;
   vault: string;
   memo: string;
+  fees: RouteFees;
   expiry: number;
   seconds: number;
 }
@@ -100,4 +112,6 @@ export interface Route {
   status(txid: string): Promise<CrossingStatus>;
   /** Open state per chain key (BCH included); throws when the route cannot be asked. */
   open(): Promise<OpenMap>;
+  /** USD per whole coin of a chain's gas asset, 8 decimals, from the route's own pool; null when it has none. */
+  gasAssetUsd(chain: string, symbol: string): Promise<bigint | null>;
 }
