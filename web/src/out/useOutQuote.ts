@@ -12,18 +12,22 @@ export interface OutAsk {
   symbol: string;
   chain: string;
   destination: string;
+  /** 1Click asks for its own (dry) quote; absent = the active route. */
+  route?: 'near-intents';
+  /** False = ask nothing (the route is not offered for this request). */
+  enabled?: boolean;
 }
 
 export function useOutQuote(ask: OutAsk, pauseMs: number): OutQuoteState {
-  const { source, amount, symbol, chain, destination } = ask;
-  const ready = amount !== undefined && amount > 0n && /^0x[0-9a-fA-F]{40}$/.test(destination);
-  const key = ready ? `${source}:${amount}:${symbol}:${chain}:${destination.toLowerCase()}` : null;
+  const { source, amount, symbol, chain, destination, route } = ask;
+  const ready = ask.enabled !== false && amount !== undefined && amount > 0n && /^0x[0-9a-fA-F]{40}$/.test(destination);
+  const key = ready ? `${route ?? ''}:${source}:${amount}:${symbol}:${chain}:${destination.toLowerCase()}` : null;
   const [result, setResult] = useState<{ key: string; state: OutQuoteState } | null>(null);
   useEffect(() => {
     if (key === null || amount === undefined) return;
     let live = true;
     const timer = setTimeout(() => {
-      quoteOut(api, { source, amount, symbol, chain, destination })
+      quoteOut(api, { source, amount, symbol, chain, destination, ...(route ? { route } : {}) })
         .then((quote) => live && setResult({ key, state: { status: 'ok', quote } }))
         .catch((e: unknown) => live && setResult({ key, state: { status: 'error', code: e instanceof ApiFailure ? e.code : 'error' } }));
     }, pauseMs);
@@ -31,7 +35,7 @@ export function useOutQuote(ask: OutAsk, pauseMs: number): OutQuoteState {
       live = false;
       clearTimeout(timer);
     };
-  }, [key, source, amount, symbol, chain, destination, pauseMs]);
+  }, [key, source, amount, symbol, chain, destination, route, pauseMs]);
   if (key === null) return { status: 'none' };
   return result?.key === key ? result.state : { status: 'loading' };
 }

@@ -60,6 +60,8 @@ export interface OutIntent {
   feeCapSats: bigint;
   business: SwapIntent['business'];
   prompts: { swap: string; deposit: string };
+  /** 'near-intents' = the 1Click route (two outputs, no memo); absent = the active route. */
+  route?: 'near-intents';
 }
 
 export interface OutProgress {
@@ -77,15 +79,35 @@ interface BuildReply {
   deposit: { lockingBytecode: string; sats: string; opReturn: string };
 }
 
-export const quoteOut = async (api: Api, b: { source: string; amount: bigint; symbol: string; chain: string; destination: string }): Promise<WireOutQuote> =>
+export const quoteOut = async (api: Api, b: { source: string; amount: bigint; symbol: string; chain: string; destination: string; route?: 'near-intents' }): Promise<WireOutQuote> =>
   (await api.post<{ quote: WireOutQuote }>('/api/out/quote', { ...b, amount: b.amount.toString() })).quote;
+
+/**
+ * 1Click carries no memo: the destination and the minimum live in the quote the server asked for, and the deposit
+ * address is one-time. The page checks the quote names the address typed here and at least the minimum shown, and
+ * that the transaction has no OP_RETURN (rule 6, two outputs).
+ */
+function oneClickQuoteMatches(build: BuildReply, intent: OutIntent): true | string {
+  const q = build.quote;
+  if (q.route !== 'near-intents') return 'the server answered for another route';
+  if (q.memo !== '' || build.deposit.opReturn !== '') return 'a 1Click deposit carries no memo';
+  if (q.destination.toLowerCase() !== intent.destination.toLowerCase()) return 'the quote pays another address';
+  if (BigInt(q.minOut) < intent.minOut) return 'the quote pays less than the minimum shown';
+  return true;
+}
 
 /** The page's own expectation for the deposit; only the vault, amount and input paths come from the server. */
 export function depositExpectation(build: BuildReply, wallet: WalletView, intent: OutIntent): Expectation {
-  const memo = memoMatches(build.quote.memo, { asset: intent.asset, destination: intent.destination, minOut: intent.minOut });
-  if (memo !== true) throw new CheckFailure(6, memo);
-  const opReturn = opReturnHex(build.quote.memo);
-  if (opReturn !== build.deposit.opReturn) throw new CheckFailure(6, 'the memo output differs from the memo');
+  const oneClick = intent.route === 'near-intents';
+  if (oneClick) {
+    const ok = oneClickQuoteMatches(build, intent);
+    if (ok !== true) throw new CheckFailure(6, ok);
+  } else {
+    if (build.quote.route === 'near-intents') throw new CheckFailure(6, 'the server answered for another route');
+    const memo = memoMatches(build.quote.memo, { asset: intent.asset, destination: intent.destination, minOut: intent.minOut });
+    if (memo !== true) throw new CheckFailure(6, memo);
+    if (opReturnHex(build.quote.memo) !== build.deposit.opReturn) throw new CheckFailure(6, 'the memo output differs from the memo');
+  }
   const sats = BigInt(build.deposit.sats);
   if (intent.source === 'BCH' && sats !== intent.amount) throw new CheckFailure(3, 'the deposit is not the amount shown');
   return {
@@ -93,8 +115,7 @@ export function depositExpectation(build: BuildReply, wallet: WalletView, intent
     inputPaths: build.inputPaths,
     poolOwnerPkhs: [],
     deposits: [{ lockingBytecode: build.deposit.lockingBytecode, sats }],
-    opReturn,
-    thorDeposit: true,
+    ...(oneClick ? { oneClickDeposit: true } : { opReturn: build.deposit.opReturn, thorDeposit: true }),
     spend: { sats, tokens: {} },
     feeCapSats: intent.feeCapSats,
     receive: { category: intent.category.toLowerCase(), min: 0n },
@@ -160,6 +181,7 @@ export async function runOut(o: {
       chain: intent.chain,
       destination: intent.destination,
       minOut: intent.minOut.toString(),
+      ...(intent.route ? { route: intent.route } : {}),
       addresses,
       ...(fromTxid ? { fromTxid } : {}),
     });

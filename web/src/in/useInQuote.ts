@@ -13,17 +13,21 @@ export interface InAsk {
   receive: string;
   address: string;
   addressOk: boolean;
+  /** 1Click asks for its own (dry) quote; absent = the active route. */
+  route?: 'near-intents';
+  /** False = ask nothing (the route is not offered for this request). */
+  enabled?: boolean;
 }
 
 export function useInQuote(ask: InAsk, pauseMs: number): InQuoteState {
-  const { symbol, chain, amount, receive, address, addressOk } = ask;
-  const key = amount !== undefined && amount > 0n && addressOk ? `${symbol}:${chain}:${amount}:${receive}:${address}` : null;
+  const { symbol, chain, amount, receive, address, addressOk, route } = ask;
+  const key = ask.enabled !== false && amount !== undefined && amount > 0n && addressOk ? `${route ?? ''}:${symbol}:${chain}:${amount}:${receive}:${address}` : null;
   const [result, setResult] = useState<{ key: string; state: InQuoteState } | null>(null);
   useEffect(() => {
     if (key === null || amount === undefined) return;
     let live = true;
     const timer = setTimeout(() => {
-      quoteIn(api, { symbol, chain, amount, receive, address })
+      quoteIn(api, { symbol, chain, amount, receive, address, ...(route ? { route } : {}) })
         .then((quote) => live && setResult({ key, state: { status: 'ok', quote } }))
         .catch((e: unknown) => live && setResult({ key, state: { status: 'error', code: e instanceof ApiFailure ? e.code : 'error' } }));
     }, pauseMs);
@@ -31,7 +35,7 @@ export function useInQuote(ask: InAsk, pauseMs: number): InQuoteState {
       live = false;
       clearTimeout(timer);
     };
-  }, [key, symbol, chain, amount, receive, address, pauseMs]);
+  }, [key, symbol, chain, amount, receive, address, route, pauseMs]);
   if (key === null) return { status: 'none' };
   return result?.key === key ? result.state : { status: 'loading' };
 }

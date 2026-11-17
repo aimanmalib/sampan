@@ -32,6 +32,23 @@ const networkPatch = { ...landingPatch, compliance: { crossChainEnabled: true },
 /** A fake server with the landing flow on and the QR opening by itself switched off (e2e/qr-first.spec.ts). */
 export const QR_OFF_PORT_OFFSET = NETWORK_PORT_OFFSET + 1;
 const qrOffPatch = { ...landingPatch, ui: { qrAutoOpen: false } };
+/**
+ * A fake server with the 1Click route on (e2e/oneclick.spec.ts): the cross-chain server plus features.oneClick, and
+ * 1Click answered by the synthetic fake. Base USDC is added to its asset list here only, so one request can show the
+ * THORChain, atomic swap and 1Click rows together (the id follows the 1Click form; the fake accepts any id).
+ */
+export const ONECLICK_PORT_OFFSET = QR_OFF_PORT_OFFSET + 1;
+const shippedOneClick = (JSON.parse(readFileSync('config/sampan.json', 'utf8')) as { oneClick: { assets: Array<Record<string, unknown>> } }).oneClick.assets;
+const oneClickPatch = {
+  ...outPatch,
+  features: { ...e2ePatch.features, oneClick: true },
+  oneClick: {
+    assets: [
+      ...shippedOneClick.map((a) => ({ ...a, live: { out: true, in: true } })),
+      { id: 'nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near', chain: 'BASE', symbol: 'USDC', decimals: 6, live: { out: true, in: true } },
+    ],
+  },
+};
 /** Test-only secret of the demo shop's hook on the local fake server (the public site's secret lives on the host). */
 const payEnv = { SAMPAN_PAY_DEMO_SECRET: `whsec_${Buffer.alloc(32, 3).toString('base64')}` };
 const fakeServer = (p: number, patch: unknown, outage?: string, extra: Record<string, string> = {}) => ({
@@ -63,6 +80,7 @@ export default defineConfig({
           fakeServer(port + PAY_PORT_OFFSET, payPatch, undefined, payEnv),
           fakeServer(port + NETWORK_PORT_OFFSET, networkPatch, undefined, { SAMPAN_FAKE_INBOUND: 'inbound-2026-11-17.json' }),
           fakeServer(port + QR_OFF_PORT_OFFSET, qrOffPatch),
+          fakeServer(port + ONECLICK_PORT_OFFSET, oneClickPatch),
         ],
       }),
 });

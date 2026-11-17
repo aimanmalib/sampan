@@ -1,12 +1,14 @@
 // "Choose a route" inside Send out and Bring in: one row per route for the same amount, with what each delivers,
-// the network fees as each reports them, the measured time and how the funds are held. The card appears only when
-// the atomic swap route has a row (flag on, flow offered in config, service checked); otherwise the panel is as before.
-// THORChain stays selected until the user picks the other row; an unavailable row says why and cannot be picked.
+// the fees as each reports them, the measured time and how the funds are held. The card appears only when a second
+// route has a row: the atomic swap route (flag on, flow offered in config, service checked) or 1Click (flag on, asset
+// live in that direction); otherwise the panel is as before. THORChain stays selected until the user picks another
+// row; an unavailable row says why and cannot be picked.
 import { useId, useState, type ReactNode } from 'react';
 import proof from 'virtual:sampan-proof';
 import { atomFlowFor, compareRoutes, type CompareFlow, type RouteRow, type ThorSide } from '../../../core/routes/compare';
 import type { LoadedConfig } from '../config';
 import { useText, type TextKey } from '../i18n';
+import { outCodeKey } from '../out/errors';
 import { useAtomQuote, type AtomReady } from './useAtomQuote';
 import './atom.css';
 
@@ -44,12 +46,19 @@ function timeText(t: T, row: RouteRow): string {
   const { median, count, estimate } = row.seconds;
   const measured =
     median === null ? t('compare.time.none') : t(count === 1 ? 'compare.time.one' : 'compare.time.many', { minutes: minutes(median), count: String(count) });
-  return estimate === undefined ? measured : `${measured} ${t('compare.time.estimate', { minutes: minutes(estimate) })}`;
+  if (estimate === undefined) return measured;
+  // THORChain keeps its own sentence; another route's estimate names that route.
+  const said =
+    row.route === 'thorchain'
+      ? t('compare.time.estimate', { minutes: minutes(estimate) })
+      : t('compare.time.estimateRoute', { route: t(`route.${row.route}` as TextKey), minutes: minutes(estimate) });
+  return `${measured} ${said}`;
 }
 
 function trustText(t: T, row: RouteRow): string {
   const tr = row.trust;
   if (tr.kind === 'vaults') return t('compare.trust.vaults');
+  if (tr.kind === 'deposit') return t('compare.trust.deposit', { minutes: String(tr.deadlineMinutes) });
   const base = t('compare.trust.locks', { after: waitText(t, tr.userLockReturnsAfter), bch: String(tr.confirmations.bch), base: String(tr.confirmations.base) });
   return tr.anyoneMaySettle ? `${base} ${t('compare.trust.settle')}` : base;
 }
@@ -58,9 +67,18 @@ export function reasonText(t: T, code: string): string {
   return REASONS.includes(code) ? t(`compare.reason.${code}` as TextKey) : t('compare.reason.other', { code });
 }
 
-function Row({ row, name, chosen, onPick }: { row: RouteRow; name: string; chosen: boolean; onPick: () => void }) {
+/** Why the 1Click row cannot be picked: its quote is on the way, was for another amount, or the server's code. */
+function oneClickReason(t: T, code: string, vars: Record<string, string>): string {
+  if (code === 'stale') return t('compare.reason.stale');
+  // 1Click names its own minimum, which config does not hold: no number is said for it.
+  if (code === 'below_route_min') return t('compare.reason.routeMin', vars);
+  return t(outCodeKey(code), vars);
+}
+
+function Row({ row, name, chosen, onPick, vars }: { row: RouteRow; name: string; chosen: boolean; onPick: () => void; vars: Record<string, string> }) {
   const { t } = useText();
-  const off = row.route === 'atom' && !row.available;
+  const off = row.route !== 'thorchain' && !row.available;
+  const waiting = off && row.reason === 'pending';
   const fees = feesText(t, row);
   return (
     <li className={`routes__row${off ? ' routes__row--off' : ''}`} data-route={row.route}>
@@ -69,7 +87,11 @@ function Row({ row, name, chosen, onPick }: { row: RouteRow; name: string; chose
         <span className="routes__name">{t(`route.${row.route}` as TextKey)}</span>
         {row.receivesMore ? <span className="routes__more">{t('compare.more')}</span> : null}
       </label>
-      {off ? (
+      {waiting ? (
+        <p className="routes__receive">{t('compare.receive.pending')}</p>
+      ) : off && row.route === 'near-intents' ? (
+        <p className="routes__reason">{oneClickReason(t, row.reason ?? 'route_unavailable', vars)}</p>
+      ) : off ? (
         <p className="routes__reason">{t('compare.unavailable', { reason: reasonText(t, row.reason ?? 'unavailable') })}</p>
       ) : (
         <>
@@ -88,27 +110,46 @@ function Row({ row, name, chosen, onPick }: { row: RouteRow; name: string; chose
   );
 }
 
+/** 1Click's side of the same request: its quote (or error code), and the words its refusals are said with. */
+export interface OneClickSide {
+  quote: ThorSide | { error: string } | null;
+  vars: Record<string, string>;
+}
+
 /**
  * The route card for one request, and the route the action button should run. `flow` null = no amount yet;
- * `thor` = THORChain's side of the same request, or a short code while its quote is pending or refused.
+ * `thor` = THORChain's side of the same request, or a short code while its quote is pending or refused; `oneClick`
+ * = 1Click's side, null when the page did not ask it.
  */
-export function useRouteChoice(config: LoadedConfig, flow: CompareFlow | null, thor: ThorSide | { error: string }): { card: ReactNode; route: RouteId; atom: AtomReady | null } {
+export function useRouteChoice(
+  config: LoadedConfig,
+  flow: CompareFlow | null,
+  thor: ThorSide | { error: string },
+  oneClick: OneClickSide | null = null,
+): { card: ReactNode; route: RouteId; atom: AtomReady | null } {
   const { t } = useText();
   const name = useId();
   const [picked, setPicked] = useState<RouteId>('thorchain');
   const token = config.tokens[config.defaultToken]!.symbol;
   const atomFlow = flow ? atomFlowFor(flow, token) : null;
   const { quote: atom, ready } = useAtomQuote(config, atomFlow, flow?.amount ?? null);
-  if (!flow || !atom) return { card: null, route: 'thorchain', atom: null };
-  const { rows } = compareRoutes({ flow, thor, atom, proof, config: { token, atomFlows: config.atom.flows } });
+  if (!flow) return { card: null, route: 'thorchain', atom: null };
+  const { rows } = compareRoutes({
+    flow,
+    thor,
+    atom,
+    oneClick: oneClick?.quote ?? null,
+    proof,
+    config: { token, atomFlows: config.atom.flows, oneClick: { enabled: config.features.oneClick, offer: config.oneClick } },
+  });
   if (rows.length < 2) return { card: null, route: 'thorchain', atom: null };
-  const route = picked === 'atom' && rows.some((r) => r.route === 'atom' && r.available) ? 'atom' : 'thorchain';
+  const route = picked !== 'thorchain' && rows.some((r) => r.route === picked && r.available) ? picked : 'thorchain';
   const card = (
     <fieldset className="routes">
       <legend className="routes__title">{t('compare.title')}</legend>
       <ul className="routes__list">
         {rows.map((row) => (
-          <Row key={row.route} row={row} name={name} chosen={route === row.route} onPick={() => setPicked(row.route)} />
+          <Row key={row.route} row={row} name={name} chosen={route === row.route} onPick={() => setPicked(row.route)} vars={oneClick?.vars ?? {}} />
         ))}
       </ul>
     </fieldset>

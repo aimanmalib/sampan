@@ -2,8 +2,8 @@
 // fixtures (page.route on /atom/api) and the route switched on in the config the page reads. The client file is the
 // real minified build. With the flag off, or a service that names another AtomLock, the page shows THORChain alone.
 // Skipped against a live site.
-import { readFileSync } from 'node:fs';
-import { expect, test, type Page, type Route } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { HEALTH, INVENTORY, noHorizontalOverflow, primary, routeOn, routes, row, service, watch } from './atom-fake.js';
 import en from '../lang/en.json' with { type: 'json' };
 
 test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server');
@@ -11,73 +11,6 @@ test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server');
 const outPort = Number(process.env.E2E_PORT ?? 4173) + 2;
 test.use({ baseURL: `http://127.0.0.1:${outPort}` });
 
-const fixture = (name: string): Record<string, unknown> =>
-  JSON.parse(readFileSync(new URL(`../tests/fixtures/atom/${name}`, import.meta.url), 'utf8')) as Record<string, unknown>;
-const HEALTH = fixture('health.json');
-const QUOTES: Record<string, Record<string, unknown>> = {
-  'pusd-to-usdc': fixture('quote-pusd-to-usdc.json'),
-  'usdc-to-pusd': fixture('quote-usdc-to-pusd.json'),
-};
-const INVENTORY = fixture('quote-pusd-to-usdc-inventory.json');
-
-interface Seen {
-  atom: string[];
-  client: string[];
-  errors: string[];
-  info: string[];
-}
-
-/** Records every request to the service and the client file, and console errors. */
-function watch(page: Page): Seen {
-  const seen: Seen = { atom: [], client: [], errors: [], info: [] };
-  page.on('request', (r) => {
-    const path = new URL(r.url()).pathname;
-    if (path.startsWith('/atom/api')) seen.atom.push(path);
-    if (path.startsWith('/vendor/atom-client')) seen.client.push(path);
-  });
-  page.on('console', (m) => {
-    if (m.type() === 'error') seen.errors.push(m.text());
-    if (m.type() === 'info') seen.info.push(m.text());
-  });
-  page.on('pageerror', (e) => seen.errors.push(e.message));
-  return seen;
-}
-
-/** Turns the route on in the config the page reads, for both flows. */
-async function routeOn(page: Page): Promise<void> {
-  await page.route('**/api/config', async (route: Route) => {
-    const res = await route.fetch();
-    const body = (await res.json()) as { features: Record<string, boolean>; atom: { flows: string[] } };
-    body.features.atom = true;
-    body.atom.flows = ['usdc-to-pusd', 'pusd-to-usdc'];
-    await route.fulfill({ response: res, json: body });
-  });
-}
-
-/** Answers the service from fixtures; each quote echoes the amount asked, as the service does. */
-async function service(page: Page, opts: { health?: Record<string, unknown>; quote?: (flow: string) => Record<string, unknown> } = {}): Promise<void> {
-  await page.route('**/atom/api/**', async (route: Route) => {
-    const url = new URL(route.request().url());
-    if (url.pathname.endsWith('/health')) return route.fulfill({ json: opts.health ?? HEALTH });
-    if (url.pathname.endsWith('/quote')) {
-      const flow = url.searchParams.get('flow') ?? '';
-      const q = { ...(opts.quote ?? ((f: string) => QUOTES[f]!))(flow) };
-      const status = q.ok ? 200 : 422;
-      if (q.ok) q.amountIn = url.searchParams.get('amount');
-      return route.fulfill({ status, json: q });
-    }
-    return route.fulfill({ status: 404, json: { error: 'not-found' } });
-  });
-}
-
-const routes = (page: Page) => page.locator('fieldset.routes');
-const row = (page: Page, name: string) => page.locator(`.routes__row[data-route="${name}"]`);
-const primary = (page: Page) => page.locator('.button--primary');
-
-async function noHorizontalOverflow(page: Page): Promise<void> {
-  const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
-  expect(scroll).toBeLessThanOrEqual(client);
-}
 
 test('Send out shows both routes for the same amount, THORChain selected, and the atom row can be chosen by keyboard', async ({ page }) => {
   const seen = watch(page);

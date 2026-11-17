@@ -84,3 +84,22 @@ export const isPlaceholder = (c: OneClickConfig, address: string): boolean =>
   address.toLowerCase() === c.placeholders.bch.toLowerCase() ||
   address.toLowerCase() === c.placeholders.evm.toLowerCase() ||
   address.toLowerCase() === c.placeholders.bch.replace(/^bitcoincash:/, '').toLowerCase();
+
+/** What the page reads about 1Click from /api/config: which assets are offered and its timings. No host, no key. */
+export interface OneClickPublic {
+  assets: Array<Pick<OneClickAsset, 'chain' | 'symbol' | 'live'>>;
+  dryDebounceMs: number;
+  statusPollSeconds: number;
+  deadlineMinutes: Record<Direction, number>;
+}
+
+export const oneClickPublic = (c: OneClickConfig): OneClickPublic => ({
+  assets: c.assets.map(({ chain, symbol, live }) => ({ chain, symbol, live })),
+  dryDebounceMs: c.dryDebounceMs,
+  statusPollSeconds: c.statusPollSeconds,
+  deadlineMinutes: c.deadlineMinutes,
+});
+
+/** True when the page may show and quote the 1Click row for this direction, chain and symbol (flag on, asset live). */
+export const offersOneClick = (enabled: boolean, c: Pick<OneClickPublic, 'assets'>, direction: Direction, chain: string, symbol: string): boolean =>
+  enabled && c.assets.some((a) => a.chain === chain && a.symbol === symbol && a.live[direction]);

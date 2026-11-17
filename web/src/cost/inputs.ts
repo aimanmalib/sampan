@@ -14,8 +14,11 @@ export const measuredSeconds = (flow: 'out' | 'in', chain: string): number[] =>
     .filter((r) => r.flow === flow && r.ok && r.seconds !== null && r.txids.some((t) => t.chain === chain.toLowerCase()))
     .map((r) => r.seconds!);
 
-export const outCard = (config: LoadedConfig, q: WireOutQuote, source: string, amount: bigint, chain: string): CostCard | null =>
-  outCardOf(config, q, source, amount, measuredSeconds('out', chain));
+/** The measured THORChain runs count for THORChain only; another route's card rests on its own quote's estimate. */
+const runsOf = (route: string, flow: 'out' | 'in', chain: string): number[] => (route === 'thorchain' ? measuredSeconds(flow, chain) : []);
 
-export const inCard = (config: LoadedConfig, q: WireInQuote, chain: EvmChain, receiveToken: boolean, gas: Gas | undefined): CostCard | null =>
-  inCardOf(config, q, chain, receiveToken, gas, measuredSeconds('in', chain.key));
+export const outCard = (config: LoadedConfig, q: WireOutQuote, source: string, amount: bigint, chain: string, route = 'thorchain'): CostCard | null =>
+  outCardOf(config, q, source, amount, runsOf(route, 'out', chain));
+
+export const inCard = (config: LoadedConfig, q: WireInQuote, chain: EvmChain, receiveToken: boolean, gas: Gas | undefined, route = 'thorchain'): CostCard | null =>
+  inCardOf(config, q, chain, receiveToken, gas, runsOf(route, 'in', chain.key));

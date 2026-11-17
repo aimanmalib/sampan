@@ -88,7 +88,8 @@ export class OneClickRoute implements Route {
     try {
       q = (await this.o.api.quote(request)).quote;
     } catch (e) {
-      if (e instanceof OneClickError && !e.unreachable) throw new RouteError('bad_request', `1Click: ${e.message}`);
+      // 1Click refuses a small amount with "Amount is too low…": the page says the route's minimum is not met.
+      if (e instanceof OneClickError && !e.unreachable) throw new RouteError(/too low/i.test(e.message) ? 'below_route_min' : 'bad_request', `1Click: ${e.message}`);
       throw new RouteError('route_unavailable', '1Click is not answering');
     }
     if (q.depositMemo) throw new RouteError('route_unavailable', '1Click asked for a memo, which this route does not send');

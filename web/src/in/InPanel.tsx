@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { parseAddress } from '../../../core/address';
 import { ApiFailure } from '../../../core/client/api';
 import { InStop, runIn, type InStep } from '../../../core/client/in';
+import { offersOneClick } from '../../../core/oneclick-config';
 import { thorFromIn } from '../../../core/routes/compare';
 import { formatUnits, parseUnits } from '../../../core/wallet';
 import { api } from '../api';
@@ -48,25 +49,38 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
   const [receive, setReceive] = useState(token.symbol);
   const [addressText, setAddressText] = useState('');
   const [run, setRun] = useState<Run>({ phase: 'idle' });
-  const route = t(`route.${config.route.active}` as TextKey);
-  const gate = useDisclosure(route);
   const src = networks.pick;
   const view = wallet.view;
   const address = view ? (receive === BCH ? view.receive.address : view.receive.tokenAddress) : addressText.trim();
   const addressOk = address !== '' && typeof parseAddress(address, 'bitcoincash') !== 'string';
   const amount = parseUnits(amountText, ROUTE_DECIMALS);
-  const quote = useInQuote({ symbol: src?.symbol ?? '', chain: src?.chain.key ?? '', amount, receive, address, addressOk }, QUOTE_PAUSE_MS);
+  const ask = { symbol: src?.symbol ?? '', chain: src?.chain.key ?? '', amount, receive, address, addressOk };
+  const thorQuote = useInQuote(ask, QUOTE_PAUSE_MS);
+  // 1Click is asked (by the server, dry) only while the flag is on and config offers this asset in.
+  const ocOffered = src !== undefined && offersOneClick(config.features.oneClick, config.oneClick, 'in', src.chain.key, src.symbol);
+  const ocQuote = useInQuote({ ...ask, route: 'near-intents', enabled: ocOffered }, config.oneClick.dryDebounceMs);
+  const side = (s: typeof thorQuote) => (s.status === 'ok' ? thorFromIn(s.quote, ROUTE_DECIMALS) : { error: s.status === 'error' ? s.code : 'pending' });
+  const minFor = (id: string): string => String(Math.max(config.limits.minUsd, config.limits.routeMinUsd[id as 'thorchain'] ?? 0));
+  const ocVars = { route: t('route.near-intents'), symbol: src?.symbol ?? '', chain: src?.chain.name ?? '', token: token.symbol, min: minFor('near-intents'), max: String(config.limits.maxUsd) };
   const choice = useRouteChoice(
     config,
     src && amount !== undefined && amount > 0n ? { kind: 'in', amount: formatUnits(amount, ROUTE_DECIMALS), chain: src.chain.key, symbol: src.symbol, receive } : null,
-    quote.status === 'ok' ? thorFromIn(quote.quote, ROUTE_DECIMALS) : { error: quote.status === 'error' ? quote.code : 'pending' },
+    side(thorQuote),
+    ocOffered ? { quote: side(ocQuote), vars: ocVars } : null,
   );
+  const oneClick = choice.route === 'near-intents';
+  // The quote the panel shows, costs and signs: the chosen route's.
+  const quote = oneClick ? ocQuote : thorQuote;
+  const chosenRoute = oneClick ? 'near-intents' : config.route.active;
+  const route = t(`route.${chosenRoute}` as TextKey);
+  const gate = useDisclosure(route);
   const q0 = quote.status === 'ok' ? quote.quote : null;
   const gas = useGas({
     enabled: !config.fake,
     chain: src?.chain ?? config.evm.chains[0]!,
     nativeUsdE8: q0?.gasAssetUsdE8,
-    router: q0?.router,
+    // 1Click is one plain transfer, no router: the card says "plus gas" instead of an estimate.
+    router: oneClick ? undefined : q0?.router,
     amount,
     wallet: evm.connected ? { address: evm.connected.address, provider: evm.connected.wallet.provider } : null,
     token: src?.token ?? { address: '', decimals: 0 },
@@ -74,9 +88,9 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
   if (!src) return null;
   const vars = { symbol: src.symbol, chain: src.chain.name, route, token: token.symbol, pct: (config.landing.toleranceBps / 100).toFixed(1) };
   const q = q0;
-  const cost = q ? inCard(config, q, src.chain, receive !== BCH, gas) : null;
+  const cost = q ? inCard(config, q, src.chain, receive !== BCH, oneClick ? undefined : gas, chosenRoute) : null;
   const busy = run.phase === 'running';
-  const limitVars = { min: String(Math.max(config.limits.minUsd, config.limits.routeMinUsd[config.route.active as 'thorchain'] ?? 0)), max: String(config.limits.maxUsd), ...vars };
+  const limitVars = { min: minFor(chosenRoute), max: String(config.limits.maxUsd), ...vars };
 
   const send = (): void => {
     const c = evm.connected;
@@ -97,6 +111,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
             address,
             minSats: BigInt(q.minSats),
             ...(receive === BCH ? {} : { landing: { category: token.category, returnAfter: config.landing.returnAfterBlocks, prefix: 'bitcoincash' as const } }),
+            ...(oneClick ? { route: 'near-intents' as const } : {}),
           },
           timing: { pollMs: config.evm.receiptPollSeconds * 1000, waitMs: config.evm.receiptWaitSeconds * 1000, replanMs: config.evm.replanSeconds * 1000 },
           onStep: (step) => setRun({ phase: 'running', step }),
@@ -169,7 +184,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
               : t('in.enter', vars)}
       </p>
       {q && receive !== BCH ? <p className="card__note">{t('in.priceMoves', vars)}</p> : null}
-      {q && evm.connected ? <p className="card__note">{t('in.signs', { ...vars, amount: amountText.trim() })}</p> : null}
+      {q && evm.connected ? <p className="card__note">{t(oneClick ? 'in.signs.transfer' : 'in.signs', { ...vars, amount: amountText.trim() })}</p> : null}
       {run.phase === 'failed' ? (
         <p className="swap__error" role="alert">
           {t(run.key, limitVars)}
@@ -177,7 +192,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
       ) : null}
       {choice.card}
       {cost && choice.route !== 'atom' ? (
-        <CostCard card={cost} vars={{ ...vars, native: src.chain.native.symbol }} warnBps={config.limits.feeWarnBps} gas={gas ? (gas.approve ? 'approve' : 'deposit') : 'extra'} />
+        <CostCard card={cost} vars={{ ...vars, native: src.chain.native.symbol }} warnBps={config.limits.feeWarnBps} gas={gas && !oneClick ? (gas.approve ? 'approve' : 'deposit') : 'extra'} />
       ) : null}
       {choice.route === 'atom' && choice.atom ? (
         <AtomSwap

@@ -5,7 +5,8 @@
 import type { Hex } from 'viem';
 import type { CashPrefix } from '../address.js';
 import type { EvmChain } from '../route-assets.js';
-import { readCall, readResult, routerDepositCalls, toTokenUnits, type EvmCall, type RouterDeposit } from '../evm/calldata.js';
+import { readCall, readResult, routerDepositCalls, toTokenUnits, transferCall, type EvmCall, type RouterDeposit } from '../evm/calldata.js';
+import { withoutPrefix } from '../routes/memo.js';
 import { checkInPlan } from '../evm/check-in.js';
 import type { Api } from './api.js';
 import { acceptCard } from './land.js';
@@ -42,6 +43,8 @@ export interface InIntent {
   minSats: bigint;
   /** For a landing address: what the card must agree with. */
   landing?: { category: string; returnAfter: number; prefix: CashPrefix };
+  /** 'near-intents' = the 1Click route: one plain transfer to a one-time deposit address; absent = the active route. */
+  route?: 'near-intents';
 }
 
 export type InStep = 'chain' | 'plan' | 'approve' | 'confirm' | 'deposit' | 'record';
@@ -56,8 +59,36 @@ export interface InTiming {
 
 interface PlanReply {
   crossingId: string;
-  deposit: { router: string; vault: string; token: string; amount: string; memo: string; expiry: number };
+  quote: WireInQuote;
+  deposit:
+    | { kind?: undefined; router: string; vault: string; token: string; amount: string; memo: string; expiry: number }
+    /** 1Click: `amount` in token units, to the one-time deposit address `vault`. */
+    | { kind: 'transfer'; vault: string; token: string; amount: string; expiry: number };
   landing?: { crossingId: string; card: unknown };
+}
+
+/** What the wallet signs: a router deposit (THORChain), or one transfer of token units (1Click). */
+type Deposit = { kind: 'router'; deposit: RouterDeposit } | { kind: 'transfer'; vault: string; units: bigint };
+
+/**
+ * 1Click carries no memo: the BCH destination and minimum are in the quote the server asked for. The page checks the
+ * quote names the address it chose (its own, or the landing address it recomputed) and at least the minimum shown.
+ */
+function checkTransfer(reply: PlanReply, i: InIntent, destination: string, nowSec: number): Deposit {
+  const d = reply.deposit;
+  const q = reply.quote;
+  const fail = (why: string): never => {
+    throw new InStop('plan_mismatch', why);
+  };
+  if (d.kind !== 'transfer' || q.route !== 'near-intents') return fail('the server answered for another route');
+  if (d.token.toLowerCase() !== i.token.toLowerCase()) fail('the plan uses another token');
+  const units = BigInt(d.amount);
+  if (units !== toTokenUnits(i.amount, i.decimals)) fail('the plan sends another amount');
+  if (d.expiry <= nowSec) fail('the quote has expired');
+  if (!/^0x[0-9a-fA-F]{40}$/.test(d.vault)) fail('the plan has no deposit address');
+  if (withoutPrefix(q.destination).toLowerCase() !== withoutPrefix(destination).toLowerCase()) fail('the quote pays another address');
+  if (BigInt(q.minSats) < i.minSats) fail('the quote pays less than the minimum shown');
+  return { kind: 'transfer', vault: d.vault, units };
 }
 
 export interface InResult {
@@ -108,7 +139,7 @@ async function confirmed(p: Eip1193, hash: Hex, t: InTiming): Promise<void> {
   throw new InStop('approval_timeout', 'the approval did not confirm in time');
 }
 
-async function plan(api: Api, i: InIntent, now: number): Promise<{ reply: PlanReply; deposit: RouterDeposit; destination: string }> {
+async function plan(api: Api, i: InIntent, from: string, now: number): Promise<{ reply: PlanReply; deposit: Deposit; destination: string }> {
   const reply = await api.post<PlanReply>('/api/in/plan', {
     symbol: i.symbol,
     chain: i.chain.key,
@@ -116,6 +147,8 @@ async function plan(api: Api, i: InIntent, now: number): Promise<{ reply: PlanRe
     receive: i.receive,
     address: i.address,
     minSats: i.minSats.toString(),
+    // 1Click refunds an unfilled deposit to the wallet that sent it.
+    ...(i.route ? { route: i.route, from } : {}),
   });
   let destination = i.address;
   if (reply.landing) {
@@ -126,10 +159,13 @@ async function plan(api: Api, i: InIntent, now: number): Promise<{ reply: PlanRe
       throw new InStop('plan_mismatch', (e as Error).message);
     }
   } else if (i.landing) throw new InStop('plan_mismatch', 'the plan has no landing address');
-  const deposit: RouterDeposit = { ...reply.deposit, amount: BigInt(reply.deposit.amount) };
+  if (i.route === 'near-intents') return { reply, deposit: checkTransfer(reply, i, destination, Math.floor(now / 1000)), destination };
+  const d = reply.deposit;
+  if (d.kind !== undefined || reply.quote?.route === 'near-intents') throw new InStop('plan_mismatch', 'the server answered for another route');
+  const deposit: RouterDeposit = { ...d, amount: BigInt(d.amount) };
   const ok = checkInPlan(deposit, { token: i.token, amount: i.amount, destination, minSats: i.minSats, now: Math.floor(now / 1000) });
   if (ok !== true) throw new InStop('plan_mismatch', ok);
-  return { reply, deposit, destination };
+  return { reply, deposit: { kind: 'router', deposit }, destination };
 }
 
 export async function runIn(o: { api: Api; provider: Eip1193; from: string; intent: InIntent; timing: InTiming; onStep: (s: InStep) => void }): Promise<InResult> {
@@ -138,28 +174,37 @@ export async function runIn(o: { api: Api; provider: Eip1193; from: string; inte
   o.onStep('chain');
   await ensureChain(p, i.chain);
   o.onStep('plan');
-  let planned = { ...(await plan(api, i, now())), at: now() };
+  let planned = { ...(await plan(api, i, from, now())), at: now() };
   const decimals = readResult.decimals(await ethCall(p, from, i.token, readCall.decimals()));
   // Amounts are scaled by the config's decimals (18 on BNB Smart Chain); a token that says otherwise is not the one listed.
   if (decimals !== i.decimals) throw new InStop('plan_mismatch', `the token reports ${decimals} decimals, config lists ${i.decimals}`);
   const balance = readResult.uint('balanceOf', await ethCall(p, from, i.token, readCall.balanceOf(from)));
-  const allowance = async (router: string) => readResult.uint('allowance', await ethCall(p, from, i.token, readCall.allowance(from, router)));
-  let calls = routerDepositCalls(planned.deposit, decimals, await allowance(planned.deposit.router));
-  if (balance < toTokenUnits(planned.deposit.amount, decimals))
-    throw new InStop('not_enough_tokens', 'the wallet holds less than the amount');
-  if (calls.length > 1) {
-    for (const approve of calls.slice(0, -1)) {
-      o.onStep('approve');
-      const hash = await send(p, from, approve);
-      o.onStep('confirm');
-      await confirmed(p, hash, t);
+  if (balance < toTokenUnits(i.amount, decimals)) throw new InStop('not_enough_tokens', 'the wallet holds less than the amount');
+  let calls: EvmCall[];
+  if (planned.deposit.kind === 'transfer') {
+    // No approval: the tokens go straight to the one-time deposit address.
+    calls = [transferCall(i.token, planned.deposit.vault, planned.deposit.units)];
+  } else {
+    const router = (d: Deposit): RouterDeposit => {
+      if (d.kind !== 'router') throw new InStop('route_changed', 'the route changed; start again');
+      return d.deposit;
+    };
+    const allowance = async (r: string) => readResult.uint('allowance', await ethCall(p, from, i.token, readCall.allowance(from, r)));
+    calls = routerDepositCalls(router(planned.deposit), decimals, await allowance(router(planned.deposit).router));
+    if (calls.length > 1) {
+      for (const approve of calls.slice(0, -1)) {
+        o.onStep('approve');
+        const hash = await send(p, from, approve);
+        o.onStep('confirm');
+        await confirmed(p, hash, t);
+      }
+      if (now() - planned.at > t.replanMs) {
+        o.onStep('plan');
+        planned = { ...(await plan(api, i, from, now())), at: now() };
+      }
+      calls = routerDepositCalls(router(planned.deposit), decimals, await allowance(router(planned.deposit).router));
+      if (calls.length > 1) throw new InStop('route_changed', 'the route changed its router; start again');
     }
-    if (now() - planned.at > t.replanMs) {
-      o.onStep('plan');
-      planned = { ...(await plan(api, i, now())), at: now() };
-    }
-    calls = routerDepositCalls(planned.deposit, decimals, await allowance(planned.deposit.router));
-    if (calls.length > 1) throw new InStop('route_changed', 'the route changed its router; start again');
   }
   o.onStep('deposit');
   const hash = await send(p, from, calls[0]!);
@@ -185,7 +230,7 @@ export interface WireInQuote {
   usd: number;
 }
 
-export async function quoteIn(api: Api, ask: { symbol: string; chain: string; amount: bigint; receive: string; address: string }): Promise<WireInQuote> {
+export async function quoteIn(api: Api, ask: { symbol: string; chain: string; amount: bigint; receive: string; address: string; route?: 'near-intents' }): Promise<WireInQuote> {
   const reply = await api.post<{ quote: WireInQuote }>('/api/in/quote', { ...ask, amount: ask.amount.toString() });
   return reply.quote;
 }

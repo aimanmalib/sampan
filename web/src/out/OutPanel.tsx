@@ -3,6 +3,7 @@
 // against the numbers shown here, including the memo, before the wallet is asked to sign.
 import { useState } from 'react';
 import { runOut, StoppedAfterStep1, type OutProgress } from '../../../core/client/out';
+import { offersOneClick } from '../../../core/oneclick-config';
 import { thorFromOut } from '../../../core/routes/compare';
 import { formatUnits, parseUnits } from '../../../core/wallet';
 import { api } from '../api';
@@ -57,21 +58,33 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
   const pick = networks.pick;
   const decimals = source === BCH ? BCH_DECIMALS : token.decimals;
   const amount = parseUnits(text, decimals);
-  const quote = useOutQuote({ source, amount, symbol: pick?.symbol ?? '', chain: pick?.chain.key ?? '', destination: destination.trim() }, QUOTE_PAUSE_MS);
+  const ask = { source, amount, symbol: pick?.symbol ?? '', chain: pick?.chain.key ?? '', destination: destination.trim() };
+  const thorQuote = useOutQuote(ask, QUOTE_PAUSE_MS);
+  // 1Click is asked (by the server, dry) only while the flag is on and config offers this asset out.
+  const ocOffered = pick !== undefined && offersOneClick(config.features.oneClick, config.oneClick, 'out', pick.chain.key, pick.symbol);
+  const ocQuote = useOutQuote({ ...ask, route: 'near-intents', enabled: ocOffered }, config.oneClick.dryDebounceMs);
   const view = wallet.view;
   const have = view ? (source === BCH ? view.sats : (view.tokens[token.category.toLowerCase()] ?? 0n)) : undefined;
   const lacking = have !== undefined && amount !== undefined && amount > have;
   const busy = run.phase === 'running';
-  const routeName = t(`route.${config.route.active}` as TextKey);
   const evm = useEvm();
-  const gate = useDisclosure(routeName);
-  const q = quote.status === 'ok' ? quote.quote : null;
+  const side = (s: typeof thorQuote) => (s.status === 'ok' ? thorFromOut(s.quote, pick?.symbol) : { error: s.status === 'error' ? s.code : 'pending' });
+  const minFor = (route: string): string => String(Math.max(config.limits.minUsd, config.limits.routeMinUsd[route as 'thorchain'] ?? 0));
+  const ocVars = { route: t('route.near-intents'), symbol: pick?.symbol ?? '', chain: pick?.chain.name ?? '', token: token.symbol, min: minFor('near-intents'), max: String(config.limits.maxUsd) };
   const choice = useRouteChoice(
     config,
     pick && amount !== undefined && amount > 0n ? { kind: 'out', amount: formatUnits(amount, decimals), source, chain: pick.chain.key, symbol: pick.symbol } : null,
-    q ? thorFromOut(q) : { error: quote.status === 'error' ? quote.code : 'pending' },
+    side(thorQuote),
+    ocOffered ? { quote: side(ocQuote), vars: ocVars } : null,
   );
   const atom = choice.route === 'atom';
+  const oneClick = choice.route === 'near-intents';
+  // The quote the panel shows, costs and signs: the chosen route's.
+  const quote = oneClick ? ocQuote : thorQuote;
+  const chosenRoute = oneClick ? 'near-intents' : config.route.active;
+  const routeName = t(`route.${chosenRoute}` as TextKey);
+  const gate = useDisclosure(routeName);
+  const q = quote.status === 'ok' ? quote.quote : null;
   if (!pick) return null;
   const vars = { symbol: pick.symbol, chain: pick.chain.name, route: routeName, token: token.symbol };
   const badAddress = destination.trim() !== '' && !/^0x[0-9a-fA-F]{40}$/.test(destination.trim());
@@ -98,6 +111,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
           ...(q.swap ? { swapMinReceive: BigInt(q.swap.minReceive) } : {}),
           feeCapSats: BigInt(config.connect.feeCapSats),
           business: config.business,
+          ...(oneClick ? { route: 'near-intents' as const } : {}),
           prompts: {
             swap: t('out.prompt.swap', { pay, min: q.swap ? formatUnits(BigInt(q.swap.minReceive), BCH_DECIMALS) : '' }),
             deposit: t('out.prompt.deposit', { ...vars, pay, about: about(q.expectedOut, q.outDecimals), to: short(destination.trim()) }),
@@ -142,10 +156,10 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
     return { label: t('out.go'), disabled: quote.status !== 'ok' || lacking || !view, onClick: () => gate.run(() => void send()) };
   })();
   const feePct = q ? (q.fees.totalBps / 100).toFixed(1) : '';
-  const cost = q && amount !== undefined ? outCard(config, q, source, amount, pick.chain.key) : null;
+  const cost = q && amount !== undefined ? outCard(config, q, source, amount, pick.chain.key, chosenRoute) : null;
   // The cost card replaces the older fee line and fee details, so the screen gives one statement of the cost.
   const costShown = cost !== null && !atom;
-  const limitVars = { min: String(Math.max(config.limits.minUsd, config.limits.routeMinUsd[config.route.active as 'thorchain'] ?? 0)), max: String(config.limits.maxUsd), ...vars };
+  const limitVars = { min: minFor(chosenRoute), max: String(config.limits.maxUsd), ...vars };
 
   return (
     <div className="swap out">

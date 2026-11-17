@@ -151,6 +151,12 @@ describe('OneClickRoute out', () => {
     const other: OneClickHttp = async () => ({ status: 201, body: { quote: { amountIn: '1', amountOut: '10', minAmountOut: '9', timeEstimate: 1 } } });
     await expect(setup({ http: other }).route.quoteOut({ sats: 1_000_000n, asset: USDC, destination: DEST })).rejects.toThrow(/different input amount/);
   });
+  it('says the route minimum is not met when 1Click refuses a small amount, and bad_request for other refusals', async () => {
+    const low: OneClickHttp = async () => ({ status: 400, body: { message: 'Amount is too low for bridge, try at least 1000000' } });
+    await expect(setup({ http: low }).route.quoteOut({ sats: 1_000n, asset: USDC, destination: DEST })).rejects.toMatchObject({ code: 'below_route_min' });
+    const other: OneClickHttp = async () => ({ status: 400, body: { message: 'tokenIn is not valid' } });
+    await expect(setup({ http: other }).route.quoteOut({ sats: 1_000n, asset: USDC, destination: DEST })).rejects.toMatchObject({ code: 'bad_request' });
+  });
 });
 
 describe('OneClickRoute in and status', () => {

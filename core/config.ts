@@ -1,7 +1,7 @@
 // Shape of config/sampan.json and the checks run when it is loaded.
 // Pure: no I/O. The server reads the file; the page receives the public part from /api/config.
 import { validateAtom, type AtomConfig } from './atom-config.js';
-import { validateOneClick, type OneClickConfig } from './oneclick-config.js';
+import { oneClickPublic, validateOneClick, type OneClickConfig, type OneClickPublic } from './oneclick-config.js';
 import { validateBusiness, type BusinessConfig } from './business.js';
 import { validatePay, type PayConfig } from './pay/config.js';
 import { chainsOf, liveAssets, symbolsOf, validateAssets, validateEvmChain, type EvmChain, type RouteAsset } from './route-assets.js';
@@ -188,6 +188,8 @@ export interface PublicConfig {
   pay: Pick<PayConfig, 'validMinutes' | 'minUsd' | 'maxUsd'> & { demoPriceUsd: number };
   /** The atomic swap route's client file, contract and service path (the page loads nothing from it while features.atom is false). */
   atom: AtomConfig;
+  /** 1Click as a second route: offered assets and timings only (core/oneclick-config.ts). */
+  oneClick: OneClickPublic;
   ui: SampanConfig['ui'];
   i18n: I18nConfig;
 }
@@ -392,6 +394,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     business: { feeBps: c.business.feeBps, feeAddress: c.business.feeAddress },
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
     atom: c.atom,
+    oneClick: oneClickPublic(c.oneClick),
     ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen, qrCloseMs: c.ui.qrCloseMs, arriveMs: c.ui.arriveMs },
     i18n: { default: c.i18n.default, languages: c.i18n.languages.map(({ code, name, machine }) => (machine ? { code, name, machine } : { code, name })) },
   };

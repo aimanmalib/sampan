@@ -25,9 +25,14 @@ const step = (q: WireQuote) => ({
   impactBps: q.impactBps ?? 0,
 });
 
+/** The card counts the received asset in 1e8 units, as THORChain reports it; 1Click reports the token's own decimals. */
+const to1e8 = (v: bigint, decimals: number): bigint => (decimals >= 8 ? v / 10n ** BigInt(decimals - 8) : v * 10n ** BigInt(8 - decimals));
+
 export function outCard(config: CardConfig, q: WireOutQuote, source: string, amount: bigint, measured: number[]): CostCard | null {
-  const fees = feesOf(q.fees);
-  if (!fees) return null;
+  const named = feesOf(q.fees);
+  if (!named) return null;
+  const scale = (v: bigint): bigint => to1e8(v, q.outDecimals);
+  const fees = { ...named, liquidity: scale(named.liquidity), outbound: scale(named.outbound), affiliate: scale(named.affiliate) };
   const token = config.tokens[config.defaultToken]!;
   const timing: Timing = { routeSeconds: q.seconds, sourceBlockSeconds: config.connect.bchBlockSeconds, measured };
   return outCost({
@@ -37,7 +42,7 @@ export function outCard(config: CardConfig, q: WireOutQuote, source: string, amo
     ...(q.swap ? { swap: { ...step(q.swap), networkSats: big(q.swap.networkSats) } } : {}),
     depositSats: big(q.sats),
     depositNetworkSats: big(q.depositNetworkSats),
-    expectedOut: big(q.expectedOut),
+    expectedOut: scale(big(q.expectedOut)),
     fees,
     expiry: q.expiry,
     timing,

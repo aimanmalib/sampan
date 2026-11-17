@@ -160,9 +160,14 @@ describe('publicConfig', () => {
     const c = clone();
     c.features.musd = false;
     const pub = publicConfig(c) as unknown as Record<string, unknown>;
-    for (const hidden of ['electrum', 'wallet', 'thorchain', 'oneClick', 'cauldron', 'rate', 'ops']) {
+    for (const hidden of ['electrum', 'wallet', 'thorchain', 'cauldron', 'rate', 'ops']) {
       expect(pub).not.toHaveProperty(hidden);
     }
+    // 1Click: which assets are offered and the page's timings only; no host, user agent, asset id or key (ADR 0050).
+    const oc = publicConfig(c).oneClick;
+    expect(Object.keys(oc).sort()).toEqual(['assets', 'deadlineMinutes', 'dryDebounceMs', 'statusPollSeconds']);
+    for (const a of oc.assets) expect(Object.keys(a).sort()).toEqual(['chain', 'live', 'symbol']);
+    expect(JSON.stringify(pub)).not.toMatch(/chaindefuser|nep141|userAgent|placeholders/i);
     expect(Object.keys(publicConfig(c).tokens)).toEqual([c.defaultToken]);
   });
 });

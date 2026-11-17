@@ -255,3 +255,23 @@ describe('cost card: the card a measured run saves before broadcasting', () => {
     expect(() => costShown(config, 'out', wire, 'nope', 'ETH', new Date())).toThrow(/txid/);
   });
 });
+
+describe('cost card: a route that reports the received token in its own decimals', () => {
+  it('gives the same card for 1Click amounts in 6 decimals as for the same amounts in 1e8 units (ADR 0050)', async () => {
+    const { outCard } = await import('../core/client/cost.js');
+    const { loadConfig } = await import('../server/config.js');
+    const { publicConfig } = await import('../core/config.js');
+    const config = publicConfig(loadConfig('config/sampan.json'));
+    const in1e8 = {
+      source: 'BCH', amount: '600000', usd: 1.25, route: 'thorchain', sats: '600000', vault: 'bitcoincash:q', memo: '', asset: 'ETH.USDC',
+      destination: '0x1a877169bB03400fA69EC4813889E78994D194Cb', expectedOut: '138000000', minOut: '0', outDecimals: 8,
+      fees: { total: '30000000', totalBps: 1786, liquidity: '0', outbound: '30000000', affiliate: '0', slippageBps: 0 }, depositNetworkSats: '690', expiry: 0, seconds: 120,
+    };
+    const in6 = { ...in1e8, route: 'near-intents', expectedOut: '1380000', outDecimals: 6, fees: { ...in1e8.fees, total: '300000', outbound: '300000' } };
+    const a = outCard(config, in1e8, 'BCH', 600_000n, [])!;
+    const b = outCard(config, in6, 'BCH', 600_000n, [])!;
+    expect(b.receiveUsd).toBe(a.receiveUsd);
+    expect(b.receiveUsd).toBe(1_380_000n);
+    expect(b.totalUsd).toBe(a.totalUsd);
+  });
+});

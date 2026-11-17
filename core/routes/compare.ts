@@ -1,10 +1,12 @@
-// Compares the THORChain route with the atomic swap route for one amount. Pure: the page passes the two live quotes
-// and the measured runs, and gets one row per route. Nothing here picks a route: the page keeps THORChain selected
-// until the user chooses, and "receives more" is a fact label only when both rows can be compared.
+// Compares the routes for one amount: THORChain, the atomic swap route and 1Click (NEAR Intents). Pure: the page
+// passes the live quotes and the measured runs, and gets one row per route it offers. Nothing here picks a route: the
+// page keeps THORChain selected until the user chooses, and "receives more" is a fact label only when rows in the same
+// asset can be compared.
 import { formatUnits, parseUnits } from '../wallet.js';
 import type { WireInQuote } from '../client/in.js';
 import type { WireOutQuote } from '../client/out.js';
 import type { Proof } from '../proof.js';
+import { offersOneClick, type OneClickPublic } from '../oneclick-config.js';
 
 /** The two flows the atomic swap service offers; each names its assets. */
 export const ATOM_FLOWS = ['usdc-to-pusd', 'pusd-to-usdc'] as const;
@@ -20,6 +22,8 @@ export type CompareFlow =
 
 /** THORChain's side as the page already holds it, reduced to what a comparison needs. */
 export interface ThorSide {
+  /** Decimal amount the quote was asked for (in the source asset), when the page knows it: a different one is stale. */
+  amount?: string;
   /** Decimal amount the user is expected to get, and its symbol. */
   receive: string;
   receiveSymbol: string;
@@ -32,10 +36,13 @@ export interface ThorSide {
 /** Symbol of a route asset such as BASE.USDC-0X8335…: the part between the chain and the contract. */
 const assetSymbol = (asset: string): string => (asset.split('.')[1] ?? asset).split('-')[0] ?? asset;
 
-/** THORChain's Send out quote: received amount and fees in the destination asset. */
-export const thorFromOut = (q: WireOutQuote): ThorSide => ({
+/**
+ * A Send out quote (THORChain's, or 1Click's in the same wire shape): received amount and fees in the destination
+ * asset. `symbol`: the symbol the page picked; THORChain's asset name carries it, a 1Click asset id does not.
+ */
+export const thorFromOut = (q: WireOutQuote, symbol?: string): ThorSide => ({
   receive: formatUnits(BigInt(q.expectedOut), q.outDecimals),
-  receiveSymbol: assetSymbol(q.asset),
+  receiveSymbol: symbol ?? assetSymbol(q.asset),
   fees: { total: formatUnits(BigInt(q.fees.total), q.outDecimals), totalBps: q.fees.totalBps },
   seconds: q.seconds,
 });
@@ -69,10 +76,12 @@ export interface AtomQuote {
 
 export type RouteTrust =
   | { kind: 'vaults'; refundsToSender: true }
+  /** 1Click: a one-time deposit address from the quote; not filled before the deadline = refunded to your own address. */
+  | { kind: 'deposit'; deadlineMinutes: number }
   | { kind: 'locks'; userLockReturnsAfter: Wait; confirmations: { bch: number; base: number }; anyoneMaySettle: boolean };
 
 export interface RouteRow {
-  route: 'thorchain' | 'atom';
+  route: 'thorchain' | 'atom' | 'near-intents';
   available: boolean;
   /** Why the row cannot be chosen now, as a short code the page translates. */
   reason?: string;
@@ -83,7 +92,7 @@ export interface RouteRow {
   /** Measured median and how many runs it rests on; `median` null = not measured yet. `estimate` = THORChain's own. */
   seconds: { median: number | null; count: number; estimate?: number };
   trust: RouteTrust;
-  /** True only on the row that receives more, when both rows are available in the same asset and differ. */
+  /** True only on the one row that receives the most, among available rows in the same asset, when they differ. */
   receivesMore: boolean;
 }
 
@@ -99,8 +108,15 @@ export interface CompareInput {
   thor: ThorSide | { error: string };
   /** Null when the atom route is not shown at all (flag off, health check failed, quote did not answer). */
   atom: AtomQuote | null;
+  /** 1Click's quote for the same request (same shape as THORChain's), or its error code; null when not asked. */
+  oneClick?: ThorSide | { error: string } | null;
   proof: Proof;
-  config: { token: string; atomFlows: readonly string[] };
+  config: {
+    token: string;
+    atomFlows: readonly string[];
+    /** features.oneClick and the 1Click block of /api/config; absent = the route is not offered. */
+    oneClick?: { enabled: boolean; offer: Pick<OneClickPublic, 'assets' | 'deadlineMinutes'> };
+  };
 }
 
 /** The atom flow that serves this request, or null when the atom route has nothing to offer for it. */
@@ -158,15 +174,48 @@ function atomRow(input: CompareInput, flow: AtomFlow, q: AtomQuote): RouteRow {
   };
 }
 
+/** The 1Click row: shown only for an asset config offers in this direction; its time is measured on its own runs. */
+function oneClickRow(input: CompareInput, offer: Pick<OneClickPublic, 'deadlineMinutes'>, q: ThorSide | { error: string }): RouteRow {
+  const ran = input.proof.flows.find((f) => (f.flow as string) === `oc-${input.flow.kind}`);
+  const measured = { median: ran?.medianSeconds ?? null, count: ran?.ok ?? 0 };
+  const trust: RouteTrust = { kind: 'deposit', deadlineMinutes: offer.deadlineMinutes[input.flow.kind] };
+  let reason = 'error' in q ? q.error : undefined;
+  if (reason === undefined && 'receive' in q && q.amount !== undefined && units(q.amount) !== units(input.flow.amount)) reason = 'stale';
+  if (reason !== undefined || 'error' in q) {
+    return { route: 'near-intents', available: false, reason: reason ?? 'unavailable', receive: null, receiveSymbol: '', fees: null, seconds: measured, trust, receivesMore: false };
+  }
+  return {
+    route: 'near-intents',
+    available: true,
+    receive: q.receive,
+    receiveSymbol: q.receiveSymbol,
+    fees: q.fees ?? null,
+    seconds: { ...measured, estimate: q.seconds },
+    trust,
+    receivesMore: false,
+  };
+}
+
+/** Marks the one available row that receives the most, per received asset, when at least two rows can be compared. */
+function markMost(rows: RouteRow[]): void {
+  const open = rows.filter((r) => r.available && r.receive !== null);
+  for (const symbol of new Set(open.map((r) => r.receiveSymbol))) {
+    const same = open.filter((r) => r.receiveSymbol === symbol).map((r) => ({ r, v: units(r.receive ?? undefined) ?? -1n }));
+    if (same.length < 2) continue;
+    const top = same.reduce((a, b) => (b.v > a ? b.v : a), -1n);
+    const best = same.filter((x) => x.v === top);
+    if (best.length === 1) best[0]!.r.receivesMore = true;
+  }
+}
+
 export function compareRoutes(input: CompareInput): Comparison {
   const rows = [thorRow(input)];
   const flow = atomFlowFor(input.flow, input.config.token);
   if (flow && input.atom && input.config.atomFlows.includes(flow)) rows.push(atomRow(input, flow, input.atom));
-  const [a, b] = rows;
-  if (a && b && a.available && b.available && a.receiveSymbol === b.receiveSymbol) {
-    const x = units(a.receive ?? undefined);
-    const y = units(b.receive ?? undefined);
-    if (x !== undefined && y !== undefined && x !== y) (x > y ? a : b).receivesMore = true;
+  const oc = input.config.oneClick;
+  if (oc && input.oneClick && offersOneClick(oc.enabled, oc.offer, input.flow.kind, input.flow.chain, input.flow.symbol)) {
+    rows.push(oneClickRow(input, oc.offer, input.oneClick));
   }
+  markMost(rows);
   return { rows, selected: 'thorchain' };
 }
