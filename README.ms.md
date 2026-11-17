@@ -45,6 +45,18 @@ kontrak kecil: sesiapa pun yang membayar BCH kepadanya, dari mana-mana dompet at
 satu tempat, iaitu alamat anda, sama ada sebagai PUSD pada kadar minimum atau lebih tinggi, atau selepas enam blok sebagai BCH
 itu sendiri. Anda menyimpan kad pemulihan, jadi anda boleh menyelesaikan atau memulihkan pendaratan tanpa Sampan.
 
+### Apa yang sudah ada
+
+Disemak pada 16 November 2026, dan BCH Bull pada 17 November 2026 daripada halaman utama dan panduan penggunanya sendiri.
+
+- Aplikasi Cauldron ada tab X-chain yang menukar BCH biasa dengan rantaian lain melalui THORChain. Kodnya tidak menghantar
+  CashTokens ke peti simpanan rentas rantaian.
+- Paytaca ada Cash In, yang memberi anda BCH dengan menukar syiling lain melalui SideShift atau dengan membeli daripada orang lain.
+- Laman BCH Bull sendiri menerangkan lindung nilai BCH berbanding USD dan aset lain, atau mengambil kedudukan long atau short ke atas BCH, dengan kontrak
+  AnyHedge yang dibiayai dalam BCH, manakala Sampan menukar BCH kepada PUSD, token yang kemudian anda pegang.
+
+Dengan Cauldron dan Paytaca, sampai ke PUSD ialah tukaran kedua.
+
 ## Cara ia berfungsi
 
 1. **Sambung.** Laman berpasangan dengan dompet anda melalui WizardConnect (`web/src/wallet/wizard.ts`). Dompet berkongsi

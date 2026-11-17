@@ -40,6 +40,18 @@ signs, after the page has checked what the server built. The landing address is 
 from any wallet, the coins can leave towards one place, your address, either as PUSD at or above a minimum rate or,
 after six blocks, as the BCH itself. You keep a recovery card, so you can finish or recover a landing without Sampan.
 
+### What already exists
+
+Checked on 16 November 2026, and BCH Bull on 17 November 2026 from its own home page and user guide.
+
+- The Cauldron app has an X-chain tab that swaps plain BCH with other chains through THORChain. Its code does not send
+  CashTokens to the cross-chain vault.
+- Paytaca has Cash In, which gets you BCH by converting other coins through SideShift or by buying from peers.
+- BCH Bull's own site describes hedging BCH against USD and other assets, or going long or short on BCH, with AnyHedge contracts
+  funded in BCH, while Sampan trades BCH for PUSD, a token you then hold.
+
+With Cauldron and Paytaca, getting to PUSD is a second swap.
+
 ## Business model
 
 **Who it is for.** People in Southeast Asia who already hold USDT and want dollars on Bitcoin Cash, and people who are

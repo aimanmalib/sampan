@@ -109,6 +109,7 @@ export function HowPage({ config }: { config: LoadedConfig | null }) {
           <li>{t('how.exists.paytaca')}</li>
         </ul>
         <p>{t('how.exists.gap', v)}</p>
+        <p>{t('how.exists.bchbull', v)}</p>
         <h3>{t('how.adds.title')}</h3>
         <ul>
           {flows.land ? <li>{t('how.adds.land', v)}</li> : null}
