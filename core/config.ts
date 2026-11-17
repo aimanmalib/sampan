@@ -152,8 +152,10 @@ export interface SampanConfig {
   /**
    * How the status pages draw; not a flow. ferryMotion: the ferry on every status page and the landing card, moving while a step is under way.
    * qrAutoOpen: the landing card opens the address and shows its QR as soon as the owner is known (false = the "Get my landing address" button).
+   * qrCloseMs: once a payment is seen, how long the QR code takes to close before the ferry moves (150 to 1500).
+   * arriveMs: how long the one arrival animation plays once the token has landed (800 to 6000).
    */
-  ui: { ferryMotion: boolean; qrAutoOpen: boolean };
+  ui: { ferryMotion: boolean; qrAutoOpen: boolean; qrCloseMs: number; arriveMs: number };
   /** Languages the page offers, in menu order, each by its own name; every code has a lang/<code>.json. default: shown until a visitor picks one. */
   i18n: I18nConfig;
 }
@@ -294,6 +296,9 @@ export function validateConfig(c: SampanConfig): string[] {
   );
   need(typeof c.ui?.ferryMotion === 'boolean', 'ui.ferryMotion: true or false');
   need(typeof c.ui?.qrAutoOpen === 'boolean', 'ui.qrAutoOpen: true or false');
+  const msIn = (v: unknown, lo: number, hi: number): boolean => typeof v === 'number' && Number.isInteger(v) && v >= lo && v <= hi;
+  need(msIn(c.ui?.qrCloseMs, 150, 1500), 'ui.qrCloseMs: an integer from 150 to 1500');
+  need(msIn(c.ui?.arriveMs, 800, 6000), 'ui.arriveMs: an integer from 800 to 6000');
   const langs = Array.isArray(c.i18n?.languages) ? c.i18n.languages : [];
   const codes = langs.map((x) => x?.code);
   need(
@@ -391,7 +396,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     business: { feeBps: c.business.feeBps, feeAddress: c.business.feeAddress },
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
     atom: c.atom,
-    ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen },
+    ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen, qrCloseMs: c.ui.qrCloseMs, arriveMs: c.ui.arriveMs },
     i18n: { default: c.i18n.default, languages: c.i18n.languages.map(({ code, name, machine }) => (machine ? { code, name, machine } : { code, name })) },
   };
 }

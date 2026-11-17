@@ -1,7 +1,10 @@
 // The ferry on a status page: a boat between two banks whose place is the step read from the crossing answer
 // (ferryStep). Decorative (aria-hidden): the timeline beside it carries the meaning in words. With `motion` the
 // water and the pole sway while a step is under way; they stop once the boat has arrived, turned back or failed.
+// `arrive` (pages that reveal a payment they saw, reveal.ts) adds data-arrive; at "playing" the one arrival runs:
+// the coin steps ashore and one ring spreads on the far bank, transform and opacity only, no loop.
 import { useText } from '../i18n';
+import type { RevealAttrs } from './reveal';
 import type { FerryKind, FerryStep } from './step';
 import './ferry.css';
 
@@ -25,7 +28,19 @@ export function useBanks(kind: FerryKind, vars: { chain?: string | undefined; sy
   return { from, to };
 }
 
-export function Ferry({ kind, at, banks, motion }: { kind: FerryKind; at: FerryStep; banks: FerryBanks; motion: boolean }) {
+export function Ferry({
+  kind,
+  at,
+  banks,
+  motion,
+  arrive,
+}: {
+  kind: FerryKind;
+  at: FerryStep;
+  banks: FerryBanks;
+  motion: boolean;
+  arrive?: RevealAttrs['arrive'];
+}) {
   return (
     <div
       className="ferry"
@@ -36,6 +51,7 @@ export function Ferry({ kind, at, banks, motion }: { kind: FerryKind; at: FerryS
       data-state={at.state}
       data-paid={at.paid ? 'true' : 'false'}
       data-motion={motion ? 'on' : 'off'}
+      data-arrive={arrive}
     >
       <p className="ferry__banks">
         <span>{banks.from}</span>
@@ -45,6 +61,9 @@ export function Ferry({ kind, at, banks, motion }: { kind: FerryKind; at: FerryS
         <svg className="ferry__river" viewBox="0 0 300 40" preserveAspectRatio="none">
           <path d="M0 30 Q 37 24 75 30 T 150 30 T 225 30 T 300 30" />
           <path className="ferry__wave" d="M-40 36 Q -20 33 0 36 T 40 36 T 80 36 T 120 36 T 160 36 T 200 36 T 240 36 T 280 36 T 320 36 T 360 36" />
+        </svg>
+        <svg className="ferry__splash" viewBox="0 0 24 24">
+          <circle className="ferry__ring" cx="12" cy="12" r="7" />
         </svg>
         <div className="ferry__lane">
           <svg className="ferry__boat" viewBox="0 0 48 28">

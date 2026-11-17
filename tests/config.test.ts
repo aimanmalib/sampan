@@ -192,9 +192,34 @@ describe('ui.qrAutoOpen', () => {
   it('is a boolean in the shipped config, is sent to the page as it is, and must be a boolean', () => {
     expect(typeof shipped.ui.qrAutoOpen).toBe('boolean');
     expect(publicConfig(shipped).ui.qrAutoOpen).toBe(shipped.ui.qrAutoOpen);
-    const missing = { ...shipped, ui: { ferryMotion: true } } as unknown as typeof shipped;
+    const missing = { ...shipped, ui: { ...shipped.ui, qrAutoOpen: undefined } } as unknown as typeof shipped;
     expect(validateConfig(missing)).toContain('ui.qrAutoOpen: true or false');
     expect(validateConfig({ ...shipped, ui: { ...shipped.ui, qrAutoOpen: false } })).toEqual([]);
+  });
+});
+
+describe('ui.qrCloseMs and ui.arriveMs', () => {
+  it('are whole milliseconds inside their ranges in the shipped config and reach the page as they are', () => {
+    expect(validateConfig(shipped)).toEqual([]);
+    expect(publicConfig(shipped).ui.qrCloseMs).toBe(shipped.ui.qrCloseMs);
+    expect(publicConfig(shipped).ui.arriveMs).toBe(shipped.ui.arriveMs);
+  });
+  it.each([
+    ['qrCloseMs', 149, 'ui.qrCloseMs: an integer from 150 to 1500'],
+    ['qrCloseMs', 1501, 'ui.qrCloseMs: an integer from 150 to 1500'],
+    ['qrCloseMs', 400.5, 'ui.qrCloseMs: an integer from 150 to 1500'],
+    ['qrCloseMs', '400', 'ui.qrCloseMs: an integer from 150 to 1500'],
+    ['arriveMs', 799, 'ui.arriveMs: an integer from 800 to 6000'],
+    ['arriveMs', 6001, 'ui.arriveMs: an integer from 800 to 6000'],
+    ['arriveMs', undefined, 'ui.arriveMs: an integer from 800 to 6000'],
+  ])('rejects ui.%s = %s', (key, value, message) => {
+    const bad = { ...shipped, ui: { ...shipped.ui, [key]: value } } as unknown as typeof shipped;
+    expect(validateConfig(bad)).toContain(message);
+  });
+  it('accepts both ends of each range', () => {
+    for (const ui of [{ qrCloseMs: 150, arriveMs: 800 }, { qrCloseMs: 1500, arriveMs: 6000 }]) {
+      expect(validateConfig({ ...shipped, ui: { ...shipped.ui, ...ui } })).toEqual([]);
+    }
   });
 });
 

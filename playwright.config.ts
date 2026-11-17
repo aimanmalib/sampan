@@ -12,7 +12,8 @@ const live = process.env.E2E_BASE_URL;
 // The local fake server shows the swap flow alone (the landing flow has its own server below), and its rate
 // limits are lifted because every browser in the run shares one IP.
 const e2ePatch = { features: { swap: true, landing: false }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } };
-const landingPatch = { ...e2ePatch, features: { swap: true, landing: true } };
+// The page asks for a landing's status every 2 s here (e2e/qr-close.spec.ts waits on it), not every 10 s as shipped.
+const landingPatch = { ...e2ePatch, features: { swap: true, landing: true }, landing: { pagePollSeconds: 2 } };
 // Crossings run against the fake THORNode, which reports Base open: Base USDC is switched live on this server only.
 const shippedAssets = (JSON.parse(readFileSync('config/sampan.json', 'utf8')) as { thorchain: { assets: RouteAsset[] } }).thorchain.assets;
 const outPatch = { ...e2ePatch, compliance: { crossChainEnabled: true }, ...livePatch(shippedAssets, ['BASE']) };

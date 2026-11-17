@@ -313,7 +313,9 @@
   },
   "ui": {
     "ferryMotion": true,
-    "qrAutoOpen": true
+    "qrAutoOpen": true,
+    "qrCloseMs": 400,
+    "arriveMs": 2400
   },
   "i18n": {
     "default": "en",

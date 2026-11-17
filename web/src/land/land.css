@@ -205,3 +205,37 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+/* Payment seen (ferry/reveal.ts): the QR wrapper fades and shrinks for --qr-close-ms, then leaves the layout. */
+.land__qr,
+.payinv__qr {
+  display: grid;
+  min-width: 0;
+  transition:
+    opacity var(--qr-close-ms, 400ms) ease-in,
+    transform var(--qr-close-ms, 400ms) ease-in;
+}
+.land__qr[data-qr='closing'],
+.payinv__qr[data-qr='closing'] {
+  opacity: 0;
+  transform: scale(0.94);
+}
+.land__qr[data-qr='closed'],
+.payinv__qr[data-qr='closed'] {
+  display: none;
+}
+.land__detected,
+.payinv__detected {
+  margin: 0;
+  font-weight: 600;
+}
+.land__detected:empty {
+  /* Out of the flow while empty (no gap in the card), still a live region for when the words arrive. */
+  position: absolute;
+}
+@media (prefers-reduced-motion: reduce) {
+  .land__qr,
+  .payinv__qr {
+    transition: none;
+  }
+}

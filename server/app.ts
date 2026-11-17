@@ -9,6 +9,7 @@ import { registerOut } from './api/out.js';
 import { registerPay, registerPayFiles } from './api/pay.js';
 import { registerDemoHook, registerDemoShop } from './pay/demo.js';
 import { registerFakePay } from './pay/fake.js';
+import { registerFakeLanding } from './landing/fake.js';
 import { registerSwap } from './api/swap.js';
 import { registerWallet } from './api/wallet.js';
 import { registerSecurityHeaders } from './security.js';
@@ -82,6 +83,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   registerDemoHook(app, config, services.demoOrders, options.payDemoSecret);
   registerDemoShop(app, config, services, options.payDemoSecret);
   if (options.fake) registerFakePay(app, config, services);
+  if (options.fake) registerFakeLanding(app, config, services);
   if (options.startWatcher ?? true) {
     services.watcher.start();
     services.health.start();

@@ -3,55 +3,32 @@
 // shown as an error and no address is displayed. One primary button at every step.
 // With ui.qrAutoOpen the address and its QR open by themselves once the owner is known: a connected wallet, or a
 // valid address pasted, left or confirmed with Enter (not on every key). Once per owner and token; a failure leaves
-// the error and the button. Until then an empty frame shows where the QR code will be.
+// the error and the button. Until then an empty frame shows where the QR code will be. The opened address, and what
+// the card does once a payment to it is seen, live in LandOpen.
 import { useEffect, useRef, useState } from 'react';
 import { parseAddress } from '../../../core/address';
-import { CheckFailure } from '../../../core/client/swap';
-import { bip21, LandingMismatch, openLanding, payLanding, type OpenedLanding } from '../../../core/client/land';
-import { cardToFragment } from '../../../core/landing-card';
-import { formatUnits, parseUnits } from '../../../core/wallet';
+import { openLanding, type OpenedLanding } from '../../../core/client/land';
+import { formatUnits } from '../../../core/wallet';
 import { shortAddress } from '../address';
 import { api } from '../api';
 import type { LoadedConfig } from '../config';
 import { useText, type TextKey } from '../i18n';
-import { codeKey, errorKey } from '../swap/errors';
 import type { Wallet } from '../wallet/useWallet';
-import type { SwapStep } from '../../../core/client/swap';
-import { ApiFailure } from '../../../core/client/api';
-import { PayQr } from './PayQr';
-import { Ferry, useBanks } from '../ferry/Ferry';
-import { ferryStep } from '../ferry/step';
 import { WizardHat } from '../wallet/WizardHat';
+import { failureKey, LandOpen } from './LandOpen';
 
 const BCH_DECIMALS = 8;
 
-type Phase =
-  | { at: 'form' }
-  | { at: 'opening' }
-  | { at: 'open'; landing: OpenedLanding }
-  | { at: 'paying'; landing: OpenedLanding; step: SwapStep }
-  | { at: 'paid'; landing: OpenedLanding };
-
-const statusLink = (l: OpenedLanding): string => `/c/${l.crossingId}#card=${cardToFragment(l.card)}`;
-
-function failureKey(e: unknown): TextKey {
-  if (e instanceof LandingMismatch) return 'land.err.mismatch';
-  if (e instanceof ApiFailure && e.code === 'flow_closed') return 'land.err.closed';
-  if (e instanceof ApiFailure) return codeKey(e.code);
-  if (e instanceof CheckFailure) return 'swap.err.check';
-  return errorKey(e);
-}
+type Phase = { at: 'form' } | { at: 'opening' } | { at: 'open'; landing: OpenedLanding };
 
 /** "Fill this in for me" remounts the panel (new key), so every field starts again from the judge values in config. */
 export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wallet }) {
   const { t } = useText();
   const token = config.tokens[config.defaultToken]!;
-  const banks = useBanks('land', { symbol: token.symbol });
   const [ownerText, setOwnerText] = useState('');
   const [amountText, setAmountText] = useState(config.limits.judgeLandBch);
   const [phase, setPhase] = useState<Phase>({ at: 'form' });
   const [error, setError] = useState<TextKey | null>(null);
-  const [copied, setCopied] = useState(false);
   /** The typed owner the visitor has finished with (paste, leaving the field, Enter). */
   const [committed, setCommitted] = useState('');
   const tried = useRef(new Set<string>());
@@ -59,9 +36,7 @@ export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
   const view = wallet.view;
   const owner = view ? view.receive.tokenAddress : ownerText.trim();
   const ownerOk = owner !== '' && typeof parseAddress(owner, 'bitcoincash') !== 'string';
-  const sats = parseUnits(amountText, BCH_DECIMALS);
   const minSats = BigInt(config.limits.localMinSats);
-  const amountOk = sats !== undefined && sats >= minSats;
   const vars = { symbol: token.symbol, min: formatUnits(minSats, BCH_DECIMALS) };
 
   const known = view ? owner : committed === owner ? owner : '';
@@ -93,29 +68,6 @@ export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
     // open() is recreated on every render; the key alone decides when to open.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoKey]);
-
-  const pay = async (landing: OpenedLanding): Promise<void> => {
-    if (!wallet.session || !view || sats === undefined) return;
-    setError(null);
-    try {
-      await payLanding({
-        api,
-        session: wallet.session,
-        wallet: view,
-        landing,
-        sats,
-        feeCapSats: BigInt(config.connect.feeCapSats),
-        userPrompt: t('land.prompt', { amount: amountText }),
-        onStep: (step) => setPhase({ at: 'paying', landing, step }),
-      });
-      setPhase({ at: 'paid', landing });
-      // No rescan here: the page leaves for the status link, and WebKit reports a fetch cut off by navigation as an error.
-      location.assign(statusLink(landing));
-    } catch (e) {
-      setError(failureKey(e));
-      setPhase({ at: 'open', landing });
-    }
-  };
 
   if (phase.at === 'form' || phase.at === 'opening') {
     const busy = phase.at === 'opening';
@@ -175,73 +127,15 @@ export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
     );
   }
 
-  const landing = phase.landing;
-  const address = landing.card.address;
-  const link = bip21(address, amountOk ? amountText.trim() : '');
-  const paying = phase.at === 'paying' || phase.at === 'paid';
-  const primary = wallet.session
-    ? {
-        label: phase.at === 'paying' ? t(`swap.step.${phase.step}`) : phase.at === 'paid' ? t('land.paid') : t('land.pay'),
-        disabled: paying || !view || !amountOk || (view !== null && sats !== undefined && sats > view.sats),
-        onClick: () => void pay(landing),
-      }
-    : { label: wallet.status === 'connecting' ? t('wallet.connecting') : t('land.connectToPay'), disabled: wallet.status === 'connecting', onClick: wallet.connect, hat: true };
-
   return (
-    <div className="land land--open">
-      <h3 className="land__title">{t('land.addressTitle')}</h3>
-      {config.ui.ferryMotion ? <Ferry kind="land" at={ferryStep('land', { status: 'open', txid: null })} banks={banks} motion={false} /> : null}
-      <div className="land__pay">
-        <PayQr
-          value={link}
-          label={t('land.qrLabel', { amount: amountOk ? amountText.trim() : vars.min })}
-          copy={{ label: t('land.qrCopy'), done: t('land.copied') }}
-        />
-        <div className="land__details">
-          <p className="land__address mono">{address}</p>
-          <button
-            type="button"
-            className="button button--quiet"
-            onClick={() => void navigator.clipboard?.writeText(address).then(() => setCopied(true), () => setCopied(false))}
-          >
-            {copied ? t('land.copied') : t('land.copy')}
-          </button>
-        </div>
-      </div>
-      <label className="field">
-        <span className="field__label">{t('land.amount')}</span>
-        <span className="field__row">
-          <input
-            className="field__input"
-            inputMode="decimal"
-            autoComplete="off"
-            value={amountText}
-            disabled={paying}
-            onChange={(e) => setAmountText(e.target.value)}
-          />
-          <span className="field__unit">BCH</span>
-        </span>
-      </label>
-      <p className="card__note">{t('land.min', { ...vars, tokens: formatUnits(landing.tokensMin, token.decimals, token.decimals) })}</p>
-      {!amountOk && amountText.trim() !== '' ? <p className="swap__error">{t('swap.err.below_min', vars)}</p> : null}
-      <p className="card__note">{t('land.promise', { symbol: token.symbol, pct: String(config.landing.toleranceBpsDirect / 100) })}</p>
-      <p className="card__note">{t('land.validity', { hours: String(landing.validHours) })}</p>
-      {error ? (
-        <p className="swap__error" role="alert">
-          {t(error, { min: vars.min, max: String(config.limits.maxUsd) })}
-        </p>
-      ) : null}
-      <button type="button" className="button button--primary" disabled={primary.disabled} onClick={primary.onClick}>
-        {primary.hat ? <WizardHat /> : null}
-        {primary.label}
-      </button>
-      {!wallet.session ? <p className="card__note">{t('land.noWallet')}</p> : null}
-      <p className="swap__links">
-        <a href={statusLink(landing)}>{t('land.follow')}</a>
-        <button type="button" className="link-button" disabled={paying} onClick={() => setPhase({ at: 'form' })}>
-          {t('land.new')}
-        </button>
-      </p>
-    </div>
+    <LandOpen
+      key={phase.landing.crossingId}
+      config={config}
+      wallet={wallet}
+      landing={phase.landing}
+      amountText={amountText}
+      setAmountText={setAmountText}
+      onNew={() => setPhase({ at: 'form' })}
+    />
   );
 }
