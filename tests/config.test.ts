@@ -182,9 +182,19 @@ describe('patchConfig (SAMPAN_CONFIG_PATCH)', () => {
 describe('ui.ferryMotion', () => {
   it('is a boolean in the shipped config, is sent to the page as it is, and must be a boolean', () => {
     expect(typeof shipped.ui.ferryMotion).toBe('boolean');
-    expect(publicConfig(shipped).ui).toEqual({ ferryMotion: shipped.ui.ferryMotion });
-    const bad = { ...shipped, ui: { ferryMotion: 'yes' } } as unknown as typeof shipped;
+    expect(publicConfig(shipped).ui.ferryMotion).toBe(shipped.ui.ferryMotion);
+    const bad = { ...shipped, ui: { ...shipped.ui, ferryMotion: 'yes' } } as unknown as typeof shipped;
     expect(validateConfig(bad)).toContain('ui.ferryMotion: true or false');
+  });
+});
+
+describe('ui.qrAutoOpen', () => {
+  it('is a boolean in the shipped config, is sent to the page as it is, and must be a boolean', () => {
+    expect(typeof shipped.ui.qrAutoOpen).toBe('boolean');
+    expect(publicConfig(shipped).ui.qrAutoOpen).toBe(shipped.ui.qrAutoOpen);
+    const missing = { ...shipped, ui: { ferryMotion: true } } as unknown as typeof shipped;
+    expect(validateConfig(missing)).toContain('ui.qrAutoOpen: true or false');
+    expect(validateConfig({ ...shipped, ui: { ...shipped.ui, qrAutoOpen: false } })).toEqual([]);
   });
 });
 

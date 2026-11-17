@@ -28,6 +28,9 @@ const payPatch = { ...e2ePatch, features: { swap: true, landing: true, pay: true
  */
 export const NETWORK_PORT_OFFSET = PAY_PORT_OFFSET + 1;
 const networkPatch = { ...landingPatch, compliance: { crossChainEnabled: true }, ...livePatch(shippedAssets, ['ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48', 'BSC', 'BASE']) };
+/** A fake server with the landing flow on and the QR opening by itself switched off (e2e/qr-first.spec.ts). */
+export const QR_OFF_PORT_OFFSET = NETWORK_PORT_OFFSET + 1;
+const qrOffPatch = { ...landingPatch, ui: { qrAutoOpen: false } };
 /** Test-only secret of the demo shop's hook on the local fake server (the public site's secret lives on the host). */
 const payEnv = { SAMPAN_PAY_DEMO_SECRET: `whsec_${Buffer.alloc(32, 3).toString('base64')}` };
 const fakeServer = (p: number, patch: unknown, outage?: string, extra: Record<string, string> = {}) => ({
@@ -58,6 +61,7 @@ export default defineConfig({
           ...OUTAGE_MODES.map((mode, i) => fakeServer(outagePort(i), e2ePatch, mode)),
           fakeServer(port + PAY_PORT_OFFSET, payPatch, undefined, payEnv),
           fakeServer(port + NETWORK_PORT_OFFSET, networkPatch, undefined, { SAMPAN_FAKE_INBOUND: 'inbound-2026-11-17.json' }),
+          fakeServer(port + QR_OFF_PORT_OFFSET, qrOffPatch),
         ],
       }),
 });

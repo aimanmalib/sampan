@@ -29,7 +29,7 @@ async function ferryOn(page: Page): Promise<void> {
   await page.route('**/api/config', async (route) => {
     const res = await route.fetch();
     const body = (await res.json()) as Record<string, Record<string, unknown>>;
-    await route.fulfill({ response: res, json: { ...body, ui: { ferryMotion: true }, landing: { ...body.landing, pagePollSeconds: 1 } } });
+    await route.fulfill({ response: res, json: { ...body, ui: { ...body.ui, ferryMotion: true }, landing: { ...body.landing, pagePollSeconds: 1 } } });
   });
 }
 

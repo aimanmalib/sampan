@@ -58,6 +58,17 @@ const SERVER_PATCH = {
 const PLAIN_OWNER_FIRST = 5;
 
 const primary = (page: Page) => page.locator('.button--primary');
+
+/**
+ * Opens the landing address once the owner is known. With ui.qrAutoOpen the page opens it by itself (the primary
+ * button then pays, so it must not be pressed here); with the flag off it waits for "Get my landing address".
+ */
+async function openAddress(page: Page): Promise<void> {
+  // A string, so the bundler's helpers never reach the page.
+  const auto = Boolean(await page.evaluate("fetch('/api/config').then((r) => r.json()).then((c) => c.ui?.qrAutoOpen === true)"));
+  if (!auto) await primary(page).filter({ hasText: en['land.open']! }).click({ timeout: 30_000 });
+  await page.locator('.land__address').waitFor({ timeout: 30_000 });
+}
 const sats = parseUnits(PAY_BCH, 8)!;
 
 async function usdOf(amount: bigint): Promise<number> {
@@ -145,8 +156,8 @@ async function walletRun(browser: Browser, chain: ElectrumChain): Promise<Run> {
     if (!uri.startsWith('wiz')) throw new Error('no pairing link on the page');
     writeFileSync(INTENT_FILE, '{}');
     wallet = spawn(process.execPath, ['--import', 'tsx', 'tools/test-wallet/connect.ts', uri, INTENT_FILE, '--timeout-seconds', '600'], { stdio: ['ignore', 'inherit', 'inherit'] });
-    await page.locator('.land__owner').filter({ hasText: 'Paid to your connected wallet' }).waitFor({ timeout: 90_000 });
-    await primary(page).click();
+    await page.locator('.land__owner').filter({ hasText: 'Paid to your connected wallet' }).or(page.locator('.land__address')).first().waitFor({ timeout: 90_000 });
+    await openAddress(page);
     const shown = await shownLanding(page);
     await page.getByRole('textbox').fill(PAY_BCH);
     const intent = {
@@ -172,7 +183,8 @@ async function plainRun(browser: Browser, chain: ElectrumChain, ownerIndex: numb
   try {
     const owner = receive(ownerIndex);
     await page.locator('.field__input--address').fill(owner.tokenAddress);
-    await primary(page).click();
+    await page.locator('.field__input--address').press('Enter');
+    await openAddress(page);
     const shown = await shownLanding(page);
     const usd = await usdOf(sats);
     const send = spawn(process.execPath, ['--import', 'tsx', 'tools/test-wallet/send.ts', shown.address, PAY_BCH, '--usd', String(usd), '--why', `Pay ${PAY_BCH} BCH to a landing address`], {

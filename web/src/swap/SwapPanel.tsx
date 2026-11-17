@@ -9,6 +9,7 @@ import { api } from '../api';
 import type { LoadedConfig } from '../config';
 import { useText } from '../i18n';
 import type { Wallet } from '../wallet/useWallet';
+import { WizardHat } from '../wallet/WizardHat';
 import { codeKey, errorKey } from './errors';
 import { useQuote } from './useQuote';
 
@@ -91,7 +92,7 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
 
   const primary = (() => {
     if (!wallet.session) {
-      return { label: wallet.status === 'connecting' ? t('wallet.connecting') : t('wallet.connect'), disabled: wallet.status === 'connecting', onClick: wallet.connect };
+      return { label: wallet.status === 'connecting' ? t('wallet.connecting') : t('wallet.connect'), disabled: wallet.status === 'connecting', onClick: wallet.connect, hat: true };
     }
     if (run.phase === 'running') return { label: t(`swap.step.${run.step}`), disabled: true, onClick: () => {} };
     if (wallet.status === 'scanning') return { label: t('wallet.scanning'), disabled: true, onClick: () => {} };
@@ -163,6 +164,7 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
         </p>
       ) : null}
       <button type="button" className="button button--primary" disabled={primary.disabled} onClick={primary.onClick}>
+        {primary.hat ? <WizardHat /> : null}
         {primary.label}
       </button>
       <details className="swap__fees">

@@ -9,6 +9,7 @@ import { api } from '../api';
 import type { LoadedConfig } from '../config';
 import { useText, type TextKey } from '../i18n';
 import type { Wallet } from '../wallet/useWallet';
+import { WizardHat } from '../wallet/WizardHat';
 import { outCodeKey, outErrorKey } from './errors';
 import { useOutQuote } from './useOutQuote';
 import { useDisclosure } from '../cross/disclosure';
@@ -133,7 +134,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
   };
   const primary = (() => {
     if (!wallet.session) {
-      return { label: wallet.status === 'connecting' ? t('wallet.connecting') : t('wallet.connect'), disabled: wallet.status === 'connecting', onClick: wallet.connect };
+      return { label: wallet.status === 'connecting' ? t('wallet.connecting') : t('wallet.connect'), disabled: wallet.status === 'connecting', onClick: wallet.connect, hat: true };
     }
     if (run.phase === 'running') return { label: stepLabel(run.at), disabled: true, onClick: () => {} };
     if (run.phase === 'stopped') return { label: t('out.continue'), disabled: quote.status !== 'ok', onClick: () => void send(run.swapTxid) };
@@ -247,6 +248,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
         />
       ) : (
         <button type="button" className="button button--primary" disabled={primary.disabled} onClick={primary.onClick}>
+          {primary.hat ? <WizardHat /> : null}
           {primary.label}
         </button>
       )}

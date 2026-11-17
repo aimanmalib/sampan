@@ -37,7 +37,7 @@ async function shot(page: Page, errors: string[], name: string, project: string)
   errors.splice(before);
 }
 
-test('judge path: fill, connect, get the landing address, pay from the wallet, see it converted', async ({ page }, info) => {
+test('judge path: fill, connect, see the landing address, pay from the wallet, see it converted', async ({ page }, info) => {
   test.setTimeout(60_000);
   const errors = collectErrors(page);
   await page.goto('/');
@@ -52,11 +52,7 @@ test('judge path: fill, connect, get the landing address, pay from the wallet, s
 
   await expect(primary(page)).toHaveText(en['wallet.connect']);
   await primary(page).click();
-  await expect(page.locator('.land__owner')).toContainText('Paid to your connected wallet', { timeout: 20_000 });
-  await expect(primary(page)).toHaveText(en['land.open'], { timeout: 20_000 });
-  await expect(primary(page)).toBeEnabled({ timeout: 20_000 });
-  await primary(page).click();
-
+  // ui.qrAutoOpen (shipped on): the address opens by itself once the wallet is known (e2e/qr-first.spec.ts).
   await expect(page.locator('.land__address')).toHaveText(/^bitcoincash:p[0-9a-z]{41}$/, { timeout: 20_000 });
   await expect(page.locator('svg.payqr')).toBeVisible();
   await expect(page.getByRole('textbox')).toHaveValue('0.001');

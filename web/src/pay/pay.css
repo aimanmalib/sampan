@@ -180,6 +180,9 @@
   /* On a phone the wallet is usually on the same phone: amount and "Open in wallet" first, the QR code after. */
   .payinv__box .payqr {
     max-width: 14rem;
+  }
+  .payinv__box > .qrcopy,
+  .payinv__box > .payqr {
     order: 2;
   }
   .payinv__details {

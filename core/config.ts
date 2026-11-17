@@ -149,8 +149,11 @@ export interface SampanConfig {
   };
   business: BusinessConfig;
   pay: PayConfig;
-  /** How the status pages draw; not a flow. ferryMotion: the ferry on every status page and the landing card, moving while a step is under way. */
-  ui: { ferryMotion: boolean };
+  /**
+   * How the status pages draw; not a flow. ferryMotion: the ferry on every status page and the landing card, moving while a step is under way.
+   * qrAutoOpen: the landing card opens the address and shows its QR as soon as the owner is known (false = the "Get my landing address" button).
+   */
+  ui: { ferryMotion: boolean; qrAutoOpen: boolean };
   /** Languages the page offers, in menu order, each by its own name; every code has a lang/<code>.json. default: shown until a visitor picks one. */
   i18n: I18nConfig;
 }
@@ -290,6 +293,7 @@ export function validateConfig(c: SampanConfig): string[] {
     'ops.healthRetrySeconds: positive integer, at most ops.healthIntervalSeconds',
   );
   need(typeof c.ui?.ferryMotion === 'boolean', 'ui.ferryMotion: true or false');
+  need(typeof c.ui?.qrAutoOpen === 'boolean', 'ui.qrAutoOpen: true or false');
   const langs = Array.isArray(c.i18n?.languages) ? c.i18n.languages : [];
   const codes = langs.map((x) => x?.code);
   need(
@@ -387,7 +391,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     business: { feeBps: c.business.feeBps, feeAddress: c.business.feeAddress },
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
     atom: c.atom,
-    ui: { ferryMotion: c.ui.ferryMotion },
+    ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen },
     i18n: { default: c.i18n.default, languages: c.i18n.languages.map(({ code, name, machine }) => (machine ? { code, name, machine } : { code, name })) },
   };
 }

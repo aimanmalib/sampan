@@ -61,6 +61,14 @@
 .payqr__dots {
   fill: var(--ink);
 }
+.payqr--waiting {
+  aspect-ratio: 1;
+  border-style: dashed;
+  background: var(--paper);
+}
+.land__pay--waiting .card__note {
+  margin: 0;
+}
 @media (max-width: 22rem) {
   .land__pay {
     grid-template-columns: minmax(0, 1fr);

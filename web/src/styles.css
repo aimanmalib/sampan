@@ -294,6 +294,56 @@ a {
   background: var(--paper-deep);
   color: var(--ink-soft);
 }
+.button__icon {
+  vertical-align: -0.25em;
+  margin-right: 0.4em;
+}
+.button__icon-star {
+  fill: var(--river);
+}
+.button:disabled .button__icon-star {
+  fill: var(--paper-deep);
+}
+
+/* A QR code that copies its link when clicked (QrCopy.tsx). */
+.qrcopy {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  min-width: 0;
+}
+.qrcopy__button {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 6px;
+  cursor: copy;
+}
+/* Laid over the foot of the code, so the code takes no more room than before. */
+.qrcopy__done {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 1rem);
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  font-size: 0.8125rem;
+  color: var(--ink);
+  text-align: center;
+}
+.qrcopy__done:empty {
+  padding: 0;
+  border: 0;
+}
 
 /* Footer */
 .footer {

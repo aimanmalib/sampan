@@ -43,7 +43,7 @@ function PayBox({ view, now }: { view: InvoiceView; now: number }) {
   const link = `${view.address}?amount=${amount}`;
   return (
     <div className="payinv__box">
-      <PayQr value={link} label={t('pay.inv.qrLabel', { amount })} />
+      <PayQr value={link} label={t('pay.inv.qrLabel', { amount })} copy={{ label: t('land.qrCopy'), done: t('land.copied') }} />
       <div className="payinv__details">
         <p className="payinv__amount">
           <span className="payinv__label">{t('pay.inv.amount')}</span>

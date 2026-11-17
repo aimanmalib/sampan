@@ -266,6 +266,8 @@
 }
 .connect__qr {
   max-width: 100%;
+  /* Room for the focus ring of the QR button inside the clipped box. */
+  padding: 6px;
   overflow: hidden;
 }
 .connect__qr canvas {
