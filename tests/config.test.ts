@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { normalizeConfig, patchConfig, publicConfig, validateConfig, type SampanConfig } from '../core/config.js';
+import { livePatch } from '../core/route-assets.js';
 
 const shipped = JSON.parse(
   readFileSync(new URL('../config/sampan.json', import.meta.url), 'utf8'),
@@ -66,13 +67,18 @@ describe('validateConfig', () => {
     expect(errors).toMatch(/defaultToken/);
   });
 
-  it('keeps one list of route assets: the old symbol and chain lists are refused next to it', () => {
-    const c = clone() as SampanConfig & { route: { symbols?: string[] }; thorchain: { chains?: string[] } };
+  it('keeps one list of route assets: route.symbols must repeat the live symbols, and thorchain.chains is refused', () => {
+    const c = clone() as SampanConfig & { thorchain: { chains?: string[] } };
     c.route.symbols = ['USDC'];
     c.thorchain.chains = ['BASE'];
     const errors = validateConfig(c).join('\n');
-    expect(errors).toMatch(/route\.symbols: removed/);
+    expect(errors).toMatch(/route\.symbols: must be the symbols of the live thorchain\.assets \(none\)/);
     expect(errors).toMatch(/thorchain\.chains: removed/);
+    const live = patchConfig(clone(), JSON.stringify(livePatch(clone().thorchain.assets, ['ETH'])));
+    expect(live.route.symbols).toEqual(['USDC', 'USDT']);
+    expect(validateConfig(live)).toEqual([]);
+    live.route.symbols = ['USDC'];
+    expect(validateConfig(live).join()).toMatch(/route\.symbols: must be the symbols of the live thorchain\.assets \(USDC, USDT\)/);
   });
 
   it('checks each asset against its chain entry: name, contract, token, live flags; a chain without an EVM entry is never live', () => {

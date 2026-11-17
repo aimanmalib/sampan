@@ -11,7 +11,7 @@ import shipped from '../config/sampan.json' with { type: 'json' };
 import { makeApi, type Api, type Fetch } from '../core/client/api.js';
 import { InStop, runIn, type InIntent, type InStep } from '../core/client/in.js';
 import { normalizeConfig, patchConfig, type SampanConfig } from '../core/config.js';
-import { withLive } from '../core/route-assets.js';
+import { livePatch } from '../core/route-assets.js';
 import { ERC20_ABI, ROUTER_ABI } from '../core/evm/calldata.js';
 import { makeCard, readCard } from '../core/landing-card.js';
 import type { LandingParams } from '../core/landing.js';
@@ -24,7 +24,7 @@ import { otherLockHex, userAddress } from './helpers/wallet.js';
 const shippedConfig = normalizeConfig(shipped as unknown as SampanConfig);
 const config = patchConfig(
   shippedConfig,
-  JSON.stringify({ compliance: { crossChainEnabled: true }, thorchain: { assets: withLive(shippedConfig.thorchain.assets, ['BASE']) }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }),
+  JSON.stringify({ compliance: { crossChainEnabled: true }, ...livePatch(shippedConfig.thorchain.assets, ['BASE']), rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }),
 );
 const chain = config.evm.chains.find((c) => c.key === 'BASE')!;
 const FROM = '0x1a877169bB03400fA69EC4813889E78994D194Cb';

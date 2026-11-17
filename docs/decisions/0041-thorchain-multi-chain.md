@@ -88,8 +88,11 @@ Public endpoints limit `eth_getLogs` ranges (200 to 2048 blocks); Sampan does no
 Config and server (2026-11-17, the slice after the pre-check):
 
 - `thorchain.assets` is the one list (`asset` exactly as `/thorchain/pools` names it, `chain`, `symbol`,
-  `live: { out, in }`). `route.symbols` and `thorchain.chains` are gone; validation refuses them if they come back.
-  `/api/config` publishes only live assets (`routeAssets`) and derives `route.symbols` and `routeChains` from them.
+  `live: { out, in }`). `thorchain.chains` is gone and refused if it comes back. `route.symbols` stays in the file
+  as a checked copy: validation refuses it unless it names exactly the symbols of the live assets (none today), so the
+  release checks that read it keep working and it cannot drift. `/api/config` publishes only live assets
+  (`routeAssets`) and derives `route.symbols` and `routeChains` from them. `livePatch()` builds both parts for a
+  local test or measurement server.
 - `evm.chains[]` has one entry per EVM chain: `rpc` is a list of at least two https endpoints, `native` names the gas
   coin a wallet is told about, and `tokens.<SYMBOL>` is `{ address, decimals }` with the decimals read above. Each
   asset's contract must match its chain entry. TRON has no EVM entry: it may be listed, never live, until its own

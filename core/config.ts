@@ -29,7 +29,8 @@ export interface SampanConfig {
   defaultToken: string;
   /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
   features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean };
-  route: { active: ActiveRoute };
+  /** symbols: the symbols of the live thorchain.assets, repeated here and checked against them (texts name them). */
+  route: { active: ActiveRoute; symbols: string[] };
   thorchain: {
     nodes: string[];
     /** The one list of stablecoins the route carries; each is offered only where live and its chain open. */
@@ -158,8 +159,8 @@ export interface PublicConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
   features: SampanConfig['features'];
-  /** symbols: derived from the live assets (texts name them). */
-  route: SampanConfig['route'] & { symbols: string[] };
+  /** symbols: derived from the live assets of the active route (texts name them). */
+  route: SampanConfig['route'];
   /** Assets live in at least one direction; the server still refuses one whose chain the route reports closed. */
   routeAssets: RouteAsset[];
   /** Chains of routeAssets (keys of evm.chains). */
@@ -222,7 +223,11 @@ export function validateConfig(c: SampanConfig): string[] {
   need(new Set(c.evm.chains.map((ch) => ch.key)).size === c.evm.chains.length, 'evm.chains: keys must differ');
   for (const ch of c.evm.chains) errors.push(...validateEvmChain(ch, isHttpsUrl));
   // One source for what the route carries: the old lists may not come back next to it.
-  need(!('symbols' in (c.route ?? {})), 'route.symbols: removed; thorchain.assets is the one list');
+  const liveSymbols = symbolsOf(liveAssets(c.thorchain.assets ?? []));
+  need(
+    Array.isArray(c.route?.symbols) && [...c.route.symbols].sort().join() === [...liveSymbols].sort().join(),
+    `route.symbols: must be the symbols of the live thorchain.assets (${liveSymbols.join(', ') || 'none'})`,
+  );
   need(!('chains' in (c.thorchain ?? {})), 'thorchain.chains: removed; thorchain.assets is the one list');
   errors.push(...validateAssets(c.thorchain.assets, c.evm.chains));
   need(

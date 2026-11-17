@@ -135,3 +135,9 @@ export function routeChoices(assets: readonly RouteAsset[], chains: readonly Evm
  */
 export const withLive = (assets: readonly RouteAsset[], names: readonly string[]): RouteAsset[] =>
   assets.map((a) => (names.includes(a.asset) || names.includes(a.chain) ? { ...a, live: { out: true, in: true } } : a));
+
+/** The SAMPAN_CONFIG_PATCH part that switches those assets live: the asset list and the route.symbols it implies. */
+export function livePatch(assets: readonly RouteAsset[], names: readonly string[]): { route: { symbols: string[] }; thorchain: { assets: RouteAsset[] } } {
+  const next = withLive(assets, names);
+  return { route: { symbols: symbolsOf(liveAssets(next)) }, thorchain: { assets: next } };
+}

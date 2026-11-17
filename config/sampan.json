@@ -24,7 +24,8 @@
     "atom": false
   },
   "route": {
-    "active": "thorchain"
+    "active": "thorchain",
+    "symbols": []
   },
   "thorchain": {
     "nodes": ["https://gateway.liquify.com/chain/thorchain_api"],

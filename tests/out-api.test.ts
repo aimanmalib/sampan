@@ -10,7 +10,7 @@ import { checkTransaction } from '../core/check.js';
 import { depositExpectation, type OutIntent, type WireOutQuote } from '../core/client/out.js';
 import type { WalletView } from '../core/client/scan.js';
 import { normalizeConfig, patchConfig, type SampanConfig } from '../core/config.js';
-import { withLive } from '../core/route-assets.js';
+import { livePatch } from '../core/route-assets.js';
 import { thorAsset } from '../core/routes/memo.js';
 import { signP2pkhInputs } from '../core/tx/sign.js';
 import { encodeTransaction, binToHex } from '@bitauth/libauth';
@@ -22,7 +22,7 @@ import { PUSD, testKey } from './helpers/pools.js';
 import { userAddress, userLockHex } from './helpers/wallet.js';
 
 const base = normalizeConfig(shipped as unknown as SampanConfig);
-const crossOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, thorchain: { assets: withLive(base.thorchain.assets, ['BASE']) }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }));
+const crossOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, ...livePatch(base.thorchain.assets, ['BASE']), rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }));
 const DEST = '0x1a877169bB03400fA69EC4813889E78994D194Cb';
 const USDC = base.evm.chains.find((c) => c.key === 'BASE')!.tokens.USDC!.address;
 let app: FastifyInstance | undefined;

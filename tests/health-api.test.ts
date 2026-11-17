@@ -7,14 +7,14 @@ import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import { normalizeConfig, patchConfig, type SampanConfig } from '../core/config.js';
-import { liveAssets, openMapOf, withLive, type InboundRow } from '../core/route-assets.js';
+import { liveAssets, livePatch, openMapOf, type InboundRow } from '../core/route-assets.js';
 import { buildApp } from '../server/app.js';
 import { ChainUnavailableError } from '../server/chain/types.js';
 import { HealthMonitor } from '../server/health.js';
 import { createServices, type Services } from '../server/services.js';
 
 const base = normalizeConfig(shipped as unknown as SampanConfig);
-const crossOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, thorchain: { assets: withLive(base.thorchain.assets, ['BASE']) }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }));
+const crossOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, ...livePatch(base.thorchain.assets, ['BASE']), rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }));
 const LIVE_BASE = liveAssets(crossOn.thorchain.assets);
 const CF = '104.16.1.2';
 const PROXY = '10.0.0.2';
@@ -176,7 +176,7 @@ describe('new crossings: region and route pause', () => {
   it('refuses only the asset whose chain is closed (503 chain_halted); assets on open chains keep quoting', async () => {
     // Inbound state read from THORNode on 2026-11-17: Base halted, Ethereum and the others open.
     const inbound = JSON.parse(readFileSync('tests/fixtures/thorchain/inbound-2026-11-17.json', 'utf8')) as InboundRow[];
-    await start(patchConfig(crossOn, JSON.stringify({ thorchain: { assets: withLive(base.thorchain.assets, ['BASE', 'ETH']) } })));
+    await start(patchConfig(crossOn, JSON.stringify(livePatch(base.thorchain.assets, ['BASE', 'ETH']))));
     services.route!.open = async () => openMapOf(inbound);
     const h = await services.health.check();
     expect(h.route).toMatchObject({ open: true, chains: { BCH: true, ETH: true, BASE: false } });

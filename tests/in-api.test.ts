@@ -8,7 +8,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import { normalizeConfig, patchConfig, type SampanConfig } from '../core/config.js';
-import { withLive } from '../core/route-assets.js';
+import { livePatch } from '../core/route-assets.js';
 import { checkInPlan } from '../core/evm/check-in.js';
 import { acceptCard } from '../core/client/land.js';
 import { buildApp } from '../server/app.js';
@@ -16,7 +16,7 @@ import { createServices } from '../server/services.js';
 import { userAddress } from './helpers/wallet.js';
 
 const base = normalizeConfig(shipped as unknown as SampanConfig);
-const crossOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, thorchain: { assets: withLive(base.thorchain.assets, ['BASE']) }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }));
+const crossOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, ...livePatch(base.thorchain.assets, ['BASE']), rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }));
 const USDC = base.evm.chains.find((c) => c.key === 'BASE')!.tokens.USDC!.address;
 let app: FastifyInstance | undefined;
 let dist: string | undefined;

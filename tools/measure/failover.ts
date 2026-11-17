@@ -9,7 +9,7 @@ import { execSync, type ChildProcess } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { devices, webkit } from '@playwright/test';
-import { withLive, type RouteAsset } from '../../core/route-assets.js';
+import { livePatch, type RouteAsset } from '../../core/route-assets.js';
 import { REFUSED_HOST, SILENT_HOST, healthWords, writeFailoverSection, type CaseOutcome, type FailoverRow } from './failover-table.js';
 import { startServer, waitHealthy } from './server.js';
 
@@ -34,7 +34,7 @@ interface Shipped {
 const shipped = JSON.parse(readFileSync('config/sampan.json', 'utf8')) as Shipped;
 /** The route cases quote the first listed asset, switched live on this local server only. */
 const probeAsset = shipped.thorchain.assets[0]!;
-const cross = { compliance: { crossChainEnabled: true }, thorchain: { assets: withLive(shipped.thorchain.assets, [probeAsset.asset]) } };
+const cross = { compliance: { crossChainEnabled: true }, ...livePatch(shipped.thorchain.assets, [probeAsset.asset]) };
 
 interface Case {
   id: string;
