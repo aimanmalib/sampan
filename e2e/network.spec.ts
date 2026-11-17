@@ -10,7 +10,7 @@ test.use({ baseURL: `http://127.0.0.1:${Number(process.env.E2E_PORT ?? 4173) + N
 
 const DEST = '0x1a877169bB03400fA69EC4813889E78994D194Cb';
 const BCH_ADDRESS = 'bitcoincash:qqyuz8zh06c8h39guuedjpfvnlvjeg394ucvfe6ltt';
-const OFFERED = ['USDC on Ethereum', 'USDC on BNB Smart Chain', 'USDT on BNB Smart Chain'];
+const OFFERED = ['USDC on Ethereum', 'USDC on BNB Smart Chain', 'USDT on BNB Smart Chain'] as const;
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
