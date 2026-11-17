@@ -14,6 +14,9 @@ import { useOutQuote } from './useOutQuote';
 import { useDisclosure } from '../cross/disclosure';
 import { EvmWallets } from '../evm/EvmWallets';
 import { shortEvm, useEvm } from '../evm/store';
+import { AtomSwap } from '../atom/AtomSwap';
+import { bchPayer } from '../atom/payBch';
+import { shortAmount } from '../atom/run';
 import { useRouteChoice } from '../atom/RouteChoice';
 import { NetworkPicker } from '../cross/NetworkPicker';
 import { useNetworks } from '../cross/useNetworks';
@@ -220,10 +223,17 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
         </p>
       ) : null}
       {choice.card}
-      {atom ? (
-        <button type="button" className="button button--primary" disabled>
-          {t('atom.go')}
-        </button>
+      {atom && choice.atom ? (
+        <AtomSwap
+          config={config}
+          ready={choice.atom}
+          flow="pusd-to-usdc"
+          amount={amount !== undefined && amount > 0n && !lacking ? formatUnits(amount, decimals) : null}
+          userBch={view ? view.receive.tokenAddress : null}
+          userEvm={destination.trim() !== '' && !badAddress ? destination.trim() : null}
+          evm={null}
+          payBch={bchPayer(config, wallet, (r) => t('atom.prompt.pay', { amount: shortAmount(r.tokenAmount), token: token.symbol }))}
+        />
       ) : (
         <button type="button" className="button button--primary" disabled={primary.disabled} onClick={primary.onClick}>
           {primary.label}

@@ -166,8 +166,10 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
         <AtomSwap
           config={config}
           ready={choice.atom}
+          flow="usdc-to-pusd"
           amount={amount !== undefined && amount > 0n ? formatUnits(amount, ROUTE_DECIMALS) : null}
           userBch={addressOk ? address : null}
+          userEvm={evm.connected ? evm.connected.address : null}
           evm={evm.connected ? { address: evm.connected.address, provider: evm.connected.wallet.provider } : null}
         />
       ) : (

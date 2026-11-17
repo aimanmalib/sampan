@@ -15,8 +15,11 @@ export interface Expectation {
   inputPaths: Array<{ inputIndex: number; path: string }>;
   /** Owner hashes (hex) of the pools the quote used; their locking bytecode is rebuilt here. */
   poolOwnerPkhs: string[];
-  /** Exchange deposit or vault outputs: exact amount, no token. */
-  deposits?: Array<{ lockingBytecode: string; sats: bigint }>;
+  /**
+   * Exchange deposit, vault or contract outputs: exact BCH amount; no token unless `token` is given, and then exactly
+   * that fungible amount of that category (category hex, any case).
+   */
+  deposits?: Array<{ lockingBytecode: string; sats: bigint; token?: { category: string; amount: bigint } }>;
   /** Expected OP_RETURN output (hex locking bytecode), byte for byte. */
   opReturn?: string;
   /** THORChain deposit (rule 6): vault, change to input 0's address, memo; plain user coins only. */
@@ -29,8 +32,8 @@ export interface Expectation {
   /** What the user was shown as leaving the wallet. */
   spend: { sats: bigint; tokens: Record<string, bigint> };
   feeCapSats: bigint;
-  /** The minimum the user was shown as receiving (category hex, or BCH). */
-  receive: { category: string; min: bigint };
+  /** The minimum the user was shown as receiving (category hex, or BCH). Absent when the action pays the user nothing (a contract payment). */
+  receive?: { category: string; min: bigint };
 }
 
 export type Rule = 1 | 2 | 3 | 4 | 5 | 6;
@@ -108,7 +111,7 @@ export const checkTransaction = (tx: Tx, sourceOutputs: Output[], e: Expectation
   for (const i of signed.keys()) if (i < 0 || i >= tx.inputs.length) return fail(5, `listed input ${i} does not exist`);
 
   // Rule 1 and 3: every output is a pool continuation, the user's own, an expected deposit or the memo.
-  const deposits = new Map((e.deposits ?? []).map((d) => [d.lockingBytecode.toLowerCase(), d.sats]));
+  const deposits = new Map((e.deposits ?? []).map((d) => [d.lockingBytecode.toLowerCase(), d]));
   const feeLock = e.sampanFee && e.sampanFee.bps > 0 ? e.sampanFee.lockingBytecode.toLowerCase() : undefined;
   let feeDue = feeLock ? sampanFeeSats(poolBchMoved(tx, sourceOutputs, poolIndexes), e.sampanFee!.bps) : 0n;
   const userFlow: Flow = { sats: 0n, tokens: new Map() };
@@ -130,8 +133,11 @@ export const checkTransaction = (tx: Tx, sourceOutputs: Output[], e: Expectation
       continue;
     }
     if (deposits.has(lock)) {
-      if (out.token) return fail(3, `deposit output ${i} carries a token`);
-      if (out.valueSatoshis !== deposits.get(lock)) return fail(3, `deposit output ${i} is not the quoted amount`);
+      const want = deposits.get(lock)!;
+      if (out.valueSatoshis !== want.sats) return fail(3, `deposit output ${i} is not the quoted amount`);
+      if (!want.token && out.token) return fail(3, `deposit output ${i} carries a token`);
+      if (want.token && (!out.token || out.token.nft || catOf(out) !== want.token.category.toLowerCase() || out.token.amount !== want.token.amount))
+        return fail(3, `deposit output ${i} does not carry the quoted token amount`);
       deposits.delete(lock);
       continue;
     }
@@ -155,6 +161,7 @@ export const checkTransaction = (tx: Tx, sourceOutputs: Output[], e: Expectation
   }
 
   // Rule 4: the user receives at least the minimum shown.
+  if (!e.receive) return { ok: true };
   const gained = e.receive.category === BCH ? userFlow.sats : (userFlow.tokens.get(e.receive.category.toLowerCase()) ?? 0n);
   if (gained < e.receive.min) return fail(4, 'the wallet receives less than the minimum shown');
   return { ok: true };

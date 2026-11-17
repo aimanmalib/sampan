@@ -105,7 +105,9 @@ test('Send out shows both routes for the same amount, THORChain selected, and th
   await page.keyboard.press('ArrowDown');
   await expect(row(page, 'atom').getByRole('radio')).toBeChecked();
   await expect(primary(page)).toHaveText(en['atom.go']);
-  await expect(page.locator('.out .card__note')).toHaveCount(0);
+  // The atom run needs the BCH wallet that pays the contract: without it the button waits and says why.
+  await expect(primary(page)).toBeDisabled();
+  await expect(page.locator('.out .card__note')).toHaveText(en['atom.needBch'].replace('{token}', 'PUSD'));
 
   await page.setViewportSize({ width: 320, height: 640 });
   await routes(page).scrollIntoViewIfNeeded();

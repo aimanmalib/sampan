@@ -2,7 +2,8 @@
 // answered by page.route (health and quote from frozen fixtures; the offer built here from the page's own request),
 // Base's clock by a stand-in RPC answer, and the wallet is a fake EIP-6963 provider. The client file is the real
 // minified build, so its own checks run: the recovery card must be downloaded before the lock button works, an offer
-// for another contract stops before anything is signed, and the card is kept under the service page's storage key.
+// for another contract stops before anything is signed, the card is kept under the service page's storage key, and
+// the refund button shows only once Base's clock is past the lock's timeout, then asks the relay.
 // Skipped against a live site.
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page, type Route } from '@playwright/test';
@@ -32,6 +33,11 @@ interface Service {
   state: string;
   hash: string | null;
   offers: number;
+  /** Unix seconds by which the user had to lock, as the service reports it. */
+  lockBy: number;
+  /** Base's latest block time as the client reads it. */
+  clock: number;
+  relays: Array<{ hash: string; action: string }>;
 }
 
 /** A wallet extension stand-in on Ethereum mainnet first; it switches to Base when asked and records what it signs. */
@@ -83,15 +89,15 @@ function offerFor(body: { hash: string; userEvm: string; amount: string }, atomL
   return { lock, swap: swapView(body.hash, 'offered', lock) };
 }
 
-function swapView(hash: string, state: string, userLock: unknown = {}) {
+function swapView(hash: string, state: string, userLock: unknown = {}, lockBy = NOW + 1800) {
   return {
     hash, flow: 'usdc-to-pusd', state, amountIn: '2', amountOut: '1.98', symbolIn: 'USDC', symbolOut: 'PUSD', userChain: 'base', userLock,
-    lockBy: NOW + 1800, makerLock: null, declined: null, secretSeen: false, retrying: false, tx: {}, times: {},
+    lockBy, makerLock: null, declined: null, secretSeen: false, retrying: false, tx: {}, times: {},
   };
 }
 
 async function setUp(page: Page, opts: { atomLock?: string } = {}): Promise<Service> {
-  const svc: Service = { state: 'offered', hash: null, offers: 0 };
+  const svc: Service = { state: 'offered', hash: null, offers: 0, lockBy: NOW + 1800, clock: NOW, relays: [] };
   await injectWallet(page);
   await page.route('**/api/config', async (route: Route) => {
     const res = await route.fetch();
@@ -112,7 +118,13 @@ async function setUp(page: Page, opts: { atomLock?: string } = {}): Promise<Serv
       return route.fulfill({ status: 201, json: offerFor(body, opts.atomLock ?? ATOM_LOCK) });
     }
     const swap = /\/swap\/([0-9a-f]{64})$/.exec(url.pathname);
-    if (swap) return route.fulfill({ json: { swap: swapView(swap[1]!, svc.state) } });
+    if (swap) return route.fulfill({ json: { swap: swapView(swap[1]!, svc.state, {}, svc.lockBy) } });
+    if (url.pathname.endsWith('/relay')) {
+      const body = route.request().postDataJSON() as { hash: string; action: string };
+      svc.relays.push(body);
+      svc.state = 'refunded';
+      return route.fulfill({ json: { txid: `0x${'77'.repeat(32)}`, swap: swapView(body.hash, 'refunded', {}, svc.lockBy) } });
+    }
     return route.fulfill({ status: 404, json: { reason: 'not-found' } });
   });
   // Base's clock as the client reads it (latest block), through the RPCs in the client's own config.
@@ -121,7 +133,7 @@ async function setUp(page: Page, opts: { atomLock?: string } = {}): Promise<Serv
     if (req.method !== 'eth_getBlockByNumber') return route.fulfill({ json: { jsonrpc: '2.0', id: req.id, error: { code: -32601, message: 'not here' } } });
     const hex = (n: number) => `0x${n.toString(16)}`;
     const block = {
-      number: hex(30_000_000), hash: `0x${'11'.repeat(32)}`, parentHash: `0x${'22'.repeat(32)}`, timestamp: hex(NOW), gasLimit: hex(1), gasUsed: hex(0),
+      number: hex(30_000_000), hash: `0x${'11'.repeat(32)}`, parentHash: `0x${'22'.repeat(32)}`, timestamp: hex(svc.clock), gasLimit: hex(1), gasUsed: hex(0),
       baseFeePerGas: hex(1), transactions: [], difficulty: '0x0', extraData: '0x', logsBloom: `0x${'00'.repeat(256)}`, miner: MAKER, nonce: '0x0000000000000000',
       receiptsRoot: `0x${'33'.repeat(32)}`, sha3Uncles: `0x${'44'.repeat(32)}`, size: hex(1), stateRoot: `0x${'55'.repeat(32)}`, transactionsRoot: `0x${'66'.repeat(32)}`, uncles: [],
     };
@@ -200,4 +212,37 @@ test('an offer for another contract stops before the card and before anything is
   await page.setViewportSize({ width: 320, height: 640 });
   const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
   expect(scroll).toBeLessThanOrEqual(client);
+});
+
+test('the refund shows only once Base is past the lock timeout, and goes through the relay', async ({ page }) => {
+  test.setTimeout(60_000);
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  const svc = await setUp(page);
+  await pickAtom(page);
+  await page.getByRole('button', { name: en['atom.go'] }).click();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: en['atom.card.download'] }).click();
+  await download;
+  svc.state = 'userLocked';
+  await lockButton(page).click();
+  await expect(page.locator('.atom-run__state')).toHaveText(en['atom.state.userLocked'], { timeout: 15_000 });
+
+  // The time to lock is over but Base's clock is still before the lock's timeout (NOW + 3600): no button.
+  svc.lockBy = NOW - 10;
+  // A clock read after a poll, then the next poll: the page has settled on that reading.
+  await page.waitForResponse((r) => /base/.test(new URL(r.url()).hostname) && r.request().postData()?.includes('eth_getBlockByNumber') === true);
+  await page.waitForResponse((r) => r.url().includes('/atom/api/swap/'));
+  const refund = page.getByRole('button', { name: en['atom.refund.go'] });
+  await expect(refund).toHaveCount(0);
+  expect(svc.relays).toEqual([]);
+
+  svc.clock = NOW + 3601;
+  await expect(refund).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(en['atom.refund.ready'])).toBeVisible();
+  await refund.click();
+  await expect(page.locator('.atom-run__state')).toHaveText(en['atom.state.refunded'], { timeout: 15_000 });
+  expect(svc.relays).toEqual([{ hash: svc.hash, action: 'refund' }]);
+  await expect(refund).toHaveCount(0);
+  expect(errors).toEqual([]);
 });

@@ -172,7 +172,7 @@ export interface PublicConfig {
   banner: SampanConfig['banner'];
   site: SampanConfig['site'];
   legal: SampanConfig['legal'];
-  connect: SampanConfig['connect'] & { gapLimit: number; feeCapSats: number };
+  connect: SampanConfig['connect'] & { gapLimit: number; feeCapSats: number; satsPerByte: number; tokenDustSats: number };
   /** How often the page asks GET /api/health again: intervalSeconds, or retrySeconds while something is not ok;
    *  and how long it waits on any API request before it says the server is not answering. */
   health: { intervalSeconds: number; retrySeconds: number; requestTimeoutSeconds: number };
@@ -370,7 +370,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     banner: c.banner,
     site: c.site,
     legal: c.legal,
-    connect: { ...c.connect, gapLimit: c.wallet.gapLimit, feeCapSats: c.fees.capSats },
+    connect: { ...c.connect, gapLimit: c.wallet.gapLimit, feeCapSats: c.fees.capSats, satsPerByte: c.fees.satsPerByte, tokenDustSats: c.landing.tokenDustSats },
     health: { intervalSeconds: c.ops.healthIntervalSeconds, retrySeconds: c.ops.healthRetrySeconds, requestTimeoutSeconds: c.ops.requestTimeoutSeconds },
     business: { feeBps: c.business.feeBps, feeAddress: c.business.feeAddress },
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },

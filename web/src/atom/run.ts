@@ -1,8 +1,9 @@
 // One atomic swap run from this page, in the order the service's integration note gives: startSwap, recovery card,
-// lockOnBase, poll the swap, makerLockReady, claim. Every lock, contract and secret step is the client's own function;
+// lockOnBase (USDC) or the contract payment (PUSD), poll the swap, makerLockReady, claim; after the lock's timeout,
+// refund. Every lock, contract and secret step is the client's own function;
 // this file only builds the client's dependencies, orders the calls and refuses to lock before the recovery card was
 // downloaded (the card holds the secret and is enough to claim or refund without this page or the service).
-import type { AtomDeps, AtomEip1193, AtomSaved, AtomShippedConfig, AtomSwapModule, AtomSwapView } from './client.js';
+import type { AtomDeps, AtomEip1193, AtomPaymentRequest, AtomSaved, AtomShippedConfig, AtomSwapModule, AtomSwapView } from './client.js';
 
 /** States after which the service no longer changes the swap. */
 export const FINAL_STATES: readonly string[] = ['done', 'refunded', 'expired', 'failed'];
@@ -64,7 +65,40 @@ export async function lockUsdc(
   return client.lockOnBase(deps.config, saved, wallet, onStep);
 }
 
-export type Activity = 'checking' | 'claiming' | null;
+/** PUSD to USDC: the BCH wallet pays the contract what the client asks for, only once this swap's card was downloaded. */
+export async function payPusd(
+  client: AtomSwapModule,
+  deps: AtomDeps,
+  saved: AtomSaved,
+  downloaded: ReadonlySet<string>,
+  pay: (request: AtomPaymentRequest) => Promise<string>,
+): Promise<string> {
+  if (!downloaded.has(saved.card.secret.hash)) throw new CardFirst();
+  return pay(client.paymentRequest(deps.config, saved));
+}
+
+/**
+ * Whether the user's own lock may be taken back now: the swap is not final, the time to lock has passed, and the
+ * chain's clock is past the lock's timeout (the client reads the clock; a failed read counts as not yet).
+ */
+export async function refundOpenNow(client: AtomSwapModule, deps: AtomDeps, saved: AtomSaved, swap: AtomSwapView, nowSeconds: number): Promise<boolean> {
+  if (FINAL_STATES.includes(swap.state) || swap.state === 'offered' || swap.tx.userRefund) return false;
+  if (nowSeconds <= swap.lockBy) return false;
+  return client.refundReady(deps, saved).catch(() => false);
+}
+
+/** Returns the user's lock: through the service's relay, or on Base by the user's own wallet when the relay fails. */
+export async function refundLock(client: AtomSwapModule, deps: AtomDeps, saved: AtomSaved, wallet: AtomEip1193 | null): Promise<AtomSwapView | null> {
+  try {
+    return await client.refundByRelay(deps, saved);
+  } catch (e) {
+    if (saved.card.user.chain !== 'base' || !wallet) throw e;
+    await client.refundWithWallet(deps.config, saved, wallet);
+    return null;
+  }
+}
+
+export type Activity = 'checking' | 'claiming' | 'refunding' | null;
 
 export interface TickResult {
   swap: AtomSwapView;

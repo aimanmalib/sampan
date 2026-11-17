@@ -1,5 +1,6 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import { publicConfig, type SampanConfig } from '../core/config.js';
+import { registerAtom } from './api/atom.js';
 import { registerBroadcast } from './api/broadcast.js';
 import { registerCrossings } from './api/crossings.js';
 import { registerLanding } from './api/landing.js';
@@ -72,6 +73,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   registerWallet(app, config, services);
   registerSwap(app, config, services);
   registerBroadcast(app, config, services);
+  registerAtom(app, config, services);
   registerLanding(app, config, services);
   registerOut(app, config, services);
   registerIn(app, config, services);

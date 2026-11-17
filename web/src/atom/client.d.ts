@@ -61,11 +61,22 @@ export interface AtomSwapView {
   tx: Partial<Record<'userLock' | 'makerLock' | 'userClaim' | 'makerClaim' | 'makerRefund' | 'userRefund', string>>;
 }
 
-/** A recovery card as the client holds it; Sampan reads only the flow, the hash and the creation time. */
+/** A recovery card as the client holds it; Sampan reads only the flow, the hash, the creation time and the user's chain. */
 export interface AtomCard {
   flow: AtomFlow;
   createdUtc: string;
   secret: { hash: string };
+  user: { chain: 'base' | 'bch' };
+}
+
+/** PUSD to USDC: what the user's BCH wallet must send to the contract (client/swap.ts PaymentRequest). */
+export interface AtomPaymentRequest {
+  /** Token-aware cash address of the contract. */
+  address: string;
+  tokenAmount: string;
+  tokenUnits: bigint;
+  category: string;
+  sats: bigint;
 }
 
 /** One swap started in this browser (client/store.ts Saved). */
@@ -110,8 +121,12 @@ export interface AtomSwapModule extends AtomClientModule {
   startSwap(d: AtomDeps, input: { flow: AtomFlow; amount: string; userBch: string; userEvm: string }): Promise<{ saved: AtomSaved; swap: AtomSwapView }>;
   lockOnBase(config: AtomShippedConfig, saved: AtomSaved, wallet: AtomEip1193, onStep?: (step: 'approve' | 'lock') => void): Promise<string>;
   makerLockReady(d: AtomDeps, saved: AtomSaved, swap: AtomSwapView): Promise<string | null>;
+  paymentRequest(config: AtomShippedConfig, saved: AtomSaved): AtomPaymentRequest;
   claim(d: AtomDeps, saved: AtomSaved): Promise<AtomSwapView>;
   refundReady(d: AtomDeps, saved: AtomSaved): Promise<boolean>;
+  refundByRelay(d: AtomDeps, saved: AtomSaved): Promise<AtomSwapView>;
+  /** Base only: the user's EVM wallet sends the refund itself. */
+  refundWithWallet(config: AtomShippedConfig, saved: AtomSaved, wallet: AtomEip1193): Promise<string>;
   amountInText(config: AtomShippedConfig, saved: AtomSaved): string;
   amountOutText(config: AtomShippedConfig, saved: AtomSaved): string;
 }

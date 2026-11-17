@@ -1,12 +1,14 @@
-// The atomic swap run inside Bring in (USDC on Base to PUSD), shown when the user picked that row in "Choose a route".
-// The recovery card is downloaded before the lock button works; the page then follows the swap and claims once its
-// own check of the maker's lock passes. Every stop is said in words, with the client's short code where it helps.
+// The atomic swap run inside Bring in (USDC on Base to PUSD) or Send out (PUSD to USDC on Base), shown when the user
+// picked that row in "Choose a route". The recovery card is downloaded before the lock or payment button works; the
+// page then follows the swap, claims once its own check of the maker's lock passes, and offers the refund once the
+// chain is past the lock's timeout. Every stop is said in words, with the client's short code where it helps.
 import type { LoadedConfig } from '../config';
 import type { EvmProvider } from '../evm/store';
 import { useText, type TextKey } from '../i18n';
 import { REASONS, reasonText } from './RouteChoice';
 import { offerProblem } from './run';
 import { useAtomSwap } from './useAtomSwap';
+import type { AtomFlow, AtomPaymentRequest } from './client';
 import type { AtomReady } from './useAtomQuote';
 
 type T = ReturnType<typeof useText>['t'];
@@ -23,21 +25,37 @@ function problemText(t: T, problem: string): string {
   return t('atom.err.other', { code });
 }
 
+/** Words that differ by direction: what the user locks, where the result arrives. */
+const STATE_OUT = ['userLocked', 'makerLocked', 'secretSeen', 'done'];
+
 export interface AtomSwapProps {
   config: LoadedConfig;
   ready: AtomReady;
-  /** Decimal USDC amount, or null while the amount is not usable. */
+  flow: AtomFlow;
+  /** Decimal amount the user sends (USDC or PUSD), or null while the amount is not usable. */
   amount: string | null;
-  /** The address that receives PUSD, or null while it is not valid. */
+  /** The BCH address that receives PUSD (or gets PUSD back on a refund), or null while it is not valid. */
   userBch: string | null;
+  /** The Base address that sends USDC (or receives it), or null while it is not valid. */
+  userEvm: string | null;
+  /** The EVM wallet: locks USDC, and may send a Base refund itself. */
   evm: { address: string; provider: EvmProvider } | null;
+  /** PUSD to USDC: pays the contract from the connected BCH wallet and returns the txid; null while not connected. */
+  payBch?: ((request: AtomPaymentRequest) => Promise<string>) | null;
 }
 
-export function AtomSwap({ config, ready, amount, userBch, evm }: AtomSwapProps) {
+export function AtomSwap({ config, ready, flow, amount, userBch, userEvm, evm, payBch = null }: AtomSwapProps) {
   const { t } = useText();
-  const run = useAtomSwap(config, ready);
-  const { phase, swap, downloaded, step, activity, problem } = run.state;
+  const run = useAtomSwap(config, ready, flow);
+  const { phase, swap, downloaded, step, activity, refundable, problem } = run.state;
+  const out = flow === 'pusd-to-usdc';
   const symbol = ready.shipped.tokens.usdc.symbol;
+  const token = ready.shipped.tokens.pusd.symbol;
+  /** What the user locks: USDC in, PUSD out. */
+  const sent = out ? token : symbol;
+  const receive = run.amounts ? (
+    <p className="swap__receive">{out ? t('atom.receiveOut', { amount: run.amounts.out, symbol }) : t('atom.receive', { amount: run.amounts.out })}</p>
+  ) : null;
   const alert = problem ? (
     <p className="swap__error" role="alert">
       {problemText(t, problem)}
@@ -45,7 +63,8 @@ export function AtomSwap({ config, ready, amount, userBch, evm }: AtomSwapProps)
   ) : null;
 
   if (phase === 'idle' || phase === 'starting') {
-    const canStart = phase === 'idle' && amount !== null && userBch !== null && evm !== null;
+    const canLock = out ? payBch !== null : evm !== null;
+    const canStart = phase === 'idle' && amount !== null && userBch !== null && userEvm !== null && canLock;
     return (
       <div className="atom-run">
         {run.pending.length > 0 ? (
@@ -69,13 +88,13 @@ export function AtomSwap({ config, ready, amount, userBch, evm }: AtomSwapProps)
             </ul>
           </section>
         ) : null}
-        {evm === null ? <p className="card__note">{t('atom.needEvm', { symbol })}</p> : null}
+        {!canLock ? <p className="card__note">{out ? t('atom.needBch', { token }) : t('atom.needEvm', { symbol })}</p> : null}
         {alert}
         <button
           type="button"
           className="button button--primary"
           disabled={!canStart}
-          onClick={() => amount && userBch && evm && run.start({ amount, userBch, userEvm: evm.address })}
+          onClick={() => amount && userBch && userEvm && run.start({ amount, userBch, userEvm })}
         >
           {phase === 'starting' ? t('atom.starting') : t('atom.go')}
         </button>
@@ -88,8 +107,8 @@ export function AtomSwap({ config, ready, amount, userBch, evm }: AtomSwapProps)
     return (
       <div className="atom-run">
         <h3 className="atom-run__title">{t('atom.card.title')}</h3>
-        <p className="card__note">{t('atom.card.why', { symbol })}</p>
-        {run.amounts ? <p className="swap__receive">{t('atom.receive', { amount: run.amounts.out })}</p> : null}
+        <p className="card__note">{t('atom.card.why', { symbol: sent })}</p>
+        {receive}
         <button type="button" className="button button--quiet" disabled={locking} onClick={run.download}>
           {t('atom.card.download')}
         </button>
@@ -98,25 +117,41 @@ export function AtomSwap({ config, ready, amount, userBch, evm }: AtomSwapProps)
         <button
           type="button"
           className="button button--primary"
-          disabled={!downloaded || locking || evm === null}
-          onClick={() => evm && run.lock(evm.provider)}
+          disabled={!downloaded || locking || (out ? payBch === null : evm === null)}
+          onClick={() => {
+            if (out && payBch) run.lock({ kind: 'bch', pay: payBch });
+            else if (!out && evm) run.lock({ kind: 'base', wallet: evm.provider });
+          }}
         >
-          {locking && step ? t(`atom.step.${step}`) : t('atom.lock', { amount: run.amounts?.in ?? '', symbol })}
+          {locking && step
+            ? t(`atom.step.${step}`)
+            : out
+              ? t('atom.pay', { amount: run.amounts?.in ?? '', token })
+              : t('atom.lock', { amount: run.amounts?.in ?? '', symbol })}
         </button>
       </div>
     );
   }
 
   const state = swap?.state ?? 'offered';
-  const line = activity ? t(`atom.${activity}`) : t(`atom.state.${state}` as TextKey);
+  const stateKey = (out && STATE_OUT.includes(state) ? `atom.stateOut.${state}` : `atom.state.${state}`) as TextKey;
+  const line = activity ? t(`atom.${activity}`) : t(stateKey, { symbol });
   const final = state === 'done' || state === 'refunded' || state === 'expired' || state === 'failed';
   return (
     <div className="atom-run" data-state={state}>
-      {run.amounts ? <p className="swap__receive">{t('atom.receive', { amount: run.amounts.out })}</p> : null}
+      {receive}
       <p className="atom-run__state" role="status" aria-live="polite">
         {line}
       </p>
       {alert}
+      {refundable && !final ? (
+        <div className="atom-run__refund">
+          <p className="card__note">{t('atom.refund.ready')}</p>
+          <button type="button" className="button button--primary" disabled={activity === 'refunding'} onClick={() => run.refund(evm?.provider ?? null)}>
+            {t('atom.refund.go')}
+          </button>
+        </div>
+      ) : null}
       {final || problem ? (
         <button type="button" className="button button--primary" onClick={run.reset}>
           {t('atom.again')}
