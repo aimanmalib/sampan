@@ -39,6 +39,8 @@ function proof(): Plugin {
 export default defineConfig({
   root,
   plugins: [react(), htmlText(), proof()],
+  // The WalletConnect provider's own modal is never used (Sampan draws the QR code): keep it out of the bundle.
+  resolve: { alias: { '@reown/appkit/core': fileURLToPath(new URL('./web/src/evm/no-appkit.ts', import.meta.url)) } },
   build: { outDir: 'dist', emptyOutDir: true, sourcemap: false },
   server: {
     port: 5173,

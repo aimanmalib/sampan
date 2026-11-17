@@ -62,7 +62,9 @@ test('without an EVM wallet the panel says how to get one and offers no address 
   await page.setViewportSize({ width: 320, height: 640 });
   await page.goto('/');
   await page.getByRole('tab', { name: en['tabs.in'] }).click();
-  await expect(page.locator('.evm--none')).toHaveText(en['evm.none']);
+  // With WalletConnect configured the sentence points to it instead (e2e/walletconnect.spec.ts).
+  const { evm } = (await (await page.request.get('/api/config')).json()) as { evm: { walletConnect: unknown } };
+  await expect(page.locator('.evm--none')).toHaveText(en[evm.walletConnect ? 'evm.noneWc' : 'evm.none']);
   await expect(page.getByRole('button', { name: en['in.go'] })).toBeDisabled();
   await expect(page.locator('.in')).not.toContainText('0x');
   await noHorizontalOverflow(page);

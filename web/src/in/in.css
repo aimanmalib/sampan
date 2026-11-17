@@ -82,3 +82,15 @@
   gap: 0.5rem;
   color: var(--ink);
 }
+.connect__qr--wc {
+  width: min(15rem, 100%);
+}
+.connect__qr--wc .payqr {
+  max-width: none;
+}
+.connect__open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}

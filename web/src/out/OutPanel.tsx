@@ -200,10 +200,10 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
         <button type="button" className="link-button out__mine" disabled={busy} onClick={() => setDestination(evm.connected!.address)}>
           {t('out.useMine', { address: shortEvm(evm.connected.address) })}
         </button>
-      ) : evm.wallets.length > 0 ? (
+      ) : evm.wallets.length > 0 || config.evm.walletConnect ? (
         <details className="out__wallets">
           <summary>{t('out.fromWallet')}</summary>
-          <EvmWallets chain={pick.chain.name} />
+          <EvmWallets chain={pick.chain.name} config={config} />
         </details>
       ) : null}
       <p className="swap__receive" aria-live="polite">

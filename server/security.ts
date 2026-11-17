@@ -4,10 +4,13 @@ import { atomConnectOrigins } from '../core/atom-config.js';
 import type { SampanConfig } from '../core/config.js';
 
 export function contentSecurityPolicy(config: SampanConfig): string {
+  const walletConnect = config.evm.walletConnectProjectId !== '';
   const connect = [
     "'self'",
     ...config.evm.chains.flatMap((c) => c.rpc.map((u) => new URL(u).origin)),
     ...config.connect.relayUrls.map((u) => new URL(u).origin),
+    // WalletConnect for EVM wallets: its relay only, and only when a project id is set.
+    ...(walletConnect ? [new URL(config.evm.walletConnectRelay).origin] : []),
     // The atomic swap client talks to its own Electrum servers and Base RPCs; nothing is allowed for it while it is off.
     ...atomConnectOrigins(config.features.atom, config.atom),
   ];
@@ -18,6 +21,8 @@ export function contentSecurityPolicy(config: SampanConfig): string {
     "img-src 'self' data:",
     "font-src 'self'",
     `connect-src ${[...new Set(connect)].join(' ')}`,
+    // WalletConnect Verify attests the page's origin in a frame of its own; no other frame is allowed.
+    ...(walletConnect ? [`frame-src ${new URL(config.evm.walletConnectVerify).origin}`] : []),
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

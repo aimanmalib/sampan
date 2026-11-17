@@ -108,7 +108,9 @@
         }
       }
     ],
-    "walletConnectProjectId": "",
+    "walletConnectProjectId": "2d8c546c57b66aeae04bcdce9c95b4da",
+    "walletConnectRelay": "wss://relay.walletconnect.org",
+    "walletConnectVerify": "https://verify.walletconnect.org",
     "receiptPollSeconds": 3,
     "receiptWaitSeconds": 180,
     "replanSeconds": 60

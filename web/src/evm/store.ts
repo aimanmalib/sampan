@@ -14,6 +14,8 @@ export interface EvmWalletInfo {
 export interface EvmProvider extends Eip1193 {
   on?(event: string, listener: (arg: unknown) => void): void;
   removeListener?(event: string, listener: (arg: unknown) => void): void;
+  /** WalletConnect ends its session with the phone wallet; extensions have no such call. */
+  disconnect?(): Promise<void>;
 }
 
 export interface EvmWallet {
@@ -55,23 +57,39 @@ const onAccounts = (arg: unknown): void => {
   set({ connected: first ? { ...state.connected, address: first } : null });
 };
 
-export async function connectEvm(wallet: EvmWallet): Promise<void> {
+let attempt = 0;
+
+/** Connects a wallet; `pair` replaces eth_requestAccounts for WalletConnect (it shows the pairing link first). */
+export async function connectEvm(wallet: EvmWallet, pair?: () => Promise<string[]>): Promise<void> {
+  const mine = ++attempt;
   set({ connecting: true, failed: false });
   try {
-    const accounts = (await wallet.provider.request({ method: 'eth_requestAccounts' })) as string[];
+    const accounts = pair ? await pair() : ((await wallet.provider.request({ method: 'eth_requestAccounts' })) as string[]);
+    if (mine !== attempt) return;
     if (!accounts[0]) throw new Error('no account');
     state.connected?.wallet.provider.removeListener?.('accountsChanged', onAccounts);
     wallet.provider.on?.('accountsChanged', onAccounts);
     set({ connected: { wallet, address: accounts[0] }, connecting: false });
   } catch {
-    set({ connecting: false, failed: true });
+    if (mine === attempt) set({ connecting: false, failed: true });
   }
+}
+
+/** A pairing the user closed before approving: the page stops waiting for it. */
+export function cancelEvm(): void {
+  attempt++;
+  set({ connecting: false, failed: false });
 }
 
 export function disconnectEvm(): void {
   const c = state.connected;
   if (!c) return;
   c.wallet.provider.removeListener?.('accountsChanged', onAccounts);
+  if (c.wallet.provider.disconnect) {
+    void c.wallet.provider.disconnect().catch(() => {});
+    set({ connected: null });
+    return;
+  }
   // Wallets that support it forget the permission too; the others keep it until the user removes the site.
   void c.wallet.provider.request({ method: 'wallet_revokePermissions', params: [{ eth_accounts: {} }] }).catch(() => {});
   set({ connected: null });

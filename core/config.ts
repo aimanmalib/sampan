@@ -53,7 +53,12 @@ export interface SampanConfig {
   };
   evm: {
     chains: EvmChainConfig[];
+    /** Reown project id for WalletConnect; empty = the option is not offered and its code is never loaded. */
     walletConnectProjectId: string;
+    /** The WalletConnect relay (the only origin added to connect-src when the option is on). */
+    walletConnectRelay: string;
+    /** WalletConnect Verify: its attestation frame lets the wallet show that a pairing comes from this domain (frame-src). */
+    walletConnectVerify: string;
     /** How often the page asks the EVM wallet for a receipt, and how long it waits for an approval to confirm. */
     receiptPollSeconds: number;
     receiptWaitSeconds: number;
@@ -167,7 +172,7 @@ export interface PublicConfig {
   routeAssets: RouteAsset[];
   /** Chains of routeAssets (keys of evm.chains). */
   routeChains: string[];
-  evm: { chains: EvmChainConfig[]; walletConnect: boolean } & Pick<SampanConfig['evm'], 'receiptPollSeconds' | 'receiptWaitSeconds' | 'replanSeconds'>;
+  evm: { chains: EvmChainConfig[]; walletConnect: { projectId: string; relayUrl: string } | null } & Pick<SampanConfig['evm'], 'receiptPollSeconds' | 'receiptWaitSeconds' | 'replanSeconds'>;
   limits: SampanConfig['limits'];
   landing: Pick<SampanConfig['landing'], 'toleranceBps' | 'toleranceBpsDirect' | 'returnAfterBlocks' | 'validHours' | 'pagePollSeconds' | 'dustSats' | 'convertFeeSats'>;
   compliance: { crossChainEnabled: boolean };
@@ -224,6 +229,9 @@ export function validateConfig(c: SampanConfig): string[] {
   need(c.evm.chains.length > 0, 'evm.chains: at least one chain');
   need(new Set(c.evm.chains.map((ch) => ch.key)).size === c.evm.chains.length, 'evm.chains: keys must differ');
   for (const ch of c.evm.chains) errors.push(...validateEvmChain(ch, isHttpsUrl));
+  need(/^[0-9a-f]{32}$|^$/.test(c.evm.walletConnectProjectId), 'evm.walletConnectProjectId: 32 hex characters or empty');
+  need(/^wss:\/\/[^\s/]+\/?$/.test(c.evm.walletConnectRelay), 'evm.walletConnectRelay: a wss URL (host only)');
+  need(/^https:\/\/[^\s/]+\/?$/.test(c.evm.walletConnectVerify), 'evm.walletConnectVerify: an https URL (host only)');
   // One source for what the route carries: the old lists may not come back next to it.
   const liveSymbols = symbolsOf(liveAssets(c.thorchain.assets ?? []));
   need(
@@ -355,7 +363,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     routeChains: chainsOf(assets),
     evm: {
       chains: c.evm.chains,
-      walletConnect: c.evm.walletConnectProjectId !== '',
+      walletConnect: c.evm.walletConnectProjectId === '' ? null : { projectId: c.evm.walletConnectProjectId, relayUrl: c.evm.walletConnectRelay },
       receiptPollSeconds: c.evm.receiptPollSeconds,
       receiptWaitSeconds: c.evm.receiptWaitSeconds,
       replanSeconds: c.evm.replanSeconds,

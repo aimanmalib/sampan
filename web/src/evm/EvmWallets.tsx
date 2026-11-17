@@ -1,11 +1,14 @@
-// The EVM wallet line: wallets found in this browser (icon and name from the wallet), or the connected address with
-// a disconnect button, or a plain sentence when this browser has none.
+// The EVM wallet line: wallets found in this browser (icon and name from the wallet), WalletConnect when the config
+// has a project id, or the connected address with a disconnect button, or a plain sentence when there is no wallet.
+import type { LoadedConfig } from '../config';
 import { useText } from '../i18n';
 import { connectEvm, disconnectEvm, shortEvm, useEvm } from './store';
+import { WalletConnectButton } from './WalletConnectButton';
 
-export function EvmWallets({ chain }: { chain: string }) {
+export function EvmWallets({ chain, config }: { chain: string; config: LoadedConfig }) {
   const { t } = useText();
   const evm = useEvm();
+  const walletConnect = config.evm.walletConnect ? <WalletConnectButton config={config} /> : null;
   if (evm.connected) {
     return (
       <div className="evm evm--on">
@@ -20,10 +23,12 @@ export function EvmWallets({ chain }: { chain: string }) {
       </div>
     );
   }
-  if (evm.wallets.length === 0) return <p className="evm evm--none">{t('evm.none')}</p>;
+  if (evm.wallets.length === 0 && !walletConnect) return <p className="evm evm--none">{t('evm.none')}</p>;
   return (
     <div className="evm">
-      <p className="evm__label">{t('evm.pick', { chain })}</p>
+      <p className={evm.wallets.length === 0 ? 'evm__label evm--none' : 'evm__label'}>
+        {evm.wallets.length === 0 ? t('evm.noneWc') : t('evm.pick', { chain })}
+      </p>
       <ul className="evm__list">
         {evm.wallets.map((w) => (
           <li key={w.info.uuid}>
@@ -33,6 +38,7 @@ export function EvmWallets({ chain }: { chain: string }) {
             </button>
           </li>
         ))}
+        {walletConnect ? <li>{walletConnect}</li> : null}
       </ul>
       {evm.failed ? <p className="swap__error">{t('evm.failed')}</p> : null}
     </div>

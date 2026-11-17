@@ -133,7 +133,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
       ) : (
         <p className="out__to">{t('in.fromOne', vars)}</p>
       )}
-      <EvmWallets chain={src.chain.name} />
+      <EvmWallets chain={src.chain.name} config={config} />
       <label className="field">
         <span className="field__label">{t('in.amount', vars)}</span>
         <span className="field__row">

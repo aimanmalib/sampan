@@ -327,12 +327,13 @@ More in [`AGENTS.md`](AGENTS.md).
 | `fastify`, `@fastify/static` | MIT | server |
 | `react`, `react-dom` | MIT | page |
 | `viem` | MIT | EVM wallet code (behind the cross-chain flag) |
+| `@walletconnect/ethereum-provider` 2.21.8 | Apache-2.0 (later releases use a vendor licence and are not used) | WalletConnect for EVM wallets, loaded only when picked |
 | `qrcode-generator` | MIT | QR codes |
 | `@modelcontextprotocol/sdk`, `zod` | MIT | the MCP server (development only) |
 | `@playwright/test`, `typescript` | Apache-2.0 | browser tests, types |
 
-Services used at run time: public Electrum (Fulcrum) servers, the Cauldron indexer, and the WizardConnect relays named in the
-config. Sampan is not affiliated with any of them.
+Services used at run time: public Electrum (Fulcrum) servers, the Cauldron indexer, the WizardConnect relays named in the
+config, and, when a WalletConnect project id is set, the WalletConnect relay and its Verify service. Sampan is not affiliated with any of them.
 
 ## Built for BCH BLAZE 2026 (Mainnet Track), 14 to 22 November 2026
 
