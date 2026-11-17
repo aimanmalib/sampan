@@ -20,8 +20,7 @@
     "musd": false,
     "swap": true,
     "landing": true,
-    "pay": true,
-    "atom": false
+    "pay": true
   },
   "route": {
     "active": "thorchain",
@@ -62,25 +61,6 @@
     "receiptPollSeconds": 3,
     "receiptWaitSeconds": 180,
     "replanSeconds": 60
-  },
-  "atom": {
-    "clientUrl": "/vendor/atom-client-1b6c6f7.js",
-    "clientCommit": "1b6c6f704993a81b726b19dd4f51b9f1e97979e8",
-    "clientSha256": "19a5a7e862f950e1550d79823d471c4e81b1834be3550d73317a13ef374ede19",
-    "atomLock": "0x195748691cBD8f47794d03f2992Bc988314af7C3",
-    "apiPath": "/atom/api",
-    "flows": [],
-    "healthTimeoutMs": 8000,
-    "quotePauseMs": 600,
-    "pollSeconds": 10,
-    "connect": [
-      "wss://bch.loping.net:50004",
-      "wss://bch.imaginary.cash:50004",
-      "wss://fulcrum.greyh.at:50004",
-      "wss://fulcrum.jettscythe.xyz:50004",
-      "https://mainnet.base.org",
-      "https://base-rpc.publicnode.com"
-    ]
   },
   "cauldron": {
     "indexers": ["https://indexer.cauldron.quest"],

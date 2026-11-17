@@ -1,6 +1,5 @@
 // Shape of config/sampan.json and the checks run when it is loaded.
 // Pure: no I/O. The server reads the file; the page receives the public part from /api/config.
-import { validateAtom, type AtomConfig } from './atom-config.js';
 import { validateBusiness, type BusinessConfig } from './business.js';
 import { validatePay, type PayConfig } from './pay/config.js';
 
@@ -34,7 +33,7 @@ export interface SampanConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
   /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
-  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean };
+  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean };
   route: { active: ActiveRoute; symbols: string[] };
   thorchain: {
     nodes: string[];
@@ -64,8 +63,6 @@ export interface SampanConfig {
     /** A plan older than this is asked for again before the deposit is signed. */
     replanSeconds: number;
   };
-  /** The atomic swap route (core/atom-config.ts); shown only while features.atom is true. */
-  atom: AtomConfig;
   cauldron: {
     indexers: string[];
     maxPoolsPerTx: number;
@@ -181,8 +178,6 @@ export interface PublicConfig {
   business: Pick<BusinessConfig, 'feeBps' | 'feeAddress'>;
   /** Sampan Pay as its pages show it: how long an invoice is open, the invoice range and the demo shop's price. */
   pay: Pick<PayConfig, 'validMinutes' | 'minUsd' | 'maxUsd'> & { demoPriceUsd: number };
-  /** The atomic swap route's client file, contract and service path (the page loads nothing from it while features.atom is false). */
-  atom: AtomConfig;
   ui: SampanConfig['ui'];
   i18n: I18nConfig;
 }
@@ -301,8 +296,6 @@ export function validateConfig(c: SampanConfig): string[] {
   }
   errors.push(...validateBusiness(c.business));
   errors.push(...validatePay(c.pay));
-  errors.push(...validateAtom(c.atom));
-  need(typeof c.features?.atom === 'boolean', 'features.atom: true or false');
   return errors;
 }
 
@@ -365,7 +358,6 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     health: { intervalSeconds: c.ops.healthIntervalSeconds, retrySeconds: c.ops.healthRetrySeconds, requestTimeoutSeconds: c.ops.requestTimeoutSeconds },
     business: { feeBps: c.business.feeBps, feeAddress: c.business.feeAddress },
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
-    atom: c.atom,
     ui: { ferryMotion: c.ui.ferryMotion },
     i18n: { default: c.i18n.default, languages: c.i18n.languages.map(({ code, name, machine }) => (machine ? { code, name, machine } : { code, name })) },
   };
