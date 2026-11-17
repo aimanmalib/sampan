@@ -137,6 +137,8 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
   })();
   const feePct = q ? (q.fees.totalBps / 100).toFixed(1) : '';
   const cost = q && amount !== undefined ? outCard(config, q, source, amount, pick.chain.key) : null;
+  // The cost card replaces the older fee line and fee details, so the screen gives one statement of the cost.
+  const costShown = cost !== null && !atom;
   const limitVars = { min: String(Math.max(config.limits.minUsd, config.limits.routeMinUsd[config.route.active as 'thorchain'] ?? 0)), max: String(config.limits.maxUsd), ...vars };
 
   return (
@@ -208,7 +210,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
               ? t(outCodeKey(quote.code), limitVars)
               : t('out.enter', vars)}
       </p>
-      {q && q.fees.totalBps > config.limits.feeWarnBps ? <p className="swap__error">{t('out.feeHigh', { pct: feePct })}</p> : null}
+      {q && !costShown && q.fees.totalBps > config.limits.feeWarnBps ? <p className="swap__error">{t('out.feeHigh', { pct: feePct })}</p> : null}
       {source !== BCH && !atom ? <p className="card__note">{t('out.twoSteps', vars)}</p> : null}
       {lacking ? <p className="swap__error">{t('swap.err.short')}</p> : null}
       {run.phase === 'stopped' ? (
@@ -226,7 +228,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
         </p>
       ) : null}
       {choice.card}
-      {q && amount !== undefined && !atom && cost ? <CostCard card={cost} vars={vars} warnBps={config.limits.feeWarnBps} /> : null}
+      {costShown && cost ? <CostCard card={cost} vars={vars} warnBps={config.limits.feeWarnBps} /> : null}
       {atom && choice.atom ? (
         <AtomSwap
           config={config}
@@ -243,7 +245,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
           {primary.label}
         </button>
       )}
-      <details className="swap__fees" hidden={atom}>
+      <details className="swap__fees" hidden={atom || costShown}>
         <summary>{t('swap.fees')}</summary>
         {q ? <p>{t('out.routeFee', { ...vars, fee: shown(q.fees.total, q.outDecimals), pct: feePct })}</p> : null}
         <p>{t('swap.networkFee', { fee: formatUnits(BigInt(config.connect.feeCapSats), BCH_DECIMALS) })}</p>

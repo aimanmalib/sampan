@@ -2,7 +2,7 @@
 // 3 USDC in) and the frozen Cauldron PUSD pools. The parts must add up to what is paid minus what is received.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { costMinutes, formatUsd, gasUsd, inCost, outCost, tradeCost, type CostCard, type Gas, type ThorFees } from '../core/cost.js';
+import { cardText, costMinutes, formatUsd, gasUsd, inCost, outCost, tradeCost, type CostCard, type Gas, type ThorFees } from '../core/cost.js';
 import { satsOutForTokens } from '../core/pools/math.js';
 import { selectTrade, type SelectedTrade } from '../core/pools/trade.js';
 import { pools, PUSD } from './helpers/pools.js';
@@ -34,14 +34,14 @@ const gap = (c: CostCard): bigint => c.payUsd - c.receiveUsd - c.leftoverUsd - c
 const part = (c: CostCard, key: string): bigint | undefined => c.parts.find((p) => p.key === key)?.usd;
 const CENT = 10_000n;
 
-const outFromToken = (tokens: bigint, warnBps = 500) => {
+const outFromToken = (tokens: bigint, warnBps = 500, sampanFeeBps = 0n) => {
   const t = sell(tokens);
   const { poolFeeSats, impactBps } = tradeCost(t);
   return outCost({
     fromToken: true,
     amount: tokens,
     tokenDecimals: 2,
-    swap: { supply: t.supply, demand: t.demand, poolFeeSats, sampanFeeSats: 0n, impactBps, networkSats: 900n },
+    swap: { supply: t.supply, demand: t.demand, poolFeeSats, sampanFeeSats: (t.demand * sampanFeeBps) / 10_000n, impactBps, networkSats: 900n },
     depositSats: OUT_SATS,
     depositNetworkSats: 690n,
     expectedOut: BigInt(out.expected_amount_out),
@@ -95,6 +95,16 @@ describe('cost card: Send out', () => {
     expect(gap(c) >= -100n && gap(c) <= 100n).toBe(true);
     expect(c.impactBps).toBe(19);
     expect(c.expiresAt).toBe(out.expiry);
+  });
+
+  it('with a Sampan fee (business.feeBps > 0) the fee is a named part and the parts still add up', () => {
+    const c = outFromToken(150n, 500, 30n);
+    const fee = part(c, 'sampanFee');
+    expect(fee).toBeGreaterThan(CENT / 10n);
+    expect(gap(c) >= -100n && gap(c) <= 100n).toBe(true);
+    // The same trade without the fee keeps that much more in the wallet.
+    const free = outFromToken(150n);
+    expect(free.leftoverUsd - c.leftoverUsd - fee! <= 1n && free.leftoverUsd - c.leftoverUsd - fee! >= -1n).toBe(true);
   });
 
   it('keep share is (received + left in the wallet) / paid', () => {
@@ -166,12 +176,49 @@ describe('cost card: pool math and time', () => {
 });
 
 describe('cost card: USD text', () => {
-  it('two decimals, four under one cent, never a bare 0 for a small fee', () => {
+  it('two decimals, four under one cent, rounded half away from zero, never a bare 0 for a small fee', () => {
     expect(formatUsd(1_500_000n)).toBe('USD 1.50');
-    expect(formatUsd(249_672n)).toBe('USD 0.24');
-    expect(formatUsd(2_499n)).toBe('USD 0.0024');
+    expect(formatUsd(249_672n)).toBe('USD 0.25');
+    expect(formatUsd(244_999n)).toBe('USD 0.24');
+    expect(formatUsd(2_499n)).toBe('USD 0.0025');
+    expect(formatUsd(9_996n)).toBe('USD 0.01');
     expect(formatUsd(0n)).toBe('USD 0.00');
     expect(formatUsd(-12_000n)).toBe('-USD 0.01');
+    expect(formatUsd(-15_000n)).toBe('-USD 0.02');
+  });
+
+  const cents = (text: string): bigint => {
+    const m = /^(-?)USD (\d+)\.(\d+)$/.exec(text);
+    if (!m) throw new Error(`not USD: ${text}`);
+    const v = BigInt(m[2]! + m[3]!.padEnd(4, '0'));
+    return m[1] ? -v : v;
+  };
+  const adds = (c: CostCard): void => {
+    const s = cardText(c);
+    expect(cents(s.pay) - cents(s.receive) - (s.leftover ? cents(s.leftover) : 0n)).toBe(cents(s.total));
+  };
+  const inBase = { amount: IN_UNITS, expectedSats: BigInt(into.expected_amount_out), fees: fees(into), expiry: into.expiry, timing, warnBps: 500 };
+
+  it('on screen, paid minus received minus left in the wallet is the total shown, cent for cent', () => {
+    for (const tokens of [150n, 210n, 333n, 500n]) adds(outFromToken(tokens));
+    adds(outFromToken(210n, 500, 30n));
+    adds(inCost({ ...inBase, gas: gas(true) }));
+    adds(inCost({ ...inBase, gas: gas(false) }));
+    adds(inCost({ ...inBase }));
+  });
+
+  it('the total shown stays within one cent of the sum of the parts', () => {
+    for (const c of [outFromToken(210n), inCost({ ...inBase, gas: gas(true) })]) {
+      const shown = cents(cardText(c).total) * 100n;
+      expect(shown - c.totalUsd <= 15_000n && c.totalUsd - shown <= 15_000n).toBe(true);
+    }
+  });
+
+  it('the old truncation case: pay 2.10 and receive 1.84 shows a total of 0.26', () => {
+    const c = { payUsd: 2_100_000n, receiveUsd: 1_845_100n, leftoverUsd: 0n, totalUsd: 254_900n } as CostCard;
+    expect(cardText(c)).toEqual({ pay: 'USD 2.10', receive: 'USD 1.85', total: 'USD 0.25' });
+    const d = { payUsd: 2_100_000n, receiveUsd: 1_844_900n, leftoverUsd: 0n, totalUsd: 255_100n } as CostCard;
+    expect(cardText(d)).toEqual({ pay: 'USD 2.10', receive: 'USD 1.84', total: 'USD 0.26' });
   });
 });
 

@@ -39,6 +39,15 @@ how much of the value is kept, how long it takes and how long the price holds.
 - `tools/measure/cross.ts --cost <quote.json>` saves the card of a run's quote to `state/cost-shown/<txid>.json`
   before broadcast, so the card can later be set against what was paid.
 
+## Rounding and one statement of the cost
+
+- Amounts are rounded half away from zero, not cut. The headline line rounds what is paid, what is received and
+  what stays in the wallet first, and shows the total as their difference, so the three add up to the total on the
+  screen cent for cent. The total can differ from the sum of the named parts (rounded one by one in the details) by
+  the rounding only.
+- In Send out the card replaces the older fee warning and the fee details under the button while it is shown; they
+  come back only when there is no card (no named fees from the server, or the atomic route).
+
 ## Consequences
 
 - The quote replies gain fields (named fees, `depositNetworkSats`, `router`, `convert`, `gasAssetUsdE8`, and the

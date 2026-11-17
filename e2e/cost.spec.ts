@@ -7,7 +7,7 @@ import { expect, test, type Page } from '@playwright/test';
 import outCapture from '../tests/fixtures/thorchain/quote-out.json' with { type: 'json' };
 import inCapture from '../tests/fixtures/thorchain/quote-in.json' with { type: 'json' };
 import en from '../lang/en.json' with { type: 'json' };
-import { formatUsd, inCost, outCost } from '../core/cost.js';
+import { cardText, formatUsd, inCost, outCost, type CostCard } from '../core/cost.js';
 
 test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server');
 test.use({ baseURL: `http://127.0.0.1:${Number(process.env.E2E_PORT ?? 4173) + 2}` });
@@ -32,6 +32,13 @@ async function fitsAndPasses(page: Page): Promise<void> {
   expect(scroll).toBeLessThanOrEqual(client);
   const axe = await new AxeBuilder({ page }).include('[data-testid="cost-card"]').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(axe.violations.map((v) => v.id)).toEqual([]);
+}
+
+/** The headline amounts as cardText rounds them, so paid - received - kept = the total on screen. */
+async function headline(page: Page, c: CostCard): Promise<void> {
+  const shown = cardText(c);
+  await expect(page.getByTestId('cost-pay')).toHaveText(en['cost.pay'].replace('{pay}', shown.pay).replace('{receive}', shown.receive));
+  await expect(page.getByTestId('cost-total')).toHaveText(en['cost.total'].replace('{usd}', shown.total));
 }
 
 /** The card sits above the main button and is shown while the button cannot be used yet (no wallet). */
@@ -70,7 +77,10 @@ test('Send out from BCH: the route fees of the capture, named, and a total that 
     timing,
     warnBps: 500,
   });
-  await expect(page.getByTestId('cost-total')).toHaveText(en['cost.total'].replace('{usd}', formatUsd(expected.totalUsd)));
+  await headline(page, expected);
+  // One statement of the cost: the older fee line and fee details are not shown next to the card.
+  await expect(page.locator('.out .swap__fees')).toBeHidden();
+  await expect(page.locator('.out')).not.toContainText(en['out.feeHigh'].split('{pct}')[0]!);
   await expect(page.getByTestId('cost-clock')).toContainText(/holds for [0-9]+:[0-5][0-9]/);
   await fitsAndPasses(page);
   expect(errors).toEqual([]);
@@ -90,7 +100,7 @@ test('Bring in to BCH: the route fees in USD at the quote price, gas said to be 
   const fees = { liquidity: BigInt(inCapture.fees.liquidity), outbound: BigInt(inCapture.fees.outbound), affiliate: BigInt(inCapture.fees.affiliate), slippageBps: inCapture.fees.slippage_bps };
   const expected = inCost({ amount: 500_000_000n, expectedSats: BigInt(inCapture.expected_amount_out), fees, expiry: 0, timing, warnBps: 500 });
   await expect(row(page, 'thorOutbound')).toHaveText(formatUsd(expected.parts.find((p) => p.key === 'thorOutbound')!.usd));
-  await expect(page.getByTestId('cost-total')).toHaveText(en['cost.total'].replace('{usd}', formatUsd(expected.totalUsd)));
+  await headline(page, expected);
   await expect(card(page)).toContainText(en['cost.gasExtra'].replace('{chain}', 'Base').replace('{native}', 'ETH'));
   await fitsAndPasses(page);
   expect(errors).toEqual([]);

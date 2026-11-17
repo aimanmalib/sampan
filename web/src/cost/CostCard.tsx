@@ -1,7 +1,7 @@
 // The cost card above the button in Send out and Bring in: what is paid and received, the total cost in USD with its
 // named parts, the share kept, the price impact, the time and how long the price holds. Numbers from core/cost.ts.
 import { useEffect, useState } from 'react';
-import { formatUsd as usd, type CostCard as Card } from '../../../core/cost';
+import { cardText, formatUsd as usd, type CostCard as Card } from '../../../core/cost';
 import { useText } from '../i18n';
 import './cost.css';
 
@@ -30,18 +30,19 @@ export interface CostCardProps {
 export function CostCard({ card, vars, warnBps, gas }: CostCardProps) {
   const { t } = useText();
   const left = useSecondsLeft(card.expiresAt);
+  const shown = cardText(card);
   const time = card.minutes.to === undefined ? t('cost.time', { from: String(card.minutes.from) }) : t('cost.timeRange', { from: String(card.minutes.from), to: String(card.minutes.to) });
   return (
     <section className="cost" aria-labelledby="cost-title" data-testid="cost-card">
       <h3 className="cost__title" id="cost-title">
         {t('cost.title')}
       </h3>
-      <p className="cost__pay">{t('cost.pay', { pay: usd(card.payUsd), receive: usd(card.receiveUsd) })}</p>
+      <p className="cost__pay" data-testid="cost-pay">{t('cost.pay', { pay: shown.pay, receive: shown.receive })}</p>
       <p className="cost__total">
-        <strong data-testid="cost-total">{t('cost.total', { usd: usd(card.totalUsd) })}</strong>
+        <strong data-testid="cost-total">{t('cost.total', { usd: shown.total })}</strong>
         <span>{t('cost.keep', { pct: card.keepPct.toFixed(1) })}</span>
       </p>
-      {card.leftoverUsd > 0n ? <p className="cost__line">{t('cost.leftover', { usd: usd(card.leftoverUsd) })}</p> : null}
+      {shown.leftover ? <p className="cost__line" data-testid="cost-leftover">{t('cost.leftover', { usd: shown.leftover })}</p> : null}
       <p className="cost__line">
         <span>{t('cost.impact', { pct: pct(card.impactBps) })}</span>
         <span>{time}</span>

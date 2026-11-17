@@ -248,12 +248,50 @@ export function inCost(i: InCostInput): CostCard {
   return card({ pay: stable + gas, receive, leftover, parts, impactBps, timing: i.timing, expiry: i.expiry, warnBps: i.warnBps });
 }
 
-/** USD from micro-dollars: two decimals, or four under one cent so a small fee does not read as 0. */
-export function formatUsd(micro: bigint): string {
-  const neg = micro < 0n;
-  const v = neg ? -micro : micro;
-  const places = v !== 0n && v < 10_000n ? 4 : 2;
+/** Micro-dollars rounded half away from zero to `places` decimals (still in micro-dollars). */
+export function roundMicro(micro: bigint, places: number): bigint {
   const step = 10n ** BigInt(6 - places);
-  const frac = ((v % MICRO_PER_UNIT) / step).toString().padStart(places, '0');
-  return `${neg ? '-' : ''}USD ${v / MICRO_PER_UNIT}.${frac}`;
+  const v = micro < 0n ? -micro : micro;
+  const r = ((v + step / 2n) / step) * step;
+  return micro < 0n ? -r : r;
+}
+
+const fixed = (micro: bigint, places: number): string => {
+  const r = roundMicro(micro, places);
+  const v = r < 0n ? -r : r;
+  const frac = ((v % MICRO_PER_UNIT) / 10n ** BigInt(6 - places)).toString().padStart(places, '0');
+  return `${r < 0n ? '-' : ''}USD ${v / MICRO_PER_UNIT}.${frac}`;
+};
+
+/** USD from micro-dollars, rounded: two decimals, or four under one cent so a small fee does not read as 0. */
+export function formatUsd(micro: bigint): string {
+  const v = micro < 0n ? -micro : micro;
+  return fixed(micro, v !== 0n && roundMicro(v, 2) < 10_000n ? 4 : 2);
+}
+
+export interface CardText {
+  pay: string;
+  receive: string;
+  /** Absent when nothing (at the shown precision) stays in the wallet. */
+  leftover?: string;
+  total: string;
+}
+
+/**
+ * The four headline amounts as shown, so that pay - receive - leftover = total on the screen, cent for cent: each
+ * is rounded first and the total is the difference of the rounded amounts (it differs from the sum of the parts by
+ * at most the rounding). Four decimals for all four when the cost is under one cent.
+ */
+export function cardText(c: CostCard): CardText {
+  const abs = c.totalUsd < 0n ? -c.totalUsd : c.totalUsd;
+  const places = abs !== 0n && roundMicro(abs, 2) < 10_000n ? 4 : 2;
+  const pay = roundMicro(c.payUsd, places);
+  const receive = roundMicro(c.receiveUsd, places);
+  const leftover = roundMicro(c.leftoverUsd, places);
+  return {
+    pay: fixed(pay, places),
+    receive: fixed(receive, places),
+    ...(leftover > 0n ? { leftover: fixed(leftover, places) } : {}),
+    total: fixed(pay - receive - leftover, places),
+  };
 }
