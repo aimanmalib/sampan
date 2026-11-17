@@ -6,6 +6,7 @@ import type { SampanConfig } from '../../core/config.js';
 import { parseAddress, tokenAddressOf } from '../../core/address.js';
 import { landingAddress } from '../../core/landing.js';
 import { prefixOf, readCard } from '../../core/landing-card.js';
+import { chainsOf, liveAssets, openMapOf, type InboundRow, type OpenMap } from '../../core/route-assets.js';
 import type { ProbeResult } from './alerts.js';
 
 export interface ProbeDeps {
@@ -15,7 +16,7 @@ export interface ProbeDeps {
   /** Active pools for a token category from one Cauldron indexer. */
   activePools: (indexer: string, category: string) => Promise<number>;
   /** THORNode inbound_addresses rows from one node. */
-  inbound: (node: string) => Promise<Array<{ chain: string; halted?: boolean; global_trading_paused?: boolean; chain_trading_paused?: boolean }>>;
+  inbound: (node: string) => Promise<InboundRow[]>;
   timeoutMs: number;
 }
 
@@ -147,12 +148,20 @@ const electrum: Check = async (c) => {
   return anyProvider(c.config.electrum.servers, (n) => withTimeout(c.deps.tipHeight(n), c.deps.timeoutMs), (v) => v > 0, (v) => `height ${v}`);
 };
 
+// Fails only when BCH is closed or every live asset's chain is; one closed chain is detail, not an alert (KMR2).
 const thornode: Check = async (c) => {
-  const chains = ['BCH', ...c.config.thorchain.chains];
-  const open = (rows: Awaited<ReturnType<ProbeDeps['inbound']>>) =>
-    chains.every((ch) => rows.some((r) => r.chain === ch && !r.halted && !r.global_trading_paused && !r.chain_trading_paused));
+  const chains = chainsOf(liveAssets(c.config.thorchain.assets));
+  const closed = (m: OpenMap) => chains.filter((ch) => m[ch] !== true);
+  const good = (rows: InboundRow[]) => {
+    const m = openMapOf(rows);
+    return m['BCH'] === true && (chains.length === 0 || closed(m).length < chains.length);
+  };
+  const label = (rows: InboundRow[]) => {
+    const shut = closed(openMapOf(rows));
+    return `BCH open, ${chains.length - shut.length}/${chains.length} live chains open${shut.length ? `; closed: ${shut.join(', ')}` : ''}`;
+  };
   try {
-    return await anyProvider(c.config.thorchain.nodes, (n) => withTimeout(c.deps.inbound(n), c.deps.timeoutMs), open, () => `${chains.join(', ')} open`);
+    return await anyProvider(c.config.thorchain.nodes, (n) => withTimeout(c.deps.inbound(n), c.deps.timeoutMs), good, label);
   } catch (e) {
     if (!crossOpen(c)) return `crossings closed; ${short(e)}`;
     throw e;

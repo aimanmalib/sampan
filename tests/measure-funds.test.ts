@@ -39,8 +39,7 @@ describe('fundsRows', () => {
       { symbol: 'AAA', category: CAT, decimals: 2 },
       { symbol: 'BBB', category: 'CD'.repeat(32), decimals: 2 },
     ],
-    eth: 1_500_000_000_000_000n,
-    evmTokens: [{ symbol: 'USDX', units: 2_500_000n, decimals: 6 }],
+    evm: [{ chain: 'Base', native: 'ETH', balance: 1_500_000_000_000_000n, tokens: [{ symbol: 'USDX', units: 2_500_000n, decimals: 6 }] }],
     needed: (asset: string) => ({ needed: asset === 'BCH' ? '0.01 BCH' : '0', why: 'w' }),
   };
 
@@ -56,7 +55,7 @@ describe('fundsRows', () => {
   });
 
   it('says "not read" instead of a zero when the RPC did not answer', () => {
-    const rows = fundsRows({ ...base, eth: undefined, evmTokens: [{ symbol: 'USDX', units: undefined, decimals: 6 }] });
+    const rows = fundsRows({ ...base, evm: [{ chain: 'Base', native: 'ETH', balance: undefined, tokens: [{ symbol: 'USDX', units: undefined, decimals: 6 }] }] });
     expect(rows.slice(-2).map((r) => r.balance)).toEqual(['not read', 'not read']);
   });
 });

@@ -5,7 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { fakeThornode } from '../server/routes/fake.js';
 import { ThorchainRoute } from '../server/routes/thorchain.js';
 import { Thornode, type HttpGet } from '../server/routes/thornode.js';
-import { traceCrossing, type CrossDeps, type Crossing, type EvmReceipt } from '../tools/measure/cross.js';
+import { loadConfig } from '../server/config.js';
+import { crossingAsset, traceCrossing, type CrossDeps, type Crossing, type EvmReceipt } from '../tools/measure/cross.js';
 import { runRow } from '../tools/measure/runs.js';
 
 const dir = path.resolve('tests/fixtures/thorchain');
@@ -45,8 +46,8 @@ function deps(over: Partial<CrossDeps> & { get?: HttpGet } = {}): CrossDeps {
   };
 }
 
-const out: Crossing = { flow: 'out', firstTxid: BCH_IN, broadcastAt: new Date(NOW - 600_000), amount: '0.01 BCH to 1.80 USDC', destination: EVM, token: USDC };
-const into: Crossing = { flow: 'in', firstTxid: BASE_OUT, broadcastAt: new Date(NOW - 60_000), amount: '2 USDC to BCH', destination: LOCKING };
+const out: Crossing = { flow: 'out', chain: 'BASE', firstTxid: BCH_IN, broadcastAt: new Date(NOW - 600_000), amount: '0.01 BCH to 1.80 USDC', destination: EVM, token: USDC };
+const into: Crossing = { flow: 'in', chain: 'BASE', firstTxid: BASE_OUT, broadcastAt: new Date(NOW - 60_000), amount: '2 USDC to BCH', destination: LOCKING };
 const BCH_OUT = 'de'.repeat(32);
 
 describe('crossing tracer', () => {
@@ -68,7 +69,7 @@ describe('crossing tracer', () => {
   it('fails when the Base transaction does not pay the destination', async () => {
     const other = { ...receipt, logs: receipt.logs.map((l) => ({ ...l, topics: [l.topics[0]!, l.topics[1]!, `0x${'0'.repeat(24)}${'22'.repeat(20)}`] })) };
     const run = await traceCrossing(out, deps({ evmReceipt: async () => other }));
-    expect(run).toMatchObject({ ok: false, note: 'the Base transaction does not pay the destination' });
+    expect(run).toMatchObject({ ok: false, note: 'the BASE transaction does not pay the destination' });
     const reverted = await traceCrossing(out, deps({ evmReceipt: async () => ({ ...receipt, status: '0x0' }) }));
     expect(reverted.ok).toBe(false);
   });
@@ -111,5 +112,27 @@ describe('crossing tracer', () => {
     expect(run).toMatchObject({ ok: false, txid: BCH_IN, note: `refunded by the route (bch ${BCH_OUT})` });
     expect(run.txid).not.toMatch(/base 0x/);
     expect(runRow(run)).not.toMatch(/0x[0-9a-f]{64}/);
+  });
+
+  it('names the asset chain in the txid cell, and fails a crossing paid out on another chain (2026-11-17: ETH first)', async () => {
+    const eth: Crossing = { ...out, chain: 'ETH' };
+    const run = await traceCrossing(eth, deps({ get: doneWith([{ id: BASE_OUT.slice(2).toUpperCase(), chain: 'ETH' }]) }));
+    expect(run).toMatchObject({ ok: true, txid: `bch ${BCH_IN} · eth ${BASE_OUT}` });
+    expect(runRow(run)).toMatch(/\beth 0x[0-9a-f]{64}\b/);
+    const elsewhere = await traceCrossing(eth, deps({ get: doneWith([{ id: BASE_OUT.slice(2).toUpperCase(), chain: 'BASE' }]) }));
+    expect(elsewhere).toMatchObject({ ok: false, note: 'route reports done without a ETH transaction' });
+    const into = await traceCrossing({ flow: 'in', chain: 'BSC', firstTxid: BASE_OUT, broadcastAt: new Date(NOW - 60_000), amount: '1 USDC to BCH', destination: LOCKING }, deps({ get: doneWith([{ id: BCH_OUT.toUpperCase(), chain: 'BCH' }]), bchHistory: async () => [BCH_OUT] }));
+    expect(into.txid).toBe(`bch ${BCH_OUT} · bsc ${BASE_OUT}`);
+  });
+
+  it('reads chain, token and RPC endpoints for --asset from config, never from code', () => {
+    const config = loadConfig('config/sampan.json');
+    for (const a of config.thorchain.assets.filter((x) => x.chain !== 'TRON')) {
+      const c = crossingAsset(config, a.asset);
+      expect(a.asset.endsWith(c.token.slice(2).toUpperCase())).toBe(true);
+      expect(c.chain).toBe(a.chain);
+      expect(c.rpc.length).toBeGreaterThanOrEqual(2);
+    }
+    expect(() => crossingAsset(config, 'ETH.DAI-0X6B175474E89094C44DA98B954EEDEAC495271D0F')).toThrow(/not in config/);
   });
 });

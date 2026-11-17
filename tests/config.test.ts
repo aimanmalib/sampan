@@ -66,6 +66,54 @@ describe('validateConfig', () => {
     expect(errors).toMatch(/defaultToken/);
   });
 
+  it('keeps one list of route assets: the old symbol and chain lists are refused next to it', () => {
+    const c = clone() as SampanConfig & { route: { symbols?: string[] }; thorchain: { chains?: string[] } };
+    c.route.symbols = ['USDC'];
+    c.thorchain.chains = ['BASE'];
+    const errors = validateConfig(c).join('\n');
+    expect(errors).toMatch(/route\.symbols: removed/);
+    expect(errors).toMatch(/thorchain\.chains: removed/);
+  });
+
+  it('checks each asset against its chain entry: name, contract, token, live flags; a chain without an EVM entry is never live', () => {
+    const c = clone();
+    const eth = c.thorchain.assets.find((a) => a.chain === 'ETH')!;
+    eth.asset = eth.asset.replace(/.$/, '0');
+    const bsc = c.thorchain.assets.find((a) => a.chain === 'BSC')!;
+    bsc.symbol = 'DAI';
+    const tron = c.thorchain.assets.find((a) => a.chain === 'TRON')!;
+    tron.live = { out: true, in: false };
+    c.thorchain.assets.push({ ...c.thorchain.assets[2]! });
+    const errors = validateConfig(c).join('\n');
+    expect(errors).toMatch(/contract differs from evm\.chains\.ETH/);
+    expect(errors).toMatch(/BSC\.USDC-.*must read CHAIN\.SYMBOL-CONTRACT/);
+    expect(errors).toMatch(/TRON\.USDT-.*live needs an evm\.chains entry/);
+    expect(errors).toMatch(/listed twice/);
+    expect(validateConfig({ ...clone(), thorchain: { ...clone().thorchain, assets: [] } }).join()).toMatch(/thorchain\.assets: at least one/);
+  });
+
+  it('wants two https RPC endpoints, the gas coin and token decimals for every EVM chain', () => {
+    const c = clone();
+    c.evm.chains[0]!.rpc = [c.evm.chains[0]!.rpc[0]!];
+    c.evm.chains[1]!.tokens.USDC!.decimals = 1.5;
+    c.evm.chains[2]!.native = { name: '', symbol: 'AVAX' };
+    const errors = validateConfig(c).join('\n');
+    expect(errors).toMatch(/evm\.chains\.ETH\.rpc: at least two https URLs/);
+    expect(errors).toMatch(/evm\.chains\.BSC\.tokens\.USDC\.decimals/);
+    expect(errors).toMatch(/evm\.chains\.AVAX\.native/);
+  });
+
+  it('publishes only live assets, with symbols and chains derived from them', () => {
+    expect(publicConfig(clone()).routeAssets.every((a) => a.live.out || a.live.in)).toBe(true);
+    const c = clone();
+    c.thorchain.assets = c.thorchain.assets.map((a) => (a.chain === 'ETH' && a.symbol === 'USDC' ? { ...a, live: { out: true, in: false } } : { ...a, live: { out: false, in: false } }));
+    const p = publicConfig(c);
+    expect(p.routeAssets.map((a) => a.asset)).toEqual([c.thorchain.assets.find((a) => a.live.out)!.asset]);
+    expect([p.route.symbols, p.routeChains]).toEqual([['USDC'], ['ETH']]);
+    c.route.active = 'none';
+    expect(publicConfig(c).routeAssets).toEqual([]);
+  });
+
   it('requires a base URL before the near-intents route can be active', () => {
     const c = clone();
     c.route.active = 'near-intents';

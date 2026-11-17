@@ -12,8 +12,8 @@ const short = (id: string): string => `${id.slice(0, id.startsWith('0x') ? 10 : 
 export function ProofTable({ config }: { config: LoadedConfig }) {
   const { t } = useText();
   if (proof.runs.length === 0) return null;
-  const base = config.evm.chains.find((c) => c.key === 'BASE')?.explorer ?? '';
-  const href = (x: ProofTxid): string => (x.chain === 'bch' ? config.connect.explorerTxUrl.replace('{txid}', x.id) : `${base}/tx/${x.id}`);
+  const explorer = (chain: string): string => config.evm.chains.find((c) => c.key.toLowerCase() === chain)?.explorer ?? '';
+  const href = (x: ProofTxid): string => (x.chain === 'bch' ? config.connect.explorerTxUrl.replace('{txid}', x.id) : `${explorer(x.chain)}/tx/${x.id}`);
   const time = (s: number | null): string =>
     s === null ? t('proof.none') : s < SECONDS_UP_TO ? t('measured.seconds', { n: s.toFixed(1) }) : t('measured.minutes', { n: String(Math.round(s / 60)) });
   const flowName = (f: ProofRun['flow']): string => t(`proof.flow.${f}` as TextKey);

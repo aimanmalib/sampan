@@ -11,6 +11,7 @@ import shipped from '../config/sampan.json' with { type: 'json' };
 import { makeApi, type Api, type Fetch } from '../core/client/api.js';
 import { InStop, runIn, type InIntent, type InStep } from '../core/client/in.js';
 import { normalizeConfig, patchConfig, type SampanConfig } from '../core/config.js';
+import { withLive } from '../core/route-assets.js';
 import { ERC20_ABI, ROUTER_ABI } from '../core/evm/calldata.js';
 import { makeCard, readCard } from '../core/landing-card.js';
 import type { LandingParams } from '../core/landing.js';
@@ -20,11 +21,12 @@ import { createServices } from '../server/services.js';
 import { fakeEip1193 } from './helpers/fake-eip1193.js';
 import { otherLockHex, userAddress } from './helpers/wallet.js';
 
+const shippedConfig = normalizeConfig(shipped as unknown as SampanConfig);
 const config = patchConfig(
-  normalizeConfig(shipped as unknown as SampanConfig),
-  JSON.stringify({ compliance: { crossChainEnabled: true }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }),
+  shippedConfig,
+  JSON.stringify({ compliance: { crossChainEnabled: true }, thorchain: { assets: withLive(shippedConfig.thorchain.assets, ['BASE']) }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }),
 );
-const chain = config.evm.chains[0]!;
+const chain = config.evm.chains.find((c) => c.key === 'BASE')!;
 const FROM = '0x1a877169bB03400fA69EC4813889E78994D194Cb';
 let app: FastifyInstance;
 let dist: string;
@@ -55,7 +57,8 @@ async function intent(receive: string): Promise<InIntent> {
   return {
     symbol: 'USDC',
     chain,
-    token: chain.tokens.USDC!,
+    token: chain.tokens.USDC!.address,
+    decimals: chain.tokens.USDC!.decimals,
     amount: 500_000_000n,
     receive,
     address: userAddress,
@@ -97,6 +100,20 @@ describe('runIn', () => {
     expect(steps).toEqual(['chain', 'plan', 'deposit', 'record']);
     expect(String(decodeFunctionData({ abi: ROUTER_ABI, data: wallet.sent[0]!.data }).args[3])).toContain(userAddress.slice(12));
     expect(res.landingId).toBeNull();
+  });
+
+  it('approves the exact amount in the decimals config lists for the token (18 on BNB Smart Chain)', async () => {
+    const wallet = fakeEip1193({ decimals: 18, balance: 10n ** 19n });
+    const i = { ...(await intent('BCH')), decimals: 18 };
+    await runIn({ api, provider: wallet, from: FROM, intent: i, timing: timing({ t: Date.now() }), onStep: () => {} });
+    // 500000000 route units (1e8) = 5 tokens = 5 * 10^18 token units.
+    expect(decodeFunctionData({ abi: ERC20_ABI, data: wallet.sent[0]!.data }).args[1]).toBe(5n * 10n ** 18n);
+  });
+
+  it('stops before the wallet signs when the token reports other decimals than config lists', async () => {
+    const wallet = fakeEip1193({ decimals: 18, balance: 10n ** 19n });
+    await expect(runIn({ api, provider: wallet, from: FROM, intent: await intent('BCH'), timing: timing({ t: Date.now() }), onStep: () => {} })).rejects.toMatchObject({ reason: 'plan_mismatch' });
+    expect(wallet.sent).toHaveLength(0);
   });
 
   it('stops before the wallet signs when the balance is short or the deposit would revert', async () => {

@@ -42,8 +42,13 @@ describe('proof from MEASURED.md', () => {
       { chain: 'base', id: E },
       { chain: 'bch', id: C },
     ]);
+    expect(parseTxids(`bch ${A} · eth ${E}`)).toEqual([
+      { chain: 'bch', id: A },
+      { chain: 'eth', id: E },
+    ]);
     expect(parseTxids('-')).toEqual([]);
     expect(parseTxids(`bch ${A} · base ${A}`)).toEqual([]);
+    expect(parseTxids(`bch ${E} · eth ${E}`)).toEqual([]);
     expect(parseTxids(A.slice(1))).toEqual([]);
   });
 

@@ -6,7 +6,7 @@ import type { SampanConfig } from '../core/config.js';
 export function contentSecurityPolicy(config: SampanConfig): string {
   const connect = [
     "'self'",
-    ...config.evm.chains.map((c) => new URL(c.rpc).origin),
+    ...config.evm.chains.flatMap((c) => c.rpc.map((u) => new URL(u).origin)),
     ...config.connect.relayUrls.map((u) => new URL(u).origin),
     // The atomic swap client talks to its own Electrum servers and Base RPCs; nothing is allowed for it while it is off.
     ...atomConnectOrigins(config.features.atom, config.atom),

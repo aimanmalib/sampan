@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { defineConfig, devices } from '@playwright/test';
+import { withLive, type RouteAsset } from './core/route-assets.js';
 
 const port = Number(process.env.E2E_PORT ?? 4173);
 /** A second fake server with the landing flow switched on (e2e/land.spec.ts points its baseURL here). */
@@ -11,7 +13,9 @@ const live = process.env.E2E_BASE_URL;
 // limits are lifted because every browser in the run shares one IP.
 const e2ePatch = { features: { swap: true, landing: false }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } };
 const landingPatch = { ...e2ePatch, features: { swap: true, landing: true } };
-const outPatch = { ...e2ePatch, compliance: { crossChainEnabled: true } };
+// Crossings run against the fake THORNode, which reports Base open: Base USDC is switched live on this server only.
+const shippedAssets = (JSON.parse(readFileSync('config/sampan.json', 'utf8')) as { thorchain: { assets: RouteAsset[] } }).thorchain.assets;
+const outPatch = { ...e2ePatch, compliance: { crossChainEnabled: true }, thorchain: { assets: withLive(shippedAssets, ['BASE']) } };
 /** One fake server per SAMPAN_FAKE_OUTAGE mode, on the ports after the three above (e2e/outage.spec.ts). */
 export const OUTAGE_MODES = ['indexer', 'electrum', 'api', 'chunk', 'render', 'app'] as const;
 const outagePort = (i: number) => port + 3 + i;

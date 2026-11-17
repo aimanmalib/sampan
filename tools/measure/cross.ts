@@ -1,16 +1,19 @@
 // Measured crossings (KP17): follows one crossing from its first transaction until the funds arrive on the other
 // chain, and returns one Runs row whose txid cell names both chains' transactions in full.
-//   out:      BCH deposit to the THORChain vault -> USDC transfer on Base to the destination 0x address
-//   in, g3a:  Base router deposit -> BCH paid to the destination address (and, for a landing address, the
-//             conversion that pays the owner, when a `convert` lookup is given)
+//   out:      BCH deposit to the THORChain vault -> stablecoin transfer on the asset's EVM chain to the 0x destination
+//   in, g3a:  router deposit on the asset's EVM chain -> BCH paid to the destination address (and, for a landing
+//             address, the conversion that pays the owner, when a `convert` lookup is given)
 // `seconds` runs from the first broadcast until arrival is seen on the second chain. A crossing the route calls
 // done without a transaction on the expected chain, or whose transaction does not pay the destination, is a fail.
 //
-//   npx tsx tools/measure/cross.ts --flow out --txid <bch txid> --to 0x… --broadcast <ISO time> --amount "…" [--write]
-//   npx tsx tools/measure/cross.ts --flow in --txid 0x… --to bitcoincash:… --broadcast <ISO time> --amount "…" [--write]
+//   npx tsx tools/measure/cross.ts --asset <THORChain asset from config> --flow out --txid <bch txid> --to 0x… \
+//     --broadcast <ISO time> --amount "…" [--write]
+//   npx tsx tools/measure/cross.ts --asset <…> --flow in --txid 0x… --to bitcoincash:… --broadcast <ISO time> --amount "…" [--write]
+// The asset names the EVM chain (its config entry gives the token contract and the RPC endpoints, tried in order).
 import { pathToFileURL } from 'node:url';
 import { parseAddress } from '../../core/address.js';
 import { ElectrumChain } from '../../server/chain/electrum.js';
+import type { SampanConfig } from '../../core/config.js';
 import { loadConfig } from '../../server/config.js';
 import { ThorchainRoute } from '../../server/routes/thorchain.js';
 import { Thornode } from '../../server/routes/thornode.js';
@@ -29,13 +32,15 @@ export interface EvmReceipt {
 
 export interface Crossing {
   flow: CrossFlow;
-  /** BCH txid (out) or Base transaction hash (in, g3a). */
+  /** The route's key of the EVM chain on the other side (ETH, BSC, AVAX, BASE). */
+  chain: string;
+  /** BCH txid (out) or EVM transaction hash (in, g3a). */
   firstTxid: string;
   broadcastAt: Date;
   amount: string;
   /** 0x address (out) or the BCH locking bytecode hex that must receive the BCH (in, g3a). */
   destination: string;
-  /** Token contract on Base that must arrive (out). */
+  /** Token contract on that chain that must arrive (out). */
   token?: string;
 }
 
@@ -52,7 +57,7 @@ export interface CrossDeps {
 }
 
 const evmHash = (id: string): string => `0x${id.replace(/^0x/i, '').toLowerCase()}`;
-/** `bch <txid>` or `base 0x<hash>` for a transaction named only in a note. */
+/** `bch <txid>` or `<chain> 0x<hash>` for a transaction named only in a note. */
 const refundRef = (chain: string | undefined, id: string): string =>
   chain === 'BCH' ? `bch ${id.toLowerCase()}` : `${(chain ?? 'unknown').toLowerCase()} ${evmHash(id)}`;
 const pad32 = (address: string): string => `0x${address.replace(/^0x/i, '').toLowerCase().padStart(64, '0')}`;
@@ -68,10 +73,14 @@ export function paysTo(receipt: EvmReceipt, token: string, to: string): boolean 
 export async function traceCrossing(c: Crossing, d: CrossDeps): Promise<Run> {
   const out = c.flow === 'out';
   if (out && !c.token) throw new Error('an out crossing needs the token contract');
-  const wantChain = out ? 'BASE' : 'BCH';
+  const wantChain = out ? c.chain : 'BCH';
   const first = out ? c.firstTxid.toLowerCase() : evmHash(c.firstTxid);
   const row = (ok: boolean, second?: string, convert?: string, note?: string): Run => {
-    const ids = second ? (out ? { bch: first, base: evmHash(second) } : { bch: second.toLowerCase(), base: first }) : undefined;
+    const ids = second
+      ? out
+        ? { bch: first, evm: { chain: c.chain, hash: evmHash(second) } }
+        : { bch: second.toLowerCase(), evm: { chain: c.chain, hash: first } }
+      : undefined;
     const txid = ids ? crossingTxid(convert ? { ...ids, convert } : ids) : first;
     const seconds = ok ? (d.now() - c.broadcastAt.getTime()) / 1000 : undefined;
     return { utc: c.broadcastAt, flow: c.flow, amount: c.amount, txid, ok, ...(seconds === undefined ? {} : { seconds }), ...(note ? { note } : {}) };
@@ -100,7 +109,7 @@ export async function traceCrossing(c: Crossing, d: CrossDeps): Promise<Run> {
       if (out) {
         const receipt = await d.evmReceipt(evmHash(second)).catch(() => null);
         if (receipt) {
-          if (!paysTo(receipt, c.token!, c.destination)) return row(false, second, undefined, 'the Base transaction does not pay the destination');
+          if (!paysTo(receipt, c.token!, c.destination)) return row(false, second, undefined, `the ${c.chain} transaction does not pay the destination`);
           return row(true, second);
         }
       } else if ((await d.bchHistory(c.destination).catch((): string[] => [])).includes(second.toLowerCase())) {
@@ -115,19 +124,37 @@ export async function traceCrossing(c: Crossing, d: CrossDeps): Promise<Run> {
   return row(false, second, undefined, `nothing arrived in ${Math.round(d.timeoutMs / 60_000)} min (${stage})`);
 }
 
-/** Minimal JSON-RPC client for the receipt, on the configured Base endpoint. */
+/** Minimal JSON-RPC client for the receipt over the chain's configured endpoints, tried in order. */
 export const evmReceiptFrom =
-  (rpc: string) =>
+  (rpcs: string[]) =>
   async (hash: string): Promise<EvmReceipt | null> => {
-    const res = await fetch(rpc, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getTransactionReceipt', params: [hash] }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    const body = (await res.json()) as { result?: EvmReceipt | null };
-    return body.result ?? null;
+    let last: unknown;
+    for (const rpc of rpcs) {
+      try {
+        const res = await fetch(rpc, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getTransactionReceipt', params: [hash] }),
+          signal: AbortSignal.timeout(15_000),
+        });
+        const body = (await res.json()) as { result?: EvmReceipt | null };
+        return body.result ?? null;
+      } catch (e) {
+        last = e;
+      }
+    }
+    throw last;
   };
+
+/** The config entries an asset name points at: its chain and, on an EVM chain, the token and RPC endpoints. */
+export function crossingAsset(config: SampanConfig, asset: string): { chain: string; token: string; rpc: string[] } {
+  const a = config.thorchain.assets.find((x) => x.asset === asset);
+  if (!a) throw new Error(`${asset} is not in config thorchain.assets`);
+  const evm = config.evm.chains.find((ch) => ch.key === a.chain);
+  const token = evm?.tokens[a.symbol];
+  if (!evm || !token) throw new Error(`${asset}: no evm.chains entry with ${a.symbol} for ${a.chain}`);
+  return { chain: a.chain, token: token.address, rpc: evm.rpc };
+}
 
 async function main(): Promise<void> {
   const arg = (name: string): string | undefined => {
@@ -138,9 +165,7 @@ async function main(): Promise<void> {
   const flow = need('--flow') as CrossFlow;
   if (!['out', 'in', 'g3a'].includes(flow)) throw new Error('--flow is out, in or g3a');
   const config = loadConfig('config/sampan.json');
-  const base = config.evm.chains.find((ch) => ch.key === 'BASE');
-  const token = base?.tokens['USDC'];
-  if (!base || !token) throw new Error('config.evm.chains has no BASE with USDC');
+  const { chain: evmChain, token, rpc } = crossingAsset(config, need('--asset'));
   let destination = need('--to');
   if (flow !== 'out') {
     const parsed = parseAddress(destination, 'bitcoincash');
@@ -151,10 +176,10 @@ async function main(): Promise<void> {
   const chain = new ElectrumChain(config.electrum.servers);
   try {
     const run = await traceCrossing(
-      { flow, firstTxid: need('--txid'), broadcastAt: new Date(need('--broadcast')), amount: need('--amount'), destination, token },
+      { flow, chain: evmChain, firstTxid: need('--txid'), broadcastAt: new Date(need('--broadcast')), amount: need('--amount'), destination, token },
       {
         status: (t) => route.status(t),
-        evmReceipt: evmReceiptFrom(base.rpc),
+        evmReceipt: evmReceiptFrom(rpc),
         bchHistory: (l) => chain.historyTxids(l),
         now: Date.now,
         sleep: (ms) => new Promise((r) => setTimeout(r, ms)),

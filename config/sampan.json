@@ -24,12 +24,20 @@
     "atom": false
   },
   "route": {
-    "active": "thorchain",
-    "symbols": ["USDC"]
+    "active": "thorchain"
   },
   "thorchain": {
     "nodes": ["https://gateway.liquify.com/chain/thorchain_api"],
-    "chains": ["BASE"],
+    "assets": [
+      { "asset": "ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48", "chain": "ETH", "symbol": "USDC", "live": { "out": false, "in": false } },
+      { "asset": "ETH.USDT-0XDAC17F958D2EE523A2206206994597C13D831EC7", "chain": "ETH", "symbol": "USDT", "live": { "out": false, "in": false } },
+      { "asset": "BSC.USDC-0X8AC76A51CC950D9822D68B83FE1AD97B32CD580D", "chain": "BSC", "symbol": "USDC", "live": { "out": false, "in": false } },
+      { "asset": "BSC.USDT-0X55D398326F99059FF775485246999027B3197955", "chain": "BSC", "symbol": "USDT", "live": { "out": false, "in": false } },
+      { "asset": "AVAX.USDC-0XB97EF9EF8734C71904D8002F8B6BC66DD9C48A6E", "chain": "AVAX", "symbol": "USDC", "live": { "out": false, "in": false } },
+      { "asset": "AVAX.USDT-0X9702230A8EA53601F5CD2DC00FDBC13D4DF4A8C7", "chain": "AVAX", "symbol": "USDT", "live": { "out": false, "in": false } },
+      { "asset": "TRON.USDT-TR7NHQJEKQXGTCI8Q8ZY4PL8OTSZGJLJ6T", "chain": "TRON", "symbol": "USDT", "live": { "out": false, "in": false } },
+      { "asset": "BASE.USDC-0X833589FCD6EDB6E08F4C7C32D4F71B54BDA02913", "chain": "BASE", "symbol": "USDC", "live": { "out": false, "in": false } }
+    ],
     "slippageBps": 150,
     "timeoutMs": 8000,
     "maxGasRate": 10,
@@ -48,13 +56,50 @@
   "evm": {
     "chains": [
       {
+        "id": 1,
+        "key": "ETH",
+        "name": "Ethereum",
+        "rpc": ["https://ethereum-rpc.publicnode.com", "https://eth.drpc.org"],
+        "explorer": "https://etherscan.io",
+        "native": { "name": "Ether", "symbol": "ETH" },
+        "tokens": {
+          "USDC": { "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "decimals": 6 },
+          "USDT": { "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7", "decimals": 6 }
+        }
+      },
+      {
+        "id": 56,
+        "key": "BSC",
+        "name": "BNB Smart Chain",
+        "rpc": ["https://bsc-dataseed.bnbchain.org", "https://bsc-dataseed.defibit.io"],
+        "explorer": "https://bscscan.com",
+        "native": { "name": "BNB", "symbol": "BNB" },
+        "tokens": {
+          "USDC": { "address": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d", "decimals": 18 },
+          "USDT": { "address": "0x55d398326f99059fF775485246999027B3197955", "decimals": 18 }
+        }
+      },
+      {
+        "id": 43114,
+        "key": "AVAX",
+        "name": "Avalanche C-Chain",
+        "rpc": ["https://api.avax.network/ext/bc/C/rpc", "https://avalanche-c-chain-rpc.publicnode.com"],
+        "explorer": "https://snowtrace.io",
+        "native": { "name": "Avalanche", "symbol": "AVAX" },
+        "tokens": {
+          "USDC": { "address": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", "decimals": 6 },
+          "USDT": { "address": "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7", "decimals": 6 }
+        }
+      },
+      {
         "id": 8453,
         "key": "BASE",
         "name": "Base",
-        "rpc": "https://mainnet.base.org",
+        "rpc": ["https://mainnet.base.org", "https://base-rpc.publicnode.com"],
         "explorer": "https://basescan.org",
+        "native": { "name": "Ether", "symbol": "ETH" },
         "tokens": {
-          "USDC": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+          "USDC": { "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "decimals": 6 }
         }
       }
     ],

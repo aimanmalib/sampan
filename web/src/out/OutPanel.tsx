@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { runOut, StoppedAfterStep1, type OutProgress } from '../../../core/client/out';
 import { thorFromOut } from '../../../core/routes/compare';
-import { thorAsset } from '../../../core/routes/memo';
+import { routeChoices } from '../../../core/route-assets';
 import { formatUnits, parseUnits } from '../../../core/wallet';
 import { api } from '../api';
 import type { LoadedConfig } from '../config';
@@ -37,10 +37,7 @@ const short = (a: string): string => `${a.slice(0, 6)}…${a.slice(-4)}`;
 export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wallet: Wallet; onSwap: () => void }) {
   const { t } = useText();
   const token = config.tokens[config.defaultToken]!;
-  const targets = config.routeChains.flatMap((key) => {
-    const chain = config.evm.chains.find((c) => c.key === key);
-    return chain ? config.route.symbols.filter((s) => chain.tokens[s]).map((symbol) => ({ chain, symbol })) : [];
-  });
+  const targets = routeChoices(config.routeAssets, config.evm.chains, 'out');
   const [source, setSource] = useState<string>(token.symbol);
   const [text, setText] = useState(config.limits.judgeOutToken[config.route.active as 'thorchain'] ?? '');
   const [target, setTarget] = useState(0);
@@ -83,7 +80,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
           amount,
           symbol: pick.symbol,
           chain: pick.chain.key,
-          asset: thorAsset(pick.chain.key, pick.symbol, pick.chain.tokens[pick.symbol]),
+          asset: pick.asset,
           destination: destination.trim(),
           minOut: BigInt(q.minOut),
           category: token.category,

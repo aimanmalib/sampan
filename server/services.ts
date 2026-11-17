@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { CashPrefix } from '../core/address.js';
-import { publicConfig, type SampanConfig } from '../core/config.js';
+import { routeAssetsOf, type SampanConfig } from '../core/config.js';
 import { poolV0LockingHex } from '../core/pools/template.js';
 import { ElectrumChain } from './chain/electrum.js';
 import { FakeChain } from './chain/fake.js';
@@ -154,11 +154,11 @@ export function createServices(o: ServiceOptions): Services {
   const webhookTransport: Transport = o.webhookTransport ?? (o.fake ? fakeTransport(config, fakeDelivery) : httpsTransport);
   const pay = new PayService({ config, db, pools, prefix, testLocks, lookup: webhookLookup });
   const category = config.tokens[config.defaultToken]!.category;
-  const routeChains = publicConfig(config).routeChains;
+  const routeAssets = routeAssetsOf(config);
   const health = new HealthMonitor({
     pools: async () => (await pools.active(category)).length,
     tipHeight: () => chain.tipHeight(),
-    ...(route && config.compliance.crossChainEnabled ? { route: { id: route.id, open: () => route.open(routeChains) } } : {}),
+    ...(route && config.compliance.crossChainEnabled ? { route: { id: route.id, open: () => route.open(), assets: routeAssets } } : {}),
     intervalMs: config.ops.healthIntervalSeconds * 1000,
     retryMs: config.ops.healthRetrySeconds * 1000,
     log: o.log,
@@ -170,8 +170,8 @@ export function createServices(o: ServiceOptions): Services {
     scanner,
     swaps,
     route,
-    outs: route ? new OutService({ config, route, swaps, chain, prefix }) : null,
-    ins: route ? new InService({ config, route, landings, prefix }) : null,
+    outs: route ? new OutService({ config, route, swaps, chain, prefix, chainOpen: (c) => health.chainOpen(c) }) : null,
+    ins: route ? new InService({ config, route, landings, prefix, chainOpen: (c) => health.chainOpen(c) }) : null,
     landings,
     watcher: new LandingWatcher({
       config,

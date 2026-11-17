@@ -10,6 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { LANDING_RATE_DEN } from '../core/landing.js';
 import { makeCard } from '../core/landing-card.js';
 import { parseAddress } from '../core/address.js';
+import { withLive, type InboundRow } from '../core/route-assets.js';
 import { loadConfig } from '../server/config.js';
 import { emptyState, readState, step, type ProbeResult, type SyntheticState } from '../tools/synthetic/alerts.js';
 import { landingOwner, runProbes, type ProbeDeps } from '../tools/synthetic/probes.js';
@@ -121,6 +122,17 @@ describe('provider probes', () => {
     expect((await runProbes(ctx(halted, false), ['thornode']))[0]!.ok).toBe(true);
     expect((await runProbes(ctx(halted, true), ['thornode']))[0]!.ok).toBe(false);
     expect((await runProbes(ctx(deps(), true), ['thornode']))[0]!.ok).toBe(true);
+  });
+
+  it('one halted chain among the live ones is a detail; all live chains halted is a failure (KMR2)', async () => {
+    const live = { ...config, compliance: { ...config.compliance, crossChainEnabled: true }, thorchain: { ...config.thorchain, assets: withLive(config.thorchain.assets, ['ETH', 'BASE']) } };
+    const inbound17 = JSON.parse(readFileSync('tests/fixtures/thorchain/inbound-2026-11-17.json', 'utf8')) as InboundRow[];
+    const [one] = await runProbes({ url: 'http://127.0.0.1:1', config: live, deps: deps({ inbound: async () => inbound17 }) }, ['thornode']);
+    expect(one).toMatchObject({ ok: true });
+    expect(one!.detail).toContain('1/2 live chains open; closed: BASE');
+    const allShut = inbound17.map((r) => (r.chain === 'ETH' ? { ...r, halted: true } : r));
+    const [all] = await runProbes({ url: 'http://127.0.0.1:1', config: live, deps: deps({ inbound: async () => allShut }) }, ['thornode']);
+    expect(all!.ok).toBe(false);
   });
 });
 

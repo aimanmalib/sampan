@@ -25,16 +25,18 @@ const cell = (s: string): string => s.replace(/[|\n]/g, ' ').trim();
 const BCH_TXID = /^[0-9a-f]{64}$/i;
 const EVM_TXID = /^0x[0-9a-f]{64}$/i;
 const SINGLE_TXID = /^(0x)?[0-9a-f]{64}$/i;
-const CROSSING_TXID = /^bch [0-9a-f]{64} · base 0x[0-9a-f]{64}( · convert [0-9a-f]{64})?$/i;
+const CROSSING_TXID = /^bch [0-9a-f]{64} · [a-z]+ 0x[0-9a-f]{64}( · convert [0-9a-f]{64})?$/i;
 const PAY_TXID = /^bch [0-9a-f]{64} · convert [0-9a-f]{64}$/i;
 
 /** The txid cell of a crossing row: both chains in full, plus the landing's conversion when there is one. */
-export function crossingTxid(ids: { bch: string; base: string; convert?: string }): string {
+/** `bch <txid> · <chain> 0x<hash>[ · convert <txid>]`; the chain is the route's key in lower case (eth, bsc, avax, base). */
+export function crossingTxid(ids: { bch: string; evm: { chain: string; hash: string }; convert?: string }): string {
   if (!BCH_TXID.test(ids.bch)) throw new Error(`not a BCH transaction id: ${ids.bch}`);
-  if (!EVM_TXID.test(ids.base)) throw new Error(`not a Base transaction id: ${ids.base}`);
+  if (!/^[a-z]+$/i.test(ids.evm.chain) || ids.evm.chain.toLowerCase() === 'bch') throw new Error(`not an EVM chain key: ${ids.evm.chain}`);
+  if (!EVM_TXID.test(ids.evm.hash)) throw new Error(`not an EVM transaction id: ${ids.evm.hash}`);
   if (ids.convert !== undefined && !BCH_TXID.test(ids.convert)) throw new Error(`not a BCH transaction id: ${ids.convert}`);
   const convert = ids.convert ? ` · convert ${ids.convert.toLowerCase()}` : '';
-  return `bch ${ids.bch.toLowerCase()} · base ${ids.base.toLowerCase()}${convert}`;
+  return `bch ${ids.bch.toLowerCase()} · ${ids.evm.chain.toLowerCase()} ${ids.evm.hash.toLowerCase()}${convert}`;
 }
 
 /** The txid cell of a Sampan Pay row: the customer's payment and the conversion that paid the merchant. */

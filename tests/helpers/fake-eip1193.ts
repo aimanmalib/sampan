@@ -1,4 +1,4 @@
-// A fake EIP-1193 provider for tests: one account on one chain, a token with 6 decimals, allowances that change
+// A fake EIP-1193 provider for tests: one account on one chain, a token with 6 decimals (or `decimals`), allowances that change
 // when an approve is mined, and a record of every transaction sent. No network.
 import { decodeFunctionData, type Hex } from 'viem';
 import { ERC20_ABI } from '../../core/evm/calldata.js';
@@ -11,7 +11,7 @@ export interface FakeEvm extends Eip1193 {
 
 const word = (n: bigint): Hex => `0x${n.toString(16).padStart(64, '0')}`;
 
-export function fakeEip1193(o: { chainId?: number; balance?: bigint; allowance?: bigint; startChain?: number; revertDeposit?: boolean } = {}): FakeEvm {
+export function fakeEip1193(o: { chainId?: number; decimals?: number; balance?: bigint; allowance?: bigint; startChain?: number; revertDeposit?: boolean } = {}): FakeEvm {
   let allowance = o.allowance ?? 0n;
   const chainId = o.chainId ?? 8453;
   let current = o.startChain ?? chainId;
@@ -32,7 +32,7 @@ export function fakeEip1193(o: { chainId?: number; balance?: bigint; allowance?:
           return ['0x1a877169bB03400fA69EC4813889E78994D194Cb'];
         case 'eth_call': {
           const data = p[0]!.data as Hex;
-          if (data.startsWith('0x313ce567')) return word(6n);
+          if (data.startsWith('0x313ce567')) return word(BigInt(o.decimals ?? 6));
           if (data.startsWith('0x70a08231')) return word(o.balance ?? 10_000_000n);
           if (data.startsWith('0xdd62ed3e')) return word(allowance);
           if (o.revertDeposit) throw new Error('execution reverted');

@@ -85,5 +85,22 @@ Public endpoints limit `eth_getLogs` ranges (200 to 2048 blocks); Sampan does no
 
 ## Consequences
 
-The config change (assets, token decimals, two RPCs per chain, open state per chain) follows in the next slice; this
-record only fixes the list and the numbers. Rollback: none needed, nothing on the site changes.
+Config and server (2026-11-17, the slice after the pre-check):
+
+- `thorchain.assets` is the one list (`asset` exactly as `/thorchain/pools` names it, `chain`, `symbol`,
+  `live: { out, in }`). `route.symbols` and `thorchain.chains` are gone; validation refuses them if they come back.
+  `/api/config` publishes only live assets (`routeAssets`) and derives `route.symbols` and `routeChains` from them.
+- `evm.chains[]` has one entry per EVM chain: `rpc` is a list of at least two https endpoints, `native` names the gas
+  coin a wallet is told about, and `tokens.<SYMBOL>` is `{ address, decimals }` with the decimals read above. Each
+  asset's contract must match its chain entry. TRON has no EVM entry: it may be listed, never live, until its own
+  client code exists.
+- The route's `open()` returns one map of chain to open (one `inbound_addresses` read per health check). The route
+  counts as open while BCH and at least one live asset's chain are open; `/api/health` carries the map. A closed
+  chain refuses only its own assets with 503 `chain_halted`; an asset not live for that direction gets 400. Nothing
+  lists halted chains in code: a chain that reopens is offered again at the next check.
+- The page approves amounts in the decimals config lists and stops before signing when the token reports others.
+- The synthetic `thornode` probe fails only when BCH or every live chain is closed; one closed chain is detail.
+- `tools/measure/cross.ts --asset <asset>` reads chain, token and RPCs from config; the txid cell names the chain
+  (`bch … · eth 0x…`). Earlier `base 0x…` rows stay valid.
+
+Rollback: revert the config and server commit; no deploy carried it.

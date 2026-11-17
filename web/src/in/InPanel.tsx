@@ -7,7 +7,7 @@ import { parseAddress } from '../../../core/address';
 import { ApiFailure } from '../../../core/client/api';
 import { InStop, runIn, type InStep } from '../../../core/client/in';
 import { thorFromIn } from '../../../core/routes/compare';
-import { thorAsset } from '../../../core/routes/memo';
+import { routeChoices } from '../../../core/route-assets';
 import { formatUnits, parseUnits } from '../../../core/wallet';
 import { api } from '../api';
 import type { LoadedConfig } from '../config';
@@ -38,10 +38,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
   const { t } = useText();
   const evm = useEvm();
   const token = config.tokens[config.defaultToken]!;
-  const sources = config.routeChains.flatMap((key) => {
-    const chain = config.evm.chains.find((c) => c.key === key);
-    return chain ? config.route.symbols.filter((s) => chain.tokens[s]).map((symbol) => ({ chain, symbol, contract: chain.tokens[symbol]! })) : [];
-  });
+  const sources = routeChoices(config.routeAssets, config.evm.chains, 'in');
   const [amountText, setAmountText] = useState('');
   const [receive, setReceive] = useState(token.symbol);
   const [addressText, setAddressText] = useState('');
@@ -77,7 +74,8 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
           intent: {
             symbol: src.symbol,
             chain: src.chain,
-            token: src.contract,
+            token: src.token.address,
+            decimals: src.token.decimals,
             amount,
             receive,
             address,
@@ -109,7 +107,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
     );
   }
 
-  const asset = thorAsset(src.chain.key, src.symbol, src.contract);
+  const asset = src.asset;
   const min = q ? formatUnits(BigInt(q.minSats), ROUTE_DECIMALS) : '';
   const label = busy ? t(`in.step.${run.step}`, vars) : t('in.go');
   return (

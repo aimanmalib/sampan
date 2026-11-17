@@ -1,11 +1,12 @@
 // One internal interface for the cross-chain route, one module per route. Only the active route is built
 // (config route.active); the other route has no code that can reach its provider.
 import type { RouteId } from '../../core/config.js';
+import type { OpenMap } from '../../core/route-assets.js';
 import type { Payment, WalletCoin } from '../../core/tx/payment.js';
 
 export class RouteError extends Error {
   constructor(
-    readonly code: 'route_unavailable' | 'route_paused' | 'below_route_min' | 'bad_request',
+    readonly code: 'route_unavailable' | 'route_paused' | 'chain_halted' | 'below_route_min' | 'bad_request',
     message: string,
   ) {
     super(message);
@@ -97,6 +98,6 @@ export interface Route {
   quoteIn(r: InRequest): Promise<InQuote>;
   buildIn(q: InQuote): InPlan;
   status(txid: string): Promise<CrossingStatus>;
-  /** False when the route reports BCH or a destination chain halted. */
-  open(chains: string[]): Promise<boolean>;
+  /** Open state per chain key (BCH included); throws when the route cannot be asked. */
+  open(): Promise<OpenMap>;
 }

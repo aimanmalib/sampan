@@ -4,6 +4,7 @@
 import { parseAddress } from '../../core/address.js';
 import { limitFor, THOR_DECIMALS, withLimit, withoutPrefix } from '../../core/routes/memo.js';
 import { buildDeposit } from '../../core/tx/deposit.js';
+import { openMapOf, type InboundRow, type OpenMap } from '../../core/route-assets.js';
 import type { WalletCoin } from '../../core/tx/payment.js';
 import { ThornodeError, type Thornode } from './thornode.js';
 import { RouteError, type CrossingStatus, type InQuote, type InPlan, type InRequest, type OutQuote, type OutRequest, type Route } from './types.js';
@@ -20,13 +21,6 @@ interface QuoteBody {
   expiry?: number;
   total_swap_seconds?: number;
   fees?: { total?: string; total_bps?: number };
-}
-
-interface InboundBody {
-  chain: string;
-  halted: boolean;
-  global_trading_paused?: boolean;
-  chain_trading_paused?: boolean;
 }
 
 interface StatusBody {
@@ -141,16 +135,18 @@ export class ThorchainRoute implements Route {
     return { stage: refunded ? 'refunded' : 'done', ...(sent ? { outTxid: sent.id, outChain: sent.chain } : {}) };
   }
 
-  async open(chains: string[]): Promise<boolean> {
-    let inbound: InboundBody[];
+  /**
+   * Open state of every chain THORChain lists, from one inbound_addresses read: open = not halted and neither chain
+   * nor global trading paused. Throws when THORNode does not answer (the caller keeps "unknown", never "closed").
+   */
+  async open(): Promise<OpenMap> {
+    let inbound: InboundRow[];
     try {
-      inbound = await this.o.node.request<InboundBody[]>('/thorchain/inbound_addresses');
+      inbound = await this.o.node.request<InboundRow[]>('/thorchain/inbound_addresses');
     } catch {
-      return false;
+      throw new RouteError('route_unavailable', 'THORChain is not answering');
     }
-    return ['BCH', ...chains].every((c) => {
-      const row = inbound.find((i) => i.chain === c);
-      return !!row && !row.halted && !row.global_trading_paused && !row.chain_trading_paused;
-    });
+    if (!Array.isArray(inbound)) throw new RouteError('route_unavailable', 'THORChain sent no chain list');
+    return openMapOf(inbound);
   }
 }

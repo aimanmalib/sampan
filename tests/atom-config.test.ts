@@ -87,7 +87,7 @@ describe('connect-src', () => {
     for (const u of c.atom.connect) {
       const origin = new URL(u).origin;
       // An origin Sampan already needs for its own route stays; the atom-only ones must not appear.
-      if (!c.evm.chains.some((ch) => new URL(ch.rpc).origin === origin)) expect(allowed).not.toContain(origin);
+      if (!c.evm.chains.some((ch) => ch.rpc.some((u) => new URL(u).origin === origin))) expect(allowed).not.toContain(origin);
     }
     expect(atomConnectOrigins(false, c.atom)).toEqual([]);
   });

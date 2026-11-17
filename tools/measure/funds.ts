@@ -1,8 +1,8 @@
 // Balances of the test wallets, read only: nothing is signed or sent.
 //   npx tsx tools/measure/funds.ts
 // BCH and tokens: every address of the receive, change and defi paths of the mainnet test wallet, walked over Electrum
-// until `wallet.gapLimit` unused addresses in a row. Base: ETH and each configured token of the EVM test key, over the
-// configured RPC. Prints the rows of the "Test wallet funds" table in docs/OPERATIONS.md. Needs the env file for the
+// until `wallet.gapLimit` unused addresses in a row. Each EVM chain in config: its gas coin and each configured token of
+// the EVM test key, over the chain's first configured RPC. Prints the rows of the "Test wallet funds" table in docs/OPERATIONS.md. Needs the env file for the
 // phrase and key (only public keys and the address are derived; neither secret is printed).
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -52,17 +52,17 @@ async function main(): Promise<void> {
   } finally {
     await chain.close();
   }
-  const base = config.evm.chains[0];
-  if (!base) throw new Error('no EVM chain in config');
   const evm = evmAddress(evmKey);
-  const eth = await rpc(base.rpc, 'eth_getBalance', [evm, 'latest']);
-  const evmTokens = [];
-  for (const [symbol, token] of Object.entries(base.tokens)) {
-    const [units, decimals] = await Promise.all([
-      rpc(base.rpc, 'eth_call', [{ to: token, data: readCall.balanceOf(evm) }, 'latest']),
-      rpc(base.rpc, 'eth_call', [{ to: token, data: readCall.decimals() }, 'latest']),
-    ]);
-    evmTokens.push({ symbol, units: units ? readResult.uint('balanceOf', units) : undefined, decimals: decimals ? readResult.decimals(decimals) : 6 });
+  const evmRows = [];
+  for (const ch of config.evm.chains) {
+    const url = ch.rpc[0]!;
+    const balance = await rpc(url, 'eth_getBalance', [evm, 'latest']);
+    const tokens = [];
+    for (const [symbol, token] of Object.entries(ch.tokens)) {
+      const units = await rpc(url, 'eth_call', [{ to: token.address, data: readCall.balanceOf(evm) }, 'latest']);
+      tokens.push({ symbol, units: units ? readResult.uint('balanceOf', units) : undefined, decimals: token.decimals });
+    }
+    evmRows.push({ chain: ch.name, native: ch.native.symbol, balance: balance ? BigInt(balance) : undefined, tokens });
   }
   const rows = fundsRows({
     utc: new Date().toISOString().slice(0, 16).replace('T', ' '),
@@ -70,8 +70,7 @@ async function main(): Promise<void> {
     evmWallet: evm,
     totals: sumCoins(coins),
     tokens: Object.values(config.tokens),
-    eth: eth ? BigInt(eth) : undefined,
-    evmTokens,
+    evm: evmRows,
     needed: () => NEEDED,
   });
   console.log(`addresses looked at: ${looked.join(', ')}`);

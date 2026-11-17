@@ -4,6 +4,7 @@
 // one is old, simulate each call with eth_call, send it, and record the deposit's hash. No keys in the page.
 import type { Hex } from 'viem';
 import type { CashPrefix } from '../address.js';
+import type { EvmChain } from '../route-assets.js';
 import { readCall, readResult, routerDepositCalls, toTokenUnits, type EvmCall, type RouterDeposit } from '../evm/calldata.js';
 import { checkInPlan } from '../evm/check-in.js';
 import type { Api } from './api.js';
@@ -26,9 +27,10 @@ export class InStop extends Error {
 
 export interface InIntent {
   symbol: string;
-  chain: { id: number; key: string; name: string; rpc: string; explorer: string };
-  /** Token contract on the source chain. */
+  chain: Pick<EvmChain, 'id' | 'key' | 'name' | 'rpc' | 'explorer' | 'native'>;
+  /** Token contract on the source chain and its decimals from config (the chain must report the same). */
   token: string;
+  decimals: number;
   /** 1e8 route units. */
   amount: bigint;
   /** 'BCH' or the stablecoin symbol. */
@@ -73,7 +75,7 @@ export async function ensureChain(p: Eip1193, chain: InIntent['chain']): Promise
     if ((e as { code?: number }).code !== 4902) throw e;
     await p.request({
       method: 'wallet_addEthereumChain',
-      params: [{ chainId: hex(chain.id), chainName: chain.name, rpcUrls: [chain.rpc], blockExplorerUrls: [chain.explorer], nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 } }],
+      params: [{ chainId: hex(chain.id), chainName: chain.name, rpcUrls: chain.rpc, blockExplorerUrls: [chain.explorer], nativeCurrency: { ...chain.native, decimals: 18 } }],
     });
   }
   if (Number(await p.request({ method: 'eth_chainId' })) !== chain.id) throw new InStop('wrong_chain', `switch the wallet to ${chain.name}`);
@@ -136,6 +138,8 @@ export async function runIn(o: { api: Api; provider: Eip1193; from: string; inte
   o.onStep('plan');
   let planned = { ...(await plan(api, i, now())), at: now() };
   const decimals = readResult.decimals(await ethCall(p, from, i.token, readCall.decimals()));
+  // Amounts are scaled by the config's decimals (18 on BNB Smart Chain); a token that says otherwise is not the one listed.
+  if (decimals !== i.decimals) throw new InStop('plan_mismatch', `the token reports ${decimals} decimals, config lists ${i.decimals}`);
   const balance = readResult.uint('balanceOf', await ethCall(p, from, i.token, readCall.balanceOf(from)));
   const allowance = async (router: string) => readResult.uint('allowance', await ethCall(p, from, i.token, readCall.allowance(from, router)));
   let calls = routerDepositCalls(planned.deposit, decimals, await allowance(planned.deposit.router));

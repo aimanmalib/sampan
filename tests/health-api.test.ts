@@ -1,19 +1,21 @@
 // Health: the monitor's report from its probes, GET /api/health on the fake network, the 451 answer for blocked
 // countries (through Cloudflare only) and new crossings paused while the route reports a halt.
 import type { FastifyInstance } from 'fastify';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import { normalizeConfig, patchConfig, type SampanConfig } from '../core/config.js';
+import { liveAssets, openMapOf, withLive, type InboundRow } from '../core/route-assets.js';
 import { buildApp } from '../server/app.js';
 import { ChainUnavailableError } from '../server/chain/types.js';
 import { HealthMonitor } from '../server/health.js';
 import { createServices, type Services } from '../server/services.js';
 
 const base = normalizeConfig(shipped as unknown as SampanConfig);
-const crossOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }));
+const crossOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, thorchain: { assets: withLive(base.thorchain.assets, ['BASE']) }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }));
+const LIVE_BASE = liveAssets(crossOn.thorchain.assets);
 const CF = '104.16.1.2';
 const PROXY = '10.0.0.2';
 const BLOCKED = base.compliance.blockedCountries[0]!;
@@ -51,12 +53,12 @@ describe('HealthMonitor', () => {
     const m = new HealthMonitor({
       pools: async () => 0,
       tipHeight: fail,
-      route: { id: 'thorchain', open: async () => false },
+      route: { id: 'thorchain', open: async () => ({ BCH: false, BASE: true }), assets: LIVE_BASE },
       intervalMs: 60_000, retryMs: 5_000,
     });
     expect(m.routeOpen()).toBe(true);
     const r = await m.check();
-    expect([r.cauldron, r.bch, r.height, r.route]).toEqual([false, false, null, { id: 'thorchain', open: false }]);
+    expect([r.cauldron, r.bch, r.height, r.route]).toEqual([false, false, null, { id: 'thorchain', open: false, chains: { BCH: false, BASE: true } }]);
     expect(m.routeOpen()).toBe(false);
   });
 
@@ -73,8 +75,9 @@ describe('HealthMonitor', () => {
   });
 
   it('keeps a route that cannot be asked unknown, so crossings stay open and the next check comes after retryMs', async () => {
-    const m = new HealthMonitor({ pools: async () => 1, tipHeight: async () => 1, route: { id: 'thorchain', open: fail as never }, intervalMs: 60_000, retryMs: 5_000 });
-    expect((await m.check()).route).toEqual({ id: 'thorchain', open: null });
+    const m = new HealthMonitor({ pools: async () => 1, tipHeight: async () => 1, route: { id: 'thorchain', open: fail as never, assets: LIVE_BASE }, intervalMs: 60_000, retryMs: 5_000 });
+    expect((await m.check()).route).toEqual({ id: 'thorchain', open: null, chains: null });
+    expect(m.chainOpen('BASE')).toBe(true);
     expect(m.routeOpen()).toBe(true);
     expect(m.allOk()).toBe(false);
   });
@@ -127,7 +130,7 @@ describe('GET /api/health', () => {
     await start(crossOn);
     await services.health.check();
     const h = (await app!.inject({ method: 'GET', url: '/api/health' })).json();
-    expect(h.route).toEqual({ id: crossOn.route.active, open: true });
+    expect(h.route).toEqual({ id: crossOn.route.active, open: true, chains: { BASE: true, BCH: true } });
   });
 });
 
@@ -160,7 +163,7 @@ describe('new crossings: region and route pause', () => {
     await start(crossOn);
     const route = services.route!;
     const open = route.open.bind(route);
-    route.open = async () => false;
+    route.open = async () => ({ BCH: false, BASE: true });
     await services.health.check();
     const res = await post('/api/out/quote', {});
     expect(res.statusCode).toBe(503);
@@ -168,5 +171,39 @@ describe('new crossings: region and route pause', () => {
     route.open = open;
     await services.health.check();
     expect((await post('/api/out/quote', {})).statusCode).toBe(200);
+  });
+
+  it('refuses only the asset whose chain is closed (503 chain_halted); assets on open chains keep quoting', async () => {
+    // Inbound state read from THORNode on 2026-11-17: Base halted, Ethereum and the others open.
+    const inbound = JSON.parse(readFileSync('tests/fixtures/thorchain/inbound-2026-11-17.json', 'utf8')) as InboundRow[];
+    await start(patchConfig(crossOn, JSON.stringify({ thorchain: { assets: withLive(base.thorchain.assets, ['BASE', 'ETH']) } })));
+    services.route!.open = async () => openMapOf(inbound);
+    const h = await services.health.check();
+    expect(h.route).toMatchObject({ open: true, chains: { BCH: true, ETH: true, BASE: false } });
+    const baseRes = await post('/api/out/quote', {});
+    expect([baseRes.statusCode, baseRes.json().error]).toEqual([503, 'chain_halted']);
+    const ethOut = await app!.inject({ method: 'POST', url: '/api/out/quote', payload: { ...quote, chain: 'ETH' }, remoteAddress: PROXY });
+    expect(ethOut.statusCode).toBe(200);
+    const inRes = await app!.inject({
+      method: 'POST',
+      url: '/api/in/quote',
+      payload: { symbol: 'USDC', chain: 'BASE', amount: '500000000', receive: 'BCH', address: 'bitcoincash:qqyuz8zh06c8h39guuedjpfvnlvjeg394ucvfe6ltt' },
+      remoteAddress: PROXY,
+    });
+    expect([inRes.statusCode, inRes.json().error]).toEqual([503, 'chain_halted']);
+  });
+
+  it('refuses an asset config does not mark live for that direction with 400', async () => {
+    await start(crossOn);
+    const res = await app!.inject({ method: 'POST', url: '/api/out/quote', payload: { ...quote, chain: 'ETH' }, remoteAddress: PROXY });
+    expect([res.statusCode, res.json().error]).toEqual([400, 'bad_request']);
+  });
+
+  it('pauses every crossing when all live chains are closed, as when BCH is', async () => {
+    await start(crossOn);
+    services.route!.open = async () => ({ BCH: true, BASE: false, ETH: true });
+    await services.health.check();
+    const res = await post('/api/out/quote', {});
+    expect([res.statusCode, res.json().error]).toEqual([503, 'route_paused']);
   });
 });

@@ -51,7 +51,7 @@ const SWAP_STATUS: Record<SwapError['code'], number> = {
   build_failed: 502,
 };
 
-const ROUTE_STATUS: Record<RouteError['code'], number> = { bad_request: 400, below_route_min: 400, route_paused: 503, route_unavailable: 503 };
+const ROUTE_STATUS: Record<RouteError['code'], number> = { bad_request: 400, below_route_min: 400, route_paused: 503, chain_halted: 503, route_unavailable: 503 };
 
 export function sendError(reply: FastifyReply, e: unknown): FastifyReply {
   if (e instanceof ApiError) return reply.code(e.status).send({ error: e.code, message: e.message });

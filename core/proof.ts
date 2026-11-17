@@ -5,8 +5,9 @@ export const PROOF_FLOWS = ['swap', 'land', 'giveBack', 'out', 'in', 'g3a', 'ref
 export type ProofFlowId = (typeof PROOF_FLOWS)[number];
 
 export interface ProofTxid {
-  chain: 'bch' | 'base';
-  /** Full id as written in MEASURED.md (Base ids keep their 0x). */
+  /** 'bch', or the route's EVM chain key in lower case as the cell names it (eth, bsc, avax, base). */
+  chain: string;
+  /** Full id as written in MEASURED.md (EVM ids keep their 0x). */
   id: string;
 }
 
@@ -60,18 +61,20 @@ function tableRows(lines: string[], header: RegExp): string[][] {
   return rows;
 }
 
-/** One txid cell: a single BCH id, a single Base id, or a crossing `bch … · base 0x… · convert …`. */
+/** One txid cell: a single BCH id, a single Base id (the only EVM chain before 2026-11-17), or a crossing
+ *  `bch … · <chain> 0x… · convert …`. */
 export function parseTxids(cell: string): ProofTxid[] {
   const one = cell.trim();
   if (BCH_TXID.test(one)) return [{ chain: 'bch', id: one.toLowerCase() }];
   if (EVM_TXID.test(one)) return [{ chain: 'base', id: one.toLowerCase() }];
   const out: ProofTxid[] = [];
   for (const part of one.split('·').map((p) => p.trim())) {
-    const m = /^(bch|base|convert) (\S+)$/i.exec(part);
+    const m = /^([a-z]+) (\S+)$/i.exec(part);
     if (!m) return [];
     const id = m[2]!.toLowerCase();
-    const chain = m[1]!.toLowerCase() === 'base' ? 'base' : 'bch';
-    if (!(chain === 'base' ? EVM_TXID : BCH_TXID).test(id)) return [];
+    const name = m[1]!.toLowerCase();
+    const chain = name === 'convert' ? 'bch' : name;
+    if (!(chain === 'bch' ? BCH_TXID : EVM_TXID).test(id)) return [];
     out.push({ chain, id });
   }
   return out;

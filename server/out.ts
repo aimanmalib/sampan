@@ -4,11 +4,11 @@
 // so the user never needs BCH of their own. Limits from config are enforced here on every quote.
 import { parseAddress, type CashPrefix } from '../core/address.js';
 import type { SampanConfig } from '../core/config.js';
-import { thorAsset } from '../core/routes/memo.js';
 import { depositSize, DepositBuildError } from '../core/tx/deposit.js';
 import type { Payment, WalletCoin } from '../core/tx/payment.js';
 import { BCH_DUST_SATS } from '../core/tx/types.js';
 import type { Chain } from './chain/types.js';
+import { routeTarget } from './route-target.js';
 import type { OutQuote, Route } from './routes/types.js';
 import { RouteError } from './routes/types.js';
 import { SwapError, type Quote, type SwapService } from './swap.js';
@@ -50,16 +50,14 @@ export interface BuiltOut {
 }
 
 export class OutService {
-  constructor(private readonly o: { config: SampanConfig; route: Route; swaps: SwapService; chain: Chain; prefix: CashPrefix }) {}
+  constructor(
+    private readonly o: { config: SampanConfig; route: Route; swaps: SwapService; chain: Chain; prefix: CashPrefix; chainOpen?: (chain: string) => boolean },
+  ) {}
 
-  private target(r: OutRequest): { asset: string; decimals: number } {
-    const { config } = this.o;
-    if (!config.route.symbols.includes(r.symbol)) throw new RouteError('bad_request', `${r.symbol} is not offered`);
-    const chain = config.evm.chains.find((c) => c.key === r.chain);
-    const contract = chain?.tokens[r.symbol];
-    if (!chain || !contract || !config.thorchain.chains.includes(r.chain)) throw new RouteError('bad_request', `${r.chain} is not offered`);
+  private target(r: OutRequest): { asset: string } {
+    const { asset } = routeTarget(this.o.config, 'out', r, this.o.chainOpen ?? (() => true));
     if (!EVM_ADDRESS.test(r.destination)) throw new RouteError('bad_request', 'the destination is not an address on that chain');
-    return { asset: thorAsset(r.chain, r.symbol, contract), decimals: 8 };
+    return { asset };
   }
 
   /** Satoshis to deposit and the step 1 swap, if any. */

@@ -1,11 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { publicConfig, type SampanConfig } from '../core/config.js';
 import { fillPageMeta, pngSize, type PageMetaConfig } from '../core/page-meta.js';
 
 const read = (rel: string): string => readFileSync(new URL(`../${rel}`, import.meta.url), 'utf8');
 const html = read('web/index.html');
 const en = JSON.parse(read('lang/en.json')) as Record<string, string>;
-const shipped = JSON.parse(read('config/sampan.json')) as PageMetaConfig;
+// The public part, as the page build (vite.config.ts) passes it.
+const shipped: PageMetaConfig = publicConfig(JSON.parse(read('config/sampan.json')) as SampanConfig);
 const ogBytes = readFileSync(new URL(`../web/public${shipped.site.ogImage}`, import.meta.url));
 
 /** A frozen config so the test does not depend on which flows the owner has switched on. */

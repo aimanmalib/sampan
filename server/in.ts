@@ -5,8 +5,8 @@
 import { parseAddress, type CashPrefix } from '../core/address.js';
 import type { SampanConfig } from '../core/config.js';
 import type { LandingCard } from '../core/landing-card.js';
-import { thorAsset } from '../core/routes/memo.js';
 import type { LandingService } from './landing/service.js';
+import { routeTarget } from './route-target.js';
 import type { InQuote, Route } from './routes/types.js';
 import { RouteError } from './routes/types.js';
 import { SwapError } from './swap.js';
@@ -27,6 +27,7 @@ export interface InRequest {
 
 export interface InView {
   quote: InQuote;
+  /** Token contract on the source chain. */
   token: string;
   usd: number;
 }
@@ -37,17 +38,16 @@ export interface InPlanView extends InView {
 }
 
 export class InService {
-  constructor(private readonly o: { config: SampanConfig; route: Route; landings: LandingService; prefix: CashPrefix }) {}
+  constructor(
+    private readonly o: { config: SampanConfig; route: Route; landings: LandingService; prefix: CashPrefix; chainOpen?: (chain: string) => boolean },
+  ) {}
 
   private source(r: InRequest): { asset: string; token: string } {
     const { config } = this.o;
-    if (!config.route.symbols.includes(r.symbol)) throw new RouteError('bad_request', `${r.symbol} is not offered`);
-    const chain = config.evm.chains.find((c) => c.key === r.chain);
-    const token = chain?.tokens[r.symbol];
-    if (!chain || !token || !config.thorchain.chains.includes(r.chain)) throw new RouteError('bad_request', `${r.chain} is not offered`);
+    const { asset, token } = routeTarget(config, 'in', r, this.o.chainOpen ?? (() => true));
     if (r.receive !== BCH && r.receive !== config.defaultToken) throw new RouteError('bad_request', `${r.receive} cannot be received`);
     if (typeof parseAddress(r.address, this.o.prefix) === 'string') throw new RouteError('bad_request', 'the BCH address is not valid');
-    return { asset: thorAsset(r.chain, r.symbol, token), token };
+    return { asset, token: token.address };
   }
 
   private async ask(r: InRequest, asset: string, destination: string): Promise<{ quote: InQuote; usd: number }> {

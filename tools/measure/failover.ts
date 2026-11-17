@@ -9,6 +9,7 @@ import { execSync, type ChildProcess } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { devices, webkit } from '@playwright/test';
+import { withLive, type RouteAsset } from '../../core/route-assets.js';
 import { REFUSED_HOST, SILENT_HOST, healthWords, writeFailoverSection, type CaseOutcome, type FailoverRow } from './failover-table.js';
 import { startServer, waitHealthy } from './server.js';
 
@@ -25,13 +26,15 @@ const SHOTS = arg('--shots', 'state/failover');
 interface Shipped {
   electrum: { servers: string[] };
   cauldron: { indexers: string[] };
-  thorchain: { nodes: string[] };
+  thorchain: { nodes: string[]; assets: RouteAsset[] };
   tokens: Record<string, { symbol: string }>;
   defaultToken: string;
   ops: { testAddresses: string[] };
 }
 const shipped = JSON.parse(readFileSync('config/sampan.json', 'utf8')) as Shipped;
-const cross = { compliance: { crossChainEnabled: true } };
+/** The route cases quote the first listed asset, switched live on this local server only. */
+const probeAsset = shipped.thorchain.assets[0]!;
+const cross = { compliance: { crossChainEnabled: true }, thorchain: { assets: withLive(shipped.thorchain.assets, [probeAsset.asset]) } };
 
 interface Case {
   id: string;
@@ -100,7 +103,7 @@ async function runCase(c: Case, commit: string): Promise<FailoverRow> {
     const token = shipped.tokens[shipped.defaultToken]!.symbol;
     const quote = await timed('/api/swap/quote', { token, side: 'buy', amount: '100000' });
     const scan = await timed('/api/wallet/scan', { paths: { receive: shipped.ops.testAddresses.slice(0, 1) } });
-    const route = c.route ? await timed('/api/out/quote', { source: 'BCH', amount: '400000', symbol: 'USDC', chain: 'BASE', destination: TO }) : undefined;
+    const route = c.route ? await timed('/api/out/quote', { source: 'BCH', amount: '400000', symbol: probeAsset.symbol, chain: probeAsset.chain, destination: TO }) : undefined;
     const page = c.page ? await pageView(c.id) : 'not opened';
     return { at: new Date().toISOString().slice(0, 19) + 'Z', id: c.id, broken: c.broken, firstHealthS, health: healthWords(h), quote, scan, ...(route ? { route } : {}), page, commit };
   } finally {

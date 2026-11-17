@@ -3,6 +3,7 @@
 import { validateAtom, type AtomConfig } from './atom-config.js';
 import { validateBusiness, type BusinessConfig } from './business.js';
 import { validatePay, type PayConfig } from './pay/config.js';
+import { chainsOf, liveAssets, symbolsOf, validateAssets, validateEvmChain, type EvmChain, type RouteAsset } from './route-assets.js';
 
 export type RouteId = 'near-intents' | 'thorchain';
 export type ActiveRoute = RouteId | 'none';
@@ -15,14 +16,7 @@ export interface TokenConfig {
   icon: string;
 }
 
-export interface EvmChainConfig {
-  id: number;
-  key: string;
-  name: string;
-  rpc: string;
-  explorer: string;
-  tokens: Record<string, string>;
-}
+export type EvmChainConfig = EvmChain;
 
 /** One section of /terms or /risks. `cross`: shown only while cross-chain flows are open. */
 export interface LegalSection {
@@ -35,10 +29,11 @@ export interface SampanConfig {
   defaultToken: string;
   /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
   features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean };
-  route: { active: ActiveRoute; symbols: string[] };
+  route: { active: ActiveRoute };
   thorchain: {
     nodes: string[];
-    chains: string[];
+    /** The one list of stablecoins the route carries; each is offered only where live and its chain open. */
+    assets: RouteAsset[];
     slippageBps: number;
     timeoutMs: number;
     /** Highest deposit fee rate (sat/byte) a quote may ask for; also the rate used to reserve fees. */
@@ -163,8 +158,11 @@ export interface PublicConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
   features: SampanConfig['features'];
-  route: SampanConfig['route'];
-  /** Destination chains the active route carries (keys of evm.chains). */
+  /** symbols: derived from the live assets (texts name them). */
+  route: SampanConfig['route'] & { symbols: string[] };
+  /** Assets live in at least one direction; the server still refuses one whose chain the route reports closed. */
+  routeAssets: RouteAsset[];
+  /** Chains of routeAssets (keys of evm.chains). */
   routeChains: string[];
   evm: { chains: EvmChainConfig[]; walletConnect: boolean } & Pick<SampanConfig['evm'], 'receiptPollSeconds' | 'receiptWaitSeconds' | 'replanSeconds'>;
   limits: SampanConfig['limits'];
@@ -220,16 +218,17 @@ export function validateConfig(c: SampanConfig): string[] {
   need(c.cauldron.indexers.length > 0 && c.cauldron.indexers.every(isHttpsUrl), 'cauldron.indexers: https URLs');
   need(c.electrum.servers.length >= 3, 'electrum.servers: at least three servers');
   need(c.electrum.indexWaitMs >= 0 && c.electrum.indexPollMs > 0, 'electrum.indexWaitMs >= 0 and indexPollMs > 0');
-  need(c.evm.chains.length > 0 && c.evm.chains.every((ch) => isHttpsUrl(ch.rpc)), 'evm.chains: https RPC per chain');
+  need(c.evm.chains.length > 0, 'evm.chains: at least one chain');
+  need(new Set(c.evm.chains.map((ch) => ch.key)).size === c.evm.chains.length, 'evm.chains: keys must differ');
+  for (const ch of c.evm.chains) errors.push(...validateEvmChain(ch, isHttpsUrl));
+  // One source for what the route carries: the old lists may not come back next to it.
+  need(!('symbols' in (c.route ?? {})), 'route.symbols: removed; thorchain.assets is the one list');
+  need(!('chains' in (c.thorchain ?? {})), 'thorchain.chains: removed; thorchain.assets is the one list');
+  errors.push(...validateAssets(c.thorchain.assets, c.evm.chains));
   need(
     c.evm.receiptPollSeconds > 0 && c.evm.receiptWaitSeconds >= c.evm.receiptPollSeconds && c.evm.replanSeconds > 0,
     'evm: receiptPollSeconds > 0, receiptWaitSeconds >= receiptPollSeconds, replanSeconds > 0',
   );
-  for (const ch of c.evm.chains) {
-    for (const [sym, addr] of Object.entries(ch.tokens)) {
-      need(/^0x[0-9a-fA-F]{40}$/.test(addr), `evm.chains.${ch.key}.tokens.${sym}: 20-byte hex address`);
-    }
-  }
   const bps = [
     c.thorchain.slippageBps,
     c.oneClick.slippageBps,
@@ -332,15 +331,20 @@ export function normalizeConfig(c: SampanConfig): SampanConfig {
   return { ...c, tokens };
 }
 
+/** Assets the active route may offer: the live THORChain assets, or none for any other route. */
+export const routeAssetsOf = (c: SampanConfig): RouteAsset[] => (c.route.active === 'thorchain' ? liveAssets(c.thorchain.assets) : []);
+
 export function publicConfig(c: SampanConfig): PublicConfig {
+  const assets = routeAssetsOf(c);
   return {
     tokens: Object.fromEntries(
       Object.entries(c.tokens).filter(([key]) => key === c.defaultToken || (key === 'MUSD' && c.features.musd)),
     ),
     defaultToken: c.defaultToken,
     features: c.features,
-    route: c.route,
-    routeChains: c.route.active === 'thorchain' ? c.thorchain.chains : c.route.active === 'near-intents' ? c.oneClick.chains.map((k) => k.toUpperCase()) : [],
+    route: { active: c.route.active, symbols: symbolsOf(assets) },
+    routeAssets: assets,
+    routeChains: chainsOf(assets),
     evm: {
       chains: c.evm.chains,
       walletConnect: c.evm.walletConnectProjectId !== '',

@@ -66,9 +66,8 @@ export interface BalanceInput {
   totals: CoinTotals;
   /** category (any case) → symbol and decimals of the configured tokens */
   tokens: Array<{ symbol: string; category: string; decimals: number }>;
-  eth?: bigint | undefined;
-  /** symbol → [units, decimals] for each configured EVM token */
-  evmTokens: Array<{ symbol: string; units: bigint | undefined; decimals: number }>;
+  /** One entry per configured EVM chain: its gas coin balance and each configured token's units and decimals. */
+  evm: Array<{ chain: string; native: string; balance: bigint | undefined; tokens: Array<{ symbol: string; units: bigint | undefined; decimals: number }> }>;
   /** What each asset is needed for until the end of judging; the same text for every row unless given per asset. */
   needed: (asset: string) => { needed: string; why: string };
 }
@@ -82,8 +81,10 @@ export function fundsRows(b: BalanceInput): FundsRow[] {
     const amount = b.totals.tokens.get(t.category.toLowerCase()) ?? 0n;
     rows.push(row(b.bchWallet, t.symbol, `${formatUnits(amount, t.decimals, t.decimals)} ${t.symbol}`));
   }
-  rows.push(row(b.evmWallet, 'ETH (Base)', b.eth === undefined ? unknown : `${formatUnits(b.eth, 18)} ETH`));
-  for (const t of b.evmTokens) rows.push(row(b.evmWallet, `${t.symbol} (Base)`, t.units === undefined ? unknown : `${formatUnits(t.units, t.decimals, 2)} ${t.symbol}`));
+  for (const c of b.evm) {
+    rows.push(row(b.evmWallet, `${c.native} (${c.chain})`, c.balance === undefined ? unknown : `${formatUnits(c.balance, 18)} ${c.native}`));
+    for (const t of c.tokens) rows.push(row(b.evmWallet, `${t.symbol} (${c.chain})`, t.units === undefined ? unknown : `${formatUnits(t.units, t.decimals, 2)} ${t.symbol}`));
+  }
   return rows;
 }
 
