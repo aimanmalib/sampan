@@ -4,9 +4,9 @@
 // state/cost-shown/<txid>.json); then the crossing is traced until the stablecoin arrives and one Runs row is
 // appended to docs/MEASURED.md (with --write). Spends stay inside state/budget.json and are recorded in the ledger.
 //   npx tsx tools/measure/out-run.ts --asset ETH.USDC-0X… --source PUSD|BCH --amount 1.80 --to 0x… [--port 4186] [--quote-only] [--write]
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { binToHex, hashTransaction, hexToBin } from '@bitauth/libauth';
+import { hashTransaction, hexToBin } from '@bitauth/libauth';
 import { makeApi } from '../../core/client/api.js';
 import { quoteOut, runOut, StoppedAfterStep1 } from '../../core/client/out.js';
 import { scanWallet } from '../../core/client/scan.js';
@@ -96,19 +96,24 @@ async function main(): Promise<void> {
     depositPrompt = intent.prompts.deposit;
     const label = outLabel(pick, quote);
     console.log(JSON.stringify({ label, usd: quoteUsd, memo: quote.memo, vault: quote.vault, expectedOut: quote.expectedOut, minOut: quote.minOut, fees: quote.fees }));
+    writeFileSync('state/out-quote.json', JSON.stringify({ quote }));
     if (process.argv.includes('--quote-only')) return;
     const refused = overBudget(quoteUsd, spentOn(LEDGER, new Date().toISOString().slice(0, 10)), budget);
     if (refused) throw new Error(`budget: ${refused}`);
 
     onDepositSigned = (signed) => {
-      const txid = binToHex(hashTransaction(hexToBin(signed)));
+      const txid = hashTransaction(hexToBin(signed));
       console.log(`cost card saved: ${writeCostShown('state/cost-shown', costShown(pub, 'out', quote, txid, evmChain, new Date()))}`);
     };
     let res: Awaited<ReturnType<typeof runOut>>;
     try {
-      res = await runOut({ api, session, wallet, intent, onStep: (s) => console.log(`step ${s.step}: ${s.phase}`) });
+      const from = arg('--from');
+      res = await runOut({ api, session, wallet, intent, ...(from ? { fromTxid: from } : {}), onStep: (s) => console.log(`step ${s.step}: ${s.phase}`) });
     } catch (e) {
-      if (e instanceof StoppedAfterStep1) console.error(`stopped after step 1 (swap ${e.swapTxid}); resume needs that txid`);
+      if (e instanceof StoppedAfterStep1) {
+        console.error(`stopped after step 1 (swap ${e.swapTxid}); resume with --from ${e.swapTxid}`);
+        console.error(e.reason instanceof Error ? e.reason.message : e.reason);
+      }
       throw e;
     }
     // Seconds run from the first signature (step 1 for a stablecoin source) until the stablecoin arrives.

@@ -40,6 +40,9 @@
 | 2026-11-16T18:13:10Z | pay | 0.20 USD · plain · live | bch db5b2fd2e3257f6b7b0a09e87509f7954543707721f53d111039758fab25fe36 · convert 8d6a12d19f6124fec8da04bb5dbb6690aedd70140068cfcb10b24bfd5c574f44 | 16.1 | ok |
 | 2026-11-16T18:30:32Z | pay | 0.20 USD · plain · local · spread 50 bps | bch e0b2ad16f1ec8b933d4d2ac7769bf17e458a14a6c477d3bce5a731e139dd65db · convert 21fbd3217c58a2a44ddd8dd0a7f6a0a91f12432f3ed74f599ed097628f125039 | 28.9 | ok |
 | 2026-11-16T19:39:41Z | land | 0.001 BCH to 0.20 PUSD (plain payment · live site, ferry watched in WebKit iPhone 13) | a9ceff4389d276597f2c6e958c01f31d580ad4573191ea2c17f7e7142400f0b7 | 3.1 | ok |
+| 2026-11-17T12:01:00Z | swap | 0.0135 BCH to at least 2.8 PUSD | 4f9b5b01dba4132d9ea35d57f367db44e0ea25dcab439fa87488e3d345332c1b | 3.0 | ok |
+| 2026-11-17T12:03:34Z | out | 1.8 PUSD to ETH.USDC (at least 1.4936146 USDC) | bch 80a72627cdc8f8155b3b1b9ea4d47d6500f82481c060ec9a372407bfb3acbf84 · eth 0xe88f9a5286c592755250428ce4ca3acffd18f4cfd4b65f406e30edf6eb2a27f0 | 373.7 | ok |
+| 2026-11-17T12:10:31Z | out | 1.8 PUSD to ETH.USDC (at least 1.49275174 USDC) | bch fa3bdc53bf3a3d7ce25dc4f2c6fbc0c262c238141b5300fad07f720737c0f577 · eth 0xfb1f69e1c1a4c6e33940a65cde16df19fb2510428604ec948657942137751e86 | 1104.0 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from
@@ -58,6 +61,7 @@ whose redeem script ends with the compiled body of `contracts/landing.cash` and 
 20 PUSD units (0.20 PUSD) to the owner lock inside that script. The payment of 0.001 BCH to the landing address was
 `0037d4fab832ae0908f17ec45a51734c0c704512ea64edcf4da08be063c79c5d`, in the same block. The PUSD to BCH swap sold
 the PUSD of the first swap and of the landing together.
+Rows with flow `out` are written by `tools/measure/out-run.ts` (ADR 0044): the page's own Send out client code against the built server with the crossing switched on for that one asset, signed by the test wallet without a browser. The txid cell names the BCH deposit to the THORChain vault and the stablecoin transfer on the other chain that pays the destination, read from that chain's receipt. `seconds` runs from the first signature to the receipt; the cost card each run signed is kept beside it (`state/cost-shown/<txid>.json`, not tracked).
 
 ### Landing address runs
 
@@ -91,6 +95,7 @@ at the merchant address, and the receiver accepted the signature of an `invoice.
 
 ### Notes on failed runs
 
+- 2026-11-17 12:01 (first Send out, PUSD to USDC on Ethereum): step 1 (Cauldron swap `de394a4cdc306d304cf15722490d6a543f8f6b2bab5cc9c778fef0d69080dd7f`) was sent, then the measuring tool stopped before step 2 was broadcast: its own hook that saves the cost card read the txid with the wrong type. Nothing went to the route; the BCH stayed in the test wallet. Fixed in `tools/measure/out-run.ts`, and step 2 was resumed from that swap (the 12:03 row; its seconds start at the deposit signature, not at step 1).
 - 2026-11-15 12:51 and 12:52 (PUSD to BCH): the test wallet refused to sign, as designed when its own check
   fails. Cause: its policy lowercased the `BCH` receive marker into a token id, so a sell could never pass rule 4.
   Fixed with a regression test; nothing was sent. The page's own check had passed.
