@@ -7,13 +7,13 @@ import proof from 'virtual:sampan-proof';
 import { atomFlowFor, compareRoutes, type CompareFlow, type RouteRow, type ThorSide } from '../../../core/routes/compare';
 import type { LoadedConfig } from '../config';
 import { useText, type TextKey } from '../i18n';
-import { useAtomQuote } from './useAtomQuote';
+import { useAtomQuote, type AtomReady } from './useAtomQuote';
 import './atom.css';
 
 export type RouteId = RouteRow['route'];
 type T = ReturnType<typeof useText>['t'];
 
-const REASONS = ['inventory', 'below-min', 'above-max', 'daily-limit', 'stale', 'wrong-flow', 'unavailable'];
+export const REASONS = ['inventory', 'below-min', 'above-max', 'daily-limit', 'stale', 'wrong-flow', 'unavailable'];
 const SHOWN_DECIMALS = 2;
 
 /** A decimal amount cut (not rounded up) to two decimals, as the panels show route amounts. */
@@ -54,7 +54,7 @@ function trustText(t: T, row: RouteRow): string {
   return tr.anyoneMaySettle ? `${base} ${t('compare.trust.settle')}` : base;
 }
 
-function reasonText(t: T, code: string): string {
+export function reasonText(t: T, code: string): string {
   return REASONS.includes(code) ? t(`compare.reason.${code}` as TextKey) : t('compare.reason.other', { code });
 }
 
@@ -92,16 +92,16 @@ function Row({ row, name, chosen, onPick }: { row: RouteRow; name: string; chose
  * The route card for one request, and the route the action button should run. `flow` null = no amount yet;
  * `thor` = THORChain's side of the same request, or a short code while its quote is pending or refused.
  */
-export function useRouteChoice(config: LoadedConfig, flow: CompareFlow | null, thor: ThorSide | { error: string }): { card: ReactNode; route: RouteId } {
+export function useRouteChoice(config: LoadedConfig, flow: CompareFlow | null, thor: ThorSide | { error: string }): { card: ReactNode; route: RouteId; atom: AtomReady | null } {
   const { t } = useText();
   const name = useId();
   const [picked, setPicked] = useState<RouteId>('thorchain');
   const token = config.tokens[config.defaultToken]!.symbol;
   const atomFlow = flow ? atomFlowFor(flow, token) : null;
-  const atom = useAtomQuote(config, atomFlow, flow?.amount ?? null);
-  if (!flow || !atom) return { card: null, route: 'thorchain' };
+  const { quote: atom, ready } = useAtomQuote(config, atomFlow, flow?.amount ?? null);
+  if (!flow || !atom) return { card: null, route: 'thorchain', atom: null };
   const { rows } = compareRoutes({ flow, thor, atom, proof, config: { token, atomFlows: config.atom.flows } });
-  if (rows.length < 2) return { card: null, route: 'thorchain' };
+  if (rows.length < 2) return { card: null, route: 'thorchain', atom: null };
   const route = picked === 'atom' && rows.some((r) => r.route === 'atom' && r.available) ? 'atom' : 'thorchain';
   const card = (
     <fieldset className="routes">
@@ -113,5 +113,5 @@ export function useRouteChoice(config: LoadedConfig, flow: CompareFlow | null, t
       </ul>
     </fieldset>
   );
-  return { card, route };
+  return { card, route, atom: route === 'atom' ? ready : null };
 }

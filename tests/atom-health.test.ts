@@ -13,6 +13,7 @@ const shippedClient: AtomShippedConfig = {
   bch: { network: 'mainnet' },
   electrum: { servers: ['wss://bch.imaginary.cash:50004'], chipnetServers: [], timeoutMs: 8000 },
   client: { apiPath: '/atom/api', pollSeconds: 10, storageKey: 'sampan-atom-cards' },
+  tokens: { pusd: { symbol: 'PUSD' }, usdc: { symbol: 'USDC' } },
 };
 const goodHealth: AtomHealthView = { ok: true, mainnet: true, bchNetwork: 'mainnet', chainId: 8453, atomLock: LOCK };
 

@@ -105,3 +105,40 @@
 .routes__how p {
   margin: 0 0 0.5rem;
 }
+
+/* The atomic swap run inside Bring in: the same column rhythm as the panel; listed swaps read like the route rows. */
+.atom-run {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.atom-run__title {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+.atom-run__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.atom-run__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) / 2);
+  background: var(--paper);
+}
+.atom-run__item > span {
+  max-width: 100%;
+}
+.atom-run__state {
+  margin: 0;
+}

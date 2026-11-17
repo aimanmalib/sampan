@@ -18,6 +18,7 @@ import { outCodeKey } from '../out/errors';
 import { errorKey } from '../swap/errors';
 import type { Wallet } from '../wallet/useWallet';
 import { useInQuote } from './useInQuote';
+import { AtomSwap } from '../atom/AtomSwap';
 import { useRouteChoice } from '../atom/RouteChoice';
 import { NetworkPicker } from '../cross/NetworkPicker';
 import { useNetworks } from '../cross/useNetworks';
@@ -161,10 +162,14 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
         </p>
       ) : null}
       {choice.card}
-      {choice.route === 'atom' ? (
-        <button type="button" className="button button--primary" disabled>
-          {t('atom.go')}
-        </button>
+      {choice.route === 'atom' && choice.atom ? (
+        <AtomSwap
+          config={config}
+          ready={choice.atom}
+          amount={amount !== undefined && amount > 0n ? formatUnits(amount, ROUTE_DECIMALS) : null}
+          userBch={addressOk ? address : null}
+          evm={evm.connected ? { address: evm.connected.address, provider: evm.connected.wallet.provider } : null}
+        />
       ) : (
         <button type="button" className="button button--primary" disabled={busy || !q || !evm.connected} onClick={() => gate.run(send)}>
           {label}
