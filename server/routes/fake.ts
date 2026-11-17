@@ -11,15 +11,16 @@ const read = (dir: string, name: string): Record<string, unknown> => JSON.parse(
 const OUT_AMOUNT = 1_000_000n;
 const IN_AMOUNT = 500_000_000n;
 
-export function fakeThornode(dir = path.resolve('tests/fixtures/thorchain'), now: () => number = Date.now): HttpGet {
+/** `inbound`: which capture of inbound_addresses to answer with (the default reports Base and BCH open). */
+export function fakeThornode(dir = path.resolve('tests/fixtures/thorchain'), now: () => number = Date.now, inbound = 'inbound.json'): HttpGet {
   const out = read(dir, 'quote-out.json');
   const into = read(dir, 'quote-in.json');
-  const inbound = JSON.parse(readFileSync(path.join(dir, 'inbound.json'), 'utf8')) as unknown;
+  const rows = JSON.parse(readFileSync(path.join(dir, inbound), 'utf8')) as unknown;
   const done = read(dir, 'status-done.json');
   const unseen = read(dir, 'status-unseen.json');
   return async (url) => {
     const u = new URL(url);
-    if (u.pathname.endsWith('/thorchain/inbound_addresses')) return { status: 200, body: inbound };
+    if (u.pathname.endsWith('/thorchain/inbound_addresses')) return { status: 200, body: rows };
     const status = /\/thorchain\/tx\/status\/([0-9A-F]{64})$/.exec(u.pathname);
     // A txid ending in 00 has not been seen yet; any other is finished (enough for the status page).
     if (status) return { status: 200, body: status[1]!.endsWith('00') ? unseen : { ...done, tx: { ...(done.tx as object), id: status[1] } } };
@@ -29,7 +30,8 @@ export function fakeThornode(dir = path.resolve('tests/fixtures/thorchain'), now
       const isOut = u.searchParams.get('from_asset') === 'BCH.BCH';
       const base = isOut ? out : into;
       const scale = (v: unknown): string => ((BigInt(String(v)) * amount) / (isOut ? OUT_AMOUNT : IN_AMOUNT)).toString();
-      const memo = String(base.memo).split(':').slice(0, 2).concat(dest).join(':');
+      // The memo names the asset asked for in short form, as THORNode does (the out capture is for BASE.USDC).
+      const memo = ['=', isOut ? (u.searchParams.get('to_asset') ?? '').split('-')[0] : String(base.memo).split(':')[1], dest].join(':');
       if (amount < BigInt(String(base.recommended_min_amount_in)) / 10n)
         return { status: 400, body: { code: 3, message: 'amount less than dust threshold', details: [] } };
       return {

@@ -109,7 +109,7 @@ describe('POST /api/out/*', () => {
     const sent = await post('/api/broadcast', { crossingId: build.crossingId, tx: signed });
     expect(sent.statusCode).toBe(200);
     const status = (await app!.inject({ method: 'GET', url: `/api/crossings/${build.crossingId}` })).json();
-    expect(status).toMatchObject({ kind: 'out', route: 'thorchain', status: 'completed', out: { stage: 'done', outChain: 'BASE' } });
+    expect(status).toMatchObject({ kind: 'out', asset: 'USDC', chain: 'BASE', route: 'thorchain', status: 'completed', out: { stage: 'done', outChain: 'BASE' } });
     expect(JSON.stringify(status)).not.toContain(DEST);
   });
 

@@ -130,6 +130,17 @@ export function routeChoices(assets: readonly RouteAsset[], chains: readonly Evm
 }
 
 /**
+ * What a page offers for a direction right now: the live choices whose chain the route reports open. While the open
+ * map is unknown (no check yet, or THORNode not answering) every live choice stays, and the server answers for it.
+ */
+export function openChoices(assets: readonly RouteAsset[], chains: readonly EvmChain[], direction: Direction, open: OpenMap | null | undefined): RouteChoice[] {
+  const all = routeChoices(assets, chains, direction);
+  if (!open) return all;
+  const names = new Set(offered(assets, direction, open).map((a) => a.asset));
+  return all.filter((c) => names.has(c.asset));
+}
+
+/**
  * The asset list with the named assets (exact name, or every asset of a chain key) live both ways. For a
  * SAMPAN_CONFIG_PATCH of a local test or measurement server only; the config file marks live from measured runs.
  */

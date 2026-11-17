@@ -22,6 +22,8 @@ export interface AppOptions {
   fake: boolean;
   /** SAMPAN_FAKE_OUTAGE, honoured only with the fake network (server/outage.ts). */
   outage?: Outage | null;
+  /** SAMPAN_FAKE_INBOUND: the frozen inbound_addresses capture of the fake THORNode (fake network only). */
+  fakeInbound?: string;
   logger?: boolean;
   /** SQLite file; defaults to an in-memory database (tests). */
   dbFile?: string;
@@ -54,6 +56,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
       testAddresses: options.testAddresses ?? [],
       teamTxids: options.teamTxids ?? [],
       outage: options.fake ? (options.outage ?? null) : null,
+      ...(options.fake && options.fakeInbound ? { fakeInbound: options.fakeInbound } : {}),
       spreadKey: options.spreadKey,
       log: (m) => app.log.warn(m),
     });

@@ -6,7 +6,8 @@ export interface HealthReport {
   cauldron: boolean | null;
   bch: boolean | null;
   height: number | null;
-  route: { id: string; open: boolean | null } | null;
+  /** `chains`: open state per chain key from the route's last check (null while unknown). */
+  route: { id: string; open: boolean | null; chains?: Record<string, boolean> | null } | null;
 }
 
 export type HealthKey = 'health.cauldron' | 'health.bch' | 'health.ok' | 'health.down' | 'health.halted';

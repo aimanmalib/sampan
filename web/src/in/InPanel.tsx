@@ -7,7 +7,6 @@ import { parseAddress } from '../../../core/address';
 import { ApiFailure } from '../../../core/client/api';
 import { InStop, runIn, type InStep } from '../../../core/client/in';
 import { thorFromIn } from '../../../core/routes/compare';
-import { routeChoices } from '../../../core/route-assets';
 import { formatUnits, parseUnits } from '../../../core/wallet';
 import { api } from '../api';
 import type { LoadedConfig } from '../config';
@@ -20,6 +19,8 @@ import { errorKey } from '../swap/errors';
 import type { Wallet } from '../wallet/useWallet';
 import { useInQuote } from './useInQuote';
 import { useRouteChoice } from '../atom/RouteChoice';
+import { NetworkPicker } from '../cross/NetworkPicker';
+import { useNetworks } from '../cross/useNetworks';
 
 const BCH = 'BCH';
 const ROUTE_DECIMALS = 8;
@@ -38,14 +39,14 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
   const { t } = useText();
   const evm = useEvm();
   const token = config.tokens[config.defaultToken]!;
-  const sources = routeChoices(config.routeAssets, config.evm.chains, 'in');
+  const networks = useNetworks(config, 'in');
   const [amountText, setAmountText] = useState('');
   const [receive, setReceive] = useState(token.symbol);
   const [addressText, setAddressText] = useState('');
   const [run, setRun] = useState<Run>({ phase: 'idle' });
   const route = t(`route.${config.route.active}` as TextKey);
   const gate = useDisclosure(route);
-  const src = sources[0];
+  const src = networks.pick;
   const view = wallet.view;
   const address = view ? (receive === BCH ? view.receive.address : view.receive.tokenAddress) : addressText.trim();
   const addressOk = address !== '' && typeof parseAddress(address, 'bitcoincash') !== 'string';
@@ -112,6 +113,11 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
   const label = busy ? t(`in.step.${run.step}`, vars) : t('in.go');
   return (
     <div className="swap in" data-asset={asset}>
+      {networks.choices.length > 1 ? (
+        <NetworkPicker choices={networks.choices} value={asset} disabled={busy} onChange={networks.choose} />
+      ) : (
+        <p className="out__to">{t('in.fromOne', vars)}</p>
+      )}
       <EvmWallets chain={src.chain.name} />
       <label className="field">
         <span className="field__label">{t('in.amount', vars)}</span>

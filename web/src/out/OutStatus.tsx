@@ -9,6 +9,8 @@ export interface OutView {
   status: string;
   route: string | null;
   asset: string;
+  /** Chain key of the stablecoin side (ETH, BSC, …); null for a crossing that did not record one. */
+  chain: string | null;
   txid: string | null;
   out: { stage: 'unseen' | 'pending' | 'done' | 'refunded' | 'unknown'; outTxid: string | null; outChain: string | null } | null;
 }
@@ -21,7 +23,8 @@ export function OutStatus({ c, config, direction }: { c: OutView; config: Loaded
   const at = ferryStep(direction, c);
   const n = at.done;
   const stage = c.status === 'completed' ? 'completed' : c.status === 'refunded' ? 'refunded' : c.txid ? (c.out?.stage ?? 'unknown') : 'built';
-  const evmChain = config?.evm.chains.find((ch) => (direction === 'out' ? ch.key === c.out?.outChain : config.routeChains.includes(ch.key)));
+  // The other chain: the one the route reports paying on (out), else the one the crossing was made for.
+  const evmChain = config?.evm.chains.find((ch) => ch.key === ((direction === 'out' ? c.out?.outChain : null) ?? c.chain));
   const bchLink = (txid: string): string => config?.connect.explorerTxUrl.replace('{txid}', txid.toLowerCase()) ?? '#';
   const evmLink = (txid: string): string => `${evmChain?.explorer ?? ''}/tx/0x${txid.toLowerCase()}`;
   // Out: the BCH deposit, then the other chain's payment. In: the other chain's deposit, then the BCH payment.

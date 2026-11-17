@@ -22,6 +22,12 @@ const outagePort = (i: number) => port + 3 + i;
 /** A fake server with Sampan Pay on (e2e/pay.spec.ts), after the outage servers. */
 export const PAY_PORT_OFFSET = 3 + OUTAGE_MODES.length;
 const payPatch = { ...e2ePatch, features: { swap: true, landing: true, pay: true }, rate: { ...e2ePatch.rate, invoicesPerHour: 1000 } };
+/**
+ * A fake server with crossings on several chains (e2e/network.spec.ts), after the Pay server: Ethereum, BNB Smart Chain
+ * and Base are live, and the fake THORNode answers with the 2026-11-17 capture, in which Base is halted.
+ */
+export const NETWORK_PORT_OFFSET = PAY_PORT_OFFSET + 1;
+const networkPatch = { ...landingPatch, compliance: { crossChainEnabled: true }, ...livePatch(shippedAssets, ['ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48', 'BSC', 'BASE']) };
 /** Test-only secret of the demo shop's hook on the local fake server (the public site's secret lives on the host). */
 const payEnv = { SAMPAN_PAY_DEMO_SECRET: `whsec_${Buffer.alloc(32, 3).toString('base64')}` };
 const fakeServer = (p: number, patch: unknown, outage?: string, extra: Record<string, string> = {}) => ({
@@ -51,6 +57,7 @@ export default defineConfig({
           fakeServer(outPort, outPatch),
           ...OUTAGE_MODES.map((mode, i) => fakeServer(outagePort(i), e2ePatch, mode)),
           fakeServer(port + PAY_PORT_OFFSET, payPatch, undefined, payEnv),
+          fakeServer(port + NETWORK_PORT_OFFSET, networkPatch, undefined, { SAMPAN_FAKE_INBOUND: 'inbound-2026-11-17.json' }),
         ],
       }),
 });

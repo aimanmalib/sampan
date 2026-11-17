@@ -13,6 +13,7 @@ const app = await buildApp({
   webDist: env.webDist,
   fake: env.fake,
   outage: env.fakeOutage,
+  ...(env.fakeInbound ? { fakeInbound: env.fakeInbound } : {}),
   logger: true,
   dbFile: env.fake ? ':memory:' : env.dbFile,
   trustedProxies: env.trustedProxies,

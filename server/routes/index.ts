@@ -5,9 +5,9 @@ import { ThorchainRoute } from './thorchain.js';
 import { Thornode, httpGet } from './thornode.js';
 import type { Route } from './types.js';
 
-export function createRoute(config: SampanConfig, fake: boolean): Route | null {
+export function createRoute(config: SampanConfig, fake: boolean, fakeInbound?: string): Route | null {
   if (config.route.active === 'thorchain') {
-    const node = new Thornode(config.thorchain.nodes, fake ? fakeThornode() : httpGet, config.thorchain.timeoutMs);
+    const node = new Thornode(config.thorchain.nodes, fake ? fakeThornode(undefined, undefined, fakeInbound) : httpGet, config.thorchain.timeoutMs);
     return new ThorchainRoute({ node, slippageBps: config.thorchain.slippageBps, minSatsPerByte: BigInt(config.fees.satsPerByte) });
   }
   // Route A (near-intents) has no module until the owner's written yes; see docs/decisions/0013.

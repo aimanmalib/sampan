@@ -1,7 +1,8 @@
 // Tab "Bring in": the landing address ("BCH from any wallet") and, when crossings are open, a stablecoin from another
 // chain. Each source shows only when its flow flag is on; with one source there is no chooser.
 import { useState } from 'react';
-import { openFlows } from '../../../core/flows';
+import { openFlows, symbolList } from '../../../core/flows';
+import { routeChoices } from '../../../core/route-assets';
 import type { LoadedConfig } from '../config';
 import { useText } from '../i18n';
 import { LandPanel } from '../land/LandPanel';
@@ -19,8 +20,11 @@ export function BringIn({ config, wallet, halted }: { config: LoadedConfig; wall
   const [chosen, setChosen] = useState<Source | null>(null);
   const source = chosen && sources.includes(chosen) ? chosen : sources[0];
   if (!source) return null;
-  const firstChain = config.evm.chains.find((c) => config.routeChains.includes(c.key));
-  const crossLabel = t('in.source.cross', { symbol: config.route.symbols[0] ?? '', chain: firstChain?.name ?? '' });
+  // Named from the assets live for bringing in: one chain by name, several as "other chains" (the tab stays short).
+  const live = routeChoices(config.routeAssets, config.evm.chains, 'in');
+  const symbols = symbolList([...new Set(live.map((c) => c.symbol))], t('text.and'));
+  const chains = [...new Set(live.map((c) => c.chain.name))];
+  const crossLabel = chains.length > 1 ? t('in.source.crossMany', { symbols }) : t('in.source.cross', { symbol: symbols, chain: chains[0] ?? '' });
   return (
     <>
       {sources.length > 1 ? (

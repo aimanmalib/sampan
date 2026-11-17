@@ -78,6 +78,8 @@ export interface ServiceOptions {
   fakeFixture?: string;
   /** SAMPAN_FAKE_OUTAGE: with the fake network, the indexer or the BCH servers fail (server/outage.ts). */
   outage?: Outage | null;
+  /** The frozen inbound_addresses capture the fake THORNode answers with (fake network only). */
+  fakeInbound?: string;
   /** The fee wallet key, used only when pay.spreadBps > 0. */
   spreadKey?: string | undefined;
   log?: (message: string) => void;
@@ -145,7 +147,7 @@ export function createServices(o: ServiceOptions): Services {
   const moved = markOwnRows(db, testLocks, prefix, new Set(o.teamTxids ?? []));
   if (moved > 0) o.log?.(`origin: ${moved} rows from team wallets counted as test`);
   const swaps = new SwapService({ config, chain, pools, prefix });
-  const route = createRoute(config, o.fake);
+  const route = createRoute(config, o.fake, o.fakeInbound);
   const landings = new LandingService({ config, chain, pools, db, prefix, testLocks });
   // The fake network sends no webhook anywhere: names resolve to TEST-NET-3 and the transport answers 503 (nothing
   // leaves), except the demo shop's own hook, which goes to this server in-process (server/pay/fake.ts).

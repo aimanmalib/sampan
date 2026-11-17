@@ -10,7 +10,7 @@ import type { InService, InView } from '../in.js';
 import { RouteError } from '../routes/types.js';
 import type { Services } from '../services.js';
 import { ApiError, crossingGate, crossingLimit, quoteLimit, sendError } from './guard.js';
-import { ADDRESS, AMOUNT, HEX_ID, jsonSafe } from './wire.js';
+import { ADDRESS, AMOUNT, HEX_ID, jsonSafe, rowAsset } from './wire.js';
 
 interface QuoteBody {
   symbol: string;
@@ -81,7 +81,7 @@ export function registerIn(app: FastifyInstance, config: SampanConfig, s: Servic
         const crossingId = s.db.createCrossing({
           kind: 'in',
           status: 'planned',
-          asset: b.symbol,
+          asset: rowAsset(b.chain, b.symbol),
           amount: b.amount,
           address: b.address,
           depositAddress: plan.landing?.card.address ?? b.address,

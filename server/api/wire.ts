@@ -23,3 +23,12 @@ export const jsonSafe = (v: unknown): unknown =>
 export const AMOUNT = { type: 'string', pattern: '^[0-9]{1,20}$' } as const;
 export const HEX_ID = { type: 'string', pattern: '^[0-9a-f]{32}$' } as const;
 export const ADDRESS = { type: 'string', minLength: 20, maxLength: 120 } as const;
+
+/** A crossing row names its stablecoin with the chain it is on (ETH.USDC); rows from before several chains say USDC. */
+export const rowAsset = (chain: string, symbol: string): string => `${chain}.${symbol}`;
+
+/** The symbol and chain of a crossing row's asset; chain null for a row that did not record one. */
+export function splitRowAsset(asset: string): { asset: string; chain: string | null } {
+  const dot = asset.indexOf('.');
+  return dot < 0 ? { asset, chain: null } : { asset: asset.slice(dot + 1), chain: asset.slice(0, dot) };
+}

@@ -1,0 +1,55 @@
+/* Network picker of the crossing panels. Rows wrap one under another on a narrow screen. */
+.network {
+  display: grid;
+  gap: 0.375rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.network > legend {
+  padding: 0;
+}
+.network__rows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.network__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 12rem;
+  max-width: 100%;
+  min-height: var(--touch);
+  padding: 0 0.75rem;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.network__row:has(:checked) {
+  color: var(--ink);
+  font-weight: 600;
+  border-color: var(--river);
+  background: var(--river-pale);
+}
+.network__row:has(:focus-visible) {
+  outline: var(--focus);
+  outline-offset: 2px;
+}
+.network__radio {
+  margin: 0;
+  accent-color: var(--river);
+}
+.network:disabled .network__row {
+  cursor: default;
+  opacity: 0.6;
+}
+/* The row carries the focus ring, so the radio inside does not draw a second one. */
+.network__radio:focus-visible {
+  outline: none;
+}

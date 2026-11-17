@@ -12,20 +12,6 @@
   font-weight: 600;
   color: var(--ink);
 }
-.out__select {
-  min-height: var(--touch);
-  max-width: 100%;
-  font: inherit;
-  color: var(--ink);
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: calc(var(--radius) / 2);
-  padding: 0 0.5rem;
-}
-.out__select:focus-visible {
-  outline: var(--focus);
-  outline-offset: 2px;
-}
 .timeline__out {
   margin: 0;
   overflow-wrap: anywhere;

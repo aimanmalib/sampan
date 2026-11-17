@@ -69,7 +69,7 @@ describe('POST /api/in/*', () => {
     expect((await post(`/api/in/${body.crossingId}/sent`, { txHash: hash })).statusCode).toBe(200);
     expect((await post(`/api/in/${body.crossingId}/sent`, { txHash: hash })).statusCode).toBe(409);
     const view = (await app!.inject({ method: 'GET', url: `/api/crossings/${body.crossingId}` })).json();
-    expect(view).toMatchObject({ kind: 'in', status: 'completed', txid: 'AB'.repeat(32), landingId: null });
+    expect(view).toMatchObject({ kind: 'in', asset: 'USDC', chain: 'BASE', status: 'completed', txid: 'AB'.repeat(32), landingId: null });
     expect(view.out.stage).toBe('done');
   });
 

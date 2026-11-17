@@ -4,7 +4,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import shippedJson from '../config/sampan.json' with { type: 'json' };
 import type { SampanConfig } from '../core/config.js';
-import { liveAssets, offered, routeOpenFor, withLive } from '../core/route-assets.js';
+import { liveAssets, offered, openChoices, routeOpenFor, withLive } from '../core/route-assets.js';
 import { fakeThornode } from '../server/routes/fake.js';
 import { ThorchainRoute } from '../server/routes/thorchain.js';
 import { Thornode, ThornodeError, type HttpGet } from '../server/routes/thornode.js';
@@ -98,6 +98,19 @@ describe('THORChain route', () => {
     expect(routeOpenFor({ ...map, BCH: false }, liveAssets(assets))).toBe(false);
     expect(offered(assets, 'in', { ...map, BCH: false })).toEqual([]);
     expect(routeOpenFor(map, [])).toBe(false);
+  });
+
+  it('offers the page only live choices on open chains, and every live choice while the open map is unknown', async () => {
+    const map = await route(fakeThornode(dir, () => NOW, 'inbound-2026-11-17.json')).open();
+    expect(map.BASE).toBe(false);
+    const assets = withLive(shipped.thorchain.assets, ['ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48', 'BSC', 'BASE']);
+    const shown = (open: Record<string, boolean> | null) => openChoices(assets, shipped.evm.chains, 'out', open).map((c) => c.asset.split('-')[0]);
+    expect(shown(map)).toEqual(['ETH.USDC', 'BSC.USDC', 'BSC.USDT']);
+    expect(shown(null)).toEqual(['ETH.USDC', 'BSC.USDC', 'BSC.USDT', 'BASE.USDC']);
+    expect(shown({ ...map, BCH: false })).toEqual([]);
+    // Each choice carries its own chain entry and token decimals (BNB Smart Chain 18).
+    const bsc = openChoices(assets, shipped.evm.chains, 'in', map).find((c) => c.chain.key === 'BSC');
+    expect(bsc?.token.decimals).toBe(18);
   });
 
   it('counts a chain missing from the list as closed, and throws when THORNode does not answer', async () => {

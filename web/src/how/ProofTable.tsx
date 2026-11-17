@@ -12,7 +12,10 @@ const short = (id: string): string => `${id.slice(0, id.startsWith('0x') ? 10 : 
 export function ProofTable({ config }: { config: LoadedConfig }) {
   const { t } = useText();
   if (proof.runs.length === 0) return null;
-  const explorer = (chain: string): string => config.evm.chains.find((c) => c.key.toLowerCase() === chain)?.explorer ?? '';
+  // A Runs cell names its chain in lower case (bch, eth, base, …); the name and explorer come from config.
+  const evmChain = (chain: string) => config.evm.chains.find((c) => c.key.toLowerCase() === chain);
+  const explorer = (chain: string): string => evmChain(chain)?.explorer ?? '';
+  const chainName = (chain: string): string => (chain === 'bch' ? t('proof.chain.bch') : (evmChain(chain)?.name ?? chain.toUpperCase()));
   const href = (x: ProofTxid): string => (x.chain === 'bch' ? config.connect.explorerTxUrl.replace('{txid}', x.id) : `${explorer(x.chain)}/tx/${x.id}`);
   const time = (s: number | null): string =>
     s === null ? t('proof.none') : s < SECONDS_UP_TO ? t('measured.seconds', { n: s.toFixed(1) }) : t('measured.minutes', { n: String(Math.round(s / 60)) });
@@ -24,7 +27,7 @@ export function ProofTable({ config }: { config: LoadedConfig }) {
       <span className="proof__ids">
         {run.txids.map((x) => (
           <a key={x.id} className="mono" href={href(x)} target="_blank" rel="noreferrer" title={x.id}>
-            {run.txids.length > 1 ? `${t(`proof.chain.${x.chain}` as TextKey)} ` : ''}
+            {run.txids.length > 1 ? `${chainName(x.chain)} ` : ''}
             {short(x.id)}
           </a>
         ))}

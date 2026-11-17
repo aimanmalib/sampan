@@ -106,4 +106,18 @@ Config and server (2026-11-17, the slice after the pre-check):
 - `tools/measure/cross.ts --asset <asset>` reads chain, token and RPCs from config; the txid cell names the chain
   (`bch … · eth 0x…`). Earlier `base 0x…` rows stay valid.
 
-Rollback: revert the config and server commit; no deploy carried it.
+Page (2026-11-17, the slice after config and server):
+
+- Send out and Bring in show a "Network" group: one native radio per asset live for that direction whose chain the
+  page's last `/api/health` check reports open, so arrow keys move between them. While the open map is unknown, every
+  live asset is offered and the server answers for it. With one network the panel shows a sentence instead of a group.
+  Changing the network asks for a new quote for that chain and symbol; Bring in switches the wallet to that chain's id.
+- Crossing rows record the chain with the symbol (`ETH.USDC`); `/api/crossings/:id` returns `asset` and `chain`, so the
+  status page links the explorer of the chain the crossing was made for. Older rows have no chain and no link.
+- Text names chains from config (`{chains}`), never Base by itself; the proof table on /how names each txid's chain
+  from config. Terms and risks say funds pass through the route's vaults on the chosen chain and that a payment out
+  can wait while that chain is halted.
+- The fake THORNode can answer with a named inbound capture (`SAMPAN_FAKE_INBOUND`), so the e2e suite runs one server
+  with Base halted and Ethereum and BNB Smart Chain open.
+
+Rollback: revert the config, server and page commits; no deploy carried them.

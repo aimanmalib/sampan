@@ -5,6 +5,7 @@ import type { FastifyInstance } from 'fastify';
 import type { SampanConfig } from '../../core/config.js';
 import type { Services } from '../services.js';
 import { ApiError, quoteLimit, sendError } from './guard.js';
+import { splitRowAsset } from './wire.js';
 
 const ID_PARAMS = { type: 'object', required: ['id'], properties: { id: { type: 'string', pattern: '^[0-9a-f]{32}$' } } } as const;
 
@@ -39,11 +40,11 @@ async function view(s: Services, id: string): Promise<Record<string, unknown>> {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
-  if (row.kind === 'out') return { ...base, route: row.route, out: out ?? null };
+  if (row.kind === 'out') return { ...base, ...splitRowAsset(row.asset), route: row.route, out: out ?? null };
   if (row.kind === 'in') {
     // The landing address the route pays, when the user asked for the stablecoin (its own status page).
     const landing = row.deposit_address ? s.db.landingByAddress(row.deposit_address) : undefined;
-    return { ...base, route: row.route, out: out ?? null, landingId: landing?.crossing_id ?? null };
+    return { ...base, ...splitRowAsset(row.asset), route: row.route, out: out ?? null, landingId: landing?.crossing_id ?? null };
   }
   if (row.kind !== 'land') return base;
   const l = s.db.landingOf(row.id);

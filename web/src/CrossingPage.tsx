@@ -15,6 +15,7 @@ interface Crossing {
   kind: string;
   status: string;
   asset: string;
+  chain?: string | null;
   txid: string | null;
   createdAt: number;
   updatedAt: number;
@@ -33,7 +34,7 @@ const STATUS_KEYS: Record<string, TextKey> = {
   failed: 'crossing.status.failed',
 };
 
-const asOut = (c: Crossing): OutView => ({ status: c.status, route: c.route ?? null, asset: c.asset, txid: c.txid, out: c.out ?? null });
+const asOut = (c: Crossing): OutView => ({ status: c.status, route: c.route ?? null, asset: c.asset, chain: c.chain ?? null, txid: c.txid, out: c.out ?? null });
 
 export function CrossingPage({ id, config }: { id: string; config: LoadedConfig | null }) {
   const { t } = useText();

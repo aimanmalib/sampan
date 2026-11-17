@@ -4,7 +4,6 @@
 import { useState } from 'react';
 import { runOut, StoppedAfterStep1, type OutProgress } from '../../../core/client/out';
 import { thorFromOut } from '../../../core/routes/compare';
-import { routeChoices } from '../../../core/route-assets';
 import { formatUnits, parseUnits } from '../../../core/wallet';
 import { api } from '../api';
 import type { LoadedConfig } from '../config';
@@ -16,6 +15,8 @@ import { useDisclosure } from '../cross/disclosure';
 import { EvmWallets } from '../evm/EvmWallets';
 import { shortEvm, useEvm } from '../evm/store';
 import { useRouteChoice } from '../atom/RouteChoice';
+import { NetworkPicker } from '../cross/NetworkPicker';
+import { useNetworks } from '../cross/useNetworks';
 
 const BCH = 'BCH';
 const BCH_DECIMALS = 8;
@@ -37,13 +38,12 @@ const short = (a: string): string => `${a.slice(0, 6)}…${a.slice(-4)}`;
 export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wallet: Wallet; onSwap: () => void }) {
   const { t } = useText();
   const token = config.tokens[config.defaultToken]!;
-  const targets = routeChoices(config.routeAssets, config.evm.chains, 'out');
+  const networks = useNetworks(config, 'out');
   const [source, setSource] = useState<string>(token.symbol);
   const [text, setText] = useState(config.limits.judgeOutToken[config.route.active as 'thorchain'] ?? '');
-  const [target, setTarget] = useState(0);
   const [destination, setDestination] = useState('');
   const [run, setRun] = useState<Run>({ phase: 'idle' });
-  const pick = targets[target];
+  const pick = networks.pick;
   const decimals = source === BCH ? BCH_DECIMALS : token.decimals;
   const amount = parseUnits(text, decimals);
   const quote = useOutQuote({ source, amount, symbol: pick?.symbol ?? '', chain: pick?.chain.key ?? '', destination: destination.trim() }, QUOTE_PAUSE_MS);
@@ -161,17 +161,8 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
           <span className="field__unit">{source}</span>
         </span>
       </label>
-      {targets.length > 1 ? (
-        <label className="field">
-          <span className="field__label">{t('out.to')}</span>
-          <select className="out__select" value={target} disabled={busy} onChange={(e) => setTarget(Number(e.target.value))}>
-            {targets.map((o, i) => (
-              <option key={`${o.chain.key}-${o.symbol}`} value={i}>
-                {t('out.toAsset', { symbol: o.symbol, chain: o.chain.name })}
-              </option>
-            ))}
-          </select>
-        </label>
+      {networks.choices.length > 1 ? (
+        <NetworkPicker choices={networks.choices} value={pick.asset} disabled={busy} onChange={networks.choose} />
       ) : (
         <p className="out__to">{t('out.toOne', vars)}</p>
       )}

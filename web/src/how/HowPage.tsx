@@ -22,7 +22,9 @@ export function HowPage({ config }: { config: LoadedConfig | null }) {
   const blocks = String(config.landing.returnAfterBlocks);
   const route = t(`route.${config.route.active}` as TextKey);
   const symbols = symbolList(config.route.symbols, t('text.and'));
-  const v = { symbol, blocks, route, symbols };
+  const chainNames = config.evm.chains.filter((c) => config.routeChains.includes(c.key)).map((c) => c.name);
+  const chains = symbolList(chainNames, t('text.and'));
+  const v = { symbol, blocks, route, symbols, chains };
   const repo = config.banner.repoUrl;
   return (
     <article className="how">
@@ -61,7 +63,7 @@ export function HowPage({ config }: { config: LoadedConfig | null }) {
           <h2>{t('how.cross.title')}</h2>
           <Diagram
             label={t('how.cross.title')}
-            steps={[{ label: t('how.cross.d.bch') }, { label: route, tone: 'contract' }, { label: t('how.cross.d.base') }]}
+            steps={[{ label: t('how.cross.d.bch') }, { label: route, tone: 'contract' }, { label: chainNames.length === 1 ? chains : t('how.cross.d.chains') }]}
           />
           <p>{t('how.cross.text', v)}</p>
         </section>
