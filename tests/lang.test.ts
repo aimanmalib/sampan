@@ -39,12 +39,16 @@ describe('lang files', () => {
 
   it('have the text of every /terms and /risks section listed in config, with no word the terms page must avoid', () => {
     const config = JSON.parse(readFileSync(new URL('../config/sampan.json', import.meta.url), 'utf8')) as {
-      legal: Record<'terms' | 'risks', { key: string }[]>;
+      legal: Record<'terms' | 'risks', { key: string; list?: string[]; verbatim?: string }[]>;
     };
     const avoid = /\b(legal|compliant|licensed|regulated|guaranteed?|safe|secure|trustless|instant|seamless)\b/i;
     for (const kind of ['terms', 'risks'] as const) {
-      const parts = kind === 'risks' ? ['title', 'text', 'funds'] : ['title', 'text'];
-      for (const { key } of config.legal[kind]) {
+      for (const { key, list = [], verbatim } of config.legal[kind]) {
+        const parts = [
+          ...(kind === 'risks' ? ['title', 'text', 'funds'] : ['title', 'text']),
+          ...list.map((item) => `list.${item}`),
+          ...(verbatim ? [verbatim, `${verbatim}Lead`] : []),
+        ];
         for (const part of parts) {
           const id = `${kind}.${key}.${part}`;
           for (const code of codes) expect(load(code)[id], `${code} ${id}`).toBeTruthy();

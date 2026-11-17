@@ -231,7 +231,7 @@
     "proofRuns": 8
   },
   "legal": {
-    "operator": "Aiman, Sasateguh (Malaysia)",
+    "operator": "Sasa Teguh (SASA TEGUH DIGITAL SOLUTION, Malaysia)",
     "terms": [
       { "key": "experiment" },
       { "key": "operator" },
@@ -243,6 +243,7 @@
       { "key": "costs" },
       { "key": "wallet" },
       { "key": "restricted" },
+      { "key": "oneclick", "oneClick": true, "list": ["release", "warranty", "final", "risk", "restricted", "promise", "rights", "controls", "behalf"], "verbatim": "uk" },
       { "key": "data" }
     ],
     "risks": [
@@ -251,7 +252,8 @@
       { "key": "address" },
       { "key": "network" },
       { "key": "server" },
-      { "key": "approval", "cross": true }
+      { "key": "approval", "cross": true },
+      { "key": "oneclick", "oneClick": true }
     ]
   },
   "ops": {

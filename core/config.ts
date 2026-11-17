@@ -19,10 +19,17 @@ export interface TokenConfig {
 
 export type EvmChainConfig = EvmChain;
 
-/** One section of /terms or /risks. `cross`: shown only while cross-chain flows are open. */
+/**
+ * One section of /terms or /risks. `cross`: shown only while cross-chain flows are open. `oneClick`: shown only while
+ * features.oneClick is true. `list`: item names rendered as a list under the text (`<kind>.<key>.list.<item>`).
+ * `verbatim`: one part quoted in English in every language, with the translation under it (`<kind>.<key>.<verbatim>`).
+ */
 export interface LegalSection {
   key: string;
   cross?: boolean;
+  oneClick?: boolean;
+  list?: string[];
+  verbatim?: string;
 }
 
 export interface SampanConfig {
@@ -315,6 +322,15 @@ export function validateConfig(c: SampanConfig): string[] {
       Array.isArray(list) && list.length > 0 && list.every((x) => /^[a-z][a-zA-Z]*$/.test(x?.key ?? '')) && new Set(list.map((x) => x.key)).size === list.length,
       'legal.terms, legal.risks: lists of unique { key } in camelCase',
     );
+    for (const x of Array.isArray(list) ? list : []) {
+      need(x?.cross === undefined || typeof x.cross === 'boolean', `legal section ${x?.key}: cross is true or false`);
+      need(x?.oneClick === undefined || typeof x.oneClick === 'boolean', `legal section ${x?.key}: oneClick is true or false`);
+      need(
+        x?.list === undefined || (Array.isArray(x.list) && x.list.length > 0 && x.list.every((i) => /^[a-z][a-zA-Z]*$/.test(i)) && new Set(x.list).size === x.list.length),
+        `legal section ${x?.key}: list is unique camelCase item names`,
+      );
+      need(x?.verbatim === undefined || /^[a-z][a-zA-Z]*$/.test(x.verbatim), `legal section ${x?.key}: verbatim is one camelCase part name`);
+    }
   }
   for (const url of [c.banner.deckUrl, c.banner.repoUrl, c.site.feedbackUrl]) {
     need(url === '' || isHttpsUrl(url) || url.startsWith('/'), `URL must be empty, a path or https: ${url}`);

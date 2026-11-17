@@ -51,6 +51,20 @@ Measured on 2026-11-16 with `tools/measure/failover.ts` (table: `docs/MEASURED.m
 | One THORNode | the next node in `thorchain.nodes` answers; a node that never answers costs `thorchain.timeoutMs` once | nothing | none |
 | THORChain halts BCH or the destination chain | new crossings answer `route_paused` (503) | "Paused by the route" in the crossing tabs | wait for THORChain to reopen |
 
+## 1Click incidents
+
+1Click (NEAR Intents) is a second route next to THORChain, shown only while `features.oneClick` is true (ADRs 0048
+to 0051). Its terms (section 4.5) ask the developer to report a security incident that touches the service.
+
+| What happens | Action |
+| --- | --- |
+| A 1Click quote, deposit or status looks wrong (address or amount not as quoted, a deposit that the status endpoint does not know) | set `features.oneClick` to false and deploy; alert the owner as `critical` with the crossing id, the transaction ids and what differs |
+| The API key may have leaked (seen in a log, a file or a message) | alert the owner as `critical`; the owner revokes the key in the provider's dashboard; the server works without it and quotes then show the extra fee |
+| A crossing is held by a compliance control | nothing to change in Sampan; the provider decides when it is released (`/risks`, section on NEAR Intents) |
+
+The owner tells Intents Technology within 24 hours of a security incident. No public statement about an incident is
+made by an agent.
+
 ## Test wallet funds
 
 Which flows a judge can start on the public site, and whether any of them spends money that Sampan holds. Read from the

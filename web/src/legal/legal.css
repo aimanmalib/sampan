@@ -74,3 +74,23 @@
   font-size: 0.875rem;
   color: var(--ink-soft);
 }
+.legal__points {
+  margin: 0 0 0.75rem;
+  padding: 0 0 0 1.125rem;
+}
+.legal__points li {
+  margin: 0 0 0.375rem;
+}
+.legal__verbatim-lead {
+  font-weight: 600;
+}
+.legal__verbatim {
+  margin: 0 0 0.5rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--card);
+  border-left: 3px solid var(--river);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.legal__verbatim-translation {
+  color: var(--ink-soft);
+}
