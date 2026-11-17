@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import en from '../lang/en.json' with { type: 'json' };
+import fil from '../lang/fil.json' with { type: 'json' };
 import ms from '../lang/ms.json' with { type: 'json' };
 
 // Runs against the fake server, or against the live site (E2E_BASE_URL, deploy/deploy.sh).
@@ -25,9 +26,22 @@ for (const kind of ['terms', 'risks'] as const) {
     expect(scroll).toBeLessThanOrEqual(client);
     await page.getByRole('combobox', { name: en['lang.label'] }).selectOption('ms');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText((ms as Record<string, string>)[`legal.${kind}.title`]!);
+    await expect(page.getByText(ms['legal.translation'], { exact: true })).toBeVisible();
     expect(errors).toEqual([]);
   });
 }
+
+test('a software translation says so in the footer and that English applies on /terms; English says neither', async ({ page }) => {
+  await page.goto('/terms');
+  await expect(page.getByText(en['legal.translation'], { exact: true })).toHaveCount(0);
+  await expect(page.getByText(en['lang.machine'], { exact: true })).toHaveCount(0);
+  await page.getByRole('combobox', { name: en['lang.label'] }).selectOption('fil');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(fil['legal.terms.title']);
+  await expect(page.getByText(fil['legal.translation'], { exact: true })).toBeVisible();
+  await expect(page.getByRole('contentinfo').getByText(fil['lang.machine'], { exact: true })).toBeVisible();
+  const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
+  expect(scroll).toBeLessThanOrEqual(client);
+});
 
 test('/terms names the operator and fits a 320 px screen', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });

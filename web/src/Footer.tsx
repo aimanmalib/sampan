@@ -3,12 +3,14 @@ import { HealthStrip } from './HealthStrip';
 import { useText } from './i18n';
 
 export function Footer() {
-  const { t } = useText();
+  const { lang, t } = useText();
   const config = useConfig();
+  const machine = config?.i18n.languages.find((l) => l.code === lang)?.machine === true;
   return (
     <footer className="footer">
       <HealthStrip />
       <p className="footer__lead">{t('footer.sampan')}</p>
+      {machine ? <p className="footer__machine">{t('lang.machine')}</p> : null}
       <p className="footer__meta">
         <span>{t('footer.built')}</span> <span>{t('footer.license')}</span>
         <a href="/how">{t('footer.how')}</a>

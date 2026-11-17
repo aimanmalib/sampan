@@ -6,7 +6,6 @@ const load = (name: string): Record<string, string> =>
 
 describe('lang files', () => {
   const en = load('en');
-  const ms = load('ms');
   // Every lang/*.json, whether config offers it yet or not: a language is either whole or absent.
   const codes = readdirSync(new URL('../lang/', import.meta.url))
     .filter((f) => f.endsWith('.json'))
@@ -48,38 +47,44 @@ describe('lang files', () => {
       for (const { key } of config.legal[kind]) {
         for (const part of parts) {
           const id = `${kind}.${key}.${part}`;
-          expect(en[id], id).toBeTruthy();
-          expect(ms[id], id).toBeTruthy();
+          for (const code of codes) expect(load(code)[id], `${code} ${id}`).toBeTruthy();
           expect(en[id], id).not.toMatch(avoid);
         }
       }
     }
   });
 
-  it('say on /risks, in both languages, that an arrival below the dust amount from config cannot be given back', () => {
+  it('say on /risks, in every language, that an arrival below the dust amount from config cannot be given back', () => {
     const config = JSON.parse(readFileSync(new URL('../config/sampan.json', import.meta.url), 'utf8')) as {
       landing: { dustSats: number };
       legal: { risks: { key: string }[] };
     };
     expect(config.landing.dustSats).toBeGreaterThan(0);
     const shown = config.legal.risks.filter((r) => !('cross' in r)).map((r) => `risks.${r.key}.funds`);
-    for (const lang of [en, ms]) {
+    for (const lang of codes.map(load)) {
       expect(shown.some((id) => lang[id]?.includes('{dust}'))).toBe(true);
     }
   });
 
-  it('keep the event name exact in both languages', () => {
-    expect(en['banner.event']).toBe('BCH BLAZE 2026');
-    expect(ms['banner.event']).toBe('BCH BLAZE 2026');
+  it('keep the event name exact in every language', () => {
+    for (const code of codes) expect(load(code)['banner.event'], code).toBe('BCH BLAZE 2026');
   });
 
   it('claim no exchange or bursa sending to a landing address, a path that was never tested', () => {
     // Only the terms may name an exchange, to say what Sampan is not.
-    for (const [lang, text] of [['en', en], ['ms', ms]] as const) {
-      for (const [key, value] of Object.entries(text)) {
+    for (const lang of codes) {
+      for (const [key, value] of Object.entries(load(lang))) {
         if (key.startsWith('terms.')) continue;
         expect(value, `${lang} ${key}`).not.toMatch(/\bexchanges?\b|\bbursa\b|binance/i);
       }
     }
+  });
+
+  it('name each language in its own words and say a software translation is one, with English applying', () => {
+    const config = JSON.parse(readFileSync(new URL('../config/sampan.json', import.meta.url), 'utf8')) as {
+      i18n: { languages: { code: string; name: string; machine?: boolean }[] };
+    };
+    for (const { code, name } of config.i18n.languages) expect(load(code)['lang.name'], code).toBe(name);
+    for (const code of others) expect(load(code)['legal.translation'], code).not.toBe(en['legal.translation']);
   });
 });

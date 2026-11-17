@@ -145,7 +145,8 @@ export interface SampanConfig {
 
 export interface I18nConfig {
   default: string;
-  languages: { code: string; name: string }[];
+  /** `machine`: the lang file was translated with software and no speaker has checked it yet (the footer says so). */
+  languages: { code: string; name: string; machine?: boolean }[];
 }
 
 /** The part of the config the page needs. Everything else stays on the server. */
@@ -268,6 +269,7 @@ export function validateConfig(c: SampanConfig): string[] {
     langs.length > 0 && langs.every((x) => /^[a-z]{2,3}$/.test(x?.code ?? '') && typeof x.name === 'string' && x.name.trim() !== ''),
     'i18n.languages: { code, name } with a 2 or 3 letter lower-case code and a name',
   );
+  need(langs.every((x) => x?.machine === undefined || typeof x.machine === 'boolean'), 'i18n.languages: machine is true or false');
   need(new Set(codes).size === codes.length && codes.includes('en'), 'i18n.languages: no code twice, and en (every key falls back to it)');
   need(codes.includes(c.i18n?.default), 'i18n.default: one of the i18n.languages codes');
   need(posInt(c.ops.requestTimeoutSeconds) && c.ops.requestTimeoutSeconds >= 10, 'ops.requestTimeoutSeconds: integer, at least 10');
@@ -350,6 +352,6 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     business: { feeBps: c.business.feeBps, feeAddress: c.business.feeAddress },
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
     ui: { ferryMotion: c.ui.ferryMotion },
-    i18n: { default: c.i18n.default, languages: c.i18n.languages.map(({ code, name }) => ({ code, name })) },
+    i18n: { default: c.i18n.default, languages: c.i18n.languages.map(({ code, name, machine }) => (machine ? { code, name, machine } : { code, name })) },
   };
 }

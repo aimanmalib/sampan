@@ -1,9 +1,12 @@
 // PRD 4.10 first-screen rule on the page that shows every part of it (landing flow on, so the judge strip is drawn):
 // without scrolling, the headline, the boat picture with both labelled banks, the judge strip with Fill, the card's
-// tabs and its one primary button are fully in view, in English and Malay, on an iPhone 13 and two desktop sizes.
+// tabs and its one primary button are fully in view, in every language config offers, on an iPhone 13 and two desktop sizes.
 // After "Fill this in for me" the primary button is still in view without scrolling.
 import { expect, test, type Page } from '@playwright/test';
+import shipped from '../config/sampan.json' with { type: 'json' };
 import en from '../lang/en.json' with { type: 'json' };
+import fil from '../lang/fil.json' with { type: 'json' };
+import id from '../lang/id.json' with { type: 'json' };
 import ms from '../lang/ms.json' with { type: 'json' };
 import { PAY_PORT_OFFSET } from '../playwright.config.js';
 
@@ -11,7 +14,8 @@ test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server with the lan
 const landingPort = Number(process.env.E2E_PORT ?? 4173) + 1;
 test.use({ baseURL: `http://127.0.0.1:${landingPort}` });
 
-const LANGS = { en, ms } as const;
+const FILES: Record<string, typeof en> = { en, ms, id, fil };
+const LANGS = Object.fromEntries(shipped.i18n.languages.map((l) => [l.code, FILES[l.code]!]));
 const DESKTOP_SIZES = [
   { width: 1440, height: 900 },
   { width: 1280, height: 720 },
@@ -53,6 +57,8 @@ for (const [lang, text] of Object.entries(LANGS)) {
         await inView(page, selector, label);
       }
       expect(await page.evaluate(() => window.scrollY), `${label}: no scroll`).toBe(0);
+      const width = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
+      expect(width[0], `${label}: no sideways scroll`).toBeLessThanOrEqual(width[1]!);
       await shot(page, `${info.project.name}-${viewport.width}-${lang}`);
 
       await page.locator('.judge__fill').click();

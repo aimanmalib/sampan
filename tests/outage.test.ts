@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import en from '../lang/en.json' with { type: 'json' };
 import ms from '../lang/ms.json' with { type: 'json' };
+import { pageLangs } from '../server/error-page.js';
 import { normalizeConfig, type SampanConfig } from '../core/config.js';
 import { buildApp } from '../server/app.js';
 import { readEnv } from '../server/env.js';
@@ -61,7 +62,10 @@ describe('server failure answers', () => {
     const res = await a.inject('/boom');
     expect(res.statusCode).toBe(500);
     expect(res.headers['content-type']).toContain('text/html');
-    for (const t of [en, ms]) {
+    const langs = pageLangs(config);
+    expect(langs.map(([code]) => code)).toEqual(config.i18n.languages.map((l) => l.code));
+    for (const [code, t] of langs) {
+      expect(res.body).toContain(`<section lang="${code}">`);
       expect(res.body).toContain(t['error.page.failed']);
       expect(res.body).toContain(t['error.page.home']);
     }
@@ -71,6 +75,12 @@ describe('server failure answers', () => {
     const csp = String(res.headers['content-security-policy']);
     expect(csp).toContain(`'sha256-${styleHashOf(res.body)}'`);
     expect(csp).toContain("script-src 'self'");
+  });
+
+  it('shows only the languages config offers, in its order', () => {
+    const only = pageLangs({ i18n: { default: 'en', languages: [{ code: 'ms', name: 'M' }, { code: 'en', name: 'E' }, { code: 'zz', name: 'Z' }] } });
+    expect(only.map(([code]) => code)).toEqual(['ms', 'en']);
+    expect(only[0]![1]['error.page.home']).toBe(ms['error.page.home']);
   });
 
   it('keeps 4xx validation answers as they were', async () => {

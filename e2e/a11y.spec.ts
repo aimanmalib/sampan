@@ -4,6 +4,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { encodeLockingBytecodeP2pkh, lockingBytecodeToCashAddress } from '@bitauth/libauth';
 import { expect, test, type Page } from '@playwright/test';
+import shipped from '../config/sampan.json' with { type: 'json' };
 import en from '../lang/en.json' with { type: 'json' };
 import { PAY_PORT_OFFSET } from '../playwright.config.js';
 
@@ -34,9 +35,14 @@ async function smallTargets(page: Page, scope: string, isMobile: boolean): Promi
   }, { selector: CONTROLS, touch: isMobile, mouseMin: MOUSE_MIN });
 }
 
-for (const path of PAGES) {
-  test(`${path}: no WCAG AA failures, targets large enough to hit`, async ({ page, isMobile }) => {
+// Every language config offers: longer text (Filipino) must not shrink a target or break contrast.
+const LANGS = shipped.i18n.languages.map((l) => l.code);
+
+for (const path of PAGES) for (const lang of LANGS) {
+  test(`${path} (${lang}): no WCAG AA failures, targets large enough to hit`, async ({ page, isMobile }) => {
+    await page.addInitScript((value) => localStorage.setItem('sampan.lang', value), lang);
     await page.goto(path);
+    await expect(page.locator('html')).toHaveAttribute('lang', lang);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
     await axeClean(page);

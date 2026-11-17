@@ -144,5 +144,13 @@ describe('i18n', () => {
     const unnamed = clone();
     unnamed.i18n.languages[0]!.name = ' ';
     expect(validateConfig(unnamed).join()).toMatch(/i18n.languages: \{ code, name \}/);
+    const machine = clone();
+    (machine.i18n.languages[0] as { machine?: unknown }).machine = 'yes';
+    expect(validateConfig(machine)).toContain('i18n.languages: machine is true or false');
+  });
+
+  it('marks every software translation it offers, and never English', () => {
+    for (const l of shipped.i18n.languages) expect(typeof (l as { machine?: unknown }).machine, l.code).toMatch(/^(undefined|boolean)$/);
+    expect((shipped.i18n.languages.find((l) => l.code === 'en') as { machine?: boolean }).machine).not.toBe(true);
   });
 });

@@ -7,15 +7,19 @@ import path from 'node:path';
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import type { SampanConfig } from '../core/config.js';
 import en from '../lang/en.json' with { type: 'json' };
+import fil from '../lang/fil.json' with { type: 'json' };
+import id from '../lang/id.json' with { type: 'json' };
 import ms from '../lang/ms.json' with { type: 'json' };
 import { contentSecurityPolicy } from './security.js';
 
 type Dictionary = Record<string, string>;
-/** Languages in page order; the first is the page's own lang attribute. */
-export const PAGE_LANGS: ReadonlyArray<[code: string, text: Dictionary]> = [
-  ['en', en],
-  ['ms', ms],
-];
+/** Every lang file the server carries. The page shows those config.i18n offers, in its order. */
+const DICTIONARIES: Readonly<Record<string, Dictionary>> = { en, ms, id, fil };
+
+/** Languages in page order (config.i18n.languages); the first is the page's own lang attribute. */
+export function pageLangs(config: Pick<SampanConfig, 'i18n'>): Array<[code: string, text: Dictionary]> {
+  return config.i18n.languages.filter(({ code }) => DICTIONARIES[code]).map(({ code }) => [code, DICTIONARIES[code]!]);
+}
 
 const escapeHtml = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -37,7 +41,7 @@ export interface ErrorPage {
   csp: string;
 }
 
-export function errorPage(kind: 'notFound' | 'failed', tokens: string, csp: string): ErrorPage {
+export function errorPage(kind: 'notFound' | 'failed', tokens: string, csp: string, langs: Array<[string, Dictionary]>): ErrorPage {
   const style = [
     `:root{${tokens}}`,
     'body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--paper,Canvas);color:var(--ink,CanvasText);',
@@ -47,7 +51,7 @@ export function errorPage(kind: 'notFound' | 'failed', tokens: string, csp: stri
     'section+section{margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--line,currentColor)}',
     'a{color:var(--river,LinkText);display:inline-block;min-height:var(--touch,44px);line-height:var(--touch,44px)}',
   ].join('');
-  const sections = PAGE_LANGS.map(([code, t]) => {
+  const sections = langs.map(([code, t]) => {
     const text = (key: string): string => escapeHtml(t[key] ?? (en as Dictionary)[key] ?? '');
     return [
       `<section lang="${code}">`,
@@ -59,7 +63,7 @@ export function errorPage(kind: 'notFound' | 'failed', tokens: string, csp: stri
   }).join('');
   const html = [
     '<!doctype html>',
-    `<html lang="${PAGE_LANGS[0]![0]}">`,
+    `<html lang="${langs[0]?.[0] ?? 'en'}">`,
     '<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">',
     `<meta name="robots" content="noindex"><title>Sampan</title><style>${style}</style></head>`,
     `<body><main>${sections}</main></body></html>`,
@@ -82,8 +86,9 @@ export interface ErrorPages {
 export function registerErrorPages(app: FastifyInstance, config: SampanConfig, webDist: string): ErrorPages {
   const csp = contentSecurityPolicy(config);
   const tokens = rootTokens(webDist);
-  const failed = errorPage('failed', tokens, csp);
-  const missing = errorPage('notFound', tokens, csp);
+  const langs = pageLangs(config);
+  const failed = errorPage('failed', tokens, csp, langs);
+  const missing = errorPage('notFound', tokens, csp, langs);
   app.setErrorHandler((error, request, reply) => {
     const code = (error as { statusCode?: unknown } | null)?.statusCode;
     const status = typeof code === 'number' && code >= 400 && code < 600 ? code : 500;

@@ -244,7 +244,9 @@
     "default": "en",
     "languages": [
       { "code": "en", "name": "English" },
-      { "code": "ms", "name": "Bahasa Melayu" }
+      { "code": "ms", "name": "Bahasa Melayu" },
+      { "code": "id", "name": "Bahasa Indonesia", "machine": true },
+      { "code": "fil", "name": "Filipino", "machine": true }
     ]
   }
 }

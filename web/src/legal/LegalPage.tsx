@@ -8,7 +8,7 @@ import './legal.css';
 export type LegalKind = 'terms' | 'risks';
 
 export function LegalPage({ kind, config }: { kind: LegalKind; config: LoadedConfig | null }) {
-  const { t } = useText();
+  const { lang, t } = useText();
   if (!config) return null;
   const cross = openFlows(config).cross;
   const v = {
@@ -41,6 +41,7 @@ export function LegalPage({ kind, config }: { kind: LegalKind; config: LoadedCon
         ))}
       </ol>
       <p className="legal__updated">{t('legal.updated')}</p>
+      {lang !== 'en' ? <p className="legal__updated">{t('legal.translation')}</p> : null}
       <p className="legal__other">
         <a href={kind === 'terms' ? '/risks' : '/terms'}>{t(kind === 'terms' ? 'footer.risks' : 'footer.terms')}</a>
         <a href="/how">{t('footer.how')}</a>
