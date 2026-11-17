@@ -10,14 +10,19 @@
 //     --broadcast <ISO time> --amount "…" [--write]
 //   npx tsx tools/measure/cross.ts --asset <…> --flow in --txid 0x… --to bitcoincash:… --broadcast <ISO time> --amount "…" [--write]
 // The asset names the EVM chain (its config entry gives the token contract and the RPC endpoints, tried in order).
+//   npx tsx tools/measure/cross.ts --asset <…> --flow out|in --txid <id> --cost <quote.json>
+// saves the cost card of that quote (the /api/out/quote or /api/in/quote reply's `quote`) to state/cost-shown/<id>.json
+// and stops: run it after signing, BEFORE broadcasting, then trace the crossing as above.
+import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { parseAddress } from '../../core/address.js';
 import { ElectrumChain } from '../../server/chain/electrum.js';
-import type { SampanConfig } from '../../core/config.js';
+import { publicConfig, type SampanConfig } from '../../core/config.js';
 import { loadConfig } from '../../server/config.js';
 import { ThorchainRoute } from '../../server/routes/thorchain.js';
 import { Thornode } from '../../server/routes/thornode.js';
 import type { CrossingStatus } from '../../server/routes/types.js';
+import { costShown, writeCostShown } from './cost-shown.js';
 import { appendRuns, crossingTxid, type Run } from './runs.js';
 
 export type CrossFlow = 'out' | 'in' | 'g3a';
@@ -166,6 +171,13 @@ async function main(): Promise<void> {
   if (!['out', 'in', 'g3a'].includes(flow)) throw new Error('--flow is out, in or g3a');
   const config = loadConfig('config/sampan.json');
   const { chain: evmChain, token, rpc } = crossingAsset(config, need('--asset'));
+  const costFile = arg('--cost');
+  if (costFile) {
+    if (flow === 'g3a') throw new Error('--cost is for out or in');
+    const quote = (JSON.parse(readFileSync(costFile, 'utf8')) as { quote?: unknown }).quote ?? JSON.parse(readFileSync(costFile, 'utf8'));
+    console.log(writeCostShown('state/cost-shown', costShown(publicConfig(config), flow, quote, need('--txid'), evmChain, new Date())));
+    return;
+  }
   let destination = need('--to');
   if (flow !== 'out') {
     const parsed = parseAddress(destination, 'bitcoincash');
