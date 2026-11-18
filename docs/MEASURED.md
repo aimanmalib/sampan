@@ -43,6 +43,7 @@
 | 2026-11-17T12:01:00Z | swap | 0.0135 BCH to at least 2.8 PUSD | 4f9b5b01dba4132d9ea35d57f367db44e0ea25dcab439fa87488e3d345332c1b | 3.0 | ok |
 | 2026-11-17T12:03:34Z | out | 1.8 PUSD to ETH.USDC (at least 1.4936146 USDC) | bch 80a72627cdc8f8155b3b1b9ea4d47d6500f82481c060ec9a372407bfb3acbf84 · eth 0xe88f9a5286c592755250428ce4ca3acffd18f4cfd4b65f406e30edf6eb2a27f0 | 373.7 | ok |
 | 2026-11-17T12:10:31Z | out | 1.8 PUSD to ETH.USDC (at least 1.49275174 USDC) | bch fa3bdc53bf3a3d7ce25dc4f2c6fbc0c262c238141b5300fad07f720737c0f577 · eth 0xfb1f69e1c1a4c6e33940a65cde16df19fb2510428604ec948657942137751e86 | 1104.0 | ok |
+| 2026-11-18T02:21:14Z | g3a | 2 ETH.USDC to PUSD (landing address, at least 0.00822467 BCH arriving) | bch 99262bb4ba739b2cd93ab0197c15166da0c6f57f6d1f2abd0a20ae3b1f330d5a · eth 0x462b684da7fd46344f32746fc96c2296b7a223ea4c372f73a87d86bb61483729 · convert 175509aa8197dcfa20f6571feba209bd3d62681a9aae2eb9381483c66a915410 | 2021.1 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from
