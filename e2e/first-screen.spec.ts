@@ -110,11 +110,19 @@ test.describe('Nostr identity card in Bring in', () => {
       await page.goto('/');
       await page.locator('.judge__fill').click();
       await expect(page.getByRole('tab', { name: text['tabs.in'] })).toHaveAttribute('aria-selected', 'true');
+      const opens: string[] = [];
+      page.on('request', (r) => r.url().endsWith('/api/land/open') && opens.push(r.url()));
       await page.locator('.field__input--address').fill(vectors.nostr.npub);
+      // Leaving the field commits the text, as a pasted npub would; the identity still waits for the button.
+      await page.locator('.field__input--address').blur();
       await expect(page.locator('[data-nostr=verified]')).toBeVisible({ timeout: 15_000 });
       await expect(page.locator('.button--primary')).toHaveCount(1);
       await inView(page, '[data-nostr=verified]', label);
       await inView(page, '.button--primary', label);
+      // A landing that opens by itself would ask on the render after the card; give it that window, then count.
+      await page.waitForRequest((r) => r.url().endsWith('/api/land/open'), { timeout: 1_500 }).catch(() => undefined);
+      expect(opens, `${label}: no landing opened by itself`).toEqual([]);
+      await expect(page.locator('.land__address')).toHaveCount(0);
       const width = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
       expect(width[0], `${label}: no sideways scroll`).toBeLessThanOrEqual(width[1]!);
       await shot(page, `${info.project.name}-${lang}-nostr`);

@@ -60,6 +60,8 @@ async function shot(page: Page, watch: Watch, name: string, project: string): Pr
   watch.errors.splice(before);
 }
 
+/** How long a committed identity is watched for a landing that opens by itself (the effect runs on the next render). */
+const NO_AUTO_OPEN_MS = 1_500;
 const ownerField = (page: Page) => page.locator('.field__input--address');
 const primary = (page: Page) => page.locator('.button--primary');
 
@@ -85,8 +87,14 @@ test.describe('features.nostrSend on', () => {
     await expect(primary(page)).toHaveCount(1);
     await expect(primary(page)).toHaveText(en['land.open']);
     await expect(primary(page)).toBeEnabled();
-    // The address does not open by itself for an identity: the verified card stays in view until the button.
+    // The address does not open by itself for an identity: the verified card stays in view until the button. Leaving
+    // the field commits the text (as a paste or Enter would), which is what lets a plain address open by itself; no
+    // POST /api/land/open may follow within the window, and no address may be drawn.
+    const early = page.waitForRequest((r) => r.url().endsWith('/api/land/open'), { timeout: NO_AUTO_OPEN_MS }).then(() => true, () => false);
+    await ownerField(page).blur();
+    expect(await early, 'an identity must not open the landing by itself').toBe(false);
     await expect(page.locator('.land__address')).toHaveCount(0);
+    await expect(primary(page)).toBeEnabled();
     await shot(page, watch, 'verified', info.project.name);
 
     const opened = page.waitForRequest((r) => r.url().endsWith('/api/land/open') && r.method() === 'POST');
