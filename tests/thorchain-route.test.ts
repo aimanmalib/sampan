@@ -1,4 +1,5 @@
 // Route B against the fake THORNode (frozen mainnet captures): quotes, limits, status and failover. No network.
+import { assetsOff } from './helpers/cross-off.js';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -90,11 +91,11 @@ describe('THORChain route', () => {
       url.endsWith('/thorchain/inbound_addresses') ? { status: 200, body: inbound17 } : capture(url, t);
     const map = await route(on17).open();
     expect(map).toMatchObject({ BCH: true, ETH: true, BSC: true, AVAX: true, TRON: true, BASE: false });
-    const assets = withLive(shipped.thorchain.assets, ['ETH', 'BASE']);
+    const assets = withLive(assetsOff(shipped.thorchain.assets), ['ETH', 'BASE']);
     // One halted chain hides its own assets; the route stays open for the rest (the old every-chain rule paused it all).
     expect(routeOpenFor(map, liveAssets(assets))).toBe(true);
     expect(offered(assets, 'out', map).map((a) => a.chain)).toEqual(['ETH', 'ETH']);
-    expect(routeOpenFor(map, liveAssets(withLive(shipped.thorchain.assets, ['BASE'])))).toBe(false);
+    expect(routeOpenFor(map, liveAssets(withLive(assetsOff(shipped.thorchain.assets), ['BASE'])))).toBe(false);
     expect(routeOpenFor({ ...map, BCH: false }, liveAssets(assets))).toBe(false);
     expect(offered(assets, 'in', { ...map, BCH: false })).toEqual([]);
     expect(routeOpenFor(map, [])).toBe(false);

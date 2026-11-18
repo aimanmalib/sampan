@@ -76,7 +76,6 @@ export function App() {
         <section className="hero">
           <h1 className="hero__title">{t('hero.title')}</h1>
           {config ? <p className="hero__sub">{t(heroSubKey(flows), vars)}</p> : null}
-          {flows.cross && route !== 'none' ? <p className="hero__honest">{t('hero.honest', { route: t(`route.${route}`) })}</p> : null}
         </section>
         <Scene />
         {serverDown ? (
@@ -94,6 +93,8 @@ export function App() {
           />
         ) : null}
         <ActionCard config={config} wallet={wallet} chosen={chosen} onChoose={setChosen} fill={fill} />
+        {/* Below the card so the card and its one primary button stay on the first screen (ADR 0053). */}
+        {flows.cross && route !== 'none' ? <p className="hero__honest">{t('hero.honest', { route: t(`route.${route}`) })}</p> : null}
         <Measured link />
       </main>
       )}

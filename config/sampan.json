@@ -26,12 +26,12 @@
   },
   "route": {
     "active": "thorchain",
-    "symbols": []
+    "symbols": ["USDC"]
   },
   "thorchain": {
     "nodes": ["https://gateway.liquify.com/chain/thorchain_api"],
     "assets": [
-      { "asset": "ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48", "chain": "ETH", "symbol": "USDC", "live": { "out": false, "in": false } },
+      { "asset": "ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48", "chain": "ETH", "symbol": "USDC", "live": { "out": true, "in": true } },
       { "asset": "ETH.USDT-0XDAC17F958D2EE523A2206206994597C13D831EC7", "chain": "ETH", "symbol": "USDT", "live": { "out": false, "in": false } },
       { "asset": "BSC.USDC-0X8AC76A51CC950D9822D68B83FE1AD97B32CD580D", "chain": "BSC", "symbol": "USDC", "live": { "out": false, "in": false } },
       { "asset": "BSC.USDT-0X55D398326F99059FF775485246999027B3197955", "chain": "BSC", "symbol": "USDT", "live": { "out": false, "in": false } },
@@ -215,7 +215,7 @@
   },
   "compliance": {
     "blockedCountries": ["KP", "IR", "CU", "SY"],
-    "crossChainEnabled": false
+    "crossChainEnabled": true
   },
   "banner": {
     "deckUrl": "",

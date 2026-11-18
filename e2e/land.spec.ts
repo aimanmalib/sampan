@@ -3,6 +3,7 @@
 // recovery card from the link. Skipped against a live site, where no wallet can connect.
 import { encodeLockingBytecodeP2pkh, lockingBytecodeToCashAddress } from '@bitauth/libauth';
 import { expect, test, type Page } from '@playwright/test';
+import { openFlows, openTabs, type FlowFlags } from '../core/flows.js';
 import en from '../lang/en.json' with { type: 'json' };
 
 test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server');
@@ -41,7 +42,8 @@ test('judge path: fill, connect, see the landing address, pay from the wallet, s
   test.setTimeout(60_000);
   const errors = collectErrors(page);
   await page.goto('/');
-  await expect(page.getByRole('tab')).toHaveCount(2);
+  const served = (await (await page.request.get('/api/config')).json()) as FlowFlags;
+  await expect(page.getByRole('tab')).toHaveCount(openTabs(openFlows(served)).length);
   await expect(page.locator('.judge__title')).toBeVisible();
   await shot(page, errors, 'front', info.project.name);
   await expect(page.locator('.judge__title')).toHaveText(en['judge.title']);

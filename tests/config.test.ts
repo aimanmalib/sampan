@@ -1,3 +1,4 @@
+import { allOff, assetsOff } from './helpers/cross-off.js';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { normalizeConfig, patchConfig, publicConfig, validateConfig, type SampanConfig } from '../core/config.js';
@@ -68,13 +69,13 @@ describe('validateConfig', () => {
   });
 
   it('keeps one list of route assets: route.symbols must repeat the live symbols, and thorchain.chains is refused', () => {
-    const c = clone() as SampanConfig & { thorchain: { chains?: string[] } };
+    const c = allOff(clone()) as SampanConfig & { thorchain: { chains?: string[] } };
     c.route.symbols = ['USDC'];
     c.thorchain.chains = ['BASE'];
     const errors = validateConfig(c).join('\n');
     expect(errors).toMatch(/route\.symbols: must be the symbols of the live thorchain\.assets \(none\)/);
     expect(errors).toMatch(/thorchain\.chains: removed/);
-    const live = patchConfig(clone(), JSON.stringify(livePatch(clone().thorchain.assets, ['ETH'])));
+    const live = patchConfig(allOff(clone()), JSON.stringify(livePatch(assetsOff(clone().thorchain.assets), ['ETH'])));
     expect(live.route.symbols).toEqual(['USDC', 'USDT']);
     expect(validateConfig(live)).toEqual([]);
     live.route.symbols = ['USDC'];

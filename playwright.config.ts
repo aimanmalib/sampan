@@ -9,13 +9,17 @@ const landingPort = port + 1;
 const outPort = port + 2;
 // E2E_BASE_URL checks a running site (deploy/deploy.sh points it at the public URL); otherwise a local fake server starts.
 const live = process.env.E2E_BASE_URL;
-// The local fake server shows the swap flow alone (the landing flow has its own server below), and its rate
+// The local fake server shows the swap flow alone (the landing flow has its own server below; crossings are off here
+// whatever the shipped config says), and its rate
 // limits are lifted because every browser in the run shares one IP.
-const e2ePatch = { features: { swap: true, landing: false }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } };
+const e2ePatch = { features: { swap: true, landing: false }, compliance: { crossChainEnabled: false }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } };
 // The page asks for a landing's status every 2 s here (e2e/qr-close.spec.ts waits on it), not every 10 s as shipped.
 const landingPatch = { ...e2ePatch, features: { swap: true, landing: true }, landing: { pagePollSeconds: 2 } };
 // Crossings run against the fake THORNode, which reports Base open: Base USDC is switched live on this server only.
-const shippedAssets = (JSON.parse(readFileSync('config/sampan.json', 'utf8')) as { thorchain: { assets: RouteAsset[] } }).thorchain.assets;
+// Every asset starts off here, so a server's live list is exactly the one its patch names (not what the file marks live).
+const shippedAssets = (JSON.parse(readFileSync('config/sampan.json', 'utf8')) as { thorchain: { assets: RouteAsset[] } }).thorchain.assets.map(
+  (a) => ({ ...a, live: { out: false, in: false } }),
+);
 const outPatch = { ...e2ePatch, compliance: { crossChainEnabled: true }, ...livePatch(shippedAssets, ['BASE']) };
 /** One fake server per SAMPAN_FAKE_OUTAGE mode, on the ports after the three above (e2e/outage.spec.ts). */
 export const OUTAGE_MODES = ['indexer', 'electrum', 'api', 'chunk', 'render', 'app'] as const;
@@ -49,6 +53,12 @@ const oneClickPatch = {
     ],
   },
 };
+/**
+ * A fake server with the shipped flows as the config file has them (landing flow on, crossings and live assets
+ * untouched), so the first-screen rule is checked on the page the live site shows (e2e/first-screen.spec.ts).
+ */
+export const SHIPPED_PORT_OFFSET = ONECLICK_PORT_OFFSET + 1;
+const shippedPatch = { features: { swap: true, landing: true }, rate: e2ePatch.rate };
 /** Test-only secret of the demo shop's hook on the local fake server (the public site's secret lives on the host). */
 const payEnv = { SAMPAN_PAY_DEMO_SECRET: `whsec_${Buffer.alloc(32, 3).toString('base64')}` };
 const fakeServer = (p: number, patch: unknown, outage?: string, extra: Record<string, string> = {}) => ({
@@ -81,6 +91,7 @@ export default defineConfig({
           fakeServer(port + NETWORK_PORT_OFFSET, networkPatch, undefined, { SAMPAN_FAKE_INBOUND: 'inbound-2026-11-17.json' }),
           fakeServer(port + QR_OFF_PORT_OFFSET, qrOffPatch),
           fakeServer(port + ONECLICK_PORT_OFFSET, oneClickPatch),
+          fakeServer(port + SHIPPED_PORT_OFFSET, shippedPatch),
         ],
       }),
 });

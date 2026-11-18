@@ -1,4 +1,5 @@
-// PRD 4.10 first-screen rule on the page that shows every part of it (landing flow on, so the judge strip is drawn):
+// PRD 4.10 first-screen rule on the page the live site shows (the shipped flows: landing flow on, so the judge strip
+// is drawn, and crossings as the config file has them):
 // without scrolling, the headline, the boat picture with both labelled banks, the judge strip with Fill, the card's
 // tabs and its one primary button are fully in view, in every language config offers, on an iPhone 13 and two desktop sizes.
 // After "Fill this in for me" the primary button is still in view without scrolling.
@@ -8,11 +9,11 @@ import en from '../lang/en.json' with { type: 'json' };
 import fil from '../lang/fil.json' with { type: 'json' };
 import id from '../lang/id.json' with { type: 'json' };
 import ms from '../lang/ms.json' with { type: 'json' };
-import { PAY_PORT_OFFSET } from '../playwright.config.js';
+import { PAY_PORT_OFFSET, SHIPPED_PORT_OFFSET } from '../playwright.config.js';
 
-test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server with the landing flow on');
-const landingPort = Number(process.env.E2E_PORT ?? 4173) + 1;
-test.use({ baseURL: `http://127.0.0.1:${landingPort}` });
+test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server with the shipped flows');
+const shippedPort = Number(process.env.E2E_PORT ?? 4173) + SHIPPED_PORT_OFFSET;
+test.use({ baseURL: `http://127.0.0.1:${shippedPort}` });
 
 const FILES: Record<string, typeof en> = { en, ms, id, fil };
 const LANGS = Object.fromEntries(shipped.i18n.languages.map((l) => [l.code, FILES[l.code]!]));

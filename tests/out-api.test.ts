@@ -15,13 +15,14 @@ import { thorAsset } from '../core/routes/memo.js';
 import { signP2pkhInputs } from '../core/tx/sign.js';
 import { encodeTransaction, binToHex } from '@bitauth/libauth';
 import { outputFromWire, txFromHex } from '../core/wire.js';
+import { allOff } from './helpers/cross-off.js';
 import { buildApp } from '../server/app.js';
 import type { FakeChain } from '../server/chain/fake.js';
 import { createServices, type Services } from '../server/services.js';
 import { PUSD, testKey } from './helpers/pools.js';
 import { userAddress, userLockHex } from './helpers/wallet.js';
 
-const base = normalizeConfig(shipped as unknown as SampanConfig);
+const base = allOff(normalizeConfig(shipped as unknown as SampanConfig));
 const crossOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, ...livePatch(base.thorchain.assets, ['BASE']), rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }));
 const DEST = '0x1a877169bB03400fA69EC4813889E78994D194Cb';
 const USDC = base.evm.chains.find((c) => c.key === 'BASE')!.tokens.USDC!.address;

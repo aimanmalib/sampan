@@ -94,3 +94,8 @@
   justify-content: center;
   text-decoration: none;
 }
+/* With the source chooser shown, the landing form's "From … → Arrives as …" line only repeats the chosen source;
+   hiding it keeps the card's primary button on a phone's first screen (ADR 0053). */
+.in__sources + .land .land__route {
+  display: none;
+}

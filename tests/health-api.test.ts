@@ -8,12 +8,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import { normalizeConfig, patchConfig, type SampanConfig } from '../core/config.js';
 import { liveAssets, livePatch, openMapOf, type InboundRow } from '../core/route-assets.js';
+import { allOff } from './helpers/cross-off.js';
 import { buildApp } from '../server/app.js';
 import { ChainUnavailableError } from '../server/chain/types.js';
 import { HealthMonitor } from '../server/health.js';
 import { createServices, type Services } from '../server/services.js';
 
-const base = normalizeConfig(shipped as unknown as SampanConfig);
+const base = allOff(normalizeConfig(shipped as unknown as SampanConfig));
 const crossOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, ...livePatch(base.thorchain.assets, ['BASE']), rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }));
 const LIVE_BASE = liveAssets(crossOn.thorchain.assets);
 const CF = '104.16.1.2';

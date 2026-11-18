@@ -1,3 +1,4 @@
+import { allOff } from './helpers/cross-off.js';
 import { execFile } from 'node:child_process';
 import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
@@ -87,7 +88,7 @@ describe('synthetic alert rule', () => {
   });
 });
 
-const config = loadConfig('config/sampan.json');
+const config = allOff(loadConfig('config/sampan.json'));
 const deps = (over: Partial<ProbeDeps> = {}): ProbeDeps => ({
   fetch,
   timeoutMs: 3000,

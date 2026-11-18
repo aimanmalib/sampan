@@ -11,11 +11,12 @@ import { normalizeConfig, patchConfig, type SampanConfig } from '../core/config.
 import { livePatch } from '../core/route-assets.js';
 import { checkInPlan } from '../core/evm/check-in.js';
 import { acceptCard } from '../core/client/land.js';
+import { allOff } from './helpers/cross-off.js';
 import { buildApp } from '../server/app.js';
 import { createServices } from '../server/services.js';
 import { userAddress } from './helpers/wallet.js';
 
-const base = normalizeConfig(shipped as unknown as SampanConfig);
+const base = allOff(normalizeConfig(shipped as unknown as SampanConfig));
 const crossOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, ...livePatch(base.thorchain.assets, ['BASE']), rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } }));
 const USDC = base.evm.chains.find((c) => c.key === 'BASE')!.tokens.USDC!.address;
 let app: FastifyInstance | undefined;
