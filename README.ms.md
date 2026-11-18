@@ -145,6 +145,23 @@ bawah kadar minimum kad; 2 jualan ditolak oleh semakan dompet ujian sendiri. Pun
 dibaiki dengan ujian regresi; tiada apa dihantar. Fail yang sama menyenaraikan tiga kolam Cauldron yang kuncinya dibina
 semula dari `owner_pkh` dan ditemui di rantaian.
 
+### Lintasan
+
+Setiap lintasan antara BCH dan rantaian lain dalam [`docs/MEASURED.md`](docs/MEASURED.md#runs), dibuat oleh
+`scripts/crossings-table.ts`, termasuk larian yang gagal. Saat dikira dari tandatangan pertama hingga tiba di rantaian lain
+(bagi Bawa masuk, hingga penukaran di alamat pendaratan). Setiap kaki dipautkan ke penjelajahnya: transaksi BCH, transaksi
+stablecoin di rantaian lain, penukaran kepada PUSD bagi Bawa masuk, dan jejak THORChain bagi deposit.
+
+<!-- crossings:start (made by scripts/crossings-table.ts from docs/MEASURED.md) -->
+| UTC (2026) | laluan | arah | aset | dihantar | saat | keputusan | transaksi |
+|---|---|---|---|---|---|---|---|
+| 11-17 12:03 | THORChain | BCH → Ethereum | USDC | 1.8 PUSD | 373.7 | ok | [`bch 80a72627`](https://blockchair.com/bitcoin-cash/transaction/80a72627cdc8f8155b3b1b9ea4d47d6500f82481c060ec9a372407bfb3acbf84) · [`eth 0xe88f9a52`](https://etherscan.io/tx/0xe88f9a5286c592755250428ce4ca3acffd18f4cfd4b65f406e30edf6eb2a27f0) · [THORChain](https://thorchain.net/tx/80a72627cdc8f8155b3b1b9ea4d47d6500f82481c060ec9a372407bfb3acbf84) |
+| 11-17 12:10 | THORChain | BCH → Ethereum | USDC | 1.8 PUSD | 1104.0 | ok | [`bch fa3bdc53`](https://blockchair.com/bitcoin-cash/transaction/fa3bdc53bf3a3d7ce25dc4f2c6fbc0c262c238141b5300fad07f720737c0f577) · [`eth 0xfb1f69e1`](https://etherscan.io/tx/0xfb1f69e1c1a4c6e33940a65cde16df19fb2510428604ec948657942137751e86) · [THORChain](https://thorchain.net/tx/fa3bdc53bf3a3d7ce25dc4f2c6fbc0c262c238141b5300fad07f720737c0f577) |
+| 11-18 03:20 | THORChain | BCH → Ethereum | USDC | 0.014 BCH | 466.6 | ok | [`bch c803bfef`](https://blockchair.com/bitcoin-cash/transaction/c803bfef5923eb065de8857580f0b90ac338509d3ca0249dd41a80e9c7d76fd0) · [`eth 0xaad48e53`](https://etherscan.io/tx/0xaad48e53acc8e94f88d3395abc05afd811f6882a7103498a161b16b7ae981d47) · [THORChain](https://thorchain.net/tx/c803bfef5923eb065de8857580f0b90ac338509d3ca0249dd41a80e9c7d76fd0) |
+| 11-18 03:28 | THORChain | Ethereum → BCH | USDC | 1.8 USDC | 219.0 | ok | [`bch 93f6c6a5`](https://blockchair.com/bitcoin-cash/transaction/93f6c6a533cb817d59b78ed0ce5046292003e6ad5c09405fdfb6c75fe9d3f201) · [`eth 0xbe6a17f1`](https://etherscan.io/tx/0xbe6a17f1e2ba17b3039f825c7aceeb1ed3fc036fdef1d6822acf03cae42714ff) · [`convert 6d073bd8`](https://blockchair.com/bitcoin-cash/transaction/6d073bd8897b8774f0857b29f797dfdc03cd694e6c00507b7b9ba0115dd06683) · [THORChain](https://thorchain.net/tx/be6a17f1e2ba17b3039f825c7aceeb1ed3fc036fdef1d6822acf03cae42714ff) |
+| 11-18 03:32 | THORChain | Ethereum → BCH | USDC | 1.8 USDC | 94.8 | ok | [`bch ee698449`](https://blockchair.com/bitcoin-cash/transaction/ee69844983f8798eebcf5640745a9ad382f7e223bc060c7c0cfd7d172921fea8) · [`eth 0xb240ea2b`](https://etherscan.io/tx/0xb240ea2b86daaa3f21a5165482be7a05c7289db91c03bb28ce455f9c17406b37) · [`convert 1549b330`](https://blockchair.com/bitcoin-cash/transaction/1549b3302e0a6185e95d1a4fdc2421426f62268cefa9a47e6bb5a2062d6ad484) · [THORChain](https://thorchain.net/tx/b240ea2b86daaa3f21a5165482be7a05c7289db91c03bb28ce455f9c17406b37) |
+<!-- crossings:end -->
+
 ### Dompet yang diuji
 
 | Dompet | Cara | Keputusan |
@@ -176,11 +193,10 @@ dompet diminta menandatangani.
 
 ## Had
 
-- **Rentas rantaian dimatikan.** `compliance.crossChainEnabled` ialah `false` dalam [`config/sampan.json`](config/sampan.json).
-  Kod untuk Hantar keluar (PUSD kepada USDC di Base melalui THORChain) dan Bawa masuk dari Base (dompet EVM melalui router
-  THORChain) ada dalam repositori bersama ujiannya ([ADR 0013](docs/decisions/0013-route-b-send-out.md),
-  [ADR 0014](docs/decisions/0014-evm-wallet-bring-in.md)), tetapi tab itu disembunyikan dan tiada lintasan diukur di mainnet.
-  Hari ini laman hidup memindahkan nilai dalam BCH sahaja: BCH kepada PUSD, PUSD kepada BCH, dan pendaratan.
+- **Rentas rantaian meliputi apa yang diukur.** Hantar keluar dan Bawa masuk berjalan melalui THORChain hanya untuk aset
+  yang ditanda `live` dalam `thorchain.assets` ([`config/sampan.json`](config/sampan.json)), dan aset ditanda hanya selepas
+  dua lintasan diukur dalam arah itu ([Lintasan](#lintasan)).
+  Bila THORChain menghentikan satu rantaian, laman memaparkan laluan itu dijeda dan tidak menawarkannya.
 - **MUSD dimatikan** (`features.musd` ialah `false`). PUSD satu-satunya token yang ditawarkan.
 - **Amaun kecil.** Satu pertukaran paling banyak 250 USD dan bahagian BCH sekurang-kurangnya 50000 satoshi; minimum yang sama
   terpakai pada pendaratan (`limits` dalam config).
