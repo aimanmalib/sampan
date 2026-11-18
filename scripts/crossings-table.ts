@@ -1,5 +1,6 @@
 // The mainnet crossings table in README.md and README.ms.md, made from the Runs table of docs/MEASURED.md and the
-// explorers in config/sampan.json. Rows: every `out` and `in` run (THORChain), failed ones included, and the `oc-out` /
+// explorers in config/sampan.json. Rows: every `out` and `in` run (THORChain), failed ones included, the first Bring in
+// run (`g3a`, THORChain), and the `oc-out` /
 // `oc-in` runs (1Click) only in a direction where at least one oneClick asset is live. Each leg of a crossing is a link:
 // bch and convert to connect.explorerTxUrl, an EVM leg to evm.chains[].explorer + /tx/, and the THORChain trace to
 // thorchain.explorerTxUrl (inbound leg). No host is written here.
@@ -46,10 +47,13 @@ export function parseRuns(measured: string): Run[] {
   return runs;
 }
 
+/** THORChain crossing flows: `out`, `in`, and `g3a` (the first Bring in run, logged under its plan row name). */
+export const THORCHAIN_FLOWS = ['out', 'in', 'g3a'];
+
 /** The flows the table shows: THORChain always, 1Click only in a direction with a live asset. */
 export function crossingFlows(cfg: CrossingsConfig): string[] {
   const assets = cfg.oneClick?.assets ?? [];
-  const flows = ['out', 'in'];
+  const flows = [...THORCHAIN_FLOWS];
   for (const dir of ['out', 'in'] as const) if (assets.some((a) => a.live?.[dir] === true)) flows.push(`oc-${dir}`);
   return flows;
 }

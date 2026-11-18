@@ -13,7 +13,9 @@ an explorer by hand, and a table typed by hand would drift from the file each ti
 - `scripts/crossings-table.ts` (`npm run crossings -- --write`) writes the rows between
   `<!-- crossings:start … -->` and `<!-- crossings:end -->` in README.md and README.ms.md. Each README keeps its own
   header row inside the block, so the script holds no text in either language; the rows are names, amounts and links.
-- Rows: every `out` and `in` run, failed ones included. `oc-out` / `oc-in` (1Click) rows appear only in a direction
+- Rows: every `out` and `in` run, failed ones included, and the first Bring in run (`g3a`, logged under its plan
+  row name before the `in` flow name existed), shown as THORChain Ethereum → BCH. A test checks that every Runs row
+  with a `CHAIN.ASSET` amount and a `bch` and an EVM leg is in the table, so a new flow name cannot drop a crossing. `oc-out` / `oc-in` (1Click) rows appear only in a direction
   where at least one `oneClick.assets[]` entry is live, so the README does not mention a route the site does not offer.
 - Every leg is a link built from config, as on the receipt page: `bch` and `convert` use `connect.explorerTxUrl`, an EVM
   leg uses `evm.chains[].explorer` + `/tx/`, and the THORChain trace uses `thorchain.explorerTxUrl` with the inbound
