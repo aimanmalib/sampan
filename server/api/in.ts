@@ -9,7 +9,7 @@ import type { Origin } from '../db.js';
 import type { InService, InView } from '../in.js';
 import { RouteError } from '../routes/types.js';
 import type { Services } from '../services.js';
-import { ApiError, crossingGate, crossingLimit, quoteLimit, sendError } from './guard.js';
+import { ApiError, crossingGate, crossingLimit, pegGate, quoteLimit, sendError } from './guard.js';
 import { submitDeposit } from './route-deposit.js';
 import { ROUTE_PROP } from './out.js';
 import { ADDRESS, AMOUNT, HEX_ID, jsonSafe, rowAsset } from './wire.js';
@@ -81,6 +81,7 @@ export function registerIn(app: FastifyInstance, config: SampanConfig, s: Servic
       try {
         const ins = service(config, s);
         crossingGate(s, config, req);
+        await pegGate(s);
         quoteLimit(s, config, req);
         crossingLimit(s, config, req);
         const b = req.body;

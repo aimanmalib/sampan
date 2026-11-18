@@ -27,6 +27,7 @@ import type { Route } from './routes/types.js';
 import { SwapService } from './swap.js';
 import { InService } from './in.js';
 import { HealthMonitor } from './health.js';
+import { DepthReader } from './depth.js';
 import { markOwnRows, testLocksOf } from './origin.js';
 import { downChain, downIndexer, type Outage } from './outage.js';
 
@@ -56,6 +57,8 @@ export interface Services {
   limiter: RateLimiter;
   /** Last health check of the indexer, the BCH servers and the route (started by the app). */
   health: HealthMonitor;
+  /** Pool depth and the PUSD peg (GET /api/depth and the peg guard). */
+  depth: DepthReader;
   /** Locking bytecodes (hex) of the project's own test wallet. */
   testLocks: Set<string>;
   /** Fake network only: the app hands its in-process request function here so the demo shop's webhook is answered
@@ -171,10 +174,26 @@ export function createServices(o: ServiceOptions): Services {
     retryMs: config.ops.healthRetrySeconds * 1000,
     log: o.log,
   });
+  const token = config.tokens[config.defaultToken]!;
+  const thor = route?.id === 'thorchain' ? route : null;
+  const depth = new DepthReader({
+    peg: config.peg,
+    pools: () => pools.active(category),
+    bchUsd: async () => (thor ? thor.gasAssetUsd('BCH', 'BCH') : null),
+    symbol: token.symbol,
+    decimals: token.decimals,
+    cacheSeconds: config.cauldron.cacheSeconds,
+    sources: {
+      pools: `${config.cauldron.indexers[0]!.replace(/\/$/, '')}/cauldron/pool/active?token=${category}`,
+      price: thor ? `${config.thorchain.nodes[0]!.replace(/\/$/, '')}/thorchain/pool/BCH.BCH` : null,
+    },
+    log: o.log,
+  });
   return {
     prefix,
     chain,
     pools,
+    depth,
     scanner,
     swaps,
     route,

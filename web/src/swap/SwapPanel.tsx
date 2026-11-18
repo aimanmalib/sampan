@@ -13,6 +13,7 @@ import { WizardHat } from '../wallet/WizardHat';
 import { UnitChip } from '../chips/Chip';
 import { codeKey, errorKey } from './errors';
 import { useQuote } from './useQuote';
+import { PegNote } from '../peg/PegNote';
 
 const BCH_DECIMALS = 8;
 const QUOTE_PAUSE_MS = 400;
@@ -162,6 +163,7 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
         </p>
       ) : null}
       {short ? <p className="swap__error">{t('swap.err.short')}</p> : null}
+      <PegNote />
       {run.phase === 'failed' ? (
         <p className="swap__error" role="alert">
           {t(run.key, { min: formatUnits(BigInt(config.limits.localMinSats), BCH_DECIMALS), max: String(config.limits.maxUsd) })}

@@ -25,6 +25,7 @@ import { useNetworks } from '../cross/useNetworks';
 import { CostCard } from '../cost/CostCard';
 import { outCard } from '../cost/inputs';
 import { UnitChip } from '../chips/Chip';
+import { PegNote } from '../peg/PegNote';
 
 const BCH = 'BCH';
 const BCH_DECIMALS = 8;
@@ -234,6 +235,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
       {q && !costShown && q.fees.totalBps > config.limits.feeWarnBps ? <p className="swap__error">{t('out.feeHigh', { pct: feePct })}</p> : null}
       {source !== BCH && !atom ? <p className="card__note">{t('out.twoSteps', vars)}</p> : null}
       {lacking ? <p className="swap__error">{t('swap.err.short')}</p> : null}
+      <PegNote />
       {run.phase === 'stopped' ? (
         <div className="swap__error" role="alert">
           <p>{t('out.stopped')}</p>

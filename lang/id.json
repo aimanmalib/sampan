@@ -617,5 +617,22 @@
   "receipt.costKept": "{usd}, Anda mempertahankan {pct}% dari nilainya",
   "receipt.time": "Waktu",
   "receipt.minutes": "Sekitar {n} menit, dari transaksi disiapkan hingga Sampan melihat pembayarannya",
-  "receipt.basis": "{symbol} dihitung USD 1. BCH dinilai dengan harga dalam penawaran yang membangun penyeberangan ini."
+  "receipt.basis": "{symbol} dihitung USD 1. BCH dinilai dengan harga dalam penawaran yang membangun penyeberangan ini.",
+  "swap.err.peg_off": "PUSD terlalu jauh dari satu dolar saat ini, jadi penyeberangan baru dan alamat pendaratan menunggu sampai kembali. Swap di Bitcoin Cash tetap terbuka.",
+  "peg.warn": "Di pool, {symbol} saat ini berjarak {gap} dari satu dolar. Periksa jumlahnya sebelum Anda menandatangani.",
+  "depth.title": "Likuiditas dan patokan harga saat ini",
+  "depth.lead": "Dibaca pada {time} UTC dari pool Cauldron yang kontraknya dibangun ulang oleh server dan ditemukan di chain, dan dari pool BCH milik THORChain untuk harga dolar.",
+  "depth.loading": "Membaca pool.",
+  "depth.down": "Pool tidak dapat dibaca saat ini, jadi tidak ada angka yang ditampilkan.",
+  "depth.pools": "Pool yang dihitung",
+  "depth.bch": "BCH di pool",
+  "depth.token": "{symbol} di pool",
+  "depth.mid": "Harga pool untuk satu BCH",
+  "depth.onePercent": "BCH yang dapat digerakkan satu transaksi sebelum harganya 1% lebih buruk",
+  "depth.bchUsd": "Harga BCH di THORChain",
+  "depth.peg": "{symbol} terhadap satu dolar",
+  "depth.unknown": "Tidak diketahui: THORChain tidak menjawab",
+  "depth.rule": "Pada jarak {warn} atau lebih, setiap panel menampilkan peringatan. Pada {refuse} atau lebih, penyeberangan baru dan alamat pendaratan menunggu; swap di Bitcoin Cash tetap terbuka.",
+  "depth.source.pools": "Daftar pool dari indexer",
+  "depth.source.price": "Pool BCH di THORNode"
 }

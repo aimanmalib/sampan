@@ -617,5 +617,22 @@
   "receipt.costKept": "{usd}, mananatili sa iyo ang {pct}% ng halaga",
   "receipt.time": "Oras",
   "receipt.minutes": "Mga {n} min, mula sa paghahanda ng transaction hanggang makita ng Sampan ang bayad",
-  "receipt.basis": "Ang {symbol} ay bilang na USD 1. Ang BCH ay sinusukat sa presyo sa quote na pinagbuuan ng paglipat na ito."
+  "receipt.basis": "Ang {symbol} ay bilang na USD 1. Ang BCH ay sinusukat sa presyo sa quote na pinagbuuan ng paglipat na ito.",
+  "swap.err.peg_off": "Masyadong malayo ang PUSD sa isang dolyar ngayon, kaya naghihintay ang mga bagong tawid at landing address hanggang bumalik ito. Bukas pa rin ang mga swap sa Bitcoin Cash.",
+  "peg.warn": "Sa mga pool, {gap} ang layo ng {symbol} sa isang dolyar ngayon. Suriin ang mga halaga bago ka pumirma.",
+  "depth.title": "Liquidity at peg ngayon",
+  "depth.lead": "Binasa noong {time} UTC mula sa mga Cauldron pool na ang contract ay binuo muli ng server at nakita sa chain, at mula sa sariling BCH pool ng THORChain para sa presyo sa dolyar.",
+  "depth.loading": "Binabasa ang mga pool.",
+  "depth.down": "Hindi mabasa ang mga pool ngayon, kaya walang numerong ipinapakita.",
+  "depth.pools": "Mga pool na binilang",
+  "depth.bch": "BCH sa mga pool",
+  "depth.token": "{symbol} sa mga pool",
+  "depth.mid": "Presyo sa pool ng isang BCH",
+  "depth.onePercent": "BCH na kayang ilipat ng isang trade bago lumala nang 1% ang presyo",
+  "depth.bchUsd": "Presyo ng BCH sa THORChain",
+  "depth.peg": "{symbol} laban sa isang dolyar",
+  "depth.unknown": "Hindi alam: hindi sumagot ang THORChain",
+  "depth.rule": "Kapag {warn} o higit pa ang layo, may babala sa bawat panel. Kapag {refuse} o higit pa, naghihintay ang mga bagong tawid at landing address; bukas pa rin ang mga swap sa Bitcoin Cash.",
+  "depth.source.pools": "Listahan ng pool mula sa indexer",
+  "depth.source.price": "BCH pool sa THORNode"
 }

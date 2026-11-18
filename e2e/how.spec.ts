@@ -70,3 +70,38 @@ test('/how fits a 320 px screen with the contract source scrolling inside its bo
   const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
   expect(scroll).toBeLessThanOrEqual(client);
 });
+
+test('/how reads liquidity and the peg right now from /api/depth, with its sources, at 320 and 390 px', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  page.on('pageerror', (e) => errors.push(e.message));
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 700 });
+    await page.goto('/how');
+    const block = page.locator('#depth');
+    await expect(block.getByRole('heading', { name: en['depth.title'] })).toBeVisible();
+    await block.scrollIntoViewIfNeeded();
+    await expect(block.locator('[data-depth="pools"]')).toHaveText(/^[1-9]\d*$/);
+    await expect(block.getByText(en['depth.lead'].slice(0, en['depth.lead'].indexOf('{time}')))).toBeVisible();
+    const depth = (await (await page.request.get('/api/depth')).json()) as { sources: { pools: string; price: string | null } };
+    await expect(block.getByRole('link', { name: en['depth.source.pools'] })).toHaveAttribute('href', depth.sources.pools);
+    if (depth.sources.price) await expect(block.getByRole('link', { name: en['depth.source.price'] })).toHaveAttribute('href', depth.sources.price);
+    const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
+    expect(scroll, `${width} px`).toBeLessThanOrEqual(client);
+  }
+  expect(errors).toEqual([]);
+});
+
+test('the page warns while PUSD sits off its peg and shows no numbers when the pools cannot be read', async ({ page }) => {
+  const real = (await (await page.request.get('/api/depth')).json()) as Record<string, unknown>;
+  await page.route('**/api/depth', (r) => r.fulfill({ json: { ...real, pegBps: -150, peg: 'warn' } }));
+  await page.goto('/');
+  const note = page.locator('[data-peg="warn"]').first();
+  await expect(note).toBeVisible();
+  await expect(note).toContainText('1.50%');
+  await page.unroute('**/api/depth');
+  await page.route('**/api/depth', (r) => r.fulfill({ status: 503, json: { error: 'pools_unavailable', message: 'Cauldron pools are not available' } }));
+  await page.goto('/how');
+  await expect(page.locator('#depth').getByText(en['depth.down'])).toBeVisible();
+  await expect(page.locator('#depth dl')).toHaveCount(0);
+});

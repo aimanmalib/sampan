@@ -4,7 +4,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { SampanConfig } from '../../core/config.js';
 import type { Services } from '../services.js';
-import { ApiError, crossingLimit, quoteLimit, sendError } from './guard.js';
+import { ApiError, crossingLimit, pegGate, quoteLimit, sendError } from './guard.js';
 import { ADDRESS, AMOUNT, HEX_ID, jsonSafe, outputToWire, txToHex } from './wire.js';
 
 interface OpenBody {
@@ -41,6 +41,7 @@ export function registerLanding(app: FastifyInstance, config: SampanConfig, s: S
     async (req, reply) => {
       try {
         flowOpen(config);
+        await pegGate(s);
         quoteLimit(s, config, req);
         crossingLimit(s, config, req);
         const opened = await s.landings.open(req.body);

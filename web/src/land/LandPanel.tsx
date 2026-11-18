@@ -16,6 +16,7 @@ import { useText, type TextKey } from '../i18n';
 import type { Wallet } from '../wallet/useWallet';
 import { WizardHat } from '../wallet/WizardHat';
 import { failureKey, LandOpen } from './LandOpen';
+import { PegNote } from '../peg/PegNote';
 
 const BCH_DECIMALS = 8;
 
@@ -106,6 +107,7 @@ export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
           </label>
         )}
         {!view && ownerText.trim() !== '' && !ownerOk ? <p className="swap__error">{t('land.err.owner')}</p> : null}
+        <PegNote />
         {error ? (
           <p className="swap__error" role="alert">
             {t(error, { min: vars.min, max: String(config.limits.maxUsd) })}

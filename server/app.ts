@@ -13,6 +13,7 @@ import { registerFakeLanding } from './landing/fake.js';
 import { registerSwap } from './api/swap.js';
 import { registerWallet } from './api/wallet.js';
 import { registerSecurityHeaders } from './security.js';
+import { sendError } from './api/guard.js';
 import { createServices, type Services } from './services.js';
 import { registerWeb } from './static.js';
 import { registerOutage, type Outage } from './outage.js';
@@ -73,6 +74,13 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
 
   app.get('/healthz', async () => ({ ok: true }));
   app.get('/api/health', async () => services.health.current());
+  app.get('/api/depth', async (_req, reply) => {
+    try {
+      return await services.depth.read();
+    } catch (e) {
+      return sendError(reply, e);
+    }
+  });
   app.get('/api/config', async () => ({ ...publicConfig(config), fake: options.fake }));
   registerWallet(app, config, services);
   registerSwap(app, config, services);

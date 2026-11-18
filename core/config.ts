@@ -4,6 +4,7 @@ import { validateAtom, type AtomConfig } from './atom-config.js';
 import { oneClickPublic, validateOneClick, type OneClickConfig, type OneClickPublic } from './oneclick-config.js';
 import { validateBusiness, type BusinessConfig } from './business.js';
 import { validatePay, type PayConfig } from './pay/config.js';
+import { validatePeg, type PegConfig } from './peg.js';
 import { chainsOf, liveAssets, symbolsOf, validateAssets, validateEvmChain, type EvmChain, type RouteAsset } from './route-assets.js';
 
 export type RouteId = 'near-intents' | 'thorchain';
@@ -152,6 +153,8 @@ export interface SampanConfig {
     quotePayloadHours: number;
   };
   business: BusinessConfig;
+  /** PUSD peg guard (core/peg.ts): warning and refusal thresholds against THORChain's BCH price. */
+  peg: PegConfig;
   pay: PayConfig;
   /**
    * How the status pages draw; not a flow. ferryMotion: the ferry on every status page and the landing card, moving while a step is under way.
@@ -199,6 +202,7 @@ export interface PublicConfig {
   health: { intervalSeconds: number; retrySeconds: number; requestTimeoutSeconds: number };
   /** The page rebuilds the expected Sampan fee output from these two values. */
   business: Pick<BusinessConfig, 'feeBps' | 'feeAddress'>;
+  peg: PegConfig;
   /** Sampan Pay as its pages show it: how long an invoice is open, the invoice range and the demo shop's price. */
   pay: Pick<PayConfig, 'validMinutes' | 'minUsd' | 'maxUsd'> & { demoPriceUsd: number };
   /** The atomic swap route's client file, contract and service path (the page loads nothing from it while features.atom is false). */
@@ -363,6 +367,7 @@ export function validateConfig(c: SampanConfig): string[] {
     need(url === '' || isHttpsUrl(url) || url.startsWith('/'), `URL must be empty, a path or https: ${url}`);
   }
   errors.push(...validateBusiness(c.business));
+  errors.push(...validatePeg(c.peg));
   errors.push(...validatePay(c.pay));
   errors.push(...validateAtom(c.atom));
   need(typeof c.features?.atom === 'boolean', 'features.atom: true or false');
@@ -436,6 +441,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     connect: { ...c.connect, gapLimit: c.wallet.gapLimit, feeCapSats: c.fees.capSats, satsPerByte: c.fees.satsPerByte, tokenDustSats: c.landing.tokenDustSats },
     health: { intervalSeconds: c.ops.healthIntervalSeconds, retrySeconds: c.ops.healthRetrySeconds, requestTimeoutSeconds: c.ops.requestTimeoutSeconds },
     business: { feeBps: c.business.feeBps, feeAddress: c.business.feeAddress },
+    peg: { warnBps: c.peg.warnBps, refuseBps: c.peg.refuseBps },
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
     atom: c.atom,
     oneClick: oneClickPublic(c.oneClick),

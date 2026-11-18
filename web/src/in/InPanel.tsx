@@ -27,6 +27,7 @@ import { CostCard } from '../cost/CostCard';
 import { inCard } from '../cost/inputs';
 import { UnitChip } from '../chips/Chip';
 import { useGas } from '../cost/useGas';
+import { PegNote } from '../peg/PegNote';
 
 const BCH = 'BCH';
 const ROUTE_DECIMALS = 8;
@@ -185,6 +186,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
               : t('in.enter', vars)}
       </p>
       {q && receive !== BCH ? <p className="card__note">{t('in.priceMoves', vars)}</p> : null}
+      <PegNote />
       {q && evm.connected ? <p className="card__note">{t(oneClick ? 'in.signs.transfer' : 'in.signs', { ...vars, amount: amountText.trim() })}</p> : null}
       {run.phase === 'failed' ? (
         <p className="swap__error" role="alert">

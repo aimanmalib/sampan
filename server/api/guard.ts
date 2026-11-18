@@ -41,6 +41,15 @@ export function crossingGate(s: Services, c: SampanConfig, req: FastifyRequest):
   if (!s.health.routeOpen()) throw new RouteError('route_paused', 'the route reports this chain halted; crossings are paused');
 }
 
+/**
+ * Before a new crossing or landing address: refused while PUSD sits at least peg.refuseBps from one dollar (core/peg.ts).
+ * An unknown peg (THORNode or the pools not answering) refuses nothing. Swaps on Bitcoin Cash never pass through here.
+ */
+export async function pegGate(s: Services): Promise<void> {
+  if ((await s.depth.level()) === 'refuse')
+    throw new ApiError(503, 'peg_off', 'PUSD is too far from one dollar right now; new crossings and landing addresses wait until it comes back');
+}
+
 const SWAP_STATUS: Record<SwapError['code'], number> = {
   bad_request: 400,
   below_min: 400,

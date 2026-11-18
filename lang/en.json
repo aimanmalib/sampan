@@ -617,5 +617,22 @@
   "receipt.costKept": "{usd}, you kept {pct}% of the value",
   "receipt.time": "Time",
   "receipt.minutes": "About {n} min, from preparing the transaction until Sampan saw the payout",
-  "receipt.basis": "{symbol} counts as USD 1. BCH is valued at the price in the quote this crossing was built from."
+  "receipt.basis": "{symbol} counts as USD 1. BCH is valued at the price in the quote this crossing was built from.",
+  "swap.err.peg_off": "PUSD is too far from one dollar right now, so new crossings and landing addresses wait until it comes back. Swaps on Bitcoin Cash stay open.",
+  "peg.warn": "In the pools, {symbol} is {gap} away from one dollar right now. Check the amounts before you sign.",
+  "depth.title": "Liquidity and peg right now",
+  "depth.lead": "Read at {time} UTC from the Cauldron pools whose contract the server rebuilt and found on chain, and from THORChain's own BCH pool for the dollar price.",
+  "depth.loading": "Reading the pools.",
+  "depth.down": "The pools could not be read right now, so no numbers are shown.",
+  "depth.pools": "Pools counted",
+  "depth.bch": "BCH in the pools",
+  "depth.token": "{symbol} in the pools",
+  "depth.mid": "Pool price of one BCH",
+  "depth.onePercent": "BCH one trade can move before its price is 1% worse",
+  "depth.bchUsd": "BCH price on THORChain",
+  "depth.peg": "{symbol} against one dollar",
+  "depth.unknown": "Unknown: THORChain did not answer",
+  "depth.rule": "At {warn} or more away, every panel shows a warning. At {refuse} or more, new crossings and landing addresses wait; swaps on Bitcoin Cash stay open.",
+  "depth.source.pools": "Pool list from the indexer",
+  "depth.source.price": "BCH pool on THORNode"
 }

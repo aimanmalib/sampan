@@ -617,5 +617,22 @@
   "receipt.costKept": "{usd}, anda menyimpan {pct}% daripada nilai",
   "receipt.time": "Masa",
   "receipt.minutes": "Kira-kira {n} min, dari transaksi disediakan hingga Sampan melihat bayaran keluar",
-  "receipt.basis": "{symbol} dikira USD 1. BCH dinilai pada harga dalam sebut harga yang membina lintasan ini."
+  "receipt.basis": "{symbol} dikira USD 1. BCH dinilai pada harga dalam sebut harga yang membina lintasan ini.",
+  "swap.err.peg_off": "PUSD terlalu jauh dari satu dolar sekarang, jadi lintasan baharu dan alamat pendaratan menunggu sehingga ia kembali. Tukaran di Bitcoin Cash kekal dibuka.",
+  "peg.warn": "Dalam kolam, {symbol} kini {gap} jauh dari satu dolar. Semak amaun sebelum anda menandatangani.",
+  "depth.title": "Kecairan dan tambatan harga sekarang",
+  "depth.lead": "Dibaca pada {time} UTC dari kolam Cauldron yang kontraknya dibina semula oleh pelayan dan ditemui dalam rantaian, dan dari kolam BCH THORChain sendiri untuk harga dolar.",
+  "depth.loading": "Membaca kolam.",
+  "depth.down": "Kolam tidak dapat dibaca sekarang, jadi tiada angka dipaparkan.",
+  "depth.pools": "Kolam dikira",
+  "depth.bch": "BCH dalam kolam",
+  "depth.token": "{symbol} dalam kolam",
+  "depth.mid": "Harga kolam bagi satu BCH",
+  "depth.onePercent": "BCH yang satu dagangan boleh gerakkan sebelum harganya 1% lebih buruk",
+  "depth.bchUsd": "Harga BCH di THORChain",
+  "depth.peg": "{symbol} berbanding satu dolar",
+  "depth.unknown": "Tidak diketahui: THORChain tidak menjawab",
+  "depth.rule": "Pada jarak {warn} atau lebih, setiap panel memaparkan amaran. Pada {refuse} atau lebih, lintasan baharu dan alamat pendaratan menunggu; tukaran di Bitcoin Cash kekal dibuka.",
+  "depth.source.pools": "Senarai kolam dari pengindeks",
+  "depth.source.price": "Kolam BCH di THORNode"
 }

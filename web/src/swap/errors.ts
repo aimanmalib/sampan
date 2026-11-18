@@ -3,7 +3,7 @@ import { ApiFailure } from '../../../core/client/api';
 import { CheckFailure } from '../../../core/client/swap';
 import type { TextKey } from '../i18n';
 
-const KNOWN = ['below_min', 'above_max', 'no_liquidity', 'not_enough_funds', 'price_moved', 'gave_up', 'offline', 'rejected', 'rate_limited'] as const;
+const KNOWN = ['below_min', 'above_max', 'no_liquidity', 'not_enough_funds', 'price_moved', 'gave_up', 'offline', 'rejected', 'rate_limited', 'peg_off'] as const;
 
 export function errorKey(e: unknown): TextKey {
   if (e instanceof CheckFailure) return 'swap.err.check';

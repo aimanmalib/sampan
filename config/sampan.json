@@ -268,6 +268,7 @@
     "testAddresses": ["bitcoincash:qqyuz8zh06c8h39guuedjpfvnlvjeg394ucvfe6ltt"],
     "quotePayloadHours": 24
   },
+  "peg": { "warnBps": 100, "refuseBps": 200 },
   "business": {
     "feeBps": 0,
     "feeAddress": "bitcoincash:qplrydnf2z4pj4z9rv7uhmwsuxyrm8hj7u3nqeslpn",

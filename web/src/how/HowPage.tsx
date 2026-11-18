@@ -8,6 +8,7 @@ import { useText, type TextKey } from '../i18n';
 import { Measured } from '../Measured';
 import { Diagram } from './Diagram';
 import { ProofTable } from './ProofTable';
+import { DepthBlock } from '../peg/DepthBlock';
 import './how.css';
 
 export function HowPage({ config }: { config: LoadedConfig | null }) {
@@ -123,6 +124,7 @@ export function HowPage({ config }: { config: LoadedConfig | null }) {
           </p>
         ) : null}
       </section>
+      <DepthBlock config={config} />
       <Measured />
       <ProofTable config={config} />
     </article>
