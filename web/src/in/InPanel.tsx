@@ -25,6 +25,7 @@ import { NetworkPicker } from '../cross/NetworkPicker';
 import { useNetworks } from '../cross/useNetworks';
 import { CostCard } from '../cost/CostCard';
 import { inCard } from '../cost/inputs';
+import { UnitChip } from '../chips/Chip';
 import { useGas } from '../cost/useGas';
 
 const BCH = 'BCH';
@@ -144,7 +145,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
   return (
     <div className="swap in" data-asset={asset}>
       {networks.choices.length > 1 ? (
-        <NetworkPicker choices={networks.choices} value={asset} disabled={busy} onChange={networks.choose} />
+        <NetworkPicker config={config} choices={networks.choices} value={asset} disabled={busy} onChange={networks.choose} />
       ) : (
         <p className="out__to">{t('in.fromOne', vars)}</p>
       )}
@@ -153,7 +154,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
         <span className="field__label">{t('in.amount', vars)}</span>
         <span className="field__row">
           <input className="field__input" inputMode="decimal" autoComplete="off" placeholder="0" value={amountText} disabled={busy} onChange={(e) => setAmountText(e.target.value)} />
-          <span className="field__unit">{src.symbol}</span>
+          <UnitChip config={config} name={src.symbol} />
         </span>
       </label>
       <div className="swap__sides" role="radiogroup" aria-label={t('in.receive')}>

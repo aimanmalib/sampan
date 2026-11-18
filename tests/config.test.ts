@@ -250,7 +250,7 @@ describe('ui.themes and ui.theme', () => {
     expect(publicConfig(shipped).ui).not.toHaveProperty('themes');
   });
   it.each([
-    [{ theme: 'night' }, 'ui.theme: one of ui.themes'],
+    [{ theme: 'dusk' }, 'ui.theme: one of ui.themes'],
     [{ theme: undefined }, 'ui.theme: one of ui.themes'],
     [{ themes: ['night'], theme: 'night' }, 'ui.themes: must include "paper", the way back'],
     [{ themes: [] }, 'ui.themes: a list of distinct lower-case theme names'],
@@ -262,6 +262,19 @@ describe('ui.themes and ui.theme', () => {
   });
   it('accepts a second listed theme as the chosen one', () => {
     expect(validateConfig({ ...shipped, ui: { ...shipped.ui, themes: ['paper', 'night'], theme: 'night' } })).toEqual([]);
+  });
+});
+
+describe('ui.icons', () => {
+  it('names an icon file that exists for every entry, and reaches the page', () => {
+    for (const [name, file] of Object.entries(shipped.ui.icons)) {
+      expect(() => readFileSync(new URL(`../web/src/icons/${file}.svg`, import.meta.url)), `${name} → ${file}.svg`).not.toThrow();
+    }
+    expect(publicConfig(shipped).ui.icons).toEqual(shipped.ui.icons);
+  });
+  it.each([[undefined], [[]], [{ BCH: 'BCH' }], [{ BCH: '../bch' }], [{ 'B C': 'bch' }], [{ BCH: 3 }]])('rejects ui.icons %o', (icons) => {
+    const bad = { ...shipped, ui: { ...shipped.ui, icons } } as unknown as typeof shipped;
+    expect(validateConfig(bad)).toContain('ui.icons: an object of name → icon file name (lower-case letters, digits, dashes)');
   });
 });
 

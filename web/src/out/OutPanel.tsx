@@ -24,6 +24,7 @@ import { NetworkPicker } from '../cross/NetworkPicker';
 import { useNetworks } from '../cross/useNetworks';
 import { CostCard } from '../cost/CostCard';
 import { outCard } from '../cost/inputs';
+import { UnitChip } from '../chips/Chip';
 
 const BCH = 'BCH';
 const BCH_DECIMALS = 8;
@@ -186,11 +187,11 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
         <span className="field__label">{t('swap.amount')}</span>
         <span className="field__row">
           <input className="field__input" inputMode="decimal" autoComplete="off" placeholder="0" value={text} disabled={busy || run.phase === 'stopped'} onChange={(e) => setText(e.target.value)} />
-          <span className="field__unit">{source}</span>
+          <UnitChip config={config} name={source} usd={source === token.symbol && amount !== undefined ? Number(formatUnits(amount, token.decimals)) : undefined} />
         </span>
       </label>
       {networks.choices.length > 1 ? (
-        <NetworkPicker choices={networks.choices} value={pick.asset} disabled={busy} onChange={networks.choose} />
+        <NetworkPicker config={config} choices={networks.choices} value={pick.asset} disabled={busy} onChange={networks.choose} />
       ) : (
         <p className="out__to">{t('out.toOne', vars)}</p>
       )}

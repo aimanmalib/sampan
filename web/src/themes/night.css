@@ -1,0 +1,63 @@
+/*
+ * Night (direction A): a dark page with a still gradient, a geometric sans (Manrope) for headings and text, one
+ * card in the middle that lifts off the page. Tokens first, then the few named overrides the dark ground needs.
+ */
+:root[data-theme='night'] {
+  --paper: #0b1020;
+  --paper-deep: #1b2440;
+  --ink: #eef1f8;
+  --ink-soft: #aab4ca;
+  --river: #5eead4;
+  --river-pale: #173a44;
+  --lamp: #f5b544;
+  --danger: #ff8f80;
+  --line: #2b3654;
+  --card: #121a2f;
+  --overlay: rgba(3, 6, 14, 0.72);
+
+  --font-display: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-text: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --radius: 20px;
+  --gap: clamp(1rem, 3vw, 1.5rem);
+  --measure: 40rem;
+  --page: 68rem;
+  --touch: 44px;
+  --focus: 3px solid var(--lamp);
+
+  /* A still gradient, drawn once: no filter, no animation (WebKit). */
+  background:
+    radial-gradient(120% 60% at 50% -10%, #1f3168 0%, rgba(31, 49, 104, 0) 70%) no-repeat,
+    var(--paper);
+  color-scheme: dark;
+}
+
+/* The banner keeps light text on a band darker than the page. */
+:root[data-theme='night'] .banner {
+  --ink: #05080f;
+  --paper: #eef1f8;
+  --paper-deep: #c3cbdd;
+}
+
+:root[data-theme='night'] .hero__title,
+:root[data-theme='night'] .wordmark {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+:root[data-theme='night'] .card {
+  border-color: #33406a;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+
+:root[data-theme='night'] .field__input {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* QR codes stay dark on light, the way every scanner reads them. */
+:root[data-theme='night'] .payqr {
+  --card: #ffffff;
+  --ink: #000000;
+}

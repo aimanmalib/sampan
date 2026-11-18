@@ -10,6 +10,7 @@ import type { LoadedConfig } from '../config';
 import { useText } from '../i18n';
 import type { Wallet } from '../wallet/useWallet';
 import { WizardHat } from '../wallet/WizardHat';
+import { UnitChip } from '../chips/Chip';
 import { codeKey, errorKey } from './errors';
 import { useQuote } from './useQuote';
 
@@ -40,6 +41,9 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
   const have = view ? (side === 'buy' ? view.sats : (view.tokens[token.category.toLowerCase()] ?? 0n)) : undefined;
   const short = have !== undefined && amount !== undefined && amount > have;
   const busy = run.phase === 'running';
+  // The token is a dollar stablecoin: its own amount when selling it, the quote's token amount when buying it.
+  const usdUnits = side === 'sell' ? amount : quote.status === 'ok' ? BigInt(quote.quote.demand) : undefined;
+  const usd = usdUnits === undefined ? undefined : Number(formatUnits(usdUnits, token.decimals));
 
   const pick = (next: TradeSide): void => {
     if (next === side || busy) return;
@@ -123,7 +127,7 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
               setRun({ phase: 'idle' });
             }}
           />
-          <span className="field__unit">{payUnit}</span>
+          <UnitChip config={config} name={payUnit} usd={usd} />
         </span>
       </label>
       <p className="swap__receive" aria-live="polite">

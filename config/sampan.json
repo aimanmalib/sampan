@@ -330,8 +330,9 @@
     "qrAutoOpen": true,
     "qrCloseMs": 400,
     "arriveMs": 2400,
-    "themes": ["paper"],
-    "theme": "paper"
+    "themes": ["paper", "night", "linen", "ink"],
+    "theme": "paper",
+    "icons": { "BCH": "bch", "USDC": "usdc", "USDT": "usdt", "ETH": "eth", "BNB": "bnb", "BSC": "bnb", "AVAX": "avax", "TRON": "trx", "TRX": "trx" }
   },
   "i18n": {
     "default": "en",

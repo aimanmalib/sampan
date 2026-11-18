@@ -11,6 +11,7 @@ import { formatUnits, parseUnits } from '../../../core/wallet';
 import { ApiFailure } from '../../../core/client/api';
 import { api } from '../api';
 import type { LoadedConfig } from '../config';
+import { UnitChip } from '../chips/Chip';
 import { useText, type TextKey } from '../i18n';
 import { codeKey, errorKey } from '../swap/errors';
 import type { Wallet } from '../wallet/useWallet';
@@ -199,7 +200,7 @@ export function LandOpen({
                 disabled={paying}
                 onChange={(e) => setAmountText(e.target.value)}
               />
-              <span className="field__unit">BCH</span>
+              <UnitChip config={config} name="BCH" />
             </span>
           </label>
           <p className="card__note">{t('land.min', { ...vars, tokens: formatUnits(landing.tokensMin, token.decimals, token.decimals) })}</p>

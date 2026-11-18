@@ -61,12 +61,18 @@ export const SHIPPED_PORT_OFFSET = ONECLICK_PORT_OFFSET + 1;
 const shippedPatch = { features: { swap: true, landing: true }, rate: e2ePatch.rate };
 /** Test-only secret of the demo shop's hook on the local fake server (the public site's secret lives on the host). */
 const payEnv = { SAMPAN_PAY_DEMO_SECRET: `whsec_${Buffer.alloc(32, 3).toString('base64')}` };
-const fakeServer = (p: number, patch: unknown, outage?: string, extra: Record<string, string> = {}) => ({
+/**
+ * E2E_THEME runs every fake server in that look (config ui.theme), so the layout and contrast specs can be repeated per
+ * theme (scripts/gerbang-ujian.sh); unset, the servers wear the shipped theme.
+ */
+export const E2E_THEME = process.env.E2E_THEME;
+const themed = (patch: object): object => (E2E_THEME ? { ...patch, ui: { ...(patch as { ui?: object }).ui, theme: E2E_THEME } } : patch);
+const fakeServer = (p: number, patch: object, outage?: string, extra: Record<string, string> = {}) => ({
   command: 'node dist/server/main.js',
   url: `http://127.0.0.1:${p}/healthz`,
   reuseExistingServer: false,
   timeout: 30_000,
-  env: { PORT: String(p), HOST: '127.0.0.1', SAMPAN_FAKE: '1', SAMPAN_CONFIG_PATCH: JSON.stringify(patch), ...(outage ? { SAMPAN_FAKE_OUTAGE: outage } : {}), ...extra },
+  env: { PORT: String(p), HOST: '127.0.0.1', SAMPAN_FAKE: '1', SAMPAN_CONFIG_PATCH: JSON.stringify(themed(patch)), ...(outage ? { SAMPAN_FAKE_OUTAGE: outage } : {}), ...extra },
 });
 
 export default defineConfig({

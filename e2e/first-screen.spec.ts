@@ -9,7 +9,7 @@ import en from '../lang/en.json' with { type: 'json' };
 import fil from '../lang/fil.json' with { type: 'json' };
 import id from '../lang/id.json' with { type: 'json' };
 import ms from '../lang/ms.json' with { type: 'json' };
-import { PAY_PORT_OFFSET, SHIPPED_PORT_OFFSET } from '../playwright.config.js';
+import { E2E_THEME, PAY_PORT_OFFSET, SHIPPED_PORT_OFFSET } from '../playwright.config.js';
 
 test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server with the shipped flows');
 const shippedPort = Number(process.env.E2E_PORT ?? 4173) + SHIPPED_PORT_OFFSET;
@@ -46,6 +46,7 @@ for (const [lang, text] of Object.entries(LANGS)) {
       const viewport = page.viewportSize()!;
       const label = `${info.project.name} ${viewport.width}x${viewport.height} ${lang}`;
       await page.goto('/');
+      await expect(page.locator('html')).toHaveAttribute('data-theme', E2E_THEME ?? shipped.ui.theme);
       await expect(page.locator('h1')).toHaveText(text['hero.title']);
       await expect(page.locator('.judge__fill')).toHaveText(text['judge.fill']);
       await expect(page.locator('.button--primary')).toHaveCount(1);

@@ -6,7 +6,16 @@ import fastifyStatic from '@fastify/static';
 import type { FastifyInstance } from 'fastify';
 import type { ErrorPages } from './error-page.js';
 
-export async function registerWeb(app: FastifyInstance, webDist: string, errorPages: ErrorPages): Promise<void> {
+/**
+ * The page names the theme config ui.theme picks. The build writes it already; serving it from the running config
+ * as well keeps the page and the error pages in one look when the server runs with a config patch (a theme preview
+ * on a local server, ADR 0057).
+ */
+export function withTheme(html: string, theme: string): string {
+  return html.replace(/(<html\b[^>]*\sdata-theme=)"[^"]*"/, `$1"${theme}"`);
+}
+
+export async function registerWeb(app: FastifyInstance, webDist: string, errorPages: ErrorPages, theme: string): Promise<void> {
   const indexFile = path.join(webDist, 'index.html');
   const hasWeb = existsSync(indexFile);
   if (hasWeb) {
@@ -21,7 +30,7 @@ export async function registerWeb(app: FastifyInstance, webDist: string, errorPa
       },
     });
   }
-  const indexHtml = hasWeb ? readFileSync(indexFile, 'utf8') : '';
+  const indexHtml = hasWeb ? withTheme(readFileSync(indexFile, 'utf8'), theme) : '';
 
   app.setNotFoundHandler((request, reply) => {
     const pathname = request.url.split('?')[0] ?? '/';

@@ -1,0 +1,61 @@
+/*
+ * Ink (direction C): a green-ink ground with one amber lamp for the action, a grotesque sans (IBM Plex Sans) at high
+ * contrast; on a wide screen the card stands beside the words. Tokens first, then named overrides.
+ */
+:root[data-theme='ink'] {
+  --paper: #0e1d18;
+  --paper-deep: #1d3029;
+  --ink: #f4f0e6;
+  --ink-soft: #b9c4ba;
+  --river: #f2a93b;
+  --river-pale: #2c3a26;
+  --lamp: #f2a93b;
+  --danger: #ff9e8a;
+  --line: #2f4a40;
+  --card: #13261f;
+  --overlay: rgba(4, 10, 8, 0.72);
+
+  --font-display: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-text: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --radius: 10px;
+  --gap: clamp(1rem, 3vw, 1.5rem);
+  --measure: 40rem;
+  --page: 68rem;
+  --touch: 44px;
+  --focus: 3px solid #ffe2ad;
+
+  background: var(--paper);
+  color-scheme: dark;
+}
+
+/* The banner: light text on a band darker than the page. */
+:root[data-theme='ink'] .banner {
+  --ink: #07110d;
+  --paper: #f4f0e6;
+  --paper-deep: #c9d2c8;
+}
+
+:root[data-theme='ink'] .hero__title {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+:root[data-theme='ink'] .card {
+  border-color: #3b5a4e;
+}
+
+:root[data-theme='ink'] .tabs__tab[aria-selected='true'] {
+  border-bottom-color: var(--lamp);
+}
+
+:root[data-theme='ink'] .field__input {
+  font-weight: 600;
+}
+
+/* QR codes stay dark on light, the way every scanner reads them. */
+:root[data-theme='ink'] .payqr {
+  --card: #ffffff;
+  --ink: #000000;
+}

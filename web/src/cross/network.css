@@ -53,3 +53,16 @@
 .network__radio:focus-visible {
   outline: none;
 }
+/* Token icon with the chain's icon tucked under its corner. */
+.network__icons {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+.network__icons > .chip__icon + .chip__icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  font-size: 0.5rem;
+  margin: 0.625rem 0 0 -0.5rem;
+  box-shadow: 0 0 0 2px var(--card);
+}

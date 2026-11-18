@@ -17,4 +17,9 @@ if [ "${CI:-}" = "1" ]; then
   echo "== browsers"; npx playwright install --with-deps chromium webkit >/dev/null
 fi
 echo "== e2e";       npx playwright test
+# Every other look config carries (ui.themes) passes the layout and contrast specs too (ADR 0057).
+for theme in $(node -e 'const u = require("./config/sampan.json").ui; console.log(u.themes.filter((t) => t !== u.theme).join(" "))'); do
+  echo "== e2e theme $theme"
+  E2E_THEME="$theme" npx playwright test e2e/first-screen.spec.ts e2e/a11y.spec.ts e2e/front.spec.ts
+done
 echo "gate ok"

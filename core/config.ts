@@ -158,8 +158,9 @@ export interface SampanConfig {
    * arriveMs: how long the one arrival animation plays once the token has landed (800 to 6000).
    * themes: the looks the build carries, each web/src/themes/<name>.css; always includes "paper", the way back.
    * theme: the one the page wears, written into <html data-theme> when the page is built.
+   * icons: token symbol or chain key → icon file web/src/icons/<file>.svg; a name not listed gets a one-letter monogram.
    */
-  ui: { ferryMotion: boolean; qrAutoOpen: boolean; qrCloseMs: number; arriveMs: number; themes: string[]; theme: string };
+  ui: { ferryMotion: boolean; qrAutoOpen: boolean; qrCloseMs: number; arriveMs: number; themes: string[]; theme: string; icons: Record<string, string> };
   /** Languages the page offers, in menu order, each by its own name; every code has a lang/<code>.json. default: shown until a visitor picks one. */
   i18n: I18nConfig;
 }
@@ -313,6 +314,12 @@ export function validateConfig(c: SampanConfig): string[] {
   );
   need(themes.includes('paper'), 'ui.themes: must include "paper", the way back');
   need(typeof c.ui?.theme === 'string' && themes.includes(c.ui.theme), 'ui.theme: one of ui.themes');
+  const icons: unknown = c.ui?.icons;
+  need(
+    typeof icons === 'object' && icons !== null && !Array.isArray(icons) &&
+      Object.entries(icons).every(([k, v]) => /^[A-Za-z0-9.-]+$/.test(k) && typeof v === 'string' && /^[a-z0-9-]+$/.test(v)),
+    'ui.icons: an object of name → icon file name (lower-case letters, digits, dashes)',
+  );
   const langs = Array.isArray(c.i18n?.languages) ? c.i18n.languages : [];
   const codes = langs.map((x) => x?.code);
   need(
@@ -426,7 +433,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
     atom: c.atom,
     oneClick: oneClickPublic(c.oneClick),
-    ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen, qrCloseMs: c.ui.qrCloseMs, arriveMs: c.ui.arriveMs, theme: c.ui.theme },
+    ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen, qrCloseMs: c.ui.qrCloseMs, arriveMs: c.ui.arriveMs, theme: c.ui.theme, icons: c.ui.icons },
     i18n: { default: c.i18n.default, languages: c.i18n.languages.map(({ code, name, machine }) => (machine ? { code, name, machine } : { code, name })) },
   };
 }
