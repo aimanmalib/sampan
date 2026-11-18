@@ -38,8 +38,8 @@ export const QR_OFF_PORT_OFFSET = NETWORK_PORT_OFFSET + 1;
 const qrOffPatch = { ...landingPatch, ui: { qrAutoOpen: false } };
 /**
  * A fake server with the 1Click route on (e2e/oneclick.spec.ts): the cross-chain server plus features.oneClick, and
- * 1Click answered by the synthetic fake. Base USDC is added to its asset list here only, so one request can show the
- * THORChain, atomic swap and 1Click rows together (the id follows the 1Click form; the fake accepts any id).
+ * 1Click answered by the synthetic fake, every configured 1Click asset live here only (Base USDC included), so one
+ * request can show the THORChain, atomic swap and 1Click rows together.
  */
 export const ONECLICK_PORT_OFFSET = QR_OFF_PORT_OFFSET + 1;
 const shippedOneClick = (JSON.parse(readFileSync('config/sampan.json', 'utf8')) as { oneClick: { assets: Array<Record<string, unknown>> } }).oneClick.assets;
@@ -49,7 +49,6 @@ const oneClickPatch = {
   oneClick: {
     assets: [
       ...shippedOneClick.map((a) => ({ ...a, live: { out: true, in: true } })),
-      { id: 'nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near', chain: 'BASE', symbol: 'USDC', decimals: 6, live: { out: true, in: true } },
     ],
   },
 };

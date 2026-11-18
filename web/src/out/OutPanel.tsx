@@ -61,7 +61,9 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
   const decimals = source === BCH ? BCH_DECIMALS : token.decimals;
   const amount = parseUnits(text, decimals);
   const ask = { source, amount, symbol: pick?.symbol ?? '', chain: pick?.chain.key ?? '', destination: destination.trim() };
-  const thorQuote = useOutQuote(ask, QUOTE_PAUSE_MS);
+  // THORChain is asked only for a network it offers now; a network only 1Click offers gets no THORChain request.
+  const thorOffered = pick?.thor === true;
+  const thorQuote = useOutQuote({ ...ask, enabled: thorOffered }, QUOTE_PAUSE_MS);
   // 1Click is asked (by the server, dry) only while the flag is on and config offers this asset out.
   const ocOffered = pick !== undefined && offersOneClick(config.features.oneClick, config.oneClick, 'out', pick.chain.key, pick.symbol);
   const ocQuote = useOutQuote({ ...ask, route: 'near-intents', enabled: ocOffered }, config.oneClick.dryDebounceMs);
@@ -76,7 +78,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
   const choice = useRouteChoice(
     config,
     pick && amount !== undefined && amount > 0n ? { kind: 'out', amount: formatUnits(amount, decimals), source, chain: pick.chain.key, symbol: pick.symbol } : null,
-    side(thorQuote),
+    thorOffered ? side(thorQuote) : { error: 'chain_halted' },
     ocOffered ? { quote: side(ocQuote), vars: ocVars } : null,
   );
   const atom = choice.route === 'atom';

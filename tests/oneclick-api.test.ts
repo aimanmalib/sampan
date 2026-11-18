@@ -118,4 +118,22 @@ describe('1Click through /api/out and /api/in', () => {
     expect(answers[0]!.json().features.oneClick).toBe(true);
     expect(answers[0]!.body).not.toMatch(/chaindefuser|x-api-key/i);
   });
+
+  it('keeps answering while THORChain halts the same chains or the whole route; THORChain stays paused (KSG3)', async () => {
+    const thorEth = { ...out, route: 'thorchain' };
+    await start(patchConfig(oneClickOn, JSON.stringify({ thorchain: { assets: base.thorchain.assets.map((a) => (a.chain === 'ETH' || a.chain === 'BSC' ? { ...a, live: { out: true, in: true } } : a)) } })));
+    // Ethereum and Base halted on THORChain: its ETH request answers 503 chain_halted, 1Click's ETH and Base answer.
+    services.route!.open = async () => ({ BCH: true, ETH: false, BASE: false, BSC: true });
+    await services.health.check();
+    expect([(await post('/api/out/quote', thorEth)).statusCode, (await post('/api/out/quote', thorEth)).json().error]).toEqual([503, 'chain_halted']);
+    expect((await post('/api/out/quote', out)).statusCode).toBe(200);
+    expect((await post('/api/out/quote', { ...out, chain: 'BASE' })).statusCode).toBe(200);
+    expect((await post('/api/in/quote', into)).statusCode).toBe(200);
+    // Bitcoin Cash halted on THORChain = its whole route paused; 1Click is not asked about THORChain's state.
+    services.route!.open = async () => ({ BCH: false, ETH: true });
+    await services.health.check();
+    expect((await post('/api/out/quote', thorEth)).json().error).toBe('route_paused');
+    expect((await post('/api/out/quote', out)).statusCode).toBe(200);
+    expect((await post('/api/in/quote', into)).statusCode).toBe(200);
+  });
 });

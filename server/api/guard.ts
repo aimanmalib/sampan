@@ -31,14 +31,16 @@ export const crossingLimit = (s: Services, c: SampanConfig, req: FastifyRequest)
 
 /**
  * Before a new crossing is quoted or planned: visitors from compliance.blockedCountries get 451 (country from
- * cf-ipcountry, believed only through Cloudflare), and a route the last health check saw halted is paused.
+ * cf-ipcountry, believed only through Cloudflare), and a route the last health check saw halted is paused. That health
+ * check is THORChain's: a request for the 1Click route (`route: near-intents`) does not wait on it (KSG3).
  * Static pages, the Swap tab and landing addresses never pass through here.
  */
 export function crossingGate(s: Services, c: SampanConfig, req: FastifyRequest): void {
   const cc = s.clientIp.country(req.socket.remoteAddress, req.headers);
   if (cc && c.compliance.blockedCountries.includes(cc))
     throw new ApiError(451, 'restricted_region', 'crossings to and from other chains are not offered in your region');
-  if (!s.health.routeOpen()) throw new RouteError('route_paused', 'the route reports this chain halted; crossings are paused');
+  const route = (req.body as { route?: string } | null | undefined)?.route;
+  if (route !== 'near-intents' && !s.health.routeOpen()) throw new RouteError('route_paused', 'the route reports this chain halted; crossings are paused');
 }
 
 /**

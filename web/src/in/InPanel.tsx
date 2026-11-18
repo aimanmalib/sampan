@@ -57,7 +57,9 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
   const addressOk = address !== '' && typeof parseAddress(address, 'bitcoincash') !== 'string';
   const amount = parseUnits(amountText, ROUTE_DECIMALS);
   const ask = { symbol: src?.symbol ?? '', chain: src?.chain.key ?? '', amount, receive, address, addressOk };
-  const thorQuote = useInQuote(ask, QUOTE_PAUSE_MS);
+  // THORChain is asked only for a network it offers now; a network only 1Click offers gets no THORChain request.
+  const thorOffered = src?.thor === true;
+  const thorQuote = useInQuote({ ...ask, enabled: thorOffered }, QUOTE_PAUSE_MS);
   // 1Click is asked (by the server, dry) only while the flag is on and config offers this asset in.
   const ocOffered = src !== undefined && offersOneClick(config.features.oneClick, config.oneClick, 'in', src.chain.key, src.symbol);
   const ocQuote = useInQuote({ ...ask, route: 'near-intents', enabled: ocOffered }, config.oneClick.dryDebounceMs);
@@ -67,7 +69,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
   const choice = useRouteChoice(
     config,
     src && amount !== undefined && amount > 0n ? { kind: 'in', amount: formatUnits(amount, ROUTE_DECIMALS), chain: src.chain.key, symbol: src.symbol, receive } : null,
-    side(thorQuote),
+    thorOffered ? side(thorQuote) : { error: 'chain_halted' },
     ocOffered ? { quote: side(ocQuote), vars: ocVars } : null,
   );
   const oneClick = choice.route === 'near-intents';

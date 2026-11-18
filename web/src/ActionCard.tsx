@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { openFlows, openTabs, type TabId } from '../../core/flows';
 import type { LoadedConfig } from './config';
 import { routeHalted } from '../../core/client/health';
+import { oneClickOffers } from '../../core/cross-choices';
 import { RoutePaused } from './cross/RoutePaused';
 import { ErrorBoundary, ErrorCard } from './ErrorBoundary';
 import { ProviderNote } from './errors/ProviderNote';
@@ -57,8 +58,10 @@ export function ActionCard({
 }) {
   const { t } = useText();
   const tabs = cardTabs(config);
-  const halted = routeHalted(useHealth());
   const tab = chosen && tabs.includes(chosen) ? chosen : tabs[0];
+  // THORChain halted pauses a crossing tab only when 1Click offers nothing in its direction either (KSG3).
+  const thorHalted = routeHalted(useHealth());
+  const halted = thorHalted && !(config && tab !== 'swap' && tab && oneClickOffers({ enabled: config.features.oneClick, assets: config.oneClick.assets }, tab));
   const Body = tab ? PANELS[tab] : undefined;
   if (!config || !tab || !Body) return null;
   return (
