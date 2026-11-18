@@ -62,6 +62,12 @@ describe('fillPageMeta', () => {
     expect(image2).not.toBe(meta(out, 'property', 'og:image'));
   });
 
+  it('writes the theme from config into <html data-theme>', () => {
+    expect(out).toMatch(new RegExp(`<html lang="en" data-theme="${shipped.ui.theme}">`));
+    const night = fillPageMeta(html, en, { ...config, ui: { theme: 'night' } }, ogBytes);
+    expect(night).toContain('<html lang="en" data-theme="night">');
+  });
+
   it('escapes quotes in text and fails on an unknown placeholder', () => {
     const quoted = fillPageMeta('<meta content="%lang:x%">', { x: 'a "b" & <c>' }, config, ogBytes);
     expect(quoted).toBe('<meta content="a &quot;b&quot; &amp; &lt;c>">');

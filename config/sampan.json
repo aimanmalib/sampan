@@ -329,7 +329,9 @@
     "ferryMotion": true,
     "qrAutoOpen": true,
     "qrCloseMs": 400,
-    "arriveMs": 2400
+    "arriveMs": 2400,
+    "themes": ["paper"],
+    "theme": "paper"
   },
   "i18n": {
     "default": "en",

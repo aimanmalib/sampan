@@ -4,6 +4,8 @@ import { descriptionKey, openFlows, symbolList, type FlowFlags } from './flows.j
 
 export interface PageMetaConfig extends FlowFlags {
   site: { url: string; ogImage: string };
+  /** theme: the name written into <html data-theme>, so the page draws in its look before any script runs. */
+  ui: { theme: string };
 }
 
 export interface PngSize {
@@ -55,6 +57,7 @@ export function fillPageMeta(
     image: `${config.site.url}${config.site.ogImage}?v=${version}`,
     'image-width': String(width),
     'image-height': String(height),
+    theme: config.ui.theme,
   };
   const out = html
     .replace(/%flows:description%/g, () => text(descriptionKey(openFlows(config))))

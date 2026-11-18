@@ -237,6 +237,34 @@ describe('ui.qrCloseMs and ui.arriveMs', () => {
   });
 });
 
+describe('ui.themes and ui.theme', () => {
+  it('ship a theme file for every listed theme, include paper, and send only the chosen theme to the page', () => {
+    expect(validateConfig(shipped)).toEqual([]);
+    expect(shipped.ui.themes).toContain('paper');
+    expect(shipped.ui.themes).toContain(shipped.ui.theme);
+    for (const name of shipped.ui.themes) {
+      const css = readFileSync(new URL(`../web/src/themes/${name}.css`, import.meta.url), 'utf8');
+      expect(css, `${name}.css scopes its tokens`).toContain(`:root[data-theme='${name}']`);
+    }
+    expect(publicConfig(shipped).ui.theme).toBe(shipped.ui.theme);
+    expect(publicConfig(shipped).ui).not.toHaveProperty('themes');
+  });
+  it.each([
+    [{ theme: 'night' }, 'ui.theme: one of ui.themes'],
+    [{ theme: undefined }, 'ui.theme: one of ui.themes'],
+    [{ themes: ['night'], theme: 'night' }, 'ui.themes: must include "paper", the way back'],
+    [{ themes: [] }, 'ui.themes: a list of distinct lower-case theme names'],
+    [{ themes: ['paper', 'paper'] }, 'ui.themes: a list of distinct lower-case theme names'],
+    [{ themes: ['paper', 'Night'] }, 'ui.themes: a list of distinct lower-case theme names'],
+  ])('rejects ui %o', (ui, message) => {
+    const bad = { ...shipped, ui: { ...shipped.ui, ...ui } } as unknown as typeof shipped;
+    expect(validateConfig(bad)).toContain(message);
+  });
+  it('accepts a second listed theme as the chosen one', () => {
+    expect(validateConfig({ ...shipped, ui: { ...shipped.ui, themes: ['paper', 'night'], theme: 'night' } })).toEqual([]);
+  });
+});
+
 describe('i18n', () => {
   it('reaches the page as the language list and default', () => {
     expect(publicConfig(shipped).i18n).toEqual(shipped.i18n);

@@ -1,29 +1,4 @@
-/* Sampan: one warm paper theme. Every colour and size comes from these tokens. */
-:root {
-  --paper: #f4f1ea;
-  --paper-deep: #e9e3d6;
-  --ink: #12261f;
-  --ink-soft: #3c4f47;
-  --river: #0e6b5c;
-  --river-pale: #cfe1db;
-  --lamp: #e8a23a;
-  --danger: #b4412f;
-  --line: #cfc7b6;
-  --card: #fffdf8;
-  --overlay: rgba(18, 38, 31, 0.55);
-
-  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
-  --font-text: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
-
-  --radius: 14px;
-  --gap: clamp(1rem, 3vw, 1.5rem);
-  --measure: 40rem;
-  --page: 68rem;
-  --touch: 44px;
-  --focus: 3px solid var(--lamp);
-}
-
+/* Sampan: layout and components. Every colour, font and size comes from the theme tokens in themes/<name>.css. */
 *,
 *::before,
 *::after {
@@ -394,23 +369,44 @@ a {
 
 /* Phones and small tablets: the headline, picture, card and primary button share the first screen. */
 @media (max-width: 55.99rem) {
+  /* Banner in two rows: the note across the top, then the event name over the address label beside the copy
+     button. The deck and source links, once configured, share one row under them. */
   .banner__inner {
-    padding: 0.375rem var(--gap);
-    gap: 0.125rem 0.75rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'note note'
+      'event copy'
+      'label copy';
+    padding: 0.25rem var(--gap);
+    gap: 0 0.75rem;
     line-height: 1.3;
   }
+  .banner__note {
+    grid-area: note;
+  }
+  .banner__event {
+    grid-area: event;
+    align-self: end;
+    font-size: 0.6875rem;
+  }
   .banner__address {
-    order: 3;
-    flex: 1 1 100%;
-    justify-content: space-between;
+    display: contents;
+  }
+  .banner__label {
+    grid-area: label;
+    align-self: start;
+  }
+  .banner__copy {
+    grid-area: copy;
+    align-self: center;
+  }
+  .banner__inner > a {
+    grid-row: 4;
   }
   .banner__label,
   .banner__note {
     font-size: 0.6875rem;
-  }
-  .banner__note {
-    order: 1;
-    flex: 1 1 12rem;
   }
   .topbar {
     padding-block: 0.25rem;
@@ -429,11 +425,30 @@ a {
     font-size: 0.875rem;
     line-height: 1.4;
   }
+  /* The picture shrinks to a strip with a bank label on each side of it. */
+  .scene {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0.5rem;
+  }
   .scene svg {
-    max-height: 4.75rem;
+    grid-column: 2;
+    grid-row: 1;
+    max-height: 2.75rem;
   }
   .scene__labels {
-    font-size: 0.8125rem;
+    display: contents;
+    font-size: 0.75rem;
+    line-height: 1.2;
+  }
+  .scene__labels > span {
+    grid-row: 1;
+    max-width: 5.5rem;
+  }
+  .scene__labels > span:last-child {
+    grid-column: 3;
+    text-align: right;
   }
   .card__body {
     padding: 0.75rem var(--gap) var(--gap);

@@ -28,7 +28,7 @@ const start = async (outage: Outage | null = null, fake = true) => {
   mkdirSync(path.join(dist, 'assets'));
   writeFileSync(path.join(dist, 'index.html'), '<!doctype html><div id="root">x</div>');
   writeFileSync(path.join(dist, 'assets', 'app-1.js'), 'console.log(1)');
-  writeFileSync(path.join(dist, 'assets', 'app-1.css'), ':root{--paper:#fff;--ink:#000}body{color:var(--ink)}');
+  writeFileSync(path.join(dist, 'assets', 'app-1.css'), ':root[data-theme=night]{--paper:#111;--ink:#eee}:root[data-theme=paper]{--paper:#fff;--ink:#000}body{color:var(--ink)}');
   const services = createServices({ config, fake, dbFile: ':memory:', trustedProxies: [], fakeFixture: fixture, outage });
   app = await buildApp({ config, webDist: dist, fake, outage, services, startWatcher: false });
   return app;
@@ -72,6 +72,7 @@ describe('server failure answers', () => {
     expect(res.body).not.toContain('secret');
     expect(res.body).not.toContain('<script');
     expect(res.body).toContain('--paper:#fff'); // the page's own colour tokens from the built stylesheet
+    expect(res.body).not.toContain('--paper:#111'); // only the theme config picks
     const csp = String(res.headers['content-security-policy']);
     expect(csp).toContain(`'sha256-${styleHashOf(res.body)}'`);
     expect(csp).toContain("script-src 'self'");

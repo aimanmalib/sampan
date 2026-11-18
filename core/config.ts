@@ -156,8 +156,10 @@ export interface SampanConfig {
    * qrAutoOpen: the landing card opens the address and shows its QR as soon as the owner is known (false = the "Get my landing address" button).
    * qrCloseMs: once a payment is seen, how long the QR code takes to close before the ferry moves (150 to 1500).
    * arriveMs: how long the one arrival animation plays once the token has landed (800 to 6000).
+   * themes: the looks the build carries, each web/src/themes/<name>.css; always includes "paper", the way back.
+   * theme: the one the page wears, written into <html data-theme> when the page is built.
    */
-  ui: { ferryMotion: boolean; qrAutoOpen: boolean; qrCloseMs: number; arriveMs: number };
+  ui: { ferryMotion: boolean; qrAutoOpen: boolean; qrCloseMs: number; arriveMs: number; themes: string[]; theme: string };
   /** Languages the page offers, in menu order, each by its own name; every code has a lang/<code>.json. default: shown until a visitor picks one. */
   i18n: I18nConfig;
 }
@@ -198,7 +200,8 @@ export interface PublicConfig {
   atom: AtomConfig;
   /** 1Click as a second route: offered assets and timings only (core/oneclick-config.ts). */
   oneClick: OneClickPublic;
-  ui: SampanConfig['ui'];
+  /** The page's look: which theme the built HTML wears (the list of themes stays in the file). */
+  ui: Omit<SampanConfig['ui'], 'themes'>;
   i18n: I18nConfig;
 }
 
@@ -303,6 +306,13 @@ export function validateConfig(c: SampanConfig): string[] {
   const msIn = (v: unknown, lo: number, hi: number): boolean => typeof v === 'number' && Number.isInteger(v) && v >= lo && v <= hi;
   need(msIn(c.ui?.qrCloseMs, 150, 1500), 'ui.qrCloseMs: an integer from 150 to 1500');
   need(msIn(c.ui?.arriveMs, 800, 6000), 'ui.arriveMs: an integer from 800 to 6000');
+  const themes: unknown[] = Array.isArray(c.ui?.themes) ? c.ui.themes : [];
+  need(
+    themes.length > 0 && themes.every((t) => typeof t === 'string' && /^[a-z][a-z0-9-]*$/.test(t)) && new Set(themes).size === themes.length,
+    'ui.themes: a list of distinct lower-case theme names',
+  );
+  need(themes.includes('paper'), 'ui.themes: must include "paper", the way back');
+  need(typeof c.ui?.theme === 'string' && themes.includes(c.ui.theme), 'ui.theme: one of ui.themes');
   const langs = Array.isArray(c.i18n?.languages) ? c.i18n.languages : [];
   const codes = langs.map((x) => x?.code);
   need(
@@ -416,7 +426,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
     atom: c.atom,
     oneClick: oneClickPublic(c.oneClick),
-    ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen, qrCloseMs: c.ui.qrCloseMs, arriveMs: c.ui.arriveMs },
+    ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen, qrCloseMs: c.ui.qrCloseMs, arriveMs: c.ui.arriveMs, theme: c.ui.theme },
     i18n: { default: c.i18n.default, languages: c.i18n.languages.map(({ code, name, machine }) => (machine ? { code, name, machine } : { code, name })) },
   };
 }

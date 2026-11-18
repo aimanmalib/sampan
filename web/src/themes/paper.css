@@ -1,0 +1,25 @@
+/* Paper: the warm paper look Sampan launched with, and the way back for any other theme (config ui.theme). */
+:root[data-theme='paper'] {
+  --paper: #f4f1ea;
+  --paper-deep: #e9e3d6;
+  --ink: #12261f;
+  --ink-soft: #3c4f47;
+  --river: #0e6b5c;
+  --river-pale: #cfe1db;
+  --lamp: #e8a23a;
+  --danger: #b4412f;
+  --line: #cfc7b6;
+  --card: #fffdf8;
+  --overlay: rgba(18, 38, 31, 0.55);
+
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-text: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --radius: 14px;
+  --gap: clamp(1rem, 3vw, 1.5rem);
+  --measure: 40rem;
+  --page: 68rem;
+  --touch: 44px;
+  --focus: 3px solid var(--lamp);
+}

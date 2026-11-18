@@ -24,13 +24,15 @@ export function pageLangs(config: Pick<SampanConfig, 'i18n'>): Array<[code: stri
 const escapeHtml = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-/** The `:root { … }` declarations of the built stylesheet, so the error page wears the same colours. */
-export function rootTokens(webDist: string): string {
+/** The `:root[data-theme=<theme>] { … }` declarations of the built stylesheet, so the error page wears the page's colours. */
+export function rootTokens(webDist: string, theme: string): string {
   const dir = path.join(webDist, 'assets');
   if (!existsSync(dir)) return '';
+  const name = theme.replace(/[^a-z0-9-]/g, '');
+  const selector = new RegExp(`:root\\[data-theme=(['"]?)${name}\\1\\]\\s*\\{([^}]*)\\}`);
   for (const file of readdirSync(dir).filter((f) => f.endsWith('.css'))) {
-    const match = /:root\s*\{([^}]*--paper:[^}]*)\}/.exec(readFileSync(path.join(dir, file), 'utf8'));
-    if (match) return match[1]!.trim();
+    const match = selector.exec(readFileSync(path.join(dir, file), 'utf8'));
+    if (match) return match[2]!.trim();
   }
   return '';
 }
@@ -85,7 +87,7 @@ export interface ErrorPages {
  */
 export function registerErrorPages(app: FastifyInstance, config: SampanConfig, webDist: string): ErrorPages {
   const csp = contentSecurityPolicy(config);
-  const tokens = rootTokens(webDist);
+  const tokens = rootTokens(webDist, config.ui.theme);
   const langs = pageLangs(config);
   const failed = errorPage('failed', tokens, csp, langs);
   const missing = errorPage('notFound', tokens, csp, langs);
