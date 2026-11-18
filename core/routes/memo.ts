@@ -6,8 +6,9 @@ import { binToHex, utf8ToBin } from '@bitauth/libauth';
 export const THOR_DECIMALS = 8;
 export const MEMO_MAX_BYTES = 80;
 const SWAP_ACTIONS = new Set(['=', 's', 'swap']);
-/** THORChain's documented short codes for whole assets (memos may use them instead of the full name). */
-const SHORT_CODES: Record<string, string> = { C: 'BCH.BCH', E: 'ETH.ETH' };
+/** THORChain's documented short codes for whole assets (memos may use them instead of the full name); each one
+ *  here was seen in a THORNode quote memo for that asset (BSC.BNB `s` and AVAX.AVAX `a` on 18 Nov 2026). */
+const SHORT_CODES: Record<string, string> = { A: 'AVAX.AVAX', C: 'BCH.BCH', E: 'ETH.ETH', S: 'BSC.BNB' };
 
 export interface SwapMemo {
   asset: string;

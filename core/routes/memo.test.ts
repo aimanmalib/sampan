@@ -53,4 +53,11 @@ describe('THORChain memo', () => {
     expect(memoMatches(memo, { asset: 'ETH.ETH', destination: DEST, minOut: 37665n })).toBe(true);
     expect(memoMatches(memo, { asset: 'BASE.ETH', destination: DEST, minOut: 37665n })).toMatch(/another asset/);
   });
+
+  it('reads the short codes THORChain quotes for BNB and AVAX (gas funding on BSC and Avalanche)', () => {
+    expect(memoMatches(`=:s:${DEST}:119282/1/0`, { asset: 'BSC.BNB', destination: DEST, minOut: 119282n })).toBe(true);
+    expect(memoMatches(`=:a:${DEST}:5000/1/0`, { asset: 'AVAX.AVAX', destination: DEST, minOut: 5000n })).toBe(true);
+    expect(memoMatches(`=:s:${DEST}:119282/1/0`, { asset: 'AVAX.AVAX', destination: DEST, minOut: 119282n })).toMatch(/another asset/);
+    expect(memoMatches(`=:a:${DEST}:5000/1/0`, { asset: 'BSC.USDC-0X8AC76A51CC950D9822D68B83FE1AD97B32CD580D', destination: DEST, minOut: 5000n })).toMatch(/another asset/);
+  });
 });
