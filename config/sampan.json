@@ -22,7 +22,8 @@
     "landing": true,
     "pay": true,
     "atom": false,
-    "oneClick": false
+    "oneClick": false,
+    "nostrSend": false
   },
   "route": {
     "active": "thorchain",
@@ -62,6 +63,17 @@
     "slippageBps": 100,
     "deadlineMinutes": { "out": 30, "in": 60 },
     "appFeeBps": 0
+  },
+  "nostrId": {
+    "relays": ["wss://nos.lol", "wss://relay.primal.net", "wss://relay.damus.io"],
+    "minRelaysAnswered": 1,
+    "queryTimeoutMs": 4000,
+    "bindingKind": 10011,
+    "platform": "bch",
+    "network": "bitcoincash",
+    "nip05": true,
+    "nip05TimeoutMs": 4000,
+    "npubShortChars": 6
   },
   "evm": {
     "chains": [

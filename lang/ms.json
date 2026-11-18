@@ -634,5 +634,19 @@
   "depth.unknown": "Tidak diketahui: THORChain tidak menjawab",
   "depth.rule": "Pada jarak {warn} atau lebih, setiap panel memaparkan amaran. Pada {refuse} atau lebih, lintasan baharu dan alamat pendaratan menunggu; tukaran di Bitcoin Cash kekal dibuka.",
   "depth.source.pools": "Senarai kolam dari pengindeks",
-  "depth.source.price": "Kolam BCH di THORNode"
+  "depth.source.price": "Kolam BCH di THORNode",
+  "nostr.reason.input_invalid": "Itu bukan npub, nprofile atau nama seperti nama@contoh.com.",
+  "nostr.reason.nip05_failed": "Nama itu tidak dapat dicari di domainnya sendiri, jadi tiada kunci ditemui untuknya.",
+  "nostr.reason.relays_unreachable": "Tiada relay Nostr yang menjawab tepat pada masanya. Cuba lagi sebentar lagi.",
+  "nostr.reason.not_found": "Identiti ini tidak menerbitkan alamat Bitcoin Cash untuk menerima.",
+  "nostr.reason.wrong_kind": "Event yang ditemui bukan bukti identiti, jadi ia tidak digunakan.",
+  "nostr.reason.id_mismatch": "Bukti identiti diubah selepas ditandatangani, jadi ia tidak digunakan.",
+  "nostr.reason.nostr_sig_invalid": "Bukti identiti tidak ditandatangani oleh kunci Nostr ini, jadi ia tidak digunakan.",
+  "nostr.reason.replaced": "Bukti yang lebih baharu daripada identiti ini menggantikan bukti yang ditemui, jadi ia tidak digunakan.",
+  "nostr.reason.bch_sig_invalid": "Tandatangan Bitcoin Cash dalam bukti tidak sah, jadi ia tidak digunakan.",
+  "nostr.reason.address_invalid": "Alamat dalam bukti bukan alamat Bitcoin Cash biasa yang boleh menerima dari halaman ini.",
+  "nostr.reason.wrong_signer": "Alamat dalam bukti tidak ditandatangani oleh kuncinya sendiri, jadi ia tidak digunakan.",
+  "nostr.reason.wrong_network": "Alamat dalam bukti adalah untuk rangkaian ujian, bukan Bitcoin Cash.",
+  "nostr.reason.same_key": "Bukti menggunakan kunci Nostr sebagai kunci Bitcoin Cash, dan protokol tidak menerimanya.",
+  "nostr.reason.ambiguous": "Identiti ini menamakan lebih daripada satu alamat Bitcoin Cash, jadi tidak jelas ke mana hendak dihantar."
 }

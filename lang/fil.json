@@ -634,5 +634,19 @@
   "depth.unknown": "Hindi alam: hindi sumagot ang THORChain",
   "depth.rule": "Kapag {warn} o higit pa ang layo, may babala sa bawat panel. Kapag {refuse} o higit pa, naghihintay ang mga bagong tawid at landing address; bukas pa rin ang mga swap sa Bitcoin Cash.",
   "depth.source.pools": "Listahan ng pool mula sa indexer",
-  "depth.source.price": "BCH pool sa THORNode"
+  "depth.source.price": "BCH pool sa THORNode",
+  "nostr.reason.input_invalid": "Hindi iyan isang npub, nprofile o pangalang tulad ng pangalan@halimbawa.com.",
+  "nostr.reason.nip05_failed": "Hindi mahanap ang pangalan sa sarili nitong domain, kaya walang nakitang key para dito.",
+  "nostr.reason.relays_unreachable": "Walang Nostr relay na sumagot sa oras. Subukan muli mamaya.",
+  "nostr.reason.not_found": "Walang inilathalang Bitcoin Cash address ang identity na ito para tumanggap.",
+  "nostr.reason.wrong_kind": "Ang nakitang event ay hindi patunay ng identity, kaya hindi ito ginamit.",
+  "nostr.reason.id_mismatch": "Binago ang patunay ng identity matapos itong pirmahan, kaya hindi ito ginamit.",
+  "nostr.reason.nostr_sig_invalid": "Hindi pinirmahan ng Nostr key na ito ang patunay ng identity, kaya hindi ito ginamit.",
+  "nostr.reason.replaced": "May mas bagong patunay mula sa identity na ito na pumapalit sa nakita, kaya hindi ito ginamit.",
+  "nostr.reason.bch_sig_invalid": "Hindi tama ang Bitcoin Cash signature sa patunay, kaya hindi ito ginamit.",
+  "nostr.reason.address_invalid": "Ang address sa patunay ay hindi karaniwang Bitcoin Cash address na makakatanggap mula sa pahinang ito.",
+  "nostr.reason.wrong_signer": "Hindi pinirmahan ng sarili nitong key ang address sa patunay, kaya hindi ito ginamit.",
+  "nostr.reason.wrong_network": "Ang address sa patunay ay para sa test network, hindi sa Bitcoin Cash.",
+  "nostr.reason.same_key": "Ginagamit ng patunay ang Nostr key bilang Bitcoin Cash key, at hindi ito tinatanggap ng protocol.",
+  "nostr.reason.ambiguous": "Higit sa isang Bitcoin Cash address ang nakalista sa identity na ito, kaya hindi malinaw kung saan magpapadala."
 }

@@ -16,7 +16,7 @@ describe('config/sampan.json', () => {
 
   it('has every top-level section the code reads', () => {
     const sections = [
-      'tokens', 'defaultToken', 'features', 'route', 'thorchain', 'oneClick', 'evm', 'cauldron', 'electrum', 'wallet', 'connect',
+      'tokens', 'defaultToken', 'features', 'route', 'thorchain', 'oneClick', 'nostrId', 'evm', 'cauldron', 'electrum', 'wallet', 'connect',
       'landing', 'limits', 'fees', 'rate', 'compliance', 'banner', 'site', 'legal', 'ops', 'business', 'peg', 'pay', 'ui', 'i18n', 'atom',
     ];
     expect(Object.keys(shipped).sort()).toEqual([...sections].sort());

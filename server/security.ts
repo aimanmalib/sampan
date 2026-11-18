@@ -2,6 +2,7 @@
 import type { FastifyInstance } from 'fastify';
 import { atomConnectOrigins } from '../core/atom-config.js';
 import type { SampanConfig } from '../core/config.js';
+import { nostrConnectSources } from '../core/nostr-config.js';
 
 export function contentSecurityPolicy(config: SampanConfig): string {
   const walletConnect = config.evm.walletConnectProjectId !== '';
@@ -13,6 +14,8 @@ export function contentSecurityPolicy(config: SampanConfig): string {
     ...(walletConnect ? [new URL(config.evm.walletConnectRelay).origin] : []),
     // The atomic swap client talks to its own Electrum servers and Base RPCs; nothing is allowed for it while it is off.
     ...atomConnectOrigins(config.features.atom, config.atom),
+    // Nostr identities: the configured relays, plus https: for a name's own domain (NIP-05); nothing while the feature is off.
+    ...nostrConnectSources(config.features.nostrSend, config.nostrId),
   ];
   return [
     "default-src 'self'",

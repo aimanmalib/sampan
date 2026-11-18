@@ -4,6 +4,7 @@ import { validateAtom, type AtomConfig } from './atom-config.js';
 import { oneClickPublic, validateOneClick, type OneClickConfig, type OneClickPublic } from './oneclick-config.js';
 import { validateBusiness, type BusinessConfig } from './business.js';
 import { validatePay, type PayConfig } from './pay/config.js';
+import { nostrIdPublic, validateNostrId, type NostrIdConfig } from './nostr-config.js';
 import { validatePeg, type PegConfig } from './peg.js';
 import { chainsOf, liveAssets, symbolsOf, validateAssets, validateEvmChain, type EvmChain, type RouteAsset } from './route-assets.js';
 
@@ -37,7 +38,7 @@ export interface SampanConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
   /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
-  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean };
+  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean; nostrSend: boolean };
   /** symbols: the symbols of the live thorchain.assets, repeated here and checked against them (texts name them). */
   route: { active: ActiveRoute; symbols: string[] };
   thorchain: {
@@ -55,6 +56,8 @@ export interface SampanConfig {
   };
   /** NEAR Intents 1Click as a second route (core/oneclick-config.ts); the server only, shown while features.oneClick is true. */
   oneClick: OneClickConfig;
+  /** Finding and checking a Nostr identity's BCH address in the page (core/nostr-config.ts); used while features.nostrSend is true. */
+  nostrId: NostrIdConfig;
   evm: {
     chains: EvmChainConfig[];
     /** Reown project id for WalletConnect; empty = the option is not offered and its code is never loaded. */
@@ -209,6 +212,8 @@ export interface PublicConfig {
   atom: AtomConfig;
   /** 1Click as a second route: offered assets and timings only (core/oneclick-config.ts). */
   oneClick: OneClickPublic;
+  /** Relays and timings for Nostr identities; null while features.nostrSend is false. */
+  nostrId: NostrIdConfig | null;
   /** The page's look: which theme the built HTML wears (the list of themes stays in the file). */
   ui: Omit<SampanConfig['ui'], 'themes'>;
   i18n: I18nConfig;
@@ -372,6 +377,8 @@ export function validateConfig(c: SampanConfig): string[] {
   errors.push(...validateAtom(c.atom));
   need(typeof c.features?.atom === 'boolean', 'features.atom: true or false');
   need(typeof c.features?.oneClick === 'boolean', 'features.oneClick: true or false');
+  need(typeof c.features?.nostrSend === 'boolean', 'features.nostrSend: true or false');
+  errors.push(...validateNostrId(c.nostrId));
   need(!c.features?.oneClick || c.oneClick.baseUrl !== '', 'oneClick.baseUrl: required while features.oneClick is true');
   return errors;
 }
@@ -445,6 +452,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
     atom: c.atom,
     oneClick: oneClickPublic(c.oneClick),
+    nostrId: nostrIdPublic(c.features.nostrSend, c.nostrId),
     ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen, qrCloseMs: c.ui.qrCloseMs, arriveMs: c.ui.arriveMs, theme: c.ui.theme, icons: c.ui.icons },
     i18n: { default: c.i18n.default, languages: c.i18n.languages.map(({ code, name, machine }) => (machine ? { code, name, machine } : { code, name })) },
   };

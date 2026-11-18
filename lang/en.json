@@ -634,5 +634,19 @@
   "depth.unknown": "Unknown: THORChain did not answer",
   "depth.rule": "At {warn} or more away, every panel shows a warning. At {refuse} or more, new crossings and landing addresses wait; swaps on Bitcoin Cash stay open.",
   "depth.source.pools": "Pool list from the indexer",
-  "depth.source.price": "BCH pool on THORNode"
+  "depth.source.price": "BCH pool on THORNode",
+  "nostr.reason.input_invalid": "That is not an npub, an nprofile or a name like name@example.com.",
+  "nostr.reason.nip05_failed": "The name could not be looked up on its own domain, so no key was found for it.",
+  "nostr.reason.relays_unreachable": "No Nostr relay answered in time. Try again in a moment.",
+  "nostr.reason.not_found": "This identity has published no Bitcoin Cash address to receive at.",
+  "nostr.reason.wrong_kind": "The event found is not an identity proof, so it was not used.",
+  "nostr.reason.id_mismatch": "The identity proof was changed after it was signed, so it was not used.",
+  "nostr.reason.nostr_sig_invalid": "The identity proof is not signed by this Nostr key, so it was not used.",
+  "nostr.reason.replaced": "A newer proof from this identity replaces the one found, so it was not used.",
+  "nostr.reason.bch_sig_invalid": "The Bitcoin Cash signature in the proof does not check out, so it was not used.",
+  "nostr.reason.address_invalid": "The address in the proof is not a standard Bitcoin Cash address this page can send to.",
+  "nostr.reason.wrong_signer": "The address in the proof was not signed by its own key, so it was not used.",
+  "nostr.reason.wrong_network": "The address in the proof is for a test network, not Bitcoin Cash.",
+  "nostr.reason.same_key": "The proof uses the Nostr key as the Bitcoin Cash key, which the protocol does not accept.",
+  "nostr.reason.ambiguous": "This identity names more than one Bitcoin Cash address, so it is not clear which one to send to."
 }

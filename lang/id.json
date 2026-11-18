@@ -634,5 +634,19 @@
   "depth.unknown": "Tidak diketahui: THORChain tidak menjawab",
   "depth.rule": "Pada jarak {warn} atau lebih, setiap panel menampilkan peringatan. Pada {refuse} atau lebih, penyeberangan baru dan alamat pendaratan menunggu; swap di Bitcoin Cash tetap terbuka.",
   "depth.source.pools": "Daftar pool dari indexer",
-  "depth.source.price": "Pool BCH di THORNode"
+  "depth.source.price": "Pool BCH di THORNode",
+  "nostr.reason.input_invalid": "Itu bukan npub, nprofile, atau nama seperti nama@contoh.com.",
+  "nostr.reason.nip05_failed": "Nama itu tidak dapat dicari di domainnya sendiri, jadi tidak ada kunci yang ditemukan untuknya.",
+  "nostr.reason.relays_unreachable": "Tidak ada relay Nostr yang menjawab tepat waktu. Coba lagi sebentar.",
+  "nostr.reason.not_found": "Identitas ini belum menerbitkan alamat Bitcoin Cash untuk menerima.",
+  "nostr.reason.wrong_kind": "Event yang ditemukan bukan bukti identitas, jadi tidak digunakan.",
+  "nostr.reason.id_mismatch": "Bukti identitas diubah setelah ditandatangani, jadi tidak digunakan.",
+  "nostr.reason.nostr_sig_invalid": "Bukti identitas tidak ditandatangani oleh kunci Nostr ini, jadi tidak digunakan.",
+  "nostr.reason.replaced": "Bukti yang lebih baru dari identitas ini menggantikan bukti yang ditemukan, jadi tidak digunakan.",
+  "nostr.reason.bch_sig_invalid": "Tanda tangan Bitcoin Cash dalam bukti tidak valid, jadi tidak digunakan.",
+  "nostr.reason.address_invalid": "Alamat dalam bukti bukan alamat Bitcoin Cash standar yang dapat menerima dari halaman ini.",
+  "nostr.reason.wrong_signer": "Alamat dalam bukti tidak ditandatangani oleh kuncinya sendiri, jadi tidak digunakan.",
+  "nostr.reason.wrong_network": "Alamat dalam bukti untuk jaringan uji, bukan Bitcoin Cash.",
+  "nostr.reason.same_key": "Bukti memakai kunci Nostr sebagai kunci Bitcoin Cash, dan protokol tidak menerimanya.",
+  "nostr.reason.ambiguous": "Identitas ini menyebut lebih dari satu alamat Bitcoin Cash, jadi tidak jelas ke mana harus mengirim."
 }
