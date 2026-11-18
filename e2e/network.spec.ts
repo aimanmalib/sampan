@@ -1,6 +1,7 @@
-// The "Network" picker of Send out and Bring in (KMR2), against a fake server with Ethereum, BNB Smart Chain and Base
-// live and the fake THORNode reporting Base halted (2026-11-17 capture): the halted chain is not offered, arrow keys
-// move between networks, and the quote asked for after a change names the new chain and symbol. Skipped against a live site.
+// The "Network" picker of Send out and Bring in (KMR2, KSG6), against a fake server with Ethereum, BNB Smart Chain and
+// Base live and the fake THORNode reporting Base halted (2026-11-17 capture): the halted chain stays listed as paused
+// and cannot be picked, arrow keys move between the open networks, and the quote asked for after a change names the
+// new chain and symbol. Skipped against a live site.
 import { expect, test, type Page, type Request } from '@playwright/test';
 import en from '../lang/en.json' with { type: 'json' };
 import { NETWORK_PORT_OFFSET } from '../playwright.config.js';
@@ -32,18 +33,24 @@ async function noHorizontalOverflow(page: Page): Promise<void> {
   expect(scroll).toBeLessThanOrEqual(client);
 }
 
+const PAUSED = 'USDC on Base';
+
+/** The open networks in list order; Base is listed after them, paused by THORChain, with its radio off. */
 async function offered(page: Page): Promise<string[]> {
   const group = page.getByRole('group', { name: en['cross.network'] });
-  await expect(group.getByRole('radio')).toHaveCount(OFFERED.length);
-  return group.getByRole('radio').evaluateAll((els) => els.map((el) => el.closest('label')?.textContent?.trim() ?? ''));
+  await expect(group.getByRole('radio')).toHaveCount(OFFERED.length + 1);
+  const base = group.locator('.network__row', { hasText: PAUSED });
+  await expect(base).toHaveAttribute('data-status', 'paused');
+  await expect(base.getByRole('radio')).toBeDisabled();
+  await expect(base).toContainText(en['cross.network.paused'].replace('{route}', en['route.thorchain']));
+  return group.locator('.network__row[data-status="open"] .network__name').allTextContents();
 }
 
-test('Send out offers only open chains, and the quote follows the network chosen', async ({ page }) => {
+test('Send out offers the open chains, marks Base paused, and the quote follows the network chosen', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto('/');
   await page.getByRole('tab', { name: en['tabs.out'] }).click();
   expect(await offered(page)).toEqual(OFFERED);
-  await expect(page.getByRole('radio', { name: 'USDC on Base' })).toHaveCount(0);
   await expect(page.getByRole('radio', { name: OFFERED[0] })).toBeChecked();
 
   const first = quoteAsked(page, '/api/out/quote', { chain: 'ETH', symbol: 'USDC' });

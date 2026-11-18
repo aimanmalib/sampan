@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import { normalizeConfig, type SampanConfig } from '../core/config.js';
-import { crossChoices, oneClickOffers } from '../core/cross-choices.js';
+import { crossChoices, crossingPaused, networkStatus, oneClickOffers } from '../core/cross-choices.js';
 import type { RouteAsset } from '../core/route-assets.js';
 
 const config = normalizeConfig(shipped as unknown as SampanConfig);
@@ -23,9 +23,9 @@ const keys = (cs: Array<{ chain: { key: string }; symbol: string; thor: boolean 
 describe('crossChoices', () => {
   it('offers a 1Click asset while THORChain halts its chain, and THORChain where it is open', () => {
     const open = { BCH: true, ETH: false, BASE: false, BSC: true };
-    expect(keys(crossChoices(thor, chains, 'out', open, on))).toEqual(['BSC.USDC:thor', 'ETH.USDC:1click', 'BASE.USDC:1click']);
+    expect(keys(crossChoices(thor, chains, 'out', open, on))).toEqual(['ETH.USDC:1click', 'BSC.USDC:thor', 'BASE.USDC:1click']);
     // In: Base is not live in for 1Click, so only Ethereum through 1Click next to THORChain's BNB Smart Chain.
-    expect(keys(crossChoices(thor, chains, 'in', open, on))).toEqual(['BSC.USDC:thor', 'ETH.USDC:1click']);
+    expect(keys(crossChoices(thor, chains, 'in', open, on))).toEqual(['ETH.USDC:1click', 'BSC.USDC:thor']);
   });
 
   it('lists a chain once, as THORChain, while both routes offer it', () => {
@@ -61,5 +61,45 @@ describe('crossChoices', () => {
     const flags = shippedBase!.live;
     const listed = crossChoices([], chains, 'out', null, offer).some((c) => c.chain.key === 'BASE');
     expect(listed).toBe(flags.out);
+  });
+});
+
+// KSG6: one halted chain is marked, not dropped; the tab pauses only when no listed network is open.
+describe('networkStatus', () => {
+  const off = { enabled: false, assets: ocAssets };
+  const states = (rows: ReturnType<typeof networkStatus>) => rows.map((r) => `${r.chain.key}.${r.symbol}:${r.open ? 'open' : 'paused'}:${r.routesOpen.join('+')}:${r.pausedBy.join('+')}`);
+
+  it('keeps a halted chain listed as paused by THORChain while another chain stays open', () => {
+    const rows = networkStatus(thor, chains, 'out', { BCH: true, ETH: false, BSC: true }, off);
+    expect(states(rows)).toEqual(['ETH.USDC:paused::thorchain', 'BSC.USDC:open:thorchain:']);
+    expect(crossingPaused(rows, false)).toBe(false);
+  });
+
+  it('lists every chain paused when all are halted, and the tab is paused', () => {
+    const rows = networkStatus(thor, chains, 'out', { BCH: true, ETH: false, BSC: false }, off);
+    expect(states(rows)).toEqual(['ETH.USDC:paused::thorchain', 'BSC.USDC:paused::thorchain']);
+    expect(crossingPaused(rows, true)).toBe(true);
+  });
+
+  it('pauses every THORChain network while Bitcoin Cash is halted, or a chain is missing from the report', () => {
+    expect(states(networkStatus(thor, chains, 'in', { BCH: false, ETH: true, BSC: true }, off))).toEqual(['ETH.USDC:paused::thorchain', 'BSC.USDC:paused::thorchain']);
+    expect(states(networkStatus(thor, chains, 'in', { BCH: true, ETH: true }, off))).toEqual(['ETH.USDC:open:thorchain:', 'BSC.USDC:paused::thorchain']);
+  });
+
+  it('keeps a network open through 1Click while THORChain halts it, and names THORChain as the one that paused it', () => {
+    const rows = networkStatus(thor, chains, 'out', { BCH: false, ETH: false, BSC: false }, on);
+    expect(states(rows)).toEqual(['ETH.USDC:open:near-intents:thorchain', 'BSC.USDC:paused::thorchain', 'BASE.USDC:open:near-intents:']);
+    expect(rows.find((r) => r.chain.key === 'ETH')?.thor).toBe(false);
+    expect(crossingPaused(rows, true)).toBe(false);
+  });
+
+  it('opens a chain again when the next check sees it open, and treats an unknown check as open', () => {
+    expect(states(networkStatus(thor, chains, 'out', { BCH: true, ETH: true, BSC: true }, off))).toEqual(['ETH.USDC:open:thorchain:', 'BSC.USDC:open:thorchain:']);
+    expect(states(networkStatus(thor, chains, 'out', null, off))).toEqual(['ETH.USDC:open:thorchain:', 'BSC.USDC:open:thorchain:']);
+  });
+
+  it('falls back to the route report when no network is listed at all', () => {
+    expect(crossingPaused([], true)).toBe(true);
+    expect(crossingPaused([], false)).toBe(false);
   });
 });

@@ -19,7 +19,7 @@ import { shortEvm, useEvm } from '../evm/store';
 import { AtomSwap } from '../atom/AtomSwap';
 import { bchPayer } from '../atom/payBch';
 import { shortAmount } from '../atom/run';
-import { useRouteChoice } from '../atom/RouteChoice';
+import { CHAIN_HALTED, useRouteChoice } from '../atom/RouteChoice';
 import { NetworkPicker } from '../cross/NetworkPicker';
 import { useNetworks } from '../cross/useNetworks';
 import { CostCard } from '../cost/CostCard';
@@ -78,7 +78,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
   const choice = useRouteChoice(
     config,
     pick && amount !== undefined && amount > 0n ? { kind: 'out', amount: formatUnits(amount, decimals), source, chain: pick.chain.key, symbol: pick.symbol } : null,
-    thorOffered ? side(thorQuote) : { error: 'chain_halted' },
+    thorOffered ? side(thorQuote) : { error: CHAIN_HALTED },
     ocOffered ? { quote: side(ocQuote), vars: ocVars } : null,
   );
   const atom = choice.route === 'atom';

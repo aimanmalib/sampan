@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { openFlows, openTabs, type TabId } from '../../core/flows';
 import type { LoadedConfig } from './config';
 import { routeHalted } from '../../core/client/health';
-import { oneClickOffers } from '../../core/cross-choices';
+import { crossingPaused, networkStatus } from '../../core/cross-choices';
 import { RoutePaused } from './cross/RoutePaused';
 import { ErrorBoundary, ErrorCard } from './ErrorBoundary';
 import { ProviderNote } from './errors/ProviderNote';
@@ -25,7 +25,7 @@ const PANELS: Partial<Record<TabId, Panel>> = {
   swap: ({ config, wallet }) => <SwapPanel config={config} wallet={wallet} />,
   out: ({ config, wallet, halted, onChoose }) => (
     <>
-      {halted ? <RoutePaused config={config} /> : <OutPanel config={config} wallet={wallet} onSwap={() => onChoose('swap')} />}
+      {halted ? <RoutePaused config={config} direction="out" /> : <OutPanel config={config} wallet={wallet} onSwap={() => onChoose('swap')} />}
       <FinishedLink config={config} flow="out" />
     </>
   ),
@@ -59,9 +59,14 @@ export function ActionCard({
   const { t } = useText();
   const tabs = cardTabs(config);
   const tab = chosen && tabs.includes(chosen) ? chosen : tabs[0];
-  // THORChain halted pauses a crossing tab only when 1Click offers nothing in its direction either (KSG3).
-  const thorHalted = routeHalted(useHealth());
-  const halted = thorHalted && !(config && tab !== 'swap' && tab && oneClickOffers({ enabled: config.features.oneClick, assets: config.oneClick.assets }, tab));
+  // A crossing tab is paused only while none of its networks is open on any route (KSG3, KSG6): one halted chain is
+  // marked in the network list instead.
+  const health = useHealth();
+  const rows =
+    config && (tab === 'out' || tab === 'in')
+      ? networkStatus(config.routeAssets, config.evm.chains, tab, health?.route?.chains, { enabled: config.features.oneClick, assets: config.oneClick.assets })
+      : [];
+  const halted = crossingPaused(rows, routeHalted(health));
   const Body = tab ? PANELS[tab] : undefined;
   if (!config || !tab || !Body) return null;
   return (

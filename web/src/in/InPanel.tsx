@@ -20,7 +20,7 @@ import { errorKey } from '../swap/errors';
 import type { Wallet } from '../wallet/useWallet';
 import { useInQuote } from './useInQuote';
 import { AtomSwap } from '../atom/AtomSwap';
-import { useRouteChoice } from '../atom/RouteChoice';
+import { CHAIN_HALTED, useRouteChoice } from '../atom/RouteChoice';
 import { NetworkPicker } from '../cross/NetworkPicker';
 import { useNetworks } from '../cross/useNetworks';
 import { CostCard } from '../cost/CostCard';
@@ -69,7 +69,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
   const choice = useRouteChoice(
     config,
     src && amount !== undefined && amount > 0n ? { kind: 'in', amount: formatUnits(amount, ROUTE_DECIMALS), chain: src.chain.key, symbol: src.symbol, receive } : null,
-    thorOffered ? side(thorQuote) : { error: 'chain_halted' },
+    thorOffered ? side(thorQuote) : { error: CHAIN_HALTED },
     ocOffered ? { quote: side(ocQuote), vars: ocVars } : null,
   );
   const oneClick = choice.route === 'near-intents';

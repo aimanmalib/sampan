@@ -40,7 +40,7 @@ export function BringIn({ config, wallet, halted }: { config: LoadedConfig; wall
       {source === 'land' ? (
         <LandPanel config={config} wallet={wallet} />
       ) : halted ? (
-        <RoutePaused config={config} />
+        <RoutePaused config={config} direction="in" />
       ) : (
         <InPanel config={config} wallet={wallet} />
       )}

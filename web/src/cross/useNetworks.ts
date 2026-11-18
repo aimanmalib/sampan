@@ -1,24 +1,31 @@
-// The networks a crossing panel offers: THORChain's live assets for its direction whose chain it reports open in the
-// page's last health check (KMR2), plus 1Click's live assets whatever THORChain reports (KSG3, core/cross-choices).
-// A chain that halts drops out of the list and comes back when it reopens, without a reload; the chosen network falls
-// back to the first one offered when it drops out.
+// The networks a crossing panel lists for its direction (KSG6, core/cross-choices networkStatus): every live one,
+// each open or paused from the page's last health check. A chain that halts stays listed as paused and opens again
+// when it reopens, without a reload; the chosen network falls back to the first open one while it is paused.
 import { useState } from 'react';
-import { crossChoices, type CrossChoice } from '../../../core/cross-choices';
+import { networkStatus, type NetworkRow } from '../../../core/cross-choices';
 import type { Direction } from '../../../core/route-assets';
 import type { LoadedConfig } from '../config';
 import { useHealth } from '../health';
 
 export interface Networks {
-  choices: CrossChoice[];
-  pick: CrossChoice | undefined;
+  /** Every listed network, open or paused, in config order. */
+  choices: NetworkRow[];
+  /** The network the panel works with: the one chosen while it is open, else the first open one. */
+  pick: NetworkRow | undefined;
   choose: (asset: string) => void;
 }
 
-export function useNetworks(config: LoadedConfig, direction: Direction): Networks {
+/** The rows for a direction from the page's last health check. */
+export function useNetworkRows(config: LoadedConfig, direction: Direction): NetworkRow[] {
   const health = useHealth();
-  const [chosen, setChosen] = useState<string | null>(null);
   const oc = { enabled: config.features.oneClick, assets: config.oneClick.assets };
-  const choices = crossChoices(config.routeAssets, config.evm.chains, direction, health?.route?.chains, oc);
-  const pick = choices.find((c) => c.asset === chosen) ?? choices[0];
+  return networkStatus(config.routeAssets, config.evm.chains, direction, health?.route?.chains, oc);
+}
+
+export function useNetworks(config: LoadedConfig, direction: Direction): Networks {
+  const choices = useNetworkRows(config, direction);
+  const [chosen, setChosen] = useState<string | null>(null);
+  const open = choices.filter((c) => c.open);
+  const pick = open.find((c) => c.asset === chosen) ?? open[0];
   return { choices, pick, choose: setChosen };
 }

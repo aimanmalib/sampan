@@ -66,3 +66,45 @@
   margin: 0.625rem 0 0 -0.5rem;
   box-shadow: 0 0 0 2px var(--card);
 }
+/* A network no route carries now (KSG6): listed with its radio off and a pill naming the route that paused it.
+   The pill wraps under the name on a narrow screen. */
+.network__name {
+  min-width: 0;
+}
+.network__row--paused {
+  flex-wrap: wrap;
+  row-gap: 0.125rem;
+  padding-block: 0.375rem;
+  cursor: default;
+  color: var(--ink-soft);
+  border-style: dashed;
+  border-radius: var(--radius);
+}
+.network__paused {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.0625rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink);
+  border: 1px solid var(--lamp);
+  border-radius: 999px;
+}
+/* The same states listed inside "Paused by the route". */
+.paused__chains {
+  display: grid;
+  gap: 0.375rem;
+  margin: 0.75rem 0;
+  padding: 0;
+  list-style: none;
+}
+.paused__chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.5rem;
+  min-width: 0;
+  font-size: 0.9375rem;
+  color: var(--ink);
+}

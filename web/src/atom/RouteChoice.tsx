@@ -15,6 +15,8 @@ import './atom.css';
 export type RouteId = RouteRow['route'];
 type T = ReturnType<typeof useText>['t'];
 
+/** The code a panel gives THORChain's side for a network THORChain halts now (core/cross-choices thor false). */
+export const CHAIN_HALTED = 'chain_halted';
 export const REASONS = ['inventory', 'below-min', 'above-max', 'daily-limit', 'stale', 'wrong-flow', 'unavailable'];
 const SHOWN_DECIMALS = 2;
 
@@ -77,7 +79,8 @@ function oneClickReason(t: T, code: string, vars: Record<string, string>): strin
 
 function Row({ row, name, chosen, onPick, vars }: { row: RouteRow; name: string; chosen: boolean; onPick: () => void; vars: Record<string, string> }) {
   const { t } = useText();
-  const off = row.route !== 'thorchain' && !row.available;
+  // THORChain's row is off only while it halts this network (KSG6); otherwise it stays picked while its quote loads.
+  const off = !row.available && (row.route !== 'thorchain' || row.reason === CHAIN_HALTED);
   const waiting = off && row.reason === 'pending';
   const fees = feesText(t, row);
   return (
@@ -89,6 +92,8 @@ function Row({ row, name, chosen, onPick, vars }: { row: RouteRow; name: string;
       </label>
       {waiting ? (
         <p className="routes__receive">{t('compare.receive.pending')}</p>
+      ) : off && row.route === 'thorchain' ? (
+        <p className="routes__reason">{t('compare.reason.chainPaused', { route: t('route.thorchain') })}</p>
       ) : off && row.route === 'near-intents' ? (
         <p className="routes__reason">{oneClickReason(t, row.reason ?? 'route_unavailable', vars)}</p>
       ) : off ? (
@@ -143,7 +148,10 @@ export function useRouteChoice(
     config: { token, atomFlows: config.atom.flows, oneClick: { enabled: config.features.oneClick, offer: config.oneClick } },
   });
   if (rows.length < 2) return { card: null, route: 'thorchain', atom: null };
-  const route = picked !== 'thorchain' && rows.some((r) => r.route === picked && r.available) ? picked : 'thorchain';
+  // While THORChain halts this network its row cannot run, so the 1Click row is the one the button runs.
+  const thorOff = rows[0]?.route === 'thorchain' && rows[0].reason === CHAIN_HALTED;
+  const fallback: RouteId = thorOff && rows.some((r) => r.route === 'near-intents') ? 'near-intents' : 'thorchain';
+  const route = picked !== 'thorchain' && rows.some((r) => r.route === picked && r.available) ? picked : fallback;
   const card = (
     <fieldset className="routes">
       <legend className="routes__title">{t('compare.title')}</legend>
