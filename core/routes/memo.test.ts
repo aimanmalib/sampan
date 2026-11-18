@@ -47,4 +47,10 @@ describe('THORChain memo', () => {
     expect(memoMatches(memo, { asset: ASSET, destination: DEST, minOut: 1001n })).toMatch(/limit/);
     expect(memoMatches(quote.memo, { asset: ASSET, destination: DEST, minOut: 0n })).toMatch(/limit/);
   });
+
+  it('reads the short code THORChain quotes for ether (gas funding of the EVM test key)', () => {
+    const memo = `=:e:${DEST}:37665/1/0`;
+    expect(memoMatches(memo, { asset: 'ETH.ETH', destination: DEST, minOut: 37665n })).toBe(true);
+    expect(memoMatches(memo, { asset: 'BASE.ETH', destination: DEST, minOut: 37665n })).toMatch(/another asset/);
+  });
 });

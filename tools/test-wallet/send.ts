@@ -13,10 +13,9 @@ import { ElectrumChain } from '../../server/chain/electrum.js';
 import { loadConfig } from '../../server/config.js';
 import { SECRET_KEYS, parseEnv } from './keys.js';
 import { record, spentOn } from './ledger.js';
-import { buildPayment, type WalletCoin } from '../../core/tx/payment.js';
+import { buildPayment } from '../../core/tx/payment.js';
+import { testWalletCoins } from './coins.js';
 import type { Budget } from './policy.js';
-
-const ADDRESSES_PER_PATH = 25;
 
 async function main(): Promise<void> {
   const [to, bch] = process.argv.slice(2);
@@ -40,14 +39,7 @@ async function main(): Promise<void> {
   const config = loadConfig('config/sampan.json');
   const chain = new ElectrumChain(config.electrum.servers);
   try {
-    const coins: WalletCoin[] = [];
-    for (const p of ['receive', 'change'] as const) {
-      for (let i = 0; i < ADDRESSES_PER_PATH; i++) {
-        const a = deriveAddress(keys.publicKey(p, i), p, i, 'bitcoincash');
-        for (const u of await chain.listUnspent(a.lockingHex))
-          coins.push({ txid: u.txid, vout: u.vout, sats: u.sats, lockingHex: a.lockingHex, path: `${p}/${i}`, hasToken: !!u.token });
-      }
-    }
+    const { coins } = await testWalletCoins(chain, keys);
     const change = deriveAddress(keys.publicKey('change', 0), 'change', 0, 'bitcoincash');
     const pay = buildPayment({ coins, toLockingHex: dest.lockingHex, sats, changeLockingHex: change.lockingHex, satsPerByte: BigInt(config.fees.satsPerByte) });
     if (pay.feeSats > BigInt(config.fees.capSats)) throw new Error(`fee ${pay.feeSats} is above the cap`);

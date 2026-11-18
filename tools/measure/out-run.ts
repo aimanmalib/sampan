@@ -16,23 +16,16 @@ import { livePatch } from '../../core/route-assets.js';
 import { parseUnits } from '../../core/wallet.js';
 import { ElectrumChain } from '../../server/chain/electrum.js';
 import { loadConfig } from '../../server/config.js';
-import { ThorchainRoute } from '../../server/routes/thorchain.js';
-import { Thornode } from '../../server/routes/thornode.js';
 import { SECRET_KEYS, parseEnv } from '../test-wallet/keys.js';
 import { record, spentOn } from '../test-wallet/ledger.js';
 import { costShown, writeCostShown } from './cost-shown.js';
-import { crossingAsset, evmReceiptFrom, traceCrossing } from './cross.js';
+import { crossingAsset, traceCrossing } from './cross.js';
 import { outIntent, outLabel, overBudget } from './out-plan.js';
 import { appendRuns } from './runs.js';
+import { arg, need, runCli, traceDeps } from './run-cli.js';
 import { startServer, waitHealthy } from './server.js';
 
 const LEDGER = 'state/test-ledger.jsonl';
-
-const arg = (name: string): string | undefined => {
-  const i = process.argv.indexOf(name);
-  return i > 0 ? process.argv[i + 1] : undefined;
-};
-const need = (name: string): string => arg(name) ?? (() => { throw new Error(`${name} is required`); })();
 
 async function main(): Promise<void> {
   const config = loadConfig('config/sampan.json');
@@ -119,18 +112,9 @@ async function main(): Promise<void> {
     // Seconds run from the first signature (step 1 for a stablecoin source) until the stablecoin arrives.
     const broadcastAt = firstSignedAt ?? new Date();
     console.log(JSON.stringify({ crossing: res.crossingId, swap: res.swapTxid, deposit: res.txid }));
-    const route = new ThorchainRoute({ node: new Thornode(config.thorchain.nodes, undefined, config.thorchain.timeoutMs), slippageBps: 0, minSatsPerByte: 1n });
     const run = await traceCrossing(
       { flow: 'out', chain: evmChain, firstTxid: res.txid, broadcastAt, amount: label, destination, token: tokenContract },
-      {
-        status: (t) => route.status(t),
-        evmReceipt: evmReceiptFrom(rpc),
-        bchHistory: (l) => chain.historyTxids(l),
-        now: Date.now,
-        sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
-        pollMs: 15_000,
-        timeoutMs: Number(arg('--timeout') ?? '60') * 60_000,
-      },
+      traceDeps(config, rpc, chain),
     );
     console.log(JSON.stringify({ ...run, utc: run.utc.toISOString() }));
     if (process.argv.includes('--write')) appendRuns('docs/MEASURED.md', [run]);
@@ -140,10 +124,4 @@ async function main(): Promise<void> {
   }
 }
 
-void main().then(
-  () => process.exit(0),
-  (e: unknown) => {
-    console.error(e instanceof Error ? e.message : e);
-    process.exit(1);
-  },
-);
+runCli(main);
