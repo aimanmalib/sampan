@@ -44,6 +44,9 @@
 | 2026-11-17T12:03:34Z | out | 1.8 PUSD to ETH.USDC (at least 1.4936146 USDC) | bch 80a72627cdc8f8155b3b1b9ea4d47d6500f82481c060ec9a372407bfb3acbf84 · eth 0xe88f9a5286c592755250428ce4ca3acffd18f4cfd4b65f406e30edf6eb2a27f0 | 373.7 | ok |
 | 2026-11-17T12:10:31Z | out | 1.8 PUSD to ETH.USDC (at least 1.49275174 USDC) | bch fa3bdc53bf3a3d7ce25dc4f2c6fbc0c262c238141b5300fad07f720737c0f577 · eth 0xfb1f69e1c1a4c6e33940a65cde16df19fb2510428604ec948657942137751e86 | 1104.0 | ok |
 | 2026-11-18T02:21:14Z | g3a | 2 ETH.USDC to PUSD (landing address, at least 0.00822467 BCH arriving) | bch 99262bb4ba739b2cd93ab0197c15166da0c6f57f6d1f2abd0a20ae3b1f330d5a · eth 0x462b684da7fd46344f32746fc96c2296b7a223ea4c372f73a87d86bb61483729 · convert 175509aa8197dcfa20f6571feba209bd3d62681a9aae2eb9381483c66a915410 | 2021.1 | ok |
+| 2026-11-18T03:20:29Z | out | 0.014 BCH to ETH.USDC (at least 2.62867344 USDC) | bch c803bfef5923eb065de8857580f0b90ac338509d3ca0249dd41a80e9c7d76fd0 · eth 0xaad48e53acc8e94f88d3395abc05afd811f6882a7103498a161b16b7ae981d47 | 466.6 | ok |
+| 2026-11-18T03:28:37Z | in | 1.8 ETH.USDC to PUSD (landing address, at least 0.00729232 BCH arriving) | bch 93f6c6a533cb817d59b78ed0ce5046292003e6ad5c09405fdfb6c75fe9d3f201 · eth 0xbe6a17f1e2ba17b3039f825c7aceeb1ed3fc036fdef1d6822acf03cae42714ff · convert 6d073bd8897b8774f0857b29f797dfdc03cd694e6c00507b7b9ba0115dd06683 | 219.0 | ok |
+| 2026-11-18T03:32:40Z | in | 1.8 ETH.USDC to PUSD (landing address, at least 0.00725762 BCH arriving) | bch ee69844983f8798eebcf5640745a9ad382f7e223bc060c7c0cfd7d172921fea8 · eth 0xb240ea2b86daaa3f21a5165482be7a05c7289db91c03bb28ce455f9c17406b37 · convert 1549b3302e0a6185e95d1a4fdc2421426f62268cefa9a47e6bb5a2062d6ad484 | 94.8 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from
