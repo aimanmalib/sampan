@@ -39,8 +39,9 @@ export function parseRuns(measured: string): Run[] {
   const runs: Run[] = [];
   for (const line of section.split('\n')) {
     const c = line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((x) => x.trim());
-    if (c.length < 6 || !/^\d{4}-\d\d-\d\dT/.test(c[0])) continue;
-    runs.push({ utc: c[0], flow: c[1], amount: c[2], txid: c[3], seconds: c[4], result: c[c.length - 1] });
+    const [utc = '', flow = '', amount = '', txid = '', seconds = ''] = c;
+    if (c.length < 6 || !/^\d{4}-\d\d-\d\dT/.test(utc)) continue;
+    runs.push({ utc, flow, amount, txid, seconds, result: c[c.length - 1] ?? '' });
   }
   return runs;
 }
@@ -71,14 +72,14 @@ function legLink(cfg: CrossingsConfig, label: string, txid: string): string | nu
 
 /** `bch <hex> · eth 0x<hex> · convert <hex>` as [label, txid] pairs. */
 export function legs(txid: string): Array<[string, string]> {
-  return [...txid.matchAll(/\b([a-z]+) ((?:0x)?[0-9a-fA-F]{64})\b/g)].map((m) => [m[1], m[2]]);
+  return [...txid.matchAll(/\b([a-z]+) ((?:0x)?[0-9a-fA-F]{64})\b/g)].map((m): [string, string] => [m[1] ?? '', m[2] ?? '']);
 }
 
 /** One table row for a crossing run. Throws when a leg has no explorer, so a new chain cannot slip in unlinked. */
 export function crossingRow(cfg: CrossingsConfig, run: Run): string {
   const asset = /\b([A-Z]+)\.([A-Z]+)\b/.exec(run.amount);
   if (!asset) throw new Error(`MEASURED ${run.utc}: no CHAIN.ASSET in "${run.amount}"`);
-  const [, chainKey, symbol] = asset;
+  const [, chainKey = '', symbol = ''] = asset;
   const chain = cfg.evm.chains.find((ch) => ch.key.toUpperCase() === chainKey);
   if (!chain) throw new Error(`MEASURED ${run.utc}: chain ${chainKey} not in evm.chains`);
   const out = run.flow.endsWith('out');
@@ -112,8 +113,9 @@ export function replaceRows(readme: string, rows: string[]): string {
   const z = readme.indexOf(END);
   if (a < 0 || z < a) throw new Error('README: crossings markers missing');
   const inner = readme.slice(a + START.length, z).split('\n').filter((l) => l.startsWith('|'));
-  if (inner.length < 2 || !/^\|\s*-/.test(inner[1])) throw new Error('README: the crossings block needs its header row and separator');
-  return `${readme.slice(0, a)}${[START, inner[0], inner[1], ...rows, END].join('\n')}${readme.slice(z + END.length)}`;
+  const [header, rule] = inner;
+  if (header === undefined || rule === undefined || !/^\|\s*-/.test(rule)) throw new Error('README: the crossings block needs its header row and separator');
+  return `${readme.slice(0, a)}${[START, header, rule, ...rows, END].join('\n')}${readme.slice(z + END.length)}`;
 }
 
 export function load(): { cfg: CrossingsConfig; measured: string } {
