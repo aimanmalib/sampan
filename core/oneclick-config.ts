@@ -34,6 +34,11 @@ export interface OneClickConfig {
   slippageBps: number;
   /** Deadline of a real quote: after it, 1Click refunds a deposit it did not fill. */
   deadlineMinutes: Record<Direction, number>;
+  /**
+   * Floor of the out deadline in average BCH blocks (connect.bchBlockSeconds): 1Click starts on a confirmed BCH
+   * deposit, so a deadline shorter than a slow block or two refunds a deposit sent in time (ADR 0066).
+   */
+  minOutDeadlineBchBlocks: number;
   /** Sampan's own fee on this route: always 0 (PRD 4.6). */
   appFeeBps: number;
 }

@@ -62,7 +62,8 @@
     "statusPollSeconds": 15,
     "dryDebounceMs": 600,
     "slippageBps": 100,
-    "deadlineMinutes": { "out": 30, "in": 60 },
+    "deadlineMinutes": { "out": 120, "in": 60 },
+    "minOutDeadlineBchBlocks": 6,
     "appFeeBps": 0
   },
   "nostrId": {

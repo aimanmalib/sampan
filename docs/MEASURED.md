@@ -47,6 +47,7 @@
 | 2026-11-18T03:20:29Z | out | 0.014 BCH to ETH.USDC (at least 2.62867344 USDC) | bch c803bfef5923eb065de8857580f0b90ac338509d3ca0249dd41a80e9c7d76fd0 · eth 0xaad48e53acc8e94f88d3395abc05afd811f6882a7103498a161b16b7ae981d47 | 466.6 | ok |
 | 2026-11-18T03:28:37Z | in | 1.8 ETH.USDC to PUSD (landing address, at least 0.00729232 BCH arriving) | bch 93f6c6a533cb817d59b78ed0ce5046292003e6ad5c09405fdfb6c75fe9d3f201 · eth 0xbe6a17f1e2ba17b3039f825c7aceeb1ed3fc036fdef1d6822acf03cae42714ff · convert 6d073bd8897b8774f0857b29f797dfdc03cd694e6c00507b7b9ba0115dd06683 | 219.0 | ok |
 | 2026-11-18T03:32:40Z | in | 1.8 ETH.USDC to PUSD (landing address, at least 0.00725762 BCH arriving) | bch ee69844983f8798eebcf5640745a9ad382f7e223bc060c7c0cfd7d172921fea8 · eth 0xb240ea2b86daaa3f21a5165482be7a05c7289db91c03bb28ce455f9c17406b37 · convert 1549b3302e0a6185e95d1a4fdc2421426f62268cefa9a47e6bb5a2062d6ad484 | 94.8 | ok |
+| 2026-11-18T22:53:12Z | oc-out | 0.0068 BCH to ETH.USDC (at least 1.078955 USDC) | 0c527fd2ba6bde755e73ede0324b0a85494460990683dae273e3edf8090c0172 | - | fail (refunded by the route (bch d4ce99ac907c8cd6169150b39001802c96eb6cfc9b8951549e880beb4cf8d234, 679500 sats): 1Click QUOTE_EXPIRED, the 30 min deadline passed before 1Click started on the deposit confirmed after 24 min; ADR 0066) |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from

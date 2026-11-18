@@ -136,6 +136,16 @@ describe('validateConfig', () => {
     expect(validateConfig(c).join()).toMatch(/oneClick\.baseUrl/);
   });
 
+  it('refuses a 1Click out deadline shorter than a few BCH blocks (2026-11-18: 30 min expired before a 24 min block)', () => {
+    const c = clone();
+    expect(validateConfig(c).join()).not.toMatch(/deadlineMinutes/);
+    c.oneClick.deadlineMinutes.out = 30;
+    expect(validateConfig(c).join()).toMatch(/oneClick\.deadlineMinutes\.out/);
+    c.oneClick.deadlineMinutes.out = 120;
+    c.oneClick.minOutDeadlineBchBlocks = 0;
+    expect(validateConfig(c).join()).toMatch(/minOutDeadlineBchBlocks/);
+  });
+
   it('rejects limits where the minimum is not below the maximum', () => {
     const c = clone();
     c.limits.minUsd = c.limits.maxUsd;

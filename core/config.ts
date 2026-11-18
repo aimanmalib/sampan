@@ -250,6 +250,10 @@ export function validateConfig(c: SampanConfig): string[] {
   need(isHttpsUrl(c.thorchain.explorerTxUrl) && c.thorchain.explorerTxUrl.includes('{txid}'), 'thorchain.explorerTxUrl: an https URL with {txid}');
   errors.push(...validateOneClick(c.oneClick, c.evm.chains));
   need(c.route.active !== 'near-intents' || c.oneClick.baseUrl !== '', 'oneClick.baseUrl: required for near-intents');
+  need(
+    posInt(c.oneClick.minOutDeadlineBchBlocks) && c.oneClick.deadlineMinutes.out * 60 >= c.oneClick.minOutDeadlineBchBlocks * c.connect.bchBlockSeconds,
+    'oneClick.deadlineMinutes.out: at least oneClick.minOutDeadlineBchBlocks average BCH blocks (connect.bchBlockSeconds)',
+  );
   need(c.cauldron.indexers.length > 0 && c.cauldron.indexers.every(isHttpsUrl), 'cauldron.indexers: https URLs');
   need(c.electrum.servers.length >= 3, 'electrum.servers: at least three servers');
   need(c.electrum.indexWaitMs >= 0 && c.electrum.indexPollMs > 0, 'electrum.indexWaitMs >= 0 and indexPollMs > 0');
