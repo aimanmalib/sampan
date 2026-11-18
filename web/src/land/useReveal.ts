@@ -10,6 +10,7 @@ const REDUCED = '(prefers-reduced-motion: reduce)';
 interface Seen {
   detectedAt: number | null;
   arrivedAt: number | null;
+  movedAt: number | null;
   now: number;
 }
 
@@ -28,10 +29,17 @@ export interface Reveal {
 
 export function useReveal(ui: { qrCloseMs: number; arriveMs: number }): Reveal {
   const [reduced] = useState(() => typeof window !== 'undefined' && window.matchMedia?.(REDUCED).matches === true);
-  const [seen, setSeen] = useState<Seen>({ detectedAt: null, arrivedAt: null, now: 0 });
-  const input = { ...seen, qrCloseMs: ui.qrCloseMs, arriveMs: ui.arriveMs, reduced };
+  const [seen, setSeen] = useState<Seen>({ detectedAt: null, arrivedAt: null, movedAt: null, now: 0 });
+  const { qrCloseMs, arriveMs } = ui;
+  const input = { ...seen, qrCloseMs, arriveMs, reduced };
   const phase = revealPhase(input);
   const wake = nextChange(input);
+
+  // The render that first shows the ferry moving starts its beat (reveal.ts), however late the timer woke.
+  const stamp = useCallback(
+    (s: Seen): Seen => (s.movedAt === null && revealPhase({ ...s, qrCloseMs, arriveMs, reduced }) === 'moving' ? { ...s, movedAt: s.now } : s),
+    [qrCloseMs, arriveMs, reduced],
+  );
 
   const saw = useCallback((news: { detected: boolean; arrived: boolean; early?: boolean }) => {
     setSeen((s) => {
@@ -39,18 +47,19 @@ export function useReveal(ui: { qrCloseMs: number; arriveMs: number }): Reveal {
       const detectedAt = s.detectedAt ?? (news.detected || news.arrived ? t : null);
       const arrivedAt = s.arrivedAt ?? (news.arrived ? t : null);
       if (detectedAt === s.detectedAt && arrivedAt === s.arrivedAt) return s;
-      return { detectedAt, arrivedAt, now: Date.now() };
+      // Opened on a paid state: the ferry counts as moved long ago, so the end state shows at once.
+      const movedAt = s.movedAt ?? (news.early ? -Infinity : null);
+      return stamp({ detectedAt, arrivedAt, movedAt, now: Date.now() });
     });
-  }, []);
+  }, [stamp]);
 
   // One timer at a time, only up to the next change; none once the end state (or the moving ferry) is reached.
   useEffect(() => {
     if (wake === null) return;
-    const timer = setTimeout(() => setSeen((s) => ({ ...s, now: Date.now() })), Math.max(0, wake - seen.now));
+    const timer = setTimeout(() => setSeen((s) => stamp({ ...s, now: Date.now() })), Math.max(0, wake - seen.now));
     return () => clearTimeout(timer);
-  }, [wake, seen.now]);
+  }, [wake, seen.now, stamp]);
 
-  const { qrCloseMs, arriveMs } = ui;
   const cssRoot = useCallback(
     (el: HTMLElement | null) => {
       el?.style.setProperty('--qr-close-ms', `${qrCloseMs}ms`);

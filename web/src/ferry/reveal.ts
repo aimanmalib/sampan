@@ -6,8 +6,9 @@
 //   closing   payment seen: the QR code is closing (qrCloseMs)
 //   moving    QR closed, the token has not landed yet: the ferry moves
 //   arriving  landed: the one arrival animation plays (arriveMs), never before the QR has closed and the ferry has
-//             been seen moving for one more beat of the same length (so a payment and a landing seen in one answer
-//             still show closing, moving, arriving in that order)
+//             been shown moving for one more beat of the same length (so a payment and a landing seen in one answer
+//             still show closing, moving, arriving in that order). The beat counts from the moment the page showed
+//             the ferry moving (movedAt), not from the clock: a timer that wakes late still shows the ferry moving.
 //   done      the end state, still
 // With reduced motion there is no closing and no arrival: the QR goes at once and the end state shows at once.
 
@@ -18,6 +19,8 @@ export interface RevealInput {
   detectedAt: number | null;
   /** When this page saw the token land (ms), or null. A landing seen without its payment counts as both. */
   arrivedAt: number | null;
+  /** When this page first showed the ferry moving (ms), or null: the caller records it once 'moving' is shown. */
+  movedAt: number | null;
   now: number;
   qrCloseMs: number;
   arriveMs: number;
@@ -40,9 +43,9 @@ const ATTRS: Record<RevealPhase, RevealAttrs> = {
 
 export const revealAttrs = (phase: RevealPhase): RevealAttrs => ATTRS[phase];
 
-/** The moment the arrival starts: when it was seen, but never before the QR has closed and the ferry has moved a beat. */
-function arrivalStart(detectedAt: number, arrivedAt: number, qrCloseMs: number): number {
-  return Math.max(arrivedAt, detectedAt + 2 * qrCloseMs);
+/** The moment the arrival starts: when it was seen, but never before the ferry has been shown moving for a beat. */
+function arrivalStart(movedAt: number, arrivedAt: number, qrCloseMs: number): number {
+  return Math.max(arrivedAt, movedAt + qrCloseMs);
 }
 
 export function revealPhase(i: RevealInput): RevealPhase {
@@ -50,8 +53,8 @@ export function revealPhase(i: RevealInput): RevealPhase {
   if (detected === null) return 'qr';
   if (i.reduced) return i.arrivedAt === null ? 'moving' : 'done';
   if (i.now < detected + i.qrCloseMs) return 'closing';
-  if (i.arrivedAt === null) return 'moving';
-  const start = arrivalStart(detected, i.arrivedAt, i.qrCloseMs);
+  if (i.arrivedAt === null || i.movedAt === null) return 'moving';
+  const start = arrivalStart(i.movedAt, i.arrivedAt, i.qrCloseMs);
   if (i.now < start) return 'moving';
   return i.now < start + i.arriveMs ? 'arriving' : 'done';
 }
@@ -62,8 +65,8 @@ export function nextChange(i: RevealInput): number | null {
   if (detected === null || i.reduced) return null;
   const closed = detected + i.qrCloseMs;
   if (i.now < closed) return closed;
-  if (i.arrivedAt === null) return null;
-  const start = arrivalStart(detected, i.arrivedAt, i.qrCloseMs);
+  if (i.arrivedAt === null || i.movedAt === null) return null;
+  const start = arrivalStart(i.movedAt, i.arrivedAt, i.qrCloseMs);
   if (i.now < start) return start;
   const end = start + i.arriveMs;
   return i.now < end ? end : null;

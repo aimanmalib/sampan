@@ -3,8 +3,16 @@
 import { describe, expect, it } from 'vitest';
 import { nextChange, revealAttrs, revealPhase, type RevealInput, type RevealPhase } from '../web/src/ferry/reveal.js';
 
-const base: RevealInput = { detectedAt: null, arrivedAt: null, now: 0, qrCloseMs: 400, arriveMs: 2400, reduced: false };
-const at = (over: Partial<RevealInput>): RevealPhase => revealPhase({ ...base, ...over });
+const base: RevealInput = { detectedAt: null, arrivedAt: null, movedAt: null, now: 0, qrCloseMs: 400, arriveMs: 2400, reduced: false };
+/** A page whose timer woke on time: unless given, the ferry was shown moving the moment the QR had closed. */
+function onTime(over: Partial<RevealInput>): RevealInput {
+  const i = { ...base, ...over };
+  const detected = i.detectedAt ?? i.arrivedAt;
+  if (over.movedAt !== undefined || detected === null) return i;
+  return { ...i, movedAt: i.now >= detected + i.qrCloseMs ? detected + i.qrCloseMs : null };
+}
+const at = (over: Partial<RevealInput>): RevealPhase => revealPhase(onTime(over));
+const next = (over: Partial<RevealInput>): number | null => nextChange(onTime(over));
 const ORDER: RevealPhase[] = ['qr', 'closing', 'moving', 'arriving', 'done'];
 
 describe('revealPhase', () => {
@@ -60,23 +68,41 @@ describe('revealPhase', () => {
     }
   });
 
+  it('shows the ferry moving for a full beat even when the timer wakes late, before the arrival plays', () => {
+    const d = 10_000;
+    // Landed while the QR was closing; the page woke 300 ms late, past the moment the arrival could have started.
+    const late = { detectedAt: d, arrivedAt: d + 100, now: d + 1100 };
+    expect(at({ ...late, movedAt: null })).toBe('moving');
+    expect(nextChange({ ...base, ...late, movedAt: null })).toBeNull();
+    // The page showed it moving at d + 1100: the arrival waits one beat from then.
+    expect(at({ ...late, movedAt: d + 1100 })).toBe('moving');
+    expect(nextChange({ ...base, ...late, movedAt: d + 1100 })).toBe(d + 1500);
+    expect(at({ ...late, movedAt: d + 1100, now: d + 1500 })).toBe('arriving');
+    expect(at({ ...late, movedAt: d + 1100, now: d + 1500 + 2400 })).toBe('done');
+  });
+
+  it('shows the end state at once on a page opened on a paid state', () => {
+    expect(at({ detectedAt: -Infinity, arrivedAt: -Infinity, movedAt: -Infinity, now: 5 })).toBe('done');
+    expect(nextChange({ ...base, detectedAt: -Infinity, arrivedAt: -Infinity, movedAt: -Infinity, now: 5 })).toBeNull();
+  });
+
   it('with reduced motion shows the end state at once: no closing, no arrival', () => {
     expect(at({ reduced: true, detectedAt: 5, now: 5 })).toBe('moving');
     expect(at({ reduced: true, detectedAt: 5, arrivedAt: 5, now: 5 })).toBe('done');
     expect(at({ reduced: true, arrivedAt: 5, now: 5 })).toBe('done');
-    expect(nextChange({ ...base, reduced: true, detectedAt: 5, arrivedAt: 5, now: 5 })).toBeNull();
+    expect(next({ reduced: true, detectedAt: 5, arrivedAt: 5, now: 5 })).toBeNull();
   });
 });
 
 describe('nextChange', () => {
   it('wakes the page when the QR has closed and when the arrival ends, and not otherwise', () => {
-    expect(nextChange({ ...base, now: 1 })).toBeNull();
-    expect(nextChange({ ...base, detectedAt: 1000, now: 1000 })).toBe(1400);
-    expect(nextChange({ ...base, detectedAt: 1000, now: 1400 })).toBeNull();
-    expect(nextChange({ ...base, detectedAt: 1000, arrivedAt: 1100, now: 1200 })).toBe(1400);
-    expect(nextChange({ ...base, detectedAt: 1000, arrivedAt: 1100, now: 1400 })).toBe(1800);
-    expect(nextChange({ ...base, detectedAt: 1000, arrivedAt: 1100, now: 1800 })).toBe(4200);
-    expect(nextChange({ ...base, detectedAt: 1000, arrivedAt: 5000, now: 5000 })).toBe(7400);
-    expect(nextChange({ ...base, detectedAt: 1000, arrivedAt: 5000, now: 7400 })).toBeNull();
+    expect(next({ now: 1 })).toBeNull();
+    expect(next({ detectedAt: 1000, now: 1000 })).toBe(1400);
+    expect(next({ detectedAt: 1000, now: 1400 })).toBeNull();
+    expect(next({ detectedAt: 1000, arrivedAt: 1100, now: 1200 })).toBe(1400);
+    expect(next({ detectedAt: 1000, arrivedAt: 1100, now: 1400 })).toBe(1800);
+    expect(next({ detectedAt: 1000, arrivedAt: 1100, now: 1800 })).toBe(4200);
+    expect(next({ detectedAt: 1000, arrivedAt: 5000, now: 5000 })).toBe(7400);
+    expect(next({ detectedAt: 1000, arrivedAt: 5000, now: 7400 })).toBeNull();
   });
 });

@@ -114,14 +114,20 @@ function freshOwner(): string {
   return owner.address;
 }
 
-/** Bring in, a fresh owner pasted and confirmed: the QR opens by itself. Returns the crossing id. */
+/**
+ * Bring in, a fresh owner pasted and confirmed: the QR opens by itself. Returns the crossing id once the card has read
+ * the address as still open (its first status answer), as a payer would only pay after seeing the card: the card
+ * watches only an address that was open when it opened, so paying before that first answer is a different case.
+ */
 async function openLanding(page: Page): Promise<string> {
   await page.goto('/');
   await page.getByRole('tab', { name: en['tabs.in'] }).click();
   const input = page.getByRole('textbox');
   await input.fill(freshOwner());
+  const firstStatus = page.waitForResponse((r) => /\/api\/crossings\/[0-9a-f]{32}$/.test(new URL(r.url()).pathname) && r.request().method() === 'GET', { timeout: 20_000 });
   await input.press('Enter');
   await expect(page.locator('.land__qr[data-qr="open"] svg.payqr')).toBeVisible({ timeout: 20_000 });
+  expect(((await (await firstStatus).json()) as { status: string }).status).toBe('open');
   const href = await page.getByRole('link', { name: en['land.follow'] }).getAttribute('href');
   const id = /^\/c\/([0-9a-f]{32})#/.exec(href ?? '')?.[1];
   if (!id) throw new Error(`no crossing id in ${href}`);
