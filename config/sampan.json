@@ -44,7 +44,8 @@
     "timeoutMs": 8000,
     "maxGasRate": 10,
     "affiliate": "",
-    "affiliateBps": 0
+    "affiliateBps": 0,
+    "explorerTxUrl": "https://thorchain.net/tx/{txid}"
   },
   "oneClick": {
     "baseUrl": "https://1click.chaindefuser.com",

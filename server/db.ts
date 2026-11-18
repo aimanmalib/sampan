@@ -23,6 +23,8 @@ export interface CrossingRow {
   attempts: number;
   error: string | null;
   quote_json: string | null;
+  /** The receipt of a finished crossing out or in (core/receipt), kept after the quote payload is cleared. */
+  receipt_json: string | null;
   created_at: number;
   updated_at: number;
 }
@@ -64,6 +66,7 @@ const ADDED_COLUMNS: Array<[table: string, column: string, type: string]> = [
   ['landings', 'seen_at', 'INTEGER'],
   ['landings', 'finished_at', 'INTEGER'],
   ['landings', 'last_activity', 'INTEGER'],
+  ['crossings', 'receipt_json', 'TEXT'],
 ];
 
 export type LandingStatus = 'watching' | 'idle';
@@ -153,12 +156,17 @@ export class Db {
     return this.db.prepare('SELECT * FROM crossings WHERE id = ?').get(id) as CrossingRow | undefined;
   }
 
-  updateCrossing(id: string, patch: Partial<Pick<CrossingRow, 'status' | 'txid' | 'error' | 'attempts' | 'quote_json'>>): void {
+  updateCrossing(id: string, patch: Partial<Pick<CrossingRow, 'status' | 'txid' | 'error' | 'attempts' | 'quote_json' | 'receipt_json'>>): void {
     const keys = Object.keys(patch) as Array<keyof typeof patch>;
     if (keys.length === 0) return;
     const sets = keys.map((k) => `${k} = ?`).join(', ');
     const values = keys.map((k) => patch[k] ?? null);
     this.db.prepare(`UPDATE crossings SET ${sets}, updated_at = ? WHERE id = ?`).run(...values, this.now(), id);
+  }
+
+  /** The clock rows are written with (receipts measure their time on it). */
+  time(): number {
+    return this.now();
   }
 
   /** Clears raw quote payloads older than `hours`. Returns how many rows were cleared. */

@@ -605,5 +605,17 @@
   "cost.part.thorOutbound": "Bayad sa {route} para magpadala sa {chain}",
   "cost.part.thorAffiliate": "Bayad sa affiliate ng {route}",
   "cost.part.gas": "Gas sa {chain}",
-  "cost.part.convertNetwork": "Bayad sa network para gawing {token} ang BCH sa landing address"
+  "cost.part.convertNetwork": "Bayad sa network para gawing {token} ang BCH sa landing address",
+  "receipt.title": "Resibo",
+  "receipt.chain.bch": "Bitcoin Cash",
+  "receipt.chain.thor": "THORChain",
+  "receipt.paid": "Ipinadala",
+  "receipt.received": "Natanggap",
+  "receipt.refunded": "Ibinalik",
+  "receipt.amountUsd": "{amount} ({usd})",
+  "receipt.cost": "Gastos",
+  "receipt.costKept": "{usd}, mananatili sa iyo ang {pct}% ng halaga",
+  "receipt.time": "Oras",
+  "receipt.minutes": "Mga {n} min, mula sa paghahanda ng transaction hanggang makita ng Sampan ang bayad",
+  "receipt.basis": "Ang {symbol} ay bilang na USD 1. Ang BCH ay sinusukat sa presyo sa quote na pinagbuuan ng paglipat na ito."
 }

@@ -48,7 +48,15 @@ describe('THORChain route', () => {
     const r = route();
     expect(await r.status(`${'ab'.repeat(31)}00`)).toEqual({ stage: 'unseen' });
     const done = await r.status('ab'.repeat(32));
-    expect(done).toEqual({ stage: 'done', outTxid: 'C0'.repeat(32), outChain: 'BASE' });
+    expect(done).toEqual({
+      stage: 'done',
+      outTxid: 'C0'.repeat(32),
+      outChain: 'BASE',
+      // The receipt's amounts: the deposit and the payout as THORNode records them (8 decimals).
+      inboundTxid: 'AB'.repeat(32),
+      paid: { asset: 'BCH.BCH', amount: 1_000_000n },
+      received: { asset: 'BASE.USDC-0X833589FCD6EDB6E08F4C7C32D4F71B54BDA02913', amount: 184_525_600n },
+    });
     const fake = fakeThornode(dir, () => NOW);
     const refunding: HttpGet = async (url, t) => {
       const res = await fake(url, t);

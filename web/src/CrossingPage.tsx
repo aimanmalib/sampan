@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiFailure } from '../../core/client/api';
 import { api } from './api';
+import { Receipt, type ReceiptWire } from './cross/Receipt';
 import type { LoadedConfig } from './config';
 import { Ferry, useBanks } from './ferry/Ferry';
 import { ferryStep } from './ferry/step';
@@ -21,7 +22,7 @@ interface Crossing {
   updatedAt: number;
   landing?: LandingView['landing'];
   route?: OutView['route'];
-  out?: OutView['out'];
+  out?: (NonNullable<OutView['out']> & { receipt?: ReceiptWire | null }) | null;
   landingId?: string | null;
 }
 
@@ -92,7 +93,8 @@ export function CrossingPage({ id, config }: { id: string; config: LoadedConfig 
       <section className="crossing">
         <h1 className="crossing__title">{t('crossing.title')}</h1>
         <p className="crossing__kind">{t(c.kind === 'in' ? 'crossing.kind.in' : 'crossing.kind.out')}</p>
-        <OutStatus c={asOut(c)} config={config} direction={c.kind} />
+        <OutStatus c={asOut(c)} config={config} direction={c.kind} txLinks={!c.out?.receipt} />
+        {config && c.out?.receipt ? <Receipt r={c.out.receipt} config={config} /> : null}
         {c.landingId ? (
           <p className="crossing__tx">
             <a href={`/c/${c.landingId}`}>{t('in.landingStatus')}</a>

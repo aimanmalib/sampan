@@ -605,5 +605,17 @@
   "cost.part.thorOutbound": "{route} fee for sending on {chain}",
   "cost.part.thorAffiliate": "{route} affiliate fee",
   "cost.part.gas": "Gas on {chain}",
-  "cost.part.convertNetwork": "Network fee to change BCH to {token} at the landing address"
+  "cost.part.convertNetwork": "Network fee to change BCH to {token} at the landing address",
+  "receipt.title": "Receipt",
+  "receipt.chain.bch": "Bitcoin Cash",
+  "receipt.chain.thor": "THORChain",
+  "receipt.paid": "Sent",
+  "receipt.received": "Received",
+  "receipt.refunded": "Returned",
+  "receipt.amountUsd": "{amount} ({usd})",
+  "receipt.cost": "Cost",
+  "receipt.costKept": "{usd}, you kept {pct}% of the value",
+  "receipt.time": "Time",
+  "receipt.minutes": "About {n} min, from preparing the transaction until Sampan saw the payout",
+  "receipt.basis": "{symbol} counts as USD 1. BCH is valued at the price in the quote this crossing was built from."
 }

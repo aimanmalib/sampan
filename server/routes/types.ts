@@ -81,6 +81,11 @@ export interface CrossingStatus {
   /** Transaction on the destination chain once the route has sent it. */
   outTxid?: string;
   outChain?: string;
+  /** The route's own record of the deposit (THORChain: the inbound id, its chain and coin). */
+  inboundTxid?: string;
+  /** What reached the route and what it sent, in its 8-decimal units (absent when the route does not say). */
+  paid?: { asset: string; amount: bigint };
+  received?: { asset: string; amount: bigint };
 }
 
 export interface OutRequest {

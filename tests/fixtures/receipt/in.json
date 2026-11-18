@@ -1,0 +1,48 @@
+{
+  "id": "00000000000000000000000000000002",
+  "kind": "in",
+  "status": "completed",
+  "asset": "USDC",
+  "chain": "ETH",
+  "amount": "180000000",
+  "txid": "CDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCD",
+  "createdAt": 1794960000000,
+  "updatedAt": 1794960219000,
+  "route": "thorchain",
+  "landingId": "00000000000000000000000000000003",
+  "out": {
+    "stage": "done",
+    "outTxid": "EFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEF",
+    "outChain": "BCH",
+    "receipt": {
+      "legs": [
+        {
+          "chain": "ETH",
+          "txid": "CDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCD"
+        },
+        {
+          "chain": "THOR",
+          "txid": "CDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCDCD"
+        },
+        {
+          "chain": "BCH",
+          "txid": "EFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEF"
+        }
+      ],
+      "refunded": false,
+      "paid": {
+        "asset": "ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48",
+        "amount": "180000000"
+      },
+      "received": {
+        "asset": "BCH.BCH",
+        "amount": "835993"
+      },
+      "paidUsd": "1800000",
+      "receivedUsd": "1730000",
+      "costUsd": "70000",
+      "keepPct": 96.11,
+      "seconds": 219
+    }
+  }
+}

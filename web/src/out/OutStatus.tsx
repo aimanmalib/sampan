@@ -17,7 +17,8 @@ export interface OutView {
 
 export const outIsFinal = (c: OutView): boolean => c.status === 'completed' || c.status === 'refunded' || c.status === 'failed';
 
-export function OutStatus({ c, config, direction }: { c: OutView; config: LoadedConfig | null; direction: 'out' | 'in' }) {
+/** `txLinks` false: the receipt below lists the transactions in full instead. */
+export function OutStatus({ c, config, direction, txLinks = true }: { c: OutView; config: LoadedConfig | null; direction: 'out' | 'in'; txLinks?: boolean }) {
   const { t } = useText();
   const vars = { route: t(`route.${c.route ?? 'thorchain'}` as TextKey), symbol: c.asset };
   const at = ferryStep(direction, c);
@@ -47,7 +48,7 @@ export function OutStatus({ c, config, direction }: { c: OutView; config: Loaded
         ))}
       </ol>
       <p className="crossing__status">{t(`crossing.${direction}.status.${stage === 'done' ? 'completed' : stage}` as TextKey, vars)}</p>
-      {source && c.txid ? (
+      {txLinks && source && c.txid ? (
         <p className="crossing__tx">
           <span>{t('crossing.txid')} </span>
           <a className="mono" href={source} target="_blank" rel="noreferrer">
@@ -55,7 +56,7 @@ export function OutStatus({ c, config, direction }: { c: OutView; config: Loaded
           </a>
         </p>
       ) : null}
-      {paid && c.out?.outTxid ? (
+      {txLinks && paid && c.out?.outTxid ? (
         <p className="crossing__tx timeline__out">
           <span>{t(`crossing.${direction}.outTx`, { chain: evmChain?.name ?? '' })} </span>
           <a className="mono" href={paid} target="_blank" rel="noreferrer">

@@ -23,14 +23,25 @@ interface QuoteBody {
   fees?: { total?: string; total_bps?: number; liquidity?: string; outbound?: string; affiliate?: string; slippage_bps?: number };
 }
 
+interface StatusCoin {
+  asset?: string;
+  amount?: string;
+}
+
 interface StatusBody {
-  tx?: { id?: string };
+  tx?: { id?: string; coins?: StatusCoin[] };
   planned_out_txs?: Array<{ chain: string; refund: boolean }>;
-  out_txs?: Array<{ id: string; chain: string }>;
+  out_txs?: Array<{ id: string; chain: string; coins?: StatusCoin[] }>;
   stages?: { inbound_observed?: { completed?: boolean }; outbound_signed?: { completed?: boolean }; swap_finalised?: { completed?: boolean } };
 }
 
 const NO_TXID = /^0+$/;
+
+/** The one coin of a status transaction, when it is well formed. */
+const coinOf = (coins: StatusCoin[] | undefined): { asset: string; amount: bigint } | undefined => {
+  const c = coins?.length === 1 ? coins[0] : undefined;
+  return c?.asset && c.amount && /^[0-9]{1,30}$/.test(c.amount) ? { asset: c.asset.toUpperCase(), amount: BigInt(c.amount) } : undefined;
+};
 
 export interface ThorchainOptions {
   node: Thornode;
@@ -146,7 +157,15 @@ export class ThorchainRoute implements Route {
     if (!s.stages.outbound_signed?.completed) return { stage: 'pending' };
     const refunded = (s.planned_out_txs ?? []).some((p) => p.refund);
     const sent = (s.out_txs ?? []).find((t) => t.chain !== 'THOR' && !NO_TXID.test(t.id));
-    return { stage: refunded ? 'refunded' : 'done', ...(sent ? { outTxid: sent.id, outChain: sent.chain } : {}) };
+    const paid = coinOf(s.tx?.coins);
+    const received = sent ? coinOf(sent.coins) : undefined;
+    return {
+      stage: refunded ? 'refunded' : 'done',
+      ...(sent ? { outTxid: sent.id, outChain: sent.chain } : {}),
+      ...(s.tx?.id && !NO_TXID.test(s.tx.id) ? { inboundTxid: s.tx.id } : {}),
+      ...(paid ? { paid } : {}),
+      ...(received ? { received } : {}),
+    };
   }
 
   /**

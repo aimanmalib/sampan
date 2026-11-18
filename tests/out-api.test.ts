@@ -112,6 +112,26 @@ describe('POST /api/out/*', () => {
     const status = (await app!.inject({ method: 'GET', url: `/api/crossings/${build.crossingId}` })).json();
     expect(status).toMatchObject({ kind: 'out', asset: 'USDC', chain: 'BASE', route: 'thorchain', status: 'completed', out: { stage: 'done', outChain: 'BASE' } });
     expect(JSON.stringify(status)).not.toContain(DEST);
+
+    // The receipt: the three transactions, the coins from THORNode's status, valued with the quote's BCH price.
+    const r = status.out.receipt;
+    expect(r.legs.map((l: { chain: string }) => l.chain)).toEqual(['BCH', 'THOR', 'BASE']);
+    expect(r.legs[0].txid).toBe(services.db.getCrossing(build.crossingId)!.txid);
+    expect(r.paid).toEqual({ asset: 'BCH.BCH', amount: '1000000' });
+    expect(r.received).toEqual({ asset: 'BASE.USDC-0X833589FCD6EDB6E08F4C7C32D4F71B54BDA02913', amount: '184525600' });
+    expect(r.receivedUsd).toBe('1845256');
+    expect(BigInt(r.paidUsd)).toBeGreaterThan(BigInt(r.receivedUsd));
+    expect(BigInt(r.costUsd)).toBe(BigInt(r.paidUsd) - BigInt(r.receivedUsd));
+    expect(r.keepPct).toBeGreaterThan(50);
+    expect(r.keepPct).toBeLessThan(100);
+    expect(r.seconds).toBeGreaterThanOrEqual(0);
+    // Kept on the row: the quote payload is cleared after a day, the receipt and its price stay.
+    expect(services.db.getCrossing(build.crossingId)!.receipt_json).not.toBeNull();
+    services.db.purgeQuotes(-1);
+    expect(services.db.getCrossing(build.crossingId)!.quote_json).toBeNull();
+    const again = (await app!.inject({ method: 'GET', url: `/api/crossings/${build.crossingId}` })).json();
+    expect(again.out.receipt).toEqual(r);
+    expect(again.out).toMatchObject({ stage: 'done', outChain: 'BASE' });
   });
 
   it('refuses to build when the fresh minimum is below the one shown', async () => {

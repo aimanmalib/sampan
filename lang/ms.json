@@ -605,5 +605,17 @@
   "cost.part.thorOutbound": "Yuran {route} untuk menghantar di {chain}",
   "cost.part.thorAffiliate": "Yuran afiliasi {route}",
   "cost.part.gas": "Gas di {chain}",
-  "cost.part.convertNetwork": "Yuran rangkaian untuk menukar BCH kepada {token} di alamat pendaratan"
+  "cost.part.convertNetwork": "Yuran rangkaian untuk menukar BCH kepada {token} di alamat pendaratan",
+  "receipt.title": "Resit",
+  "receipt.chain.bch": "Bitcoin Cash",
+  "receipt.chain.thor": "THORChain",
+  "receipt.paid": "Dihantar",
+  "receipt.received": "Diterima",
+  "receipt.refunded": "Dipulangkan",
+  "receipt.amountUsd": "{amount} ({usd})",
+  "receipt.cost": "Kos",
+  "receipt.costKept": "{usd}, anda menyimpan {pct}% daripada nilai",
+  "receipt.time": "Masa",
+  "receipt.minutes": "Kira-kira {n} min, dari transaksi disediakan hingga Sampan melihat bayaran keluar",
+  "receipt.basis": "{symbol} dikira USD 1. BCH dinilai pada harga dalam sebut harga yang membina lintasan ini."
 }

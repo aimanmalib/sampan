@@ -49,6 +49,8 @@ export interface SampanConfig {
     maxGasRate: number;
     affiliate: string;
     affiliateBps: number;
+    /** THORChain explorer page of one transaction, with {txid} (the receipt on /c/:id links the route's leg). */
+    explorerTxUrl: string;
   };
   /** NEAR Intents 1Click as a second route (core/oneclick-config.ts); the server only, shown while features.oneClick is true. */
   oneClick: OneClickConfig;
@@ -182,6 +184,8 @@ export interface PublicConfig {
   routeAssets: RouteAsset[];
   /** Chains of routeAssets (keys of evm.chains). */
   routeChains: string[];
+  /** thorchain.explorerTxUrl: the receipt's THORChain link (/c/:id); the rest of thorchain stays on the server. */
+  routeExplorerTxUrl: string;
   evm: { chains: EvmChainConfig[]; walletConnect: { projectId: string; relayUrl: string } | null } & Pick<SampanConfig['evm'], 'receiptPollSeconds' | 'receiptWaitSeconds' | 'replanSeconds'>;
   limits: SampanConfig['limits'];
   landing: Pick<SampanConfig['landing'], 'toleranceBps' | 'toleranceBpsDirect' | 'returnAfterBlocks' | 'validHours' | 'pagePollSeconds' | 'dustSats' | 'convertFeeSats'>;
@@ -234,6 +238,7 @@ export function validateConfig(c: SampanConfig): string[] {
   need(ROUTES.includes(c.route?.active), 'route.active: none, near-intents or thorchain');
   need(c.thorchain.nodes.length > 0 && c.thorchain.nodes.every(isHttpsUrl), 'thorchain.nodes: https URLs');
   need(posInt(c.thorchain.timeoutMs) && posInt(c.thorchain.maxGasRate), 'thorchain.timeoutMs, maxGasRate: positive integers');
+  need(isHttpsUrl(c.thorchain.explorerTxUrl) && c.thorchain.explorerTxUrl.includes('{txid}'), 'thorchain.explorerTxUrl: an https URL with {txid}');
   errors.push(...validateOneClick(c.oneClick, c.evm.chains));
   need(c.route.active !== 'near-intents' || c.oneClick.baseUrl !== '', 'oneClick.baseUrl: required for near-intents');
   need(c.cauldron.indexers.length > 0 && c.cauldron.indexers.every(isHttpsUrl), 'cauldron.indexers: https URLs');
@@ -406,6 +411,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     route: { active: c.route.active, symbols: symbolsOf(assets) },
     routeAssets: assets,
     routeChains: chainsOf(assets),
+    routeExplorerTxUrl: c.thorchain.explorerTxUrl,
     evm: {
       chains: c.evm.chains,
       walletConnect: c.evm.walletConnectProjectId === '' ? null : { projectId: c.evm.walletConnectProjectId, relayUrl: c.evm.walletConnectRelay },

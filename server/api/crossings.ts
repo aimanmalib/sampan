@@ -5,6 +5,7 @@ import type { FastifyInstance } from 'fastify';
 import type { SampanConfig } from '../../core/config.js';
 import type { Services } from '../services.js';
 import { ApiError, quoteLimit, sendError } from './guard.js';
+import { keepable, receiptFor, type StoredReceipt } from './receipt.js';
 import { depositAddressOf, routeOf } from './route-deposit.js';
 import { splitRowAsset } from './wire.js';
 
@@ -12,24 +13,35 @@ const ID_PARAMS = { type: 'object', required: ['id'], properties: { id: { type: 
 
 const STAGE_STATUS = { done: 'completed', refunded: 'refunded', failed: 'failed' } as const;
 
-/** A crossing out: ask the route how far it got and keep a final answer on the row. */
-async function outStage(s: Services, id: string): Promise<Record<string, unknown> | undefined> {
+/** A crossing out or in: ask the route how far it got, keep a final answer (and its receipt) on the row. */
+async function outStage(config: SampanConfig, s: Services, id: string): Promise<Record<string, unknown> | undefined> {
   const row = s.db.getCrossing(id);
+  if (row?.receipt_json) {
+    const kept = JSON.parse(row.receipt_json) as StoredReceipt;
+    return { stage: kept.stage, outTxid: kept.outTxid, outChain: kept.outChain, receipt: kept.receipt };
+  }
   const route = row ? routeOf(s, row) : null;
   if (!row?.txid || !route) return undefined;
   try {
     const st = await route.status(row.txid, depositAddressOf(row));
     const final = st.stage === 'done' || st.stage === 'refunded' || st.stage === 'failed' ? STAGE_STATUS[st.stage] : undefined;
-    if (final && row.status !== final) s.db.updateCrossing(id, { status: final });
-    return { stage: st.stage, outTxid: st.outTxid ?? null, outChain: st.outChain ?? null };
+    const receipt = receiptFor(config, row, st, s.db.time());
+    const patch: { status?: string; receipt_json?: string } = {};
+    if (final && row.status !== final) patch.status = final;
+    if (keepable(st)) {
+      const kept: StoredReceipt = { stage: st.stage, outTxid: st.outTxid, outChain: st.outChain ?? null, receipt };
+      patch.receipt_json = JSON.stringify(kept);
+    }
+    s.db.updateCrossing(id, patch);
+    return { stage: st.stage, outTxid: st.outTxid ?? null, outChain: st.outChain ?? null, receipt };
   } catch {
-    return { stage: 'unknown', outTxid: null, outChain: null };
+    return { stage: 'unknown', outTxid: null, outChain: null, receipt: null };
   }
 }
 
-async function view(s: Services, id: string): Promise<Record<string, unknown>> {
+async function view(config: SampanConfig, s: Services, id: string): Promise<Record<string, unknown>> {
   const first = s.db.getCrossing(id);
-  const out = first?.kind === 'out' || first?.kind === 'in' ? await outStage(s, id) : undefined;
+  const out = first?.kind === 'out' || first?.kind === 'in' ? await outStage(config, s, id) : undefined;
   const row = s.db.getCrossing(id);
   if (!row) throw new ApiError(404, 'not_found', 'unknown crossing');
   const base = {
@@ -65,7 +77,7 @@ async function view(s: Services, id: string): Promise<Record<string, unknown>> {
 export function registerCrossings(app: FastifyInstance, config: SampanConfig, s: Services): void {
   app.get<{ Params: { id: string } }>('/api/crossings/:id', { schema: { params: ID_PARAMS } }, async (req, reply) => {
     try {
-      return await view(s, req.params.id);
+      return await view(config, s, req.params.id);
     } catch (e) {
       return sendError(reply, e);
     }
@@ -77,7 +89,7 @@ export function registerCrossings(app: FastifyInstance, config: SampanConfig, s:
       const row = s.db.getCrossing(req.params.id);
       if (!row) throw new ApiError(404, 'not_found', 'unknown crossing');
       if (row.kind === 'land') await s.watcher.kick(row.id);
-      return await view(s, row.id);
+      return await view(config, s, row.id);
     } catch (e) {
       return sendError(reply, e);
     }
