@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { openFlows, openTabs, type TabId } from '../../core/flows';
 import type { LoadedConfig } from './config';
-import { routeHalted } from '../../core/client/health';
+import { routeHalted, routeOpenMap } from '../../core/client/health';
 import { crossingPaused, networkStatus } from '../../core/cross-choices';
 import { RoutePaused } from './cross/RoutePaused';
 import { ErrorBoundary, ErrorCard } from './ErrorBoundary';
@@ -64,7 +64,7 @@ export function ActionCard({
   const health = useHealth();
   const rows =
     config && (tab === 'out' || tab === 'in')
-      ? networkStatus(config.routeAssets, config.evm.chains, tab, health?.route?.chains, { enabled: config.features.oneClick, assets: config.oneClick.assets })
+      ? networkStatus(config.routeAssets, config.evm.chains, tab, routeOpenMap(health), { enabled: config.features.oneClick, assets: config.oneClick.assets })
       : [];
   const halted = crossingPaused(rows, routeHalted(health));
   const Body = tab ? PANELS[tab] : undefined;

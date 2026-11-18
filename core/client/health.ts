@@ -38,3 +38,10 @@ export function healthParts(h: HealthReport | null, t: (key: HealthKey) => strin
 
 /** True only when the server's last check saw the route halted. */
 export const routeHalted = (h: HealthReport | null): boolean => h?.route?.open === false;
+
+/**
+ * THORChain's open state per chain for the network list: the report's map; an empty map (every chain closed) when
+ * the route is reported halted without one; null (unknown, the server answers) while nothing is known.
+ */
+export const routeOpenMap = (h: HealthReport | null): Record<string, boolean> | null =>
+  h?.route?.chains ?? (h?.route?.open === false ? {} : null);

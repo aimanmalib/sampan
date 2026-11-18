@@ -2,6 +2,7 @@
 // each open or paused from the page's last health check. A chain that halts stays listed as paused and opens again
 // when it reopens, without a reload; the chosen network falls back to the first open one while it is paused.
 import { useState } from 'react';
+import { routeOpenMap } from '../../../core/client/health';
 import { networkStatus, type NetworkRow } from '../../../core/cross-choices';
 import type { Direction } from '../../../core/route-assets';
 import type { LoadedConfig } from '../config';
@@ -19,7 +20,7 @@ export interface Networks {
 export function useNetworkRows(config: LoadedConfig, direction: Direction): NetworkRow[] {
   const health = useHealth();
   const oc = { enabled: config.features.oneClick, assets: config.oneClick.assets };
-  return networkStatus(config.routeAssets, config.evm.chains, direction, health?.route?.chains, oc);
+  return networkStatus(config.routeAssets, config.evm.chains, direction, routeOpenMap(health), oc);
 }
 
 export function useNetworks(config: LoadedConfig, direction: Direction): Networks {

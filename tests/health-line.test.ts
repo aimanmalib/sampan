@@ -1,7 +1,7 @@
 // The status line parts and the "Paused by the route" switch from a health report.
 import { describe, expect, it } from 'vitest';
 import en from '../lang/en.json' with { type: 'json' };
-import { healthParts, routeHalted, type HealthKey, type HealthReport } from '../core/client/health.js';
+import { healthParts, routeHalted, routeOpenMap, type HealthKey, type HealthReport } from '../core/client/health.js';
 
 const t = (k: HealthKey): string => en[k];
 const name = (id: string): string => (en as Record<string, string>)[`route.${id}`] ?? id;
@@ -42,5 +42,15 @@ describe('routeHalted', () => {
     expect(routeHalted(report({ route: { id: 'thorchain', open: null } }))).toBe(false);
     expect(routeHalted(report({ route: { id: 'thorchain', open: true } }))).toBe(false);
     expect(routeHalted(report({ route: { id: 'thorchain', open: false } }))).toBe(true);
+  });
+});
+
+describe('routeOpenMap', () => {
+  it('passes the per-chain map on, closes every chain for a halted route without one, and is unknown otherwise', () => {
+    expect(routeOpenMap(null)).toBeNull();
+    expect(routeOpenMap(report({ route: { id: 'thorchain', open: null } }))).toBeNull();
+    expect(routeOpenMap(report({ route: { id: 'thorchain', open: true } }))).toBeNull();
+    expect(routeOpenMap(report({ route: { id: 'thorchain', open: false } }))).toEqual({});
+    expect(routeOpenMap(report({ route: { id: 'thorchain', open: false, chains: { BCH: true, ETH: false } } }))).toEqual({ BCH: true, ETH: false });
   });
 });
