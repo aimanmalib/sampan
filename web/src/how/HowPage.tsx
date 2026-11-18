@@ -9,6 +9,7 @@ import { Measured } from '../Measured';
 import { Diagram } from './Diagram';
 import { ProofTable } from './ProofTable';
 import { DepthBlock } from '../peg/DepthBlock';
+import { HowNostr } from '../nostr/HowNostr';
 import './how.css';
 
 export function HowPage({ config }: { config: LoadedConfig | null }) {
@@ -124,6 +125,7 @@ export function HowPage({ config }: { config: LoadedConfig | null }) {
           </p>
         ) : null}
       </section>
+      <HowNostr config={config} />
       <DepthBlock config={config} />
       <Measured />
       <ProofTable config={config} />

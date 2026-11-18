@@ -1,0 +1,37 @@
+/* The verified Nostr identity card under a recipient field. Tokens from the theme only. */
+.nostr {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--river);
+  border-radius: calc(var(--radius) / 2);
+  background: var(--river-pale);
+  color: var(--ink);
+}
+.nostr p {
+  margin: 0;
+}
+.nostr__title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.nostr__tick {
+  color: var(--river);
+}
+.nostr__npub {
+  font-weight: 400;
+}
+.nostr__address {
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+.nostr__how {
+  font-size: 0.875rem;
+}
+.nostr__how a {
+  color: var(--ink);
+}
+.nostr__checking {
+  font-size: 0.9375rem;
+}

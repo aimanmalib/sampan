@@ -59,6 +59,12 @@ const oneClickPatch = {
  */
 export const SHIPPED_PORT_OFFSET = ONECLICK_PORT_OFFSET + 1;
 const shippedPatch = { features: { swap: true, landing: true }, rate: e2ePatch.rate };
+/**
+ * A fake server with the landing flow and Nostr identities on (e2e/nostr.spec.ts): the page asks the relays in config,
+ * which the spec answers itself with page.routeWebSocket.
+ */
+export const NOSTR_PORT_OFFSET = SHIPPED_PORT_OFFSET + 1;
+const nostrPatch = { ...landingPatch, features: { ...landingPatch.features, nostrSend: true } };
 /** Test-only secret of the demo shop's hook on the local fake server (the public site's secret lives on the host). */
 const payEnv = { SAMPAN_PAY_DEMO_SECRET: `whsec_${Buffer.alloc(32, 3).toString('base64')}` };
 /**
@@ -98,6 +104,7 @@ export default defineConfig({
           fakeServer(port + QR_OFF_PORT_OFFSET, qrOffPatch),
           fakeServer(port + ONECLICK_PORT_OFFSET, oneClickPatch),
           fakeServer(port + SHIPPED_PORT_OFFSET, shippedPatch),
+          fakeServer(port + NOSTR_PORT_OFFSET, nostrPatch),
         ],
       }),
 });

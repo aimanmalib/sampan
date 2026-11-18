@@ -188,6 +188,7 @@
   "land.source": "BCH mula sa kahit anong wallet",
   "land.to": "Darating bilang",
   "land.ownerLabel": "Iyong {symbol} address (token address, nagsisimula sa z)",
+  "land.ownerLabelNostr": "Iyong {symbol} address (nagsisimula sa z) o Nostr identity",
   "land.ownerConnected": "Ibabayad sa iyong nakakonektang wallet: {address}",
   "land.open": "Kunin ang landing address ko",
   "land.opening": "Ginagawa ang iyong address",
@@ -648,5 +649,18 @@
   "nostr.reason.wrong_signer": "Hindi pinirmahan ng sarili nitong key ang address sa patunay, kaya hindi ito ginamit.",
   "nostr.reason.wrong_network": "Ang address sa patunay ay para sa test network, hindi sa Bitcoin Cash.",
   "nostr.reason.same_key": "Ginagamit ng patunay ang Nostr key bilang Bitcoin Cash key, at hindi ito tinatanggap ng protocol.",
-  "nostr.reason.ambiguous": "Higit sa isang Bitcoin Cash address ang nakalista sa identity na ito, kaya hindi malinaw kung saan magpapadala."
+  "nostr.reason.ambiguous": "Higit sa isang Bitcoin Cash address ang nakalista sa identity na ito, kaya hindi malinaw kung saan magpapadala.",
+  "nostr.checking": "Sinusuri ang Nostr identity na ito sa mga relay…",
+  "nostr.verified": "Na-verify na Nostr identity",
+  "nostr.howLink": "Paano ito sinusuri",
+  "how.nostr.title": "Pagbabayad sa isang Nostr identity",
+  "how.nostr.text": "Kung saan hinihingi ang address, puwede kang magbigay ng npub, nprofile, o pangalang tulad ng name@example.com. Hahanapin ng page na ito ang Bitcoin Cash address na inilathala ng identity na iyon at susuriin ito bago may maipadala roon:",
+  "how.nostr.s1": "Tinatanong nito nang sabay ang lahat ng relay sa ibaba para sa proof event ng identity (kind 10011) at sinusuri ulit dito ang bawat event: ang id nito at ang pirma ng Nostr key.",
+  "how.nostr.s2": "Ang pinakabagong valid na event lang mula sa lahat ng relay ang itinatabi. Kung wala nang Bitcoin Cash address ang event na iyon, walang mababayaran.",
+  "how.nostr.s3": "Dapat may eksaktong isang Bitcoin Cash address ang proof, na pinirmahan ng sariling key ng address na iyon sa tekstong nagbabanggit sa npub na ito.",
+  "how.nostr.s4": "Dapat karaniwang mainnet Bitcoin Cash address ito, at hindi dapat ang Nostr key ang key nito.",
+  "how.nostr.s5": "Kapag pumasa lang ang bawat hakbang ipapakita at gagamitin ang address. Kung hindi, makikita mo ang dahilan at mananatiling naka-off ang button.",
+  "how.nostr.relays": "Mga relay na tinatanong ng page na ito:",
+  "how.nostr.server": "Tumatakbo ang lahat ng ito sa iyong browser. Walang identity server na tinatanong, at hindi kailanman nakikita ng server ng Sampan ang identity na tina-type mo. Ang pangalang tulad ng name@example.com ay hinahanap lang sa sarili nitong domain.",
+  "how.nostr.limit": "Puwede pa ring itago ng isang relay ang mas bagong event. Kaya tinatanong ng page ang lahat ng relay sa itaas at itinatabi ang pinakabagong event na ibinalik ng alinman sa kanila."
 }

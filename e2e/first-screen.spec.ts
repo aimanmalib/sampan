@@ -9,7 +9,9 @@ import en from '../lang/en.json' with { type: 'json' };
 import fil from '../lang/fil.json' with { type: 'json' };
 import id from '../lang/id.json' with { type: 'json' };
 import ms from '../lang/ms.json' with { type: 'json' };
-import { E2E_THEME, PAY_PORT_OFFSET, SHIPPED_PORT_OFFSET } from '../playwright.config.js';
+import vectors from '../tests/fixtures/tambat-vectors.json' with { type: 'json' };
+import { E2E_THEME, NOSTR_PORT_OFFSET, PAY_PORT_OFFSET, SHIPPED_PORT_OFFSET } from '../playwright.config.js';
+import { answerRelays } from './nostr-relays.js';
 
 test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server with the shipped flows');
 const shippedPort = Number(process.env.E2E_PORT ?? 4173) + SHIPPED_PORT_OFFSET;
@@ -91,6 +93,31 @@ test.describe('Sampan Pay first screens', () => {
       for (const selector of ['h1', '.payinv__bch', '.button--primary']) await inView(page, selector, `${info.project.name} invoice ${lang}`);
       expect(await page.evaluate(() => window.scrollY)).toBe(0);
       await shot(page, `${info.project.name}-invoice-${lang}`);
+    });
+  }
+});
+
+// Nostr identities on (fake server, relays answered by the spec): after Fill and a pasted npub, the verified card and
+// the one primary button under it are both in view (the page brings the button back with the least scroll), in every
+// language, with no sideways scroll.
+test.describe('Nostr identity card in Bring in', () => {
+  test.use({ baseURL: `http://127.0.0.1:${Number(process.env.E2E_PORT ?? 4173) + NOSTR_PORT_OFFSET}` });
+  for (const [lang, text] of Object.entries(LANGS)) {
+    test(`verified card and primary button in view (${lang})`, async ({ page }, info) => {
+      const label = `${info.project.name} ${lang} nostr`;
+      await answerRelays(page, [vectors.bindingEvent]);
+      await page.addInitScript((value) => localStorage.setItem('sampan.lang', value), lang);
+      await page.goto('/');
+      await page.locator('.judge__fill').click();
+      await expect(page.getByRole('tab', { name: text['tabs.in'] })).toHaveAttribute('aria-selected', 'true');
+      await page.locator('.field__input--address').fill(vectors.nostr.npub);
+      await expect(page.locator('[data-nostr=verified]')).toBeVisible({ timeout: 15_000 });
+      await expect(page.locator('.button--primary')).toHaveCount(1);
+      await inView(page, '[data-nostr=verified]', label);
+      await inView(page, '.button--primary', label);
+      const width = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
+      expect(width[0], `${label}: no sideways scroll`).toBeLessThanOrEqual(width[1]!);
+      await shot(page, `${info.project.name}-${lang}-nostr`);
     });
   }
 });

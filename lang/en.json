@@ -188,6 +188,7 @@
   "land.source": "BCH from any wallet",
   "land.to": "Arrives as",
   "land.ownerLabel": "Your {symbol} address (token address, starts with z)",
+  "land.ownerLabelNostr": "Your {symbol} address (starts with z) or a Nostr identity",
   "land.ownerConnected": "Paid to your connected wallet: {address}",
   "land.open": "Get my landing address",
   "land.opening": "Making your address",
@@ -648,5 +649,18 @@
   "nostr.reason.wrong_signer": "The address in the proof was not signed by its own key, so it was not used.",
   "nostr.reason.wrong_network": "The address in the proof is for a test network, not Bitcoin Cash.",
   "nostr.reason.same_key": "The proof uses the Nostr key as the Bitcoin Cash key, which the protocol does not accept.",
-  "nostr.reason.ambiguous": "This identity names more than one Bitcoin Cash address, so it is not clear which one to send to."
+  "nostr.reason.ambiguous": "This identity names more than one Bitcoin Cash address, so it is not clear which one to send to.",
+  "nostr.checking": "Checking this Nostr identity on the relays…",
+  "nostr.verified": "Verified Nostr identity",
+  "nostr.howLink": "How this is checked",
+  "how.nostr.title": "Paying a Nostr identity",
+  "how.nostr.text": "Where an address is asked for, you can give an npub, an nprofile or a name like name@example.com instead. This page then finds the Bitcoin Cash address that identity has published and checks it before anything can be sent there:",
+  "how.nostr.s1": "It asks every relay below at once for the identity's proof event (kind 10011) and checks each event again here: its id, and its signature by the Nostr key.",
+  "how.nostr.s2": "It keeps only the newest valid event across all relays. If that event no longer names a Bitcoin Cash address, there is nothing to pay.",
+  "how.nostr.s3": "The proof must hold exactly one Bitcoin Cash address, signed with that address's own key over the text that names this npub.",
+  "how.nostr.s4": "The address must be a standard Bitcoin Cash mainnet address, and its key must not be the Nostr key.",
+  "how.nostr.s5": "Only when every step passes is the address shown and used. Otherwise you see the reason and the button stays off.",
+  "how.nostr.relays": "Relays this page asks:",
+  "how.nostr.server": "All of this runs in your browser. No identity server is asked, and Sampan's server never sees the identity you type. A name like name@example.com is looked up on its own domain only.",
+  "how.nostr.limit": "A relay can still hide a newer event from you. That is why the page asks all the relays above and keeps the newest event any of them returns."
 }

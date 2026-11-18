@@ -6,7 +6,9 @@ import { encodeLockingBytecodeP2pkh, lockingBytecodeToCashAddress } from '@bitau
 import { expect, test, type Page } from '@playwright/test';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import en from '../lang/en.json' with { type: 'json' };
-import { PAY_PORT_OFFSET } from '../playwright.config.js';
+import vectors from '../tests/fixtures/tambat-vectors.json' with { type: 'json' };
+import { NOSTR_PORT_OFFSET, PAY_PORT_OFFSET } from '../playwright.config.js';
+import { answerRelays } from './nostr-relays.js';
 
 const PAGES = ['/', '/how', '/terms', '/risks'];
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
@@ -120,6 +122,31 @@ test.describe('Sampan Pay pages', () => {
     expect(await smallTargets(page, 'body', isMobile)).toEqual([]);
     await page.getByRole('button', { name: en['pay.shop.buy'] }).click();
     await expect(page.locator('.payinv__address')).toBeVisible({ timeout: 20_000 });
+    await axeClean(page);
+    expect(await smallTargets(page, 'body', isMobile)).toEqual([]);
+  });
+});
+
+test.describe('Nostr identity card', () => {
+  // Fake server with features.nostrSend on (playwright.config.ts NOSTR_PORT_OFFSET); relays answered by the spec.
+  test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server with Nostr identities on');
+  test.use({ baseURL: `http://127.0.0.1:${Number(process.env.E2E_PORT ?? 4173) + NOSTR_PORT_OFFSET}` });
+
+  test('verified and failed cards, and /how#nostr: no WCAG AA failures, targets large enough to hit', async ({ page, isMobile }) => {
+    await answerRelays(page, [vectors.bindingEvent]);
+    await page.goto('/');
+    await page.getByRole('tab', { name: en['tabs.in'] }).click();
+    await page.locator('.field__input--address').fill(vectors.nostr.npub);
+    await expect(page.locator('[data-nostr=verified]')).toBeVisible({ timeout: 15_000 });
+    await page.evaluate(() => document.fonts.ready);
+    await axeClean(page);
+    expect(await smallTargets(page, 'body', isMobile)).toEqual([]);
+    await page.locator('.field__input--address').fill('npub1abc');
+    await page.locator('.field__input--address').blur();
+    await expect(page.locator('[data-nostr=failed]')).toBeVisible();
+    await axeClean(page);
+    await page.goto('/how#nostr');
+    await expect(page.locator('section#nostr')).toBeVisible();
     await axeClean(page);
     expect(await smallTargets(page, 'body', isMobile)).toEqual([]);
   });

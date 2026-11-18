@@ -188,6 +188,7 @@
   "land.source": "BCH dari dompet mana pun",
   "land.to": "Tiba sebagai",
   "land.ownerLabel": "Alamat {symbol} Anda (alamat token, diawali z)",
+  "land.ownerLabelNostr": "Alamat {symbol} Anda (diawali z) atau identitas Nostr",
   "land.ownerConnected": "Dibayarkan ke dompet Anda yang terhubung: {address}",
   "land.open": "Buat alamat pendaratan saya",
   "land.opening": "Membuat alamat Anda",
@@ -648,5 +649,18 @@
   "nostr.reason.wrong_signer": "Alamat dalam bukti tidak ditandatangani oleh kuncinya sendiri, jadi tidak digunakan.",
   "nostr.reason.wrong_network": "Alamat dalam bukti untuk jaringan uji, bukan Bitcoin Cash.",
   "nostr.reason.same_key": "Bukti memakai kunci Nostr sebagai kunci Bitcoin Cash, dan protokol tidak menerimanya.",
-  "nostr.reason.ambiguous": "Identitas ini menyebut lebih dari satu alamat Bitcoin Cash, jadi tidak jelas ke mana harus mengirim."
+  "nostr.reason.ambiguous": "Identitas ini menyebut lebih dari satu alamat Bitcoin Cash, jadi tidak jelas ke mana harus mengirim.",
+  "nostr.checking": "Memeriksa identitas Nostr ini di relay…",
+  "nostr.verified": "Identitas Nostr terverifikasi",
+  "nostr.howLink": "Cara pemeriksaannya",
+  "how.nostr.title": "Membayar identitas Nostr",
+  "how.nostr.text": "Di tempat alamat diminta, Anda bisa memberikan npub, nprofile, atau nama seperti nama@contoh.com. Halaman ini lalu mencari alamat Bitcoin Cash yang diterbitkan identitas itu dan memeriksanya sebelum apa pun bisa dikirim ke sana:",
+  "how.nostr.s1": "Halaman bertanya ke semua relay di bawah sekaligus untuk event bukti identitas itu (kind 10011) dan memeriksa ulang setiap event di sini: id-nya dan tanda tangannya oleh kunci Nostr.",
+  "how.nostr.s2": "Hanya event sah terbaru dari semua relay yang disimpan. Jika event itu tidak lagi menyebut alamat Bitcoin Cash, tidak ada yang bisa dibayar.",
+  "how.nostr.s3": "Bukti itu harus memuat tepat satu alamat Bitcoin Cash, ditandatangani dengan kunci alamat itu sendiri atas teks yang menyebut npub ini.",
+  "how.nostr.s4": "Alamat itu harus alamat mainnet Bitcoin Cash standar, dan kuncinya tidak boleh sama dengan kunci Nostr.",
+  "how.nostr.s5": "Hanya jika setiap langkah lolos alamat itu ditampilkan dan dipakai. Jika tidak, Anda melihat alasannya dan tombol tetap nonaktif.",
+  "how.nostr.relays": "Relay yang ditanya halaman ini:",
+  "how.nostr.server": "Semua ini berjalan di browser Anda. Tidak ada server identitas yang ditanya, dan server Sampan tidak pernah melihat identitas yang Anda ketik. Nama seperti nama@contoh.com hanya dicari di domainnya sendiri.",
+  "how.nostr.limit": "Relay tetap bisa menyembunyikan event yang lebih baru dari Anda. Karena itu halaman ini bertanya ke semua relay di atas dan menyimpan event terbaru yang dikembalikan relay mana pun."
 }

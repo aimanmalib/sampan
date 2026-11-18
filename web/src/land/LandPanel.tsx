@@ -5,6 +5,9 @@
 // valid address pasted, left or confirmed with Enter (not on every key). Once per owner and token; a failure leaves
 // the error and the button. Until then an empty frame shows where the QR code will be. The opened address, and what
 // the card does once a payment to it is seen, live in LandOpen.
+// With features.nostrSend the owner field also takes a Nostr identity: it is checked in this browser and only a
+// verified identity's token address (same hash as the address it proved) can own the landing. The address then
+// opens on the button, not by itself, so the verified card is seen first.
 import { useEffect, useRef, useState } from 'react';
 import { parseAddress } from '../../../core/address';
 import { openLanding, type OpenedLanding } from '../../../core/client/land';
@@ -17,6 +20,9 @@ import type { Wallet } from '../wallet/useWallet';
 import { WizardHat } from '../wallet/WizardHat';
 import { failureKey, LandOpen } from './LandOpen';
 import { PegNote } from '../peg/PegNote';
+import { NostrCard } from '../nostr/NostrCard';
+import { looksLikeNostr, nostrQuery } from '../nostr/query';
+import { useNostrRecipient } from '../nostr/useNostrRecipient';
 
 const BCH_DECIMALS = 8;
 
@@ -33,14 +39,19 @@ export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
   /** The typed owner the visitor has finished with (paste, leaving the field, Enter). */
   const [committed, setCommitted] = useState('');
   const tried = useRef(new Set<string>());
+  const button = useRef<HTMLButtonElement | null>(null);
 
   const view = wallet.view;
-  const owner = view ? view.receive.tokenAddress : ownerText.trim();
+  const typed = ownerText.trim();
+  const nostrId = config.features.nostrSend ? config.nostrId : null;
+  const isNostr = !view && nostrId !== null && looksLikeNostr(typed, nostrId);
+  const nostr = useNostrRecipient(isNostr ? nostrQuery(typed, committed) : null, nostrId);
+  const owner = view ? view.receive.tokenAddress : isNostr ? (nostr.at === 'ok' ? nostr.result.tokenAddress : '') : typed;
   const ownerOk = owner !== '' && typeof parseAddress(owner, 'bitcoincash') !== 'string';
   const minSats = BigInt(config.limits.localMinSats);
   const vars = { symbol: token.symbol, min: formatUnits(minSats, BCH_DECIMALS) };
 
-  const known = view ? owner : committed === owner ? owner : '';
+  const known = view ? owner : committed === typed && !isNostr ? owner : '';
   const auto = config.ui.qrAutoOpen;
 
   const open = async (ownerAddress: string): Promise<void> => {
@@ -60,6 +71,14 @@ export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
       setPhase({ at: 'form' });
     }
   };
+
+  // A verified card pushes the button down; where that takes it below the screen (a phone), it is scrolled back up to
+  // the middle, which keeps the card above it in view too.
+  const verified = nostr.at === 'ok' ? nostr.result.eventId : '';
+  useEffect(() => {
+    const el = button.current;
+    if (verified !== '' && el && el.getBoundingClientRect().bottom > window.innerHeight) el.scrollIntoView({ block: 'center' });
+  }, [verified]);
 
   const autoKey = auto && phase.at === 'form' && known !== '' && ownerOk ? `${known}|${token.symbol}` : '';
   useEffect(() => {
@@ -88,14 +107,14 @@ export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
           <p className="land__owner">{wallet.status === 'error' ? t('wallet.scanFailed') : t('wallet.scanning')}</p>
         ) : (
           <label className="field">
-            <span className="field__label">{t('land.ownerLabel', { symbol: token.symbol })}</span>
+            <span className="field__label">{t(nostrId ? 'land.ownerLabelNostr' : 'land.ownerLabel', { symbol: token.symbol })}</span>
             <span className="field__row">
               <input
                 className="field__input field__input--address mono"
                 autoComplete="off"
                 autoCapitalize="off"
                 spellCheck={false}
-                placeholder="bitcoincash:z…"
+                placeholder={nostrId ? 'bitcoincash:z… / npub1…' : 'bitcoincash:z…'}
                 value={ownerText}
                 disabled={busy}
                 onChange={(e) => setOwnerText(e.target.value)}
@@ -106,14 +125,15 @@ export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
             </span>
           </label>
         )}
-        {!view && ownerText.trim() !== '' && !ownerOk ? <p className="swap__error">{t('land.err.owner')}</p> : null}
+        {isNostr && nostrId ? <NostrCard state={nostr} nostrId={nostrId} use="tokenAddress" /> : null}
+        {!view && typed !== '' && !isNostr && !ownerOk ? <p className="swap__error">{t('land.err.owner')}</p> : null}
         <PegNote />
         {error ? (
           <p className="swap__error" role="alert">
             {t(error, { min: vars.min, max: String(config.limits.maxUsd) })}
           </p>
         ) : null}
-        <button type="button" className="button button--primary" disabled={primary.disabled} onClick={primary.onClick}>
+        <button ref={button} type="button" className="button button--primary" disabled={primary.disabled} onClick={primary.onClick}>
           {primary.hat ? <WizardHat /> : null}
           {primary.label}
         </button>
