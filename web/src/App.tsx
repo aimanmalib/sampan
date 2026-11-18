@@ -8,6 +8,7 @@ import { applyLanguages, useText } from './i18n';
 import { LangPicker } from './LangPicker';
 import { Scene } from './Scene';
 import { CrossingPage } from './CrossingPage';
+import { doneRoute, FinishedPage } from './cross/Finished';
 import { HowPage } from './how/HowPage';
 import { LegalPage } from './legal/LegalPage';
 import { Measured } from './Measured';
@@ -27,6 +28,7 @@ export function App() {
   const [serverDown, setServerDown] = useState(false);
   const judge = config && flows.land && cardTabs(config).includes('in') ? config : null;
   const crossing = /^\/c\/([0-9a-f]{32})$/.exec(location.pathname)?.[1];
+  const done = doneRoute(location.pathname);
   const how = location.pathname === '/how';
   const legal = location.pathname === '/terms' ? 'terms' : location.pathname === '/risks' ? 'risks' : null;
   // Sampan Pay pages exist only with features.pay; until the config says so nothing is drawn, then the front page.
@@ -66,6 +68,10 @@ export function App() {
       ) : legal ? (
         <main>
           <LegalPage kind={legal} config={config} />
+        </main>
+      ) : done ? (
+        <main className="page">
+          <FinishedPage id={done} config={config} />
         </main>
       ) : crossing ? (
         <main className="page">

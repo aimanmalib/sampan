@@ -39,6 +39,14 @@ describe('validateConfig', () => {
     expect(Object.values(normalizeConfig(c).tokens)[0]!.category).toBe('ab'.repeat(32));
   });
 
+  it('takes site.finished as a lower case BCH txid or empty, nothing else', () => {
+    const c = clone();
+    c.site.finished = { out: '', in: 'ab'.repeat(32) };
+    expect(validateConfig(c)).toEqual([]);
+    c.site.finished = { out: `0x${'ab'.repeat(32)}`, in: 'AB'.repeat(32) };
+    expect(validateConfig(c).join()).toMatch(/site\.finished/);
+  });
+
   it('rejects a site origin with a trailing slash and a preview picture that is not a PNG path', () => {
     const c = clone();
     c.site.url = 'https://example.test/';

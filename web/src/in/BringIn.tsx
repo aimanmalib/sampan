@@ -8,6 +8,7 @@ import { useText } from '../i18n';
 import { LandPanel } from '../land/LandPanel';
 import type { Wallet } from '../wallet/useWallet';
 import { RoutePaused } from '../cross/RoutePaused';
+import { FinishedLink } from '../cross/Finished';
 import { InPanel } from './InPanel';
 
 type Source = 'land' | 'cross';
@@ -43,6 +44,8 @@ export function BringIn({ config, wallet, halted }: { config: LoadedConfig; wall
       ) : (
         <InPanel config={config} wallet={wallet} />
       )}
+      {/* Under either source: a judge sees a finished crossing without first choosing the other chain. */}
+      {flows.cross ? <FinishedLink config={config} flow="in" /> : null}
     </>
   );
 }

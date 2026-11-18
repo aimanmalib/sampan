@@ -7,6 +7,7 @@ import { ErrorBoundary, ErrorCard } from './ErrorBoundary';
 import { ProviderNote } from './errors/ProviderNote';
 import { useHealth } from './health';
 import { useText, type TextKey } from './i18n';
+import { FinishedLink } from './cross/Finished';
 import { BringIn } from './in/BringIn';
 import { OutPanel } from './out/OutPanel';
 import { SwapPanel } from './swap/SwapPanel';
@@ -21,8 +22,12 @@ type Panel = (props: { config: LoadedConfig; wallet: Wallet; fill: number; halte
 /** Tabs with a working panel. A tab is listed only when its flow flag is on and its panel exists. */
 const PANELS: Partial<Record<TabId, Panel>> = {
   swap: ({ config, wallet }) => <SwapPanel config={config} wallet={wallet} />,
-  out: ({ config, wallet, halted, onChoose }) =>
-    halted ? <RoutePaused config={config} /> : <OutPanel config={config} wallet={wallet} onSwap={() => onChoose('swap')} />,
+  out: ({ config, wallet, halted, onChoose }) => (
+    <>
+      {halted ? <RoutePaused config={config} /> : <OutPanel config={config} wallet={wallet} onSwap={() => onChoose('swap')} />}
+      <FinishedLink config={config} flow="out" />
+    </>
+  ),
   in: ({ config, wallet, fill, halted }) => <BringIn key={fill} config={config} wallet={wallet} halted={halted} />,
 };
 

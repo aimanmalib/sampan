@@ -140,3 +140,16 @@ export function buildProof(markdown: string): Proof {
   const newest = runs.map((r, i) => ({ r, i })).sort((a, b) => b.r.utc.localeCompare(a.r.utc) || b.i - a.i);
   return { flows, wallets: countWallets(markdown), runs: newest.map((x) => x.r) };
 }
+
+/** The crossing `site.finished` names for one direction: an ok `out` or `in` row of the Runs table whose BCH
+ *  transaction id is `bchTxid` and which also records the other chain's transaction. Null otherwise, so a link is
+ *  only drawn to a crossing the measurements show finished. */
+export function finishedCrossing(p: Proof, flow: 'out' | 'in', bchTxid: string): ProofRun | null {
+  const id = bchTxid.toLowerCase();
+  if (!BCH_TXID.test(id)) return null;
+  return (
+    p.runs.find(
+      (r) => r.flow === flow && r.ok && r.txids[0]?.chain === 'bch' && r.txids[0].id === id && r.txids.some((x) => x.chain !== 'bch'),
+    ) ?? null
+  );
+}

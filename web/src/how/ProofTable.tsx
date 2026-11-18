@@ -2,23 +2,15 @@
 // page was built (virtual:sampan-proof). Every transaction id opens in an explorer; crossing rows are shown as
 // measurements only, whatever the flags say.
 import proof from 'virtual:sampan-proof';
-import { SECONDS_UP_TO } from '../../../core/client/measured';
-import type { ProofRun, ProofTxid } from '../../../core/proof';
+import type { ProofRun } from '../../../core/proof';
 import type { LoadedConfig } from '../config';
 import { useText, type TextKey } from '../i18n';
-
-const short = (id: string): string => `${id.slice(0, id.startsWith('0x') ? 10 : 8)}…${id.slice(-6)}`;
+import { runText, shortTxid as short } from './txLinks';
 
 export function ProofTable({ config }: { config: LoadedConfig }) {
   const { t } = useText();
   if (proof.runs.length === 0) return null;
-  // A Runs cell names its chain in lower case (bch, eth, base, …); the name and explorer come from config.
-  const evmChain = (chain: string) => config.evm.chains.find((c) => c.key.toLowerCase() === chain);
-  const explorer = (chain: string): string => evmChain(chain)?.explorer ?? '';
-  const chainName = (chain: string): string => (chain === 'bch' ? t('proof.chain.bch') : (evmChain(chain)?.name ?? chain.toUpperCase()));
-  const href = (x: ProofTxid): string => (x.chain === 'bch' ? config.connect.explorerTxUrl.replace('{txid}', x.id) : `${explorer(x.chain)}/tx/${x.id}`);
-  const time = (s: number | null): string =>
-    s === null ? t('proof.none') : s < SECONDS_UP_TO ? t('measured.seconds', { n: s.toFixed(1) }) : t('measured.minutes', { n: String(Math.round(s / 60)) });
+  const { chainName, href, time } = runText(config, t);
   const flowName = (f: ProofRun['flow']): string => t(`proof.flow.${f}` as TextKey);
   const links = (run: ProofRun) =>
     run.txids.length === 0 ? (

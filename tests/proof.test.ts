@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildProof, countWallets, median, parseRuns, parseTxids, PROOF_FLOWS } from '../core/proof.js';
+import { buildProof, countWallets, finishedCrossing, median, parseRuns, parseTxids, PROOF_FLOWS } from '../core/proof.js';
 import { measuredJson } from '../scripts/measured-json.js';
 
 const A = 'a'.repeat(64);
@@ -109,5 +109,46 @@ describe('proof from the real docs/MEASURED.md', () => {
     const first = table.find((l) => l.split('|')[2]!.trim() === 'swap' && /\| ok \|$/.test(l.trim()))!;
     const id = /[0-9a-f]{64}/.exec(first)![0];
     expect(measuredJson().flows.find((f) => f.flow === 'swap')!.first!.txids[0]!.id).toBe(id);
+  });
+});
+
+describe('finishedCrossing (site.finished)', () => {
+  const p = buildProof(fixture);
+
+  it('finds an ok out or in row by its BCH txid, with the other chain recorded', () => {
+    expect(finishedCrossing(p, 'out', A)!.txids.map((x) => x.chain)).toEqual(['bch', 'base']);
+    expect(finishedCrossing(p, 'in', B)!.seconds).toBe(700);
+    expect(finishedCrossing(p, 'in', B.toUpperCase())).not.toBeNull();
+  });
+
+  it('finds nothing for an empty id, the other direction, a swap row or an EVM id', () => {
+    expect(finishedCrossing(p, 'out', '')).toBeNull();
+    expect(finishedCrossing(p, 'in', A)).toBeNull();
+    expect(finishedCrossing(p, 'out', B)).toBeNull();
+    expect(finishedCrossing(p, 'out', C)).toBeNull();
+    expect(finishedCrossing(p, 'out', E)).toBeNull();
+  });
+
+  it('finds nothing for a failed row or a crossing recorded without the other chain', () => {
+    const rows = fixture
+      .replace(`bch ${A} · base ${E} | 900.0 | ok |`, `bch ${A} · base ${E} | 900.0 | fail (refunded) |`)
+      .replace(`bch ${B} · base ${E} · convert ${C}`, B);
+    const q = buildProof(rows);
+    expect(finishedCrossing(q, 'out', A)).toBeNull();
+    expect(finishedCrossing(q, 'in', B)).toBeNull();
+  });
+
+  it('the crossings config/sampan.json names are finished rows of the real MEASURED.md', () => {
+    const cfg = JSON.parse(readFileSync(new URL('../config/sampan.json', import.meta.url), 'utf8')) as {
+      site: { finished: { out: string; in: string } };
+    };
+    const real = measuredJson();
+    for (const flow of ['out', 'in'] as const) {
+      const id = cfg.site.finished[flow];
+      if (id === '') continue;
+      const run = finishedCrossing(real, flow, id);
+      expect(run, `${flow} ${id}`).not.toBeNull();
+      expect(run!.seconds).not.toBeNull();
+    }
   });
 });

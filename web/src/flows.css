@@ -316,3 +316,30 @@
   max-width: var(--measure);
   color: var(--ink-soft);
 }
+
+/* Finished crossing link and page (/done/<txid>) */
+.done-link {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+}
+.done-link a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  color: var(--river);
+}
+.done__facts {
+  display: grid;
+  gap: 0.25rem 0;
+  margin: 0;
+}
+.done__facts dt {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  margin-top: 0.5rem;
+}
+.done__facts dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
