@@ -4,6 +4,7 @@ import { App } from './App';
 import { Banner } from './Banner';
 import { ErrorBoundary, PageCrash } from './ErrorBoundary';
 import { browserReload, reloadOnce } from './errors/reload-once';
+import './fonts/fonts.css';
 import './styles.css';
 import './flows.css';
 import './land/land.css';
