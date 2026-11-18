@@ -14,7 +14,8 @@
 //                the largest text in the card, at most 60 words on the first screen.
 import AxeBuilder from '@axe-core/playwright';
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { chromium, devices, webkit, type Browser, type BrowserContextOptions, type Page } from '@playwright/test';
 import en from '../../lang/en.json' with { type: 'json' };
@@ -47,6 +48,8 @@ const ENGINES: Record<Engine, { launch: () => Promise<Browser>; options: Browser
 
 async function open(browser: Browser, engine: Engine, base: string, lang: string, at: string): Promise<Page> {
   const context = await browser.newContext({ ...ENGINES[engine].options, baseURL: base });
+  // tsx (esbuild keepNames) wraps named inner functions of page.evaluate bodies in __name(), which the page lacks.
+  await context.addInitScript('window.__name = window.__name || ((f) => f);');
   await context.addInitScript((value) => localStorage.setItem('sampan.lang', value), lang);
   const page = await context.newPage();
   await page.goto(at);
@@ -147,16 +150,20 @@ export function scoreAnswers(answer: string, primaryLabel: string, receiveLine: 
   return [does, presses, receives].filter(Boolean).length;
 }
 
-function ask(png: string): Promise<string> {
+/** Runs --ask in an empty folder that holds only a copy of the screenshot, so the session sees no project files. */
+function ask(source: string): Promise<string> {
+  const dir = mkdtempSync(path.join(tmpdir(), 'sampan-look-'));
+  const png = path.join(dir, 'screen.png');
+  copyFileSync(source, png);
   const prompt = `Look only at the screenshot ${png}. Answer each question in one line, numbered 1 to 3.\n${QUESTIONS.map((q, i) => `${i + 1}. ${q}`).join('\n')}`;
-  return new Promise((resolve, reject) => {
-    const child: ChildProcess = spawn('sh', ['-c', ASK.replaceAll('{png}', png)], { stdio: ['pipe', 'pipe', 'inherit'] });
+  return new Promise<string>((resolve, reject) => {
+    const child: ChildProcess = spawn('sh', ['-c', ASK.replaceAll('{png}', png)], { cwd: dir, stdio: ['pipe', 'pipe', 'inherit'] });
     let out = '';
     child.stdout!.on('data', (d: Buffer) => (out += d.toString()));
     child.on('error', reject);
     child.on('close', (code) => (code === 0 ? resolve(out) : reject(new Error(`--ask exited ${code}`))));
     child.stdin!.end(prompt);
-  });
+  }).finally(() => rmSync(dir, { recursive: true, force: true }));
 }
 
 async function scoreDirection(theme: string, port: number, browsers: Record<Engine, Browser>): Promise<DirectionScore> {
