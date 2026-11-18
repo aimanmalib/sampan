@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { WireOutQuote } from '../core/client/out.js';
-import { outIntent, outLabel, overBudget, type OutPick } from '../tools/measure/out-plan.js';
+import type { OneClickAsset } from '../core/oneclick-config.js';
+import { oneClickLivePatch, outIntent, outLabel, overBudget, type OutPick } from '../tools/measure/out-plan.js';
 
 const pick: OutPick = {
   source: 'PUSD',
@@ -64,5 +65,24 @@ describe('measured Send out plan', () => {
 
   it('labels the row with the source amount and the shown minimum', () => {
     expect(outLabel(pick, quote)).toBe('1.8 PUSD to ETH.USDC (at least 1.49492366 USDC)');
+  });
+
+  it('sends the 1Click route only on a 1Click quote, and refuses a quote from the other route', () => {
+    const oc = { ...quote, route: 'near-intents' } as WireOutQuote;
+    expect(outIntent({ ...pick, route: 'near-intents' }, oc).route).toBe('near-intents');
+    expect(outIntent(pick, quote).route).toBeUndefined();
+    expect(() => outIntent({ ...pick, route: 'near-intents' }, quote)).toThrow(/another route/);
+    expect(() => outIntent(pick, oc)).toThrow(/another route/);
+  });
+
+  it('offers exactly one 1Click asset in one direction on the measuring server', () => {
+    const assets: OneClickAsset[] = [
+      { id: 'a', chain: 'ETH', symbol: 'USDC', decimals: 6, live: { out: false, in: true } },
+      { id: 'b', chain: 'BASE', symbol: 'USDC', decimals: 6, live: { out: true, in: false } },
+    ];
+    const p = oneClickLivePatch(assets, 'ETH', 'USDC', 'out');
+    expect(p.features.oneClick).toBe(true);
+    expect(p.oneClick.assets.map((a) => a.live)).toEqual([{ out: true, in: false }, { out: false, in: false }]);
+    expect(() => oneClickLivePatch(assets, 'BSC', 'USDC', 'out')).toThrow(/not in config/);
   });
 });

@@ -1,6 +1,8 @@
 // Measured crossings (KP17): follows one crossing from its first transaction until the funds arrive on the other
 // chain, and returns one Runs row whose txid cell names both chains' transactions in full.
 //   out:      BCH deposit to the THORChain vault -> stablecoin transfer on the asset's EVM chain to the 0x destination
+//   oc-out:   the same through 1Click: BCH paid to its one-time deposit address (status asked by that address)
+//   oc-in:    the same as in through 1Click
 //   in, g3a:  router deposit on the asset's EVM chain -> BCH paid to the destination address (and, for a landing
 //             address, the conversion that pays the owner, when a `convert` lookup is given)
 // `seconds` runs from the first broadcast until arrival is seen on the second chain. A crossing the route calls
@@ -25,7 +27,10 @@ import type { CrossingStatus } from '../../server/routes/types.js';
 import { costShown, writeCostShown } from './cost-shown.js';
 import { appendRuns, crossingTxid, type Run } from './runs.js';
 
-export type CrossFlow = 'out' | 'in' | 'g3a';
+export type CrossFlow = 'out' | 'in' | 'g3a' | 'oc-out' | 'oc-in';
+
+/** BCH first, stablecoin second: a Send out on either route. */
+export const isOutFlow = (flow: CrossFlow): boolean => flow === 'out' || flow === 'oc-out';
 
 /** keccak256("Transfer(address,address,uint256)") */
 export const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
@@ -76,7 +81,7 @@ export function paysTo(receipt: EvmReceipt, token: string, to: string): boolean 
 }
 
 export async function traceCrossing(c: Crossing, d: CrossDeps): Promise<Run> {
-  const out = c.flow === 'out';
+  const out = isOutFlow(c.flow);
   if (out && !c.token) throw new Error('an out crossing needs the token contract');
   const wantChain = out ? c.chain : 'BCH';
   const first = out ? c.firstTxid.toLowerCase() : evmHash(c.firstTxid);
@@ -106,6 +111,7 @@ export async function traceCrossing(c: Crossing, d: CrossDeps): Promise<Run> {
       if (s.outTxid && s.outChain === wantChain) return row(false, s.outTxid, undefined, 'refunded by the route');
       return row(false, undefined, undefined, s.outTxid ? `refunded by the route (${refundRef(s.outChain, s.outTxid)})` : 'refunded by the route');
     }
+    if (s?.stage === 'failed') return row(false, undefined, undefined, 'failed at the route');
     if (s?.stage === 'pending') stage = 'swapping';
     if (s?.stage === 'done') {
       if (!s.outTxid || s.outChain !== wantChain) return row(false, undefined, undefined, `route reports done without a ${wantChain} transaction`);
@@ -167,7 +173,7 @@ async function main(): Promise<void> {
     return i > 0 ? process.argv[i + 1] : undefined;
   };
   const need = (name: string): string => arg(name) ?? (() => { throw new Error(`${name} is required`); })();
-  const flow = need('--flow') as CrossFlow;
+  const flow = need('--flow') as 'out' | 'in' | 'g3a';
   if (!['out', 'in', 'g3a'].includes(flow)) throw new Error('--flow is out, in or g3a');
   const config = loadConfig('config/sampan.json');
   const { chain: evmChain, token, rpc } = crossingAsset(config, need('--asset'));

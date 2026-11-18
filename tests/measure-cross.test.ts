@@ -66,6 +66,21 @@ describe('crossing tracer', () => {
     expect(runRow(run)).not.toMatch(/0x[0-9a-f]{64}/);
   });
 
+  it('writes a 1Click out row as oc-out, taking the chain from the asset when the route names only the hash', async () => {
+    const steps = [{ stage: 'unseen' as const }, { stage: 'pending' as const }, { stage: 'done' as const, outTxid: BASE_OUT, outChain: 'BASE' }];
+    let i = 0;
+    const run = await traceCrossing({ ...out, flow: 'oc-out' }, deps({ status: async () => steps[Math.min(i++, steps.length - 1)]! }));
+    expect(run).toMatchObject({ ok: true, flow: 'oc-out', txid: `bch ${BCH_IN} · base ${BASE_OUT}` });
+    expect(runRow(run)).toMatch(/^\| \S+ \| oc-out \| .* \| ok \|$/);
+  });
+
+  it('stops at once on a crossing the route reports failed, instead of waiting for the deadline', async () => {
+    let asked = 0;
+    const run = await traceCrossing({ ...out, flow: 'oc-out' }, deps({ status: async () => (asked++, { stage: 'failed' as const }) }));
+    expect(run).toMatchObject({ ok: false, note: 'failed at the route' });
+    expect(asked).toBe(1);
+  });
+
   it('fails when the Base transaction does not pay the destination', async () => {
     const other = { ...receipt, logs: receipt.logs.map((l) => ({ ...l, topics: [l.topics[0]!, l.topics[1]!, `0x${'0'.repeat(24)}${'22'.repeat(20)}`] })) };
     const run = await traceCrossing(out, deps({ evmReceipt: async () => other }));

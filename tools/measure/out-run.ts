@@ -3,7 +3,9 @@
 // the mainnet test wallet. Before the deposit is broadcast the cost card of the signed quote is saved (KC2,
 // state/cost-shown/<txid>.json); then the crossing is traced until the stablecoin arrives and one Runs row is
 // appended to docs/MEASURED.md (with --write). Spends stay inside state/budget.json and are recorded in the ledger.
-//   npx tsx tools/measure/out-run.ts --asset ETH.USDC-0X… --source PUSD|BCH --amount 1.80 --to 0x… [--port 4186] [--quote-only] [--write]
+// --route near-intents measures the 1Click route instead (flow oc-out): the server offers only that asset through
+// 1Click, with the env file's ONECLICK_JWT when there is one, and the crossing is traced through its status endpoint.
+//   npx tsx tools/measure/out-run.ts --asset ETH.USDC-0X… --source PUSD|BCH --amount 1.80 --to 0x… [--route near-intents] [--port 4186] [--quote-only] [--write]
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { hashTransaction, hexToBin } from '@bitauth/libauth';
@@ -19,8 +21,8 @@ import { loadConfig } from '../../server/config.js';
 import { SECRET_KEYS, parseEnv } from '../test-wallet/keys.js';
 import { record, spentOn } from '../test-wallet/ledger.js';
 import { costShown, writeCostShown } from './cost-shown.js';
-import { crossingAsset, traceCrossing } from './cross.js';
-import { outIntent, outLabel, overBudget } from './out-plan.js';
+import { crossingAsset, traceCrossing, type CrossDeps } from './cross.js';
+import { oneClickLivePatch, outIntent, outLabel, overBudget } from './out-plan.js';
 import { appendRuns } from './runs.js';
 import { arg, need, runCli, traceDeps } from './run-cli.js';
 import { startServer, waitHealthy } from './server.js';
@@ -46,6 +48,10 @@ async function main(): Promise<void> {
   const phrase = env.get(SECRET_KEYS.bchMainnet);
   if (!phrase) throw new Error(`${SECRET_KEYS.bchMainnet} is missing from the env file`);
   const keys = hdKeysFromPhrase(phrase);
+  const routeArg = arg('--route');
+  if (routeArg !== undefined && routeArg !== 'near-intents') throw new Error('--route is near-intents (absent = the active route)');
+  const route = routeArg as 'near-intents' | undefined;
+  const oneClickKey = env.get('ONECLICK_JWT');
   const budget = JSON.parse(readFileSync('state/budget.json', 'utf8')) as { maxUsdPerTx: number; maxUsdPerDay: number };
 
   const port = Number(arg('--port') ?? '4186');
@@ -53,7 +59,11 @@ async function main(): Promise<void> {
   const server = startServer({
     port,
     dataDir: 'state/measure-data',
-    patch: { compliance: { crossChainEnabled: true }, ...livePatch(config.thorchain.assets, [assetName]) },
+    patch: {
+      compliance: { crossChainEnabled: true },
+      ...(route ? oneClickLivePatch(config.oneClick.assets, entry.chain, entry.symbol, 'out') : livePatch(config.thorchain.assets, [assetName])),
+    },
+    ...(route && oneClickKey ? { env: { ONECLICK_JWT: oneClickKey } } : {}),
   });
   const chain = new ElectrumChain(config.electrum.servers);
   try {
@@ -79,11 +89,12 @@ async function main(): Promise<void> {
       },
     };
     const wallet = await scanWallet(api, session, 'bitcoincash', { gapLimit: pub.connect.gapLimit, maxRounds: config.connect.maxScanRounds });
-    const quote = await quoteOut(api, { source, amount, symbol: entry.symbol, chain: entry.chain, destination });
+    const quote = await quoteOut(api, { source, amount, symbol: entry.symbol, chain: entry.chain, destination, ...(route ? { route } : {}) });
     quoteUsd = Math.round(quote.usd * 100) / 100;
     const pick = {
       source, amount, decimals, asset: assetName, chain: entry.chain, symbol: entry.symbol, destination,
       category: token.category, feeCapSats: BigInt(pub.connect.feeCapSats), business: pub.business,
+      ...(route ? { route } : {}),
     };
     const intent = outIntent(pick, quote);
     depositPrompt = intent.prompts.deposit;
@@ -112,9 +123,10 @@ async function main(): Promise<void> {
     // Seconds run from the first signature (step 1 for a stablecoin source) until the stablecoin arrives.
     const broadcastAt = firstSignedAt ?? new Date();
     console.log(JSON.stringify({ crossing: res.crossingId, swap: res.swapTxid, deposit: res.txid }));
+    const deps = traceDeps(config, rpc, chain);
     const run = await traceCrossing(
-      { flow: 'out', chain: evmChain, firstTxid: res.txid, broadcastAt, amount: label, destination, token: tokenContract },
-      traceDeps(config, rpc, chain),
+      { flow: route ? 'oc-out' : 'out', chain: evmChain, firstTxid: res.txid, broadcastAt, amount: label, destination, token: tokenContract },
+      route ? { ...deps, status: crossingStatus(api, res.crossingId, evmChain) } : deps,
     );
     console.log(JSON.stringify({ ...run, utc: run.utc.toISOString() }));
     if (process.argv.includes('--write')) appendRuns('docs/MEASURED.md', [run]);
@@ -122,6 +134,20 @@ async function main(): Promise<void> {
     await chain.close();
     server.kill();
   }
+}
+
+/**
+ * 1Click names a crossing by its deposit address, which the server keeps on the crossing row: ask the page's own status
+ * endpoint. 1Click does not name the chain of the transaction it sent; it is the asset's chain, and the tracer still
+ * reads that transaction's receipt there and checks it pays the destination.
+ */
+function crossingStatus(api: ReturnType<typeof makeApi>, crossingId: string, evmChain: string): CrossDeps['status'] {
+  return async () => {
+    const v = await api.get<{ out: { stage: string; outTxid: string | null } | null }>(`/api/crossings/${crossingId}`);
+    const stage = v.out?.stage;
+    if (stage !== 'unseen' && stage !== 'pending' && stage !== 'done' && stage !== 'refunded' && stage !== 'failed') throw new Error('no answer');
+    return { stage, ...(v.out?.outTxid ? { outTxid: v.out.outTxid, outChain: evmChain } : {}) };
+  };
 }
 
 runCli(main);

@@ -2,7 +2,7 @@
 //   | UTC | flow | amount | txid | seconds | result |
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-export const FLOWS = ['swap', 'land', 'giveBack', 'out', 'in', 'g3a', 'refund', 'pay'] as const;
+export const FLOWS = ['swap', 'land', 'giveBack', 'out', 'in', 'g3a', 'oc-out', 'oc-in', 'refund', 'pay'] as const;
 export type Flow = (typeof FLOWS)[number];
 
 export interface Run {
