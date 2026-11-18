@@ -1,4 +1,4 @@
-// "See a crossing that already finished" (site.finished): Send out and Bring in each link to one measured crossing,
+// "See a finished crossing" (site.finished): Send out and Bring in each link to one measured crossing,
 // and its page shows the BCH and the other chain's transaction ids as docs/MEASURED.md records them, with explorer
 // links and the measured time, in two languages and without overflow. Runs against the fake server with the shipped
 // config, or against the live site (E2E_BASE_URL).

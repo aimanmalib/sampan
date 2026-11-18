@@ -1,4 +1,4 @@
-// "See a crossing that already finished": Send out and Bring in link to one measured crossing per direction
+// "See a finished crossing": Send out and Bring in link to one measured crossing per direction
 // (config site.finished), and /done/<BCH txid> shows that Runs row of docs/MEASURED.md as read when the page was
 // built: when, how much, the measured time and every transaction id with its explorer. Nothing is fetched, so a
 // judge can check both directions without funds on another chain and without waiting.

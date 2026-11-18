@@ -435,7 +435,7 @@
   "proof.chain.bch": "BCH",
   "proof.full": "Every run, with notes on the failed ones: docs/MEASURED.md",
   "proof.fullFile": "Every run, with notes on the failed ones, is in docs/MEASURED.md in the source code.",
-  "done.link": "See a crossing that already finished",
+  "done.link": "See a finished crossing",
   "done.title": "A finished crossing",
   "done.lead": "Made on mainnet from the project's test wallet and recorded in its measurement file. Open each transaction id to check it in an explorer.",
   "done.when": "Started (UTC)",
