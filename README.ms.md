@@ -253,6 +253,7 @@ Lebih lanjut dalam [`AGENTS.md`](AGENTS.md) (Bahasa Inggeris).
 | `@wizardconnect/core`, `dapp`, `react`, `wallet` | LGPL-3.0 ([LICENSE.txt hulu](https://gitlab.com/riftenlabs/lib/wizardconnect/-/blob/master/LICENSE.txt)) | berpasangan dompet dan permintaan tandatangan |
 | `cashscript`, `cashc` | MIT | kontrak pendaratan |
 | `@bitauth/libauth` | MIT | transaksi, alamat, semakan VM |
+| `@noble/curves`, `@scure/base` | MIT | tandatangan Schnorr, pemulihan kunci dan bech32 untuk semakan identiti (di belakang bendera) |
 | `@cashlab/cauldron`, `@cashlab/common` | ISC | aritmetik kolam Cauldron, disemak silang dalam ujian |
 | `@electrum-cash/network` | MIT | klien Electrum |
 | `fastify`, `@fastify/static` | MIT | pelayan |

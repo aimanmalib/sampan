@@ -37,6 +37,8 @@
     "@cashlab/common": "^1.0.5",
     "@electrum-cash/network": "4.4.8",
     "@fastify/static": "^10.1.11",
+    "@noble/curves": "1.9.1",
+    "@scure/base": "1.2.6",
     "@wizardconnect/core": "0.2.10",
     "@wizardconnect/dapp": "0.2.7",
     "@wizardconnect/react": "0.2.6",

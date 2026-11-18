@@ -322,6 +322,7 @@ More in [`AGENTS.md`](AGENTS.md).
 | `@wizardconnect/core`, `dapp`, `react`, `wallet` | LGPL-3.0 ([upstream LICENSE.txt](https://gitlab.com/riftenlabs/lib/wizardconnect/-/blob/master/LICENSE.txt)) | wallet pairing and signing requests |
 | `cashscript`, `cashc` | MIT | the landing contract |
 | `@bitauth/libauth` | MIT | transactions, addresses, VM checks |
+| `@noble/curves`, `@scure/base` | MIT | Schnorr signatures, key recovery and bech32 for identity checks (behind a flag) |
 | `@cashlab/cauldron`, `@cashlab/common` | ISC | Cauldron pool arithmetic, cross-checked in tests |
 | `@electrum-cash/network` | MIT | Electrum client |
 | `fastify`, `@fastify/static` | MIT | server |
