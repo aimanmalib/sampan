@@ -117,6 +117,8 @@ describe('bounty table', () => {
 
   it('README.md, README.ms.md and docs/JUDGE.md hold the block made from docs/MEASURED.md (run npm run bounty -- --write)', () => {
     const { b, cfg: live, measured: real } = load();
+    const s = countStats(live, real);
+    for (const r of b.rows) expect(r.status, `${r.quote}: run npm run bounty -- --write`).toBe(rowStatus(r, s));
     for (const target of TARGETS) {
       const text = readFileSync(repoFile(target.path), 'utf8');
       expect(currentBlock(text), `${target.path}: run npm run bounty -- --write`).toBe(bountyBlock(b, live, real, target));
@@ -129,7 +131,7 @@ describe('bounty table', () => {
     expect(b.rows.length).toBeGreaterThanOrEqual(3);
     for (const r of b.rows) {
       expect(r.proof.length, r.quote).toBeGreaterThan(0);
-      expect(r.rule ?? r.status, r.quote).toBeTruthy();
+      expect(r.status, r.quote).toMatch(/^(met|partly|open)$/);
     }
   });
 });

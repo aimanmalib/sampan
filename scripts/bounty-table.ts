@@ -14,6 +14,7 @@ const file = (p: string): string => fileURLToPath(new URL(p, import.meta.url));
 export const START = '<!-- bounty:start (made by scripts/bounty-table.ts from docs/bounty/stablecoin-bridge.json and docs/MEASURED.md) -->';
 export const END = '<!-- bounty:end -->';
 const MEASURED = 'docs/MEASURED.md';
+export const BOUNTY_FILE = 'docs/bounty/stablecoin-bridge.json';
 
 export type Lang = 'en' | 'ms';
 /** Each file with the block: its repo path and its language. */
@@ -101,6 +102,11 @@ export function rowStatus(row: Row, s: Stats): Status {
     case 'pusd': return atLeast(s.pusd, 1);
     default: throw new Error(`unknown bounty rule "${row.rule}"`);
   }
+}
+
+/** The bounty file with each counted status written in, as `--write` saves it (the file shows every status). */
+export function withCountedStatus(b: Bounty, s: Stats): Bounty {
+  return { ...b, rows: b.rows.map((r) => (r.rule ? { ...r, status: rowStatus(r, s) } : r)) };
 }
 
 function list(items: string[], and: string): string {
@@ -199,7 +205,7 @@ export const repoFile = (p: string): string => file(`../${p}`);
 
 export function load(): { b: Bounty; cfg: BountyConfig; measured: string } {
   return {
-    b: JSON.parse(readFileSync(repoFile('docs/bounty/stablecoin-bridge.json'), 'utf8')) as Bounty,
+    b: JSON.parse(readFileSync(repoFile(BOUNTY_FILE), 'utf8')) as Bounty,
     cfg: JSON.parse(readFileSync(repoFile('config/sampan.json'), 'utf8')) as BountyConfig,
     measured: readFileSync(repoFile(MEASURED), 'utf8'),
   };
@@ -208,6 +214,8 @@ export function load(): { b: Bounty; cfg: BountyConfig; measured: string } {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { b, cfg, measured } = load();
   if (process.argv.includes('--write')) {
+    const counted = withCountedStatus(b, countStats(cfg, measured));
+    writeFileSync(repoFile(BOUNTY_FILE), `${JSON.stringify(counted, null, 2)}\n`);
     for (const t of TARGETS) {
       const f = repoFile(t.path);
       writeFileSync(f, replaceBlock(readFileSync(f, 'utf8'), bountyBlock(b, cfg, measured, t)));

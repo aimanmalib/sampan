@@ -71,7 +71,8 @@
             "ms": "Bawa masuk terbaharu"
           }
         }
-      ]
+      ],
+      "status": "met"
     },
     {
       "section": "Requirements",
@@ -94,7 +95,8 @@
             "ms": "USDC di Ethereum ke PUSD"
           }
         }
-      ]
+      ],
+      "status": "met"
     },
     {
       "section": "Requirements",
@@ -116,7 +118,8 @@
             "ms": "PUSD ke USDC di Ethereum"
           }
         }
-      ]
+      ],
+      "status": "met"
     },
     {
       "section": "Requirements",
@@ -135,7 +138,8 @@
             "ms": "jadual Runs"
           }
         }
-      ]
+      ],
+      "status": "met"
     },
     {
       "section": "Requirements",
@@ -235,12 +239,13 @@
             "ms": "ukuran kolam MUSD"
           }
         }
-      ]
+      ],
+      "status": "open"
     },
     {
       "section": "Stretch goals",
       "quote": "Contacting influential members of other ecosystems that would be willing to facilitate and promote the bridge for users of the other side of the bridge is a laudable business win.",
-      "status": "open",
+      "status": "met",
       "note": {
         "en": "Not done.",
         "ms": "Belum dibuat."
@@ -281,7 +286,8 @@
             "ms": "rekod keputusan"
           }
         }
-      ]
+      ],
+      "status": "met"
     },
     {
       "section": "Additional Notes",
@@ -305,7 +311,8 @@
             "ms": "lintasan PUSD terbaharu"
           }
         }
-      ]
+      ],
+      "status": "met"
     }
   ]
 }
