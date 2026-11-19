@@ -82,3 +82,47 @@ test('connected wallet: only its addresses are sent and its landing is listed', 
   await expect(page).toHaveURL(new RegExp(`/c/${crossingId}$`));
   expect(errors).toEqual([]);
 });
+
+// The row layout at the narrowest width: kind and asset on the left, status and time on the right, as a grid (not the
+// inline-flex every `.crossing a` gets), and no asset broken inside a word. The list answer is a synthetic fixture.
+test('rows are a two-column grid and keep words whole at 320 px', async ({ page }) => {
+  const errors = collectErrors(page);
+  const now = Date.now();
+  const row = (id: string, kind: string, status: string, asset: string, chain: string | null) => ({
+    id, kind, status, asset, chain, amount: '1', createdAt: now, url: `/c/${id}`,
+  });
+  const crossings = [
+    row('r1', 'out', 'broadcast', 'USDC', 'BASE'),
+    row('r2', 'in', 'failed', 'USDC', 'BASE'),
+    row('r3', 'swap', 'broadcast', 'PUSD', null),
+    row('r4', 'land', 'open', 'PUSD', null),
+  ];
+  await page.route('**/api/activity', (r) => r.fulfill({ json: { crossings } }));
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto('/activity');
+  await page.getByRole('button', { name: en['wallet.connect'] }).click();
+  const links = page.locator('a.activity__link');
+  await expect(links).toHaveCount(crossings.length);
+  await expect(links.nth(0).locator('.activity__state')).toHaveText(en['activity.state.sent']);
+  await expect(links.nth(1).locator('.activity__state')).toHaveText(en['activity.state.unfinished']);
+  const shapes = await links.evaluateAll((els) =>
+    els.map((a) => {
+      const box = (s: string) => a.querySelector(s)!.getBoundingClientRect();
+      const asset = a.querySelector('.activity__asset')!;
+      const range = document.createRange();
+      range.selectNodeContents(asset);
+      const lines = new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
+      return {
+        display: getComputedStyle(a).display,
+        kindLeftOfState: box('.activity__kind').right <= box('.activity__state').left,
+        assetBelowKind: box('.activity__asset').top >= box('.activity__kind').bottom - 1,
+        assetLines: lines,
+      };
+    }),
+  );
+  for (const s of shapes) expect(s).toEqual({ display: 'grid', kindLeftOfState: true, assetBelowKind: true, assetLines: 1 });
+  await noOverflow(page);
+  expect(errors).toEqual([]);
+  // After the error check: the screenshot injects a style the page's CSP refuses, which WebKit logs as an error.
+  if (process.env.AUTOPILOT_BUKTI_DIR) await page.screenshot({ path: `${process.env.AUTOPILOT_BUKTI_DIR}/activity-rows-${test.info().project.name}.png`, fullPage: true });
+});

@@ -50,8 +50,10 @@ export interface ActivityRow {
  * What the page says about a row. A crossing out or in keeps its last known status: the server writes "broadcast" or
  * "sent" when the deposit goes out and the final answer (completed, refunded, failed) only when the route is asked,
  * which the status page does. So a sent crossing out or in reads "sent" (open it for the status), never "done" by itself.
+ * A crossing out or in marked failed may have failed after its deposit went out (the route said so), so it reads
+ * "unfinished" (open it for the status), never "not sent".
  */
-export type ActivityState = 'done' | 'refunded' | 'failed' | 'open' | 'sent';
+export type ActivityState = 'done' | 'refunded' | 'failed' | 'open' | 'sent' | 'unfinished';
 
 type Kind = ActivityRow['kind'];
 
@@ -62,8 +64,8 @@ type Kind = ActivityRow['kind'];
 export const ACTIVITY_STATES: Record<Kind, Record<string, ActivityState | null>> = {
   swap: { built: null, broadcast: 'done', stale: 'failed', failed: 'failed' },
   land: { open: 'open', seen: 'open', converted: 'done', returned: 'refunded' },
-  out: { built: null, broadcast: 'sent', stale: 'failed', failed: 'failed', completed: 'done', refunded: 'refunded' },
-  in: { planned: null, sent: 'sent', completed: 'done', refunded: 'refunded', failed: 'failed' },
+  out: { built: null, broadcast: 'sent', stale: 'failed', failed: 'unfinished', completed: 'done', refunded: 'refunded' },
+  in: { planned: null, sent: 'sent', completed: 'done', refunded: 'refunded', failed: 'unfinished' },
 };
 
 /** The word for a row, or null for one never signed. A status not in the table reads "sent": open it for the status. */

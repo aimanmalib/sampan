@@ -715,5 +715,6 @@
   "activity.state.refunded": "Ibinalik",
   "activity.state.failed": "Hindi naipadala",
   "activity.state.open": "Isinasagawa",
-  "activity.state.sent": "Naipadala na, buksan para makita ang status"
+  "activity.state.sent": "Naipadala na, buksan para makita ang status",
+  "activity.state.unfinished": "Hindi natapos, buksan para makita ang status"
 }

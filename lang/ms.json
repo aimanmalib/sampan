@@ -715,5 +715,6 @@
   "activity.state.refunded": "Dipulangkan",
   "activity.state.failed": "Tidak dihantar",
   "activity.state.open": "Sedang berjalan",
-  "activity.state.sent": "Dihantar, buka untuk melihat status"
+  "activity.state.sent": "Dihantar, buka untuk melihat status",
+  "activity.state.unfinished": "Tidak selesai, buka untuk melihat status"
 }

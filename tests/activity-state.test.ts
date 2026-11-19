@@ -22,7 +22,7 @@ describe('activityState', () => {
     expect(activityState('out', 'broadcast')).toBe('sent');
     expect(activityState('out', 'built')).toBeNull();
     expect(activityState('out', 'stale')).toBe('failed');
-    expect(activityState('out', 'failed')).toBe('failed');
+    expect(activityState('out', 'failed')).toBe('unfinished');
     expect(activityState('out', 'completed')).toBe('done');
     expect(activityState('out', 'refunded')).toBe('refunded');
   });
@@ -32,7 +32,7 @@ describe('activityState', () => {
     expect(activityState('in', 'planned')).toBeNull();
     expect(activityState('in', 'completed')).toBe('done');
     expect(activityState('in', 'refunded')).toBe('refunded');
-    expect(activityState('in', 'failed')).toBe('failed');
+    expect(activityState('in', 'failed')).toBe('unfinished');
   });
 
   it('reads a status it does not know as sent, open it for the status', () => {

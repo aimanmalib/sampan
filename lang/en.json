@@ -715,5 +715,6 @@
   "activity.state.refunded": "Refunded",
   "activity.state.failed": "Not sent",
   "activity.state.open": "In progress",
-  "activity.state.sent": "Sent, open it for the status"
+  "activity.state.sent": "Sent, open it for the status",
+  "activity.state.unfinished": "Did not finish, open it for the status"
 }

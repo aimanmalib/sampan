@@ -31,9 +31,12 @@
   display: grid;
   gap: 0.5rem;
 }
-.activity__link {
+.activity__list .activity__link {
+  /* Above `.crossing a` (inline-flex) in specificity: kind and asset on the left, status and time on the right. */
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: 'kind state' 'asset time';
+  align-items: baseline;
   gap: 0.125rem 1rem;
   padding: 0.75rem 1rem;
   min-height: var(--touch);
@@ -48,26 +51,34 @@
   border-color: var(--river);
 }
 .activity__kind {
+  grid-area: kind;
   font-weight: 600;
+}
+.activity__asset {
+  grid-area: asset;
 }
 .activity__asset,
 .activity__time {
   font-size: 0.875rem;
   color: var(--ink-soft);
   min-width: 0;
-  overflow-wrap: anywhere;
+  /* Wrap between words; break inside one only when it cannot fit on a line by itself. */
+  overflow-wrap: break-word;
 }
 .activity__state {
+  grid-area: state;
   text-align: end;
   font-size: 0.875rem;
 }
 .activity__time {
+  grid-area: time;
   text-align: end;
 }
 .activity__row[data-state='done'] .activity__state {
   color: var(--river);
 }
 .activity__row[data-state='failed'] .activity__state,
+.activity__row[data-state='unfinished'] .activity__state,
 .activity__row[data-state='refunded'] .activity__state {
   color: var(--ink-soft);
 }
