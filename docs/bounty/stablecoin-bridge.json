@@ -1,0 +1,311 @@
+{
+  "source": "https://bchblaze.cash/bounties/",
+  "readUtc": "2026-11-19T14:24Z",
+  "bounty": "Stablecoin Bridge",
+  "intro": {
+    "en": "Each requirement and stretch goal of the {bounty} bounty, quoted word for word from [the bounty page]({source}) as read on {readDate} UTC. The counts come from the ok crossings in [`docs/MEASURED.md`]({measured}), made by `scripts/bounty-table.ts`.",
+    "ms": "Setiap syarat dan stretch goal bounty {bounty}, dipetik perkataan demi perkataan dari [halaman bounty]({source}) seperti dibaca pada {readDate} UTC. Kiraan datang dari lintasan ok dalam [`docs/MEASURED.md`]({measured}), dibuat oleh `scripts/bounty-table.ts`."
+  },
+  "headline": {
+    "en": "Measured on mainnet: {crossings} stablecoin crossings that arrived, on {chains} chains ({chainNames}), in {symbols}; both ways on {bothWays}.",
+    "ms": "Diukur di mainnet: {crossings} lintasan stablecoin yang tiba, di {chains} rantaian ({chainNames}), dalam {symbols}; dua arah di {bothWays}."
+  },
+  "columns": {
+    "en": [
+      "Requirement (quoted)",
+      "Sampan",
+      "Proof"
+    ],
+    "ms": [
+      "Syarat (dipetik, bahasa asal)",
+      "Sampan",
+      "Bukti"
+    ]
+  },
+  "statusLabels": {
+    "en": {
+      "met": "Met",
+      "partly": "Partly",
+      "open": "Open"
+    },
+    "ms": {
+      "met": "Dipenuhi",
+      "partly": "Sebahagian",
+      "open": "Belum"
+    }
+  },
+  "joinWord": {
+    "en": " and ",
+    "ms": " dan "
+  },
+  "rows": [
+    {
+      "section": "Requirements",
+      "quote": "Build a project that allows users to bridge or swap stablecoins into & out of BCH",
+      "rule": "bothDirections",
+      "note": {
+        "en": "Send out (PUSD to another chain) and Bring in (another chain to PUSD at a landing address), signed in the user's own wallets.",
+        "ms": "Hantar keluar (PUSD ke rantaian lain) dan Bawa masuk (rantaian lain ke PUSD di alamat pendaratan), ditandatangani dalam dompet pengguna sendiri."
+      },
+      "proof": [
+        {
+          "kind": "runs",
+          "ref": "PUSD to ",
+          "flows": [
+            "out"
+          ],
+          "label": {
+            "en": "newest Send out",
+            "ms": "Hantar keluar terbaharu"
+          }
+        },
+        {
+          "kind": "runs",
+          "ref": " to PUSD",
+          "flows": [
+            "in",
+            "g3a"
+          ],
+          "label": {
+            "en": "newest Bring in",
+            "ms": "Bawa masuk terbaharu"
+          }
+        }
+      ]
+    },
+    {
+      "section": "Requirements",
+      "quote": "Ie. to be able to convert stablecoins on other chains to BCH stablecoins (eg USDC on ETH into PUSD on BCH)",
+      "rule": "in",
+      "note": {
+        "en": "Bring in: the stablecoin is sent to a landing address and arrives as PUSD.",
+        "ms": "Bawa masuk: stablecoin dihantar ke alamat pendaratan dan tiba sebagai PUSD."
+      },
+      "proof": [
+        {
+          "kind": "runs",
+          "ref": "ETH.USDC to PUSD",
+          "flows": [
+            "in",
+            "g3a"
+          ],
+          "label": {
+            "en": "USDC on Ethereum to PUSD",
+            "ms": "USDC di Ethereum ke PUSD"
+          }
+        }
+      ]
+    },
+    {
+      "section": "Requirements",
+      "quote": "And vice-versa, BCH stables to other-chain stables (eg PUSD on BCH into USDC on ETH)",
+      "rule": "out",
+      "note": {
+        "en": "Send out: PUSD is swapped and sent to the user's address on the other chain.",
+        "ms": "Hantar keluar: PUSD ditukar dan dihantar ke alamat pengguna di rantaian lain."
+      },
+      "proof": [
+        {
+          "kind": "runs",
+          "ref": "PUSD to ETH.USDC",
+          "flows": [
+            "out"
+          ],
+          "label": {
+            "en": "PUSD to USDC on Ethereum",
+            "ms": "PUSD ke USDC di Ethereum"
+          }
+        }
+      ]
+    },
+    {
+      "section": "Requirements",
+      "quote": "A swap from BCH stables to stables in one other ecosystem is sufficient, but from BCH stables to multiple/any other ecosystems would be even better.",
+      "rule": "chains",
+      "note": {
+        "en": "{chains} chains with an ok crossing: {chainNames}.",
+        "ms": "{chains} rantaian dengan lintasan ok: {chainNames}."
+      },
+      "proof": [
+        {
+          "kind": "file",
+          "ref": "docs/MEASURED.md#runs",
+          "label": {
+            "en": "Runs table",
+            "ms": "jadual Runs"
+          }
+        }
+      ]
+    },
+    {
+      "section": "Requirements",
+      "quote": "The faster, cheaper, and easier to use the bridge is - the better.",
+      "status": "partly",
+      "note": {
+        "en": "Every crossing has its seconds and fees measured, and the cost card shows the fees before signing. No comparison with other routes is claimed.",
+        "ms": "Setiap lintasan diukur saat dan yurannya, dan kad kos memaparkan yuran sebelum tandatangan. Tiada perbandingan dengan laluan lain didakwa."
+      },
+      "proof": [
+        {
+          "kind": "file",
+          "ref": "docs/MEASURED.md#runs",
+          "label": {
+            "en": "seconds per crossing",
+            "ms": "saat setiap lintasan"
+          }
+        },
+        {
+          "kind": "file",
+          "ref": "core/cost.ts",
+          "label": {
+            "en": "cost card",
+            "ms": "kad kos"
+          }
+        }
+      ]
+    },
+    {
+      "section": "Requirements",
+      "quote": "On the BCH side, WizardConnect is highly recommended.",
+      "status": "met",
+      "note": {
+        "en": "BCH wallets connect with WizardConnect.",
+        "ms": "Dompet BCH bersambung dengan WizardConnect."
+      },
+      "proof": [
+        {
+          "kind": "file",
+          "ref": "web/src/wallet/wizard.ts",
+          "label": {
+            "en": "WizardConnect code",
+            "ms": "kod WizardConnect"
+          }
+        },
+        {
+          "kind": "file",
+          "ref": "docs/MEASURED.md#wallets-checked",
+          "label": {
+            "en": "wallets checked",
+            "ms": "dompet yang disemak"
+          }
+        }
+      ]
+    },
+    {
+      "section": "Requirements",
+      "quote": "On the other chain side, WalletConnect is probably essential - but it depends on the paired chains and what is popular/easiest for their wallet integration stack.",
+      "status": "partly",
+      "note": {
+        "en": "Browser wallets (EIP-6963) signed the measured crossings. A WalletConnect option is in the code; it is not counted here until it is checked on the live site.",
+        "ms": "Dompet pelayar (EIP-6963) menandatangani lintasan yang diukur. Pilihan WalletConnect ada dalam kod; ia tidak dikira di sini sehingga disemak di laman hidup."
+      },
+      "proof": [
+        {
+          "kind": "file",
+          "ref": "web/src/evm/walletconnect.ts",
+          "label": {
+            "en": "WalletConnect code",
+            "ms": "kod WalletConnect"
+          }
+        },
+        {
+          "kind": "file",
+          "ref": "docs/decisions/0045-walletconnect-evm.md",
+          "label": {
+            "en": "decision record",
+            "ms": "rekod keputusan"
+          }
+        }
+      ]
+    },
+    {
+      "section": "Stretch goals",
+      "quote": "Project only needs to support 1 BCH stablecoin, but supporting multiple would be better",
+      "rule": "bchStables",
+      "note": {
+        "en": "BCH stablecoins with an ok crossing: {bchStables}. The MUSD pools are measured; MUSD stays off until its swaps are measured.",
+        "ms": "Stablecoin BCH dengan lintasan ok: {bchStables}. Kolam MUSD sudah diukur; MUSD kekal mati sehingga tukarannya diukur."
+      },
+      "proof": [
+        {
+          "kind": "file",
+          "ref": "docs/decisions/0072-musd-pool-measurement.md",
+          "label": {
+            "en": "MUSD pool measurement",
+            "ms": "ukuran kolam MUSD"
+          }
+        }
+      ]
+    },
+    {
+      "section": "Stretch goals",
+      "quote": "Contacting influential members of other ecosystems that would be willing to facilitate and promote the bridge for users of the other side of the bridge is a laudable business win.",
+      "status": "open",
+      "note": {
+        "en": "Not done.",
+        "ms": "Belum dibuat."
+      },
+      "proof": [
+        {
+          "kind": "url",
+          "ref": "https://bchblaze.cash/bounties/",
+          "label": {
+            "en": "bounty page",
+            "ms": "halaman bounty"
+          }
+        }
+      ]
+    },
+    {
+      "section": "Stretch goals",
+      "quote": "Especially good would be integration or collaborations that route through large popular and existing multicoin providers like ShapeShift, ThorChain etc.",
+      "rule": "thorchain",
+      "note": {
+        "en": "{thorchain} of the {crossings} crossings route through THORChain, using quotes from its public THORNode API. No collaboration is claimed.",
+        "ms": "{thorchain} daripada {crossings} lintasan melalui THORChain, menggunakan sebut harga dari API THORNode awamnya. Tiada kerjasama didakwa."
+      },
+      "proof": [
+        {
+          "kind": "file",
+          "ref": "server/routes/thorchain.ts",
+          "label": {
+            "en": "THORChain route",
+            "ms": "laluan THORChain"
+          }
+        },
+        {
+          "kind": "file",
+          "ref": "docs/decisions/0018-crossing-precheck-and-tracer.md",
+          "label": {
+            "en": "decision record",
+            "ms": "rekod keputusan"
+          }
+        }
+      ]
+    },
+    {
+      "section": "Additional Notes",
+      "quote": "ParyonUSD is sponsoring BLAZE this year, so they are an excellent choice for first priority integration & demo purposes.",
+      "rule": "pusd",
+      "note": {
+        "en": "PUSD (ParyonUSD) is the default token and the BCH stablecoin of {pusd} of the {crossings} crossings.",
+        "ms": "PUSD (ParyonUSD) ialah token lalai dan stablecoin BCH bagi {pusd} daripada {crossings} lintasan."
+      },
+      "proof": [
+        {
+          "kind": "runs",
+          "ref": "PUSD",
+          "flows": [
+            "out",
+            "in",
+            "g3a"
+          ],
+          "label": {
+            "en": "newest PUSD crossing",
+            "ms": "lintasan PUSD terbaharu"
+          }
+        }
+      ]
+    }
+  ]
+}

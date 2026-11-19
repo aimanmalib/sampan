@@ -14,6 +14,26 @@ Sampan menukar BCH dan stablecoin PUSD melalui kolam Cauldron sedia ada di mainn
 pendaratan: hantar BCH ke alamat itu dari mana-mana dompet atau bursa, dan ia sampai ke alamat anda sebagai PUSD, sementara
 pelayan Sampan tidak memegang sebarang kunci.
 
+<!-- bounty:start (made by scripts/bounty-table.ts from docs/bounty/stablecoin-bridge.json and docs/MEASURED.md) -->
+Setiap syarat dan stretch goal bounty Stablecoin Bridge, dipetik perkataan demi perkataan dari [halaman bounty](https://bchblaze.cash/bounties/) seperti dibaca pada 2026-11-19 UTC. Kiraan datang dari lintasan ok dalam [`docs/MEASURED.md`](docs/MEASURED.md), dibuat oleh `scripts/bounty-table.ts`.
+
+**Diukur di mainnet: 12 lintasan stablecoin yang tiba, di 3 rantaian (Ethereum, BNB Smart Chain dan Avalanche C-Chain), dalam USDC dan USDT; dua arah di Ethereum dan BNB Smart Chain.**
+
+| Syarat (dipetik, bahasa asal) | Sampan | Bukti |
+|---|---|---|
+| Build a project that allows users to bridge or swap stablecoins into & out of BCH <sub>Requirements</sub> | **Dipenuhi.** Hantar keluar (PUSD ke rantaian lain) dan Bawa masuk (rantaian lain ke PUSD di alamat pendaratan), ditandatangani dalam dompet pengguna sendiri. | [Hantar keluar terbaharu `bch 55621bde`](https://blockchair.com/bitcoin-cash/transaction/55621bde55adf3aba3bfb64fea956cd07f8f13d6a73b6c601cb40a6a1a1c14bf) · [Bawa masuk terbaharu `bch dde7a35b`](https://blockchair.com/bitcoin-cash/transaction/dde7a35b834e62ec93525e2892ab67bfcf2943ef236d03325031aa6b41e4ad88) |
+| Ie. to be able to convert stablecoins on other chains to BCH stablecoins (eg USDC on ETH into PUSD on BCH) <sub>Requirements</sub> | **Dipenuhi.** Bawa masuk: stablecoin dihantar ke alamat pendaratan dan tiba sebagai PUSD. | [USDC di Ethereum ke PUSD `bch ee698449`](https://blockchair.com/bitcoin-cash/transaction/ee69844983f8798eebcf5640745a9ad382f7e223bc060c7c0cfd7d172921fea8) |
+| And vice-versa, BCH stables to other-chain stables (eg PUSD on BCH into USDC on ETH) <sub>Requirements</sub> | **Dipenuhi.** Hantar keluar: PUSD ditukar dan dihantar ke alamat pengguna di rantaian lain. | [PUSD ke USDC di Ethereum `bch fa3bdc53`](https://blockchair.com/bitcoin-cash/transaction/fa3bdc53bf3a3d7ce25dc4f2c6fbc0c262c238141b5300fad07f720737c0f577) |
+| A swap from BCH stables to stables in one other ecosystem is sufficient, but from BCH stables to multiple/any other ecosystems would be even better. <sub>Requirements</sub> | **Dipenuhi.** 3 rantaian dengan lintasan ok: Ethereum, BNB Smart Chain dan Avalanche C-Chain. | [jadual Runs](docs/MEASURED.md#runs) |
+| The faster, cheaper, and easier to use the bridge is - the better. <sub>Requirements</sub> | **Sebahagian.** Setiap lintasan diukur saat dan yurannya, dan kad kos memaparkan yuran sebelum tandatangan. Tiada perbandingan dengan laluan lain didakwa. | [saat setiap lintasan](docs/MEASURED.md#runs) · [kad kos](core/cost.ts) |
+| On the BCH side, WizardConnect is highly recommended. <sub>Requirements</sub> | **Dipenuhi.** Dompet BCH bersambung dengan WizardConnect. | [kod WizardConnect](web/src/wallet/wizard.ts) · [dompet yang disemak](docs/MEASURED.md#wallets-checked) |
+| On the other chain side, WalletConnect is probably essential - but it depends on the paired chains and what is popular/easiest for their wallet integration stack. <sub>Requirements</sub> | **Sebahagian.** Dompet pelayar (EIP-6963) menandatangani lintasan yang diukur. Pilihan WalletConnect ada dalam kod; ia tidak dikira di sini sehingga disemak di laman hidup. | [kod WalletConnect](web/src/evm/walletconnect.ts) · [rekod keputusan](docs/decisions/0045-walletconnect-evm.md) |
+| Project only needs to support 1 BCH stablecoin, but supporting multiple would be better <sub>Stretch goals</sub> | **Belum.** Stablecoin BCH dengan lintasan ok: PUSD. Kolam MUSD sudah diukur; MUSD kekal mati sehingga tukarannya diukur. | [ukuran kolam MUSD](docs/decisions/0072-musd-pool-measurement.md) |
+| Contacting influential members of other ecosystems that would be willing to facilitate and promote the bridge for users of the other side of the bridge is a laudable business win. <sub>Stretch goals</sub> | **Belum.** Belum dibuat. | [halaman bounty](https://bchblaze.cash/bounties/) |
+| Especially good would be integration or collaborations that route through large popular and existing multicoin providers like ShapeShift, ThorChain etc. <sub>Stretch goals</sub> | **Dipenuhi.** 12 daripada 12 lintasan melalui THORChain, menggunakan sebut harga dari API THORNode awamnya. Tiada kerjasama didakwa. | [laluan THORChain](server/routes/thorchain.ts) · [rekod keputusan](docs/decisions/0018-crossing-precheck-and-tracer.md) |
+| ParyonUSD is sponsoring BLAZE this year, so they are an excellent choice for first priority integration & demo purposes. <sub>Additional Notes</sub> | **Dipenuhi.** PUSD (ParyonUSD) ialah token lalai dan stablecoin BCH bagi 10 daripada 12 lintasan. | [lintasan PUSD terbaharu `bch 55621bde`](https://blockchair.com/bitcoin-cash/transaction/55621bde55adf3aba3bfb64fea956cd07f8f13d6a73b6c601cb40a6a1a1c14bf) |
+<!-- bounty:end -->
+
 ## Cuba dalam seminit
 
 Laman hidup ialah [sampan.sasateguh.com](https://sampan.sasateguh.com). Ia berjalan di mainnet BCH dengan syiling sebenar,
