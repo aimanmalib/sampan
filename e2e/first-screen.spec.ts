@@ -61,6 +61,17 @@ for (const [lang, text] of Object.entries(LANGS)) {
         await inView(page, selector, label);
       }
       expect(await page.evaluate(() => window.scrollY), `${label}: no scroll`).toBe(0);
+      if (!size) {
+        // The phone hero (ADR 0071): a headline of at least 2rem and the boat as a full-width picture at least 3rem tall.
+        const hero = await page.evaluate(() => ({
+          title: parseFloat(getComputedStyle(document.querySelector('h1')!).fontSize),
+          art: document.querySelector('figure.scene svg')!.getBoundingClientRect(),
+          card: document.querySelector('section.card')!.getBoundingClientRect().width,
+        }));
+        expect(hero.title, `${label}: headline size`).toBeGreaterThanOrEqual(32);
+        expect(hero.art.height, `${label}: picture height`).toBeGreaterThanOrEqual(48);
+        expect(hero.art.width, `${label}: picture spans the card's width`).toBeGreaterThanOrEqual(hero.card - 1);
+      }
       const width = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
       expect(width[0], `${label}: no sideways scroll`).toBeLessThanOrEqual(width[1]!);
       await shot(page, `${info.project.name}-${viewport.width}-${lang}`);

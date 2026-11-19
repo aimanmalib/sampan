@@ -6,7 +6,7 @@ export function Scene() {
   const { t } = useText();
   return (
     <figure className="scene" aria-label={t('scene.label')} role="img">
-      <SceneArt />
+      <SceneArt fit="slice" />
       <figcaption className="scene__labels">
         <span>{t('scene.left')}</span>
         <span>{t('scene.right')}</span>

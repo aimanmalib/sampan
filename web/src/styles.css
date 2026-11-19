@@ -473,6 +473,36 @@ a {
   }
 }
 
+/* A phone tall enough for it (an iPhone 13 shows 664 px): a larger headline and the boat as a picture across the full
+   width, cut at the river's lower edge (ADR 0071), the two bank labels laid over its top corners. Shorter phones keep
+   the strip above. */
+@media (max-width: 55.99rem) and (min-height: 40rem) {
+  .hero__title {
+    font-size: clamp(1.75rem, 8.25vw, 2.75rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .scene {
+    display: block;
+    position: relative;
+  }
+  .scene svg {
+    height: auto;
+    max-height: none;
+    aspect-ratio: 640 / 88;
+  }
+  .scene__labels {
+    display: flex;
+    position: absolute;
+    inset: 0.25rem 0.5rem auto;
+    pointer-events: none;
+  }
+  .scene__labels > span {
+    max-width: none;
+  }
+}
+
 @media (min-width: 56rem) {
   .page {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
