@@ -6,6 +6,7 @@ import { validateBusiness, type BusinessConfig } from './business.js';
 import { validatePay, type PayConfig } from './pay/config.js';
 import { nostrIdPublic, validateNostrId, type NostrIdConfig } from './nostr-config.js';
 import { validatePeg, type PegConfig } from './peg.js';
+import { validateKeep, type KeepConfig } from './keep.js';
 import { chainsOf, liveAssets, symbolsOf, validateAssets, validateEvmChain, type EvmChain, type RouteAsset } from './route-assets.js';
 
 export type RouteId = 'near-intents' | 'thorchain';
@@ -38,7 +39,7 @@ export interface SampanConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
   /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
-  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean; nostrSend: boolean; watchDemo: boolean };
+  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean; nostrSend: boolean; watchDemo: boolean; keepCompare: boolean };
   /** symbols: the symbols of the live thorchain.assets, repeated here and checked against them (texts name them). */
   route: { active: ActiveRoute; symbols: string[] };
   thorchain: {
@@ -171,6 +172,8 @@ export interface SampanConfig {
   /** PUSD peg guard (core/peg.ts): warning and refusal thresholds against THORChain's BCH price. */
   peg: PegConfig;
   pay: PayConfig;
+  /** "You keep" per network before signing (features.keepCompare): how many networks are quoted and after what pause. */
+  keepCompare: KeepConfig;
   /**
    * How the status pages draw; not a flow. ferryMotion: the ferry on every status page and the landing card, moving while a step is under way.
    * qrAutoOpen: the landing card opens the address and shows its QR as soon as the owner is known (false = the "Get my landing address" button).
@@ -221,6 +224,7 @@ export interface PublicConfig {
   peg: PegConfig;
   /** Sampan Pay as its pages show it: how long an invoice is open, the invoice range and the demo shop's price. */
   pay: Pick<PayConfig, 'validMinutes' | 'minUsd' | 'maxUsd'> & { demoPriceUsd: number };
+  keepCompare: KeepConfig;
   /** The atomic swap route's client file, contract and service path (the page loads nothing from it while features.atom is false). */
   atom: AtomConfig;
   /** 1Click as a second route: offered assets and timings only (core/oneclick-config.ts). */
@@ -398,6 +402,8 @@ export function validateConfig(c: SampanConfig): string[] {
   need(typeof c.features?.oneClick === 'boolean', 'features.oneClick: true or false');
   need(typeof c.features?.nostrSend === 'boolean', 'features.nostrSend: true or false');
   need(typeof c.features?.watchDemo === 'boolean', 'features.watchDemo: true or false');
+  need(typeof c.features?.keepCompare === 'boolean', 'features.keepCompare: true or false');
+  errors.push(...validateKeep(c.keepCompare));
   need(typeof c.judge?.openOnPhone === 'boolean', 'judge.openOnPhone: true or false');
   errors.push(...validateNostrId(c.nostrId));
   need(!c.features?.oneClick || c.oneClick.baseUrl !== '', 'oneClick.baseUrl: required while features.oneClick is true');
@@ -472,6 +478,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     business: { feeBps: c.business.feeBps, feeAddress: c.business.feeAddress },
     peg: { warnBps: c.peg.warnBps, refuseBps: c.peg.refuseBps },
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
+    keepCompare: c.keepCompare,
     atom: c.atom,
     oneClick: oneClickPublic(c.oneClick),
     nostrId: nostrIdPublic(c.features.nostrSend, c.nostrId),

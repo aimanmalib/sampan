@@ -1,0 +1,93 @@
+/* "Compare networks" in Send out and Bring in. Rows read like the route card's: paper ground, river border on the
+   network in use, a dashed muted row for a paused network. A grid of one column, so long amounts wrap inside it. */
+.keep {
+  display: grid;
+  gap: 0.375rem;
+  min-width: 0;
+}
+.keep__title {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+.keep__intro,
+.keep__fact {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+.keep__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.keep__item {
+  min-width: 0;
+}
+.keep__row {
+  display: grid;
+  gap: 0.125rem;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--touch);
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  text-align: start;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) / 2);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.keep__row:focus-visible {
+  outline: var(--focus);
+  outline-offset: 2px;
+}
+.keep__row--chosen {
+  border-color: var(--river);
+  background: var(--river-pale);
+}
+.keep__row--paused {
+  color: var(--ink-soft);
+  background: var(--card);
+  border-style: dashed;
+  cursor: not-allowed;
+}
+.keep__row:disabled:not(.keep__row--paused) {
+  cursor: default;
+}
+.keep__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  min-width: 0;
+}
+.keep__name {
+  min-width: 0;
+  max-width: 100%;
+  font-weight: 600;
+}
+.keep__best,
+.keep__chosen {
+  max-width: 100%;
+  padding: 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 999px;
+}
+.keep__best {
+  color: var(--river);
+  border: 1px solid var(--river);
+}
+.keep__chosen {
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+.keep__amount {
+  font-variant-numeric: tabular-nums;
+}

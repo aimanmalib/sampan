@@ -33,7 +33,8 @@ const payPatch = { ...e2ePatch, features: { swap: true, landing: true, pay: true
  * and Base are live, and the fake THORNode answers with the 2026-11-17 capture, in which Base is halted.
  */
 export const NETWORK_PORT_OFFSET = PAY_PORT_OFFSET + 1;
-const networkPatch = { ...landingPatch, compliance: { crossChainEnabled: true }, ...livePatch(shippedAssets, ['ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48', 'BSC', 'BASE']) };
+// "You keep" per network is on here only (e2e/keep.spec.ts); the shipped flag stays off until it is measured live.
+const networkPatch = { ...landingPatch, features: { ...landingPatch.features, keepCompare: true }, compliance: { crossChainEnabled: true }, ...livePatch(shippedAssets, ['ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48', 'BSC', 'BASE']) };
 /** A fake server with the landing flow on and the QR opening by itself switched off (e2e/qr-first.spec.ts). */
 export const QR_OFF_PORT_OFFSET = NETWORK_PORT_OFFSET + 1;
 const qrOffPatch = { ...landingPatch, ui: { qrAutoOpen: false } };

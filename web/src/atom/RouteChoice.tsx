@@ -6,6 +6,7 @@
 import { useId, useState, type ReactNode } from 'react';
 import proof from 'virtual:sampan-proof';
 import { atomFlowFor, compareRoutes, type CompareFlow, type RouteRow, type ThorSide } from '../../../core/routes/compare';
+import { routeKeepPct } from '../../../core/keep';
 import type { LoadedConfig } from '../config';
 import { useText, type TextKey } from '../i18n';
 import { outCodeKey } from '../out/errors';
@@ -77,7 +78,7 @@ function oneClickReason(t: T, code: string, vars: Record<string, string>): strin
   return t(outCodeKey(code), vars);
 }
 
-function Row({ row, name, chosen, onPick, vars }: { row: RouteRow; name: string; chosen: boolean; onPick: () => void; vars: Record<string, string> }) {
+function Row({ row, name, chosen, onPick, vars, receive }: { row: RouteRow; name: string; chosen: boolean; onPick: () => void; vars: Record<string, string>; receive: string }) {
   const { t } = useText();
   // THORChain's row is off only while it halts this network (KSG6); otherwise it stays picked while its quote loads.
   const off = !row.available && (row.route !== 'thorchain' || row.reason === CHAIN_HALTED);
@@ -100,9 +101,7 @@ function Row({ row, name, chosen, onPick, vars }: { row: RouteRow; name: string;
         <p className="routes__reason">{t('compare.unavailable', { reason: reasonText(t, row.reason ?? 'unavailable') })}</p>
       ) : (
         <>
-          <p className="routes__receive">
-            {row.receive === null ? t('compare.receive.pending') : t('compare.receive', { amount: cut(row.receive), symbol: row.receiveSymbol })}
-          </p>
+          <p className="routes__receive">{receive}</p>
           {fees ? <p className="routes__fact">{fees}</p> : null}
           <p className="routes__fact">{timeText(t, row)}</p>
         </>
@@ -152,12 +151,22 @@ export function useRouteChoice(
   const thorOff = rows[0]?.route === 'thorchain' && rows[0].reason === CHAIN_HALTED;
   const fallback: RouteId = thorOff && rows.some((r) => r.route === 'near-intents') ? 'near-intents' : 'thorchain';
   const route = picked !== 'thorchain' && rows.some((r) => r.route === picked && r.available) ? picked : fallback;
+  // With features.keepCompare the amount reads "You keep", with the percent kept when both sides count as USD 1.
+  const usd = [token, ...config.route.symbols];
+  const pay = flow.kind === 'out' ? flow.source : flow.symbol;
+  const receiveText = (row: RouteRow): string => {
+    if (row.receive === null) return t('compare.receive.pending');
+    const v = { amount: cut(row.receive), symbol: row.receiveSymbol };
+    if (!config.features.keepCompare) return t('compare.receive', v);
+    const pct = routeKeepPct({ amount: flow.amount, symbol: pay }, { amount: row.receive, symbol: row.receiveSymbol }, usd);
+    return pct === null ? t('keep.amount', v) : t('keep.row', { ...v, pct: pct.toFixed(1) });
+  };
   const card = (
     <fieldset className="routes">
       <legend className="routes__title">{t('compare.title')}</legend>
       <ul className="routes__list">
         {rows.map((row) => (
-          <Row key={row.route} row={row} name={name} chosen={route === row.route} onPick={() => setPicked(row.route)} vars={oneClick?.vars ?? {}} />
+          <Row key={row.route} row={row} name={name} chosen={route === row.route} onPick={() => setPicked(row.route)} vars={oneClick?.vars ?? {}} receive={receiveText(row)} />
         ))}
       </ul>
     </fieldset>

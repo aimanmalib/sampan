@@ -24,7 +24,8 @@
     "atom": false,
     "oneClick": false,
     "nostrSend": false,
-    "watchDemo": true
+    "watchDemo": true,
+    "keepCompare": false
   },
   "route": {
     "active": "thorchain",
@@ -348,6 +349,10 @@
     "scenarioSpreadBps": 50,
     "webhook": { "retrySeconds": [10, 60, 300, 1800, 7200], "timeoutMs": 5000, "tickSeconds": 5, "allowPrivate": false },
     "demo": { "priceUsd": 0.2, "merchantAddress": "bitcoincash:zpn0pzjdqy0m36jlvnrjs3fmalq0zt0wvvxdewu2m5" }
+  },
+  "keepCompare": {
+    "maxNetworks": 4,
+    "debounceMs": 700
   },
   "ui": {
     "ferryMotion": true,

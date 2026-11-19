@@ -26,6 +26,7 @@ import { CostCard } from '../cost/CostCard';
 import { outCard } from '../cost/inputs';
 import { UnitChip } from '../chips/Chip';
 import { PegNote } from '../peg/PegNote';
+import { OutKeep } from '../keep/Keeps';
 
 const BCH = 'BCH';
 const BCH_DECIMALS = 8;
@@ -252,6 +253,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
           {t(run.key, limitVars)}
         </p>
       ) : null}
+      <OutKeep config={config} choices={networks.choices} picked={pick} onPick={networks.choose} disabled={busy || run.phase === 'stopped'} source={source} amount={amount} destination={destination.trim()} />
       {choice.card}
       {costShown && cost ? <CostCard card={cost} vars={vars} warnBps={config.limits.feeWarnBps} /> : null}
       {atom && choice.atom ? (

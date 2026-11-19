@@ -28,6 +28,7 @@ import { inCard } from '../cost/inputs';
 import { UnitChip } from '../chips/Chip';
 import { useGas } from '../cost/useGas';
 import { PegNote } from '../peg/PegNote';
+import { InKeep } from '../keep/Keeps';
 
 const BCH = 'BCH';
 const ROUTE_DECIMALS = 8;
@@ -195,6 +196,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
           {t(run.key, limitVars)}
         </p>
       ) : null}
+      <InKeep config={config} choices={networks.choices} picked={src} onPick={networks.choose} disabled={busy} amount={amount} receive={receive} address={address} addressOk={addressOk} />
       {choice.card}
       {cost && choice.route !== 'atom' ? (
         <CostCard card={cost} vars={{ ...vars, native: src.chain.native.symbol }} warnBps={config.limits.feeWarnBps} gas={gas && !oneClick ? (gas.approve ? 'approve' : 'deposit') : 'extra'} />
