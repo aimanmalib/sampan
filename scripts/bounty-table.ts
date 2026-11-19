@@ -17,10 +17,12 @@ const MEASURED = 'docs/MEASURED.md';
 
 export type Lang = 'en' | 'ms';
 /** Each file with the block: its repo path and its language. */
-export const TARGETS: ReadonlyArray<{ path: string; lang: Lang }> = [
+// docs/JUDGE.md is held to 40 lines, so its block is one line of HTML (the markers on their own lines would cost two).
+export interface Target { path: string; lang: Lang; html?: boolean }
+export const TARGETS: ReadonlyArray<Target> = [
   { path: 'README.md', lang: 'en' },
   { path: 'README.ms.md', lang: 'ms' },
-  { path: 'docs/JUDGE.md', lang: 'en' },
+  { path: 'docs/JUDGE.md', lang: 'en', html: true },
 ];
 
 export type Status = 'met' | 'partly' | 'open';
@@ -113,20 +115,27 @@ function fill(template: string, vars: Record<string, string | number>): string {
   });
 }
 
-/** One proof as a markdown link, relative to the file that holds the block. */
-function proofLink(p: Proof, lang: Lang, from: string, cfg: BountyConfig, runs: Run[]): string {
-  const label = p.label[lang];
-  if (p.kind === 'url') return `[${label}](${p.ref})`;
+interface Link { text: string; href: string; code?: string }
+
+/** One proof as a link, relative to the file that holds the block. */
+function proofLink(p: Proof, lang: Lang, from: string, cfg: BountyConfig, runs: Run[]): Link {
+  const text = p.label[lang];
+  if (p.kind === 'url') return { text, href: p.ref };
   if (p.kind === 'file') {
     const [path = '', anchor] = p.ref.split('#');
     const rel = posix.relative(posix.dirname(from), path);
-    return `[${label}](${rel}${anchor ? `#${anchor}` : ''})`;
+    return { text, href: `${rel}${anchor ? `#${anchor}` : ''}` };
   }
   const run = [...runs].reverse().find((r) => (!p.flows || p.flows.includes(r.flow)) && r.amount.includes(p.ref));
   const bch = run ? legs(run.txid).find(([l]) => l === 'bch') : undefined;
   if (!run || !bch) throw new Error(`bounty proof: no ok crossing with "${p.ref}" in ${MEASURED}`);
-  return `[${label} \`bch ${bch[1].slice(0, 8)}\`](${cfg.connect.explorerTxUrl.replace('{txid}', bch[1])})`;
+  return { text, href: cfg.connect.explorerTxUrl.replace('{txid}', bch[1]), code: `bch ${bch[1].slice(0, 8)}` };
 }
+
+const md = (l: Link): string => `[${l.text}${l.code ? ` \`${l.code}\`` : ''}](${l.href})`;
+const htmlLink = (l: Link): string => `<a href="${l.href}">${l.text}${l.code ? ` <code>${l.code}</code>` : ''}</a>`;
+/** Markdown links and code spans of the JSON texts as HTML. */
+const toHtml = (s: string): string => s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>').replace(/`([^`]+)`/g, '<code>$1</code>');
 
 const cell = (s: string): string => {
   if (s.includes('|')) throw new Error(`bounty text with a "|": ${s.slice(0, 40)}`);
@@ -134,7 +143,7 @@ const cell = (s: string): string => {
 };
 
 /** The block (markers included) for one file. */
-export function bountyBlock(b: Bounty, cfg: BountyConfig, measured: string, target: { path: string; lang: Lang }): string {
+export function bountyBlock(b: Bounty, cfg: BountyConfig, measured: string, target: Target): string {
   const { lang, path } = target;
   const s = countStats(cfg, measured);
   const runs = okCrossings(cfg, measured);
@@ -146,6 +155,16 @@ export function bountyBlock(b: Bounty, cfg: BountyConfig, measured: string, targ
     bothWays: list(s.bothWays, and), bchStables: list(s.bchStables, and), thorchain: s.thorchain, pusd: s.pusd,
   };
   const cols = b.columns[lang];
+  const rows = b.rows.map((r) => ({
+    quote: cell(r.quote), section: cell(r.section), status: b.statusLabels[lang][rowStatus(r, s)],
+    note: cell(fill(r.note[lang], vars)), proofs: r.proof.map((p) => proofLink(p, lang, path, cfg, runs)),
+  }));
+  if (target.html) {
+    const head = `<tr>${cols.map((c) => `<th>${c}</th>`).join('')}</tr>`;
+    const body = rows.map((r) => `<tr><td>${r.quote} <sub>${r.section}</sub></td><td><b>${r.status}.</b> ${toHtml(r.note)}</td>`
+      + `<td>${r.proofs.map(htmlLink).join(' · ')}</td></tr>`).join('');
+    return `${START}<p><b>${toHtml(fill(b.headline[lang], vars))}</b> ${toHtml(fill(b.intro[lang], vars))}</p><table>${head}${body}</table>\n${END}`;
+  }
   const lines = [
     START,
     fill(b.intro[lang], vars),
@@ -154,11 +173,7 @@ export function bountyBlock(b: Bounty, cfg: BountyConfig, measured: string, targ
     '',
     `| ${cols.join(' | ')} |`,
     `|${cols.map(() => '---').join('|')}|`,
-    ...b.rows.map((r) => {
-      const status = b.statusLabels[lang][rowStatus(r, s)];
-      const proofs = r.proof.map((p) => proofLink(p, lang, path, cfg, runs)).join(' · ');
-      return `| ${cell(r.quote)} <sub>${cell(r.section)}</sub> | **${status}.** ${cell(fill(r.note[lang], vars))} | ${proofs} |`;
-    }),
+    ...rows.map((r) => `| ${r.quote} <sub>${r.section}</sub> | **${r.status}.** ${r.note} | ${r.proofs.map(md).join(' · ')} |`),
     END,
   ];
   return lines.join('\n');

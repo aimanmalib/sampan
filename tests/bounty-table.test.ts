@@ -94,6 +94,17 @@ describe('bounty table', () => {
     expect(ms).toContain('| Go both ways, & out of BCH <sub>Requirements</sub> |');
   });
 
+  it('writes the 40-line docs/JUDGE.md block as one line of HTML with the same quotes, counts and links', () => {
+    const html = bountyBlock(bounty, cfg, measured(runs), { path: 'docs/JUDGE.md', lang: 'en', html: true });
+    expect(html.split('\n')).toHaveLength(2);
+    expect(html).toContain('<b>3 crossings on 2 chains (Ethereum and BNB Smart Chain) in USDC and USDT; both ways on Ethereum.</b>');
+    for (const r of bounty.rows) expect(html).toContain(`<td>${r.quote} <sub>${r.section}</sub></td>`);
+    expect(html).toContain('<a href="MEASURED.md#runs">Runs</a>');
+    expect(html).toContain(`<a href="https://bch.example/tx/${h('a')}">out <code>bch aaaaaaaa</code></a>`);
+    expect(html).toContain('counted from MEASURED.md.</p><table>');
+    expect(html).not.toMatch(/\]\(|\|/);
+  });
+
   it('refuses a run proof with no ok crossing behind it', () => {
     expect(() => block(runs.filter((r) => !r.includes('| out | 1.8 PUSD')))).toThrow(/no ok crossing/);
   });
