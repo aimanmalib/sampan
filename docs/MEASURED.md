@@ -152,6 +152,7 @@ same BCH and token amounts.
 | 2026-11-16T12:02:56Z | webkit-iphone13 | do | 14.2 | 3 page actions + 3 wallet actions | f301d1d |
 | 2026-11-16T12:03:02Z | chromium-desktop | see | 1.9 | 1 page action | f301d1d |
 | 2026-11-16T12:03:26Z | chromium-desktop | do | 13.6 | 3 page actions + 3 wallet actions | f301d1d |
+| 2026-11-19T12:29:23Z | webkit-iphone13 | judge-md | 2.0 | 3 page actions | 45cfe7f |
 
 ## Failover
 
