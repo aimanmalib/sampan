@@ -24,7 +24,7 @@
     "atom": false,
     "oneClick": false,
     "nostrSend": false,
-    "watchDemo": false
+    "watchDemo": true
   },
   "route": {
     "active": "thorchain",
