@@ -112,7 +112,7 @@ describe('THORChain route', () => {
   it('offers the page only live choices on open chains, and every live choice while the open map is unknown', async () => {
     const map = await route(fakeThornode(dir, () => NOW, 'inbound-2026-11-17.json')).open();
     expect(map.BASE).toBe(false);
-    const assets = withLive(shipped.thorchain.assets, ['ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48', 'BSC', 'BASE']);
+    const assets = withLive(assetsOff(shipped.thorchain.assets), ['ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48', 'BSC', 'BASE']);
     const shown = (open: Record<string, boolean> | null) => openChoices(assets, shipped.evm.chains, 'out', open).map((c) => c.asset.split('-')[0]);
     expect(shown(map)).toEqual(['ETH.USDC', 'BSC.USDC', 'BSC.USDT']);
     expect(shown(null)).toEqual(['ETH.USDC', 'BSC.USDC', 'BSC.USDT', 'BASE.USDC']);

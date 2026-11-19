@@ -52,6 +52,8 @@
 | 2026-11-19T00:38:55Z | out | 2 PUSD to BSC.USDT (at least 1.68519116 USDT) | bch 925b00383b749442fdded5c1f0919bc9581c0e44b2c50da54e95e8dfee83e259 · bsc 0xfbae6a1962911614bc40bf41ad8941eadbc65fa305b5022e57dc41607934fd2b | 98.4 | ok |
 | 2026-11-19T00:41:16Z | in | 1.6 BSC.USDC to PUSD (landing address, at least 0.00631698 BCH arriving) | bch 3265f9b3269a28cd6dfefad986375f85a671122418d37e25890aee5e32051e0b · bsc 0xb12d36058c876fc2bcbba378fd2d09b4607bafd9067417619ac6bdecc5bd96d9 · convert 5ef580dddded892aecf0941ec545e9ac6d0a31a1f15e95fce1386966caa1b774 | 63.0 | ok |
 | 2026-11-19T00:42:39Z | in | 1.6 BSC.USDT to PUSD (landing address, at least 0.00637953 BCH arriving) | bch dde7a35b834e62ec93525e2892ab67bfcf2943ef236d03325031aa6b41e4ad88 · bsc 0x08fa859d2bfb348385b545ea92ebbd34593772ce4aef862b30c67057d692d7bd · convert c80222b2d9e22e7baeeedb65059c7c43115137086b18f95b50c1324c6b586dec | 48.4 | ok |
+| 2026-11-19T01:50:24Z | out | 2 PUSD to AVAX.USDC (at least 1.68606784 USDC) | bch 55621bde55adf3aba3bfb64fea956cd07f8f13d6a73b6c601cb40a6a1a1c14bf · avax 0xdf3322941330fe0794c7d3acb5ad1abf475210513ceecf1a55ea6766ea55cabb | 3405.1 | ok |
+| 2026-11-19T01:52:26Z | out | 0.0092 BCH to AVAX.USDT (at least 1.60678716 USDT) | bch 3efcc889b2dd837646ffcb45b638438da365cd94fbd1d7288a7620edc8315649 · avax 0x1a6546d031b94d1517771aafbe4bada72d05354dabb36c07f4958f29e8991d25 | 3283.4 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from

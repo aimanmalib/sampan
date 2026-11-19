@@ -36,8 +36,8 @@
       { "asset": "ETH.USDT-0XDAC17F958D2EE523A2206206994597C13D831EC7", "chain": "ETH", "symbol": "USDT", "live": { "out": false, "in": false } },
       { "asset": "BSC.USDC-0X8AC76A51CC950D9822D68B83FE1AD97B32CD580D", "chain": "BSC", "symbol": "USDC", "live": { "out": true, "in": true } },
       { "asset": "BSC.USDT-0X55D398326F99059FF775485246999027B3197955", "chain": "BSC", "symbol": "USDT", "live": { "out": true, "in": true } },
-      { "asset": "AVAX.USDC-0XB97EF9EF8734C71904D8002F8B6BC66DD9C48A6E", "chain": "AVAX", "symbol": "USDC", "live": { "out": false, "in": false } },
-      { "asset": "AVAX.USDT-0X9702230A8EA53601F5CD2DC00FDBC13D4DF4A8C7", "chain": "AVAX", "symbol": "USDT", "live": { "out": false, "in": false } },
+      { "asset": "AVAX.USDC-0XB97EF9EF8734C71904D8002F8B6BC66DD9C48A6E", "chain": "AVAX", "symbol": "USDC", "live": { "out": true, "in": false } },
+      { "asset": "AVAX.USDT-0X9702230A8EA53601F5CD2DC00FDBC13D4DF4A8C7", "chain": "AVAX", "symbol": "USDT", "live": { "out": true, "in": false } },
       { "asset": "TRON.USDT-TR7NHQJEKQXGTCI8Q8ZY4PL8OTSZGJLJ6T", "chain": "TRON", "symbol": "USDT", "live": { "out": false, "in": false } },
       { "asset": "BASE.USDC-0X833589FCD6EDB6E08F4C7C32D4F71B54BDA02913", "chain": "BASE", "symbol": "USDC", "live": { "out": false, "in": false } }
     ],
