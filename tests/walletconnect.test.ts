@@ -43,7 +43,7 @@ describe('WalletConnect config', () => {
 
   it('pairs only on chains the route offers, with each chain first RPC', () => {
     const c = withWc(ID);
-    c.thorchain.assets = c.thorchain.assets.map((a) => (a.chain === 'ETH' ? { ...a, live: { out: true, in: false } } : a));
+    c.thorchain.assets = c.thorchain.assets.map((a) => ({ ...a, live: { out: a.chain === 'ETH', in: false } }));
     const o = walletConnectOptions(publicConfig(c), 'Sampan', 'About', 'https://x.test')!;
     const eth = c.evm.chains.find((ch) => ch.key === 'ETH')!;
     expect(o.chains).toEqual([{ id: eth.id, rpc: eth.rpc[0] }]);
