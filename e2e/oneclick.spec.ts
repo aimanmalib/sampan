@@ -3,6 +3,7 @@
 // 1Click; with the flag off (the cross-chain server) the page sends no 1Click request and names no 1Click anywhere.
 // Skipped against a live site.
 import { expect, test, type Page, type Request } from '@playwright/test';
+import shipped from '../config/sampan.json' with { type: 'json' };
 import en from '../lang/en.json' with { type: 'json' };
 import { ONECLICK_PORT_OFFSET } from '../playwright.config.js';
 import { noHorizontalOverflow, primary, routeOn, routes, row, service, watch } from './atom-fake.js';
@@ -49,7 +50,7 @@ test('Send out shows THORChain, the atomic swap and 1Click for the same amount; 
   await expect(oc).toContainText(en['compare.time.none']);
   await expect(oc).toContainText(en['compare.time.estimateRoute'].replace('{route}', ROUTE).replace('{minutes}', '2'));
   await oc.locator('summary').click();
-  await expect(oc).toContainText(en['compare.trust.deposit'].replace('{minutes}', '30'));
+  await expect(oc).toContainText(en['compare.trust.deposit'].replace('{minutes}', String(shipped.oneClick.deadlineMinutes.out)));
   // Exactly one row carries the label, whichever receives the most.
   await expect(routes(page).locator('.routes__more')).toHaveCount(1);
   await expect(primary(page)).toHaveText(en['wallet.connect']);
