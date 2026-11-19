@@ -3,6 +3,7 @@
 // route card specs (e2e/atom.spec.ts, e2e/oneclick.spec.ts).
 import { readFileSync } from 'node:fs';
 import { expect, type Page, type Route } from '@playwright/test';
+import shipped from '../config/sampan.json' with { type: 'json' };
 
 const fixture = (name: string): Record<string, unknown> =>
   JSON.parse(readFileSync(new URL(`../tests/fixtures/atom/${name}`, import.meta.url), 'utf8')) as Record<string, unknown>;
@@ -66,6 +67,13 @@ export async function service(page: Page, opts: { health?: Record<string, unknow
 export const routes = (page: Page) => page.locator('fieldset.routes');
 export const row = (page: Page, name: string) => page.locator(`.routes__row[data-route="${name}"]`);
 export const primary = (page: Page) => page.locator('.button--primary');
+/**
+ * The amount a route row reads, as the shipped config words it (ADR 0074): "You receive about" with features.keepCompare
+ * off, "You keep" with it on (with the percent kept when both sides are USD stablecoins). `amount` is a regex source.
+ */
+export function rowAmount(amount: string, symbol: string): RegExp {
+  return shipped.features.keepCompare ? new RegExp(`You keep (?:about )?${amount} ${symbol}`) : new RegExp(`You receive about ${amount} ${symbol}`);
+}
 
 export async function noHorizontalOverflow(page: Page): Promise<void> {
   const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);

@@ -3,7 +3,7 @@
 // real minified build. With the flag off, or a service that names another AtomLock, the page shows THORChain alone.
 // Skipped against a live site.
 import { expect, test } from '@playwright/test';
-import { HEALTH, INVENTORY, noHorizontalOverflow, primary, routeOn, routes, row, service, watch } from './atom-fake.js';
+import { HEALTH, INVENTORY, noHorizontalOverflow, primary, routeOn, routes, row, rowAmount, service, watch } from './atom-fake.js';
 import en from '../lang/en.json' with { type: 'json' };
 
 test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server');
@@ -27,7 +27,7 @@ test('Send out shows both routes for the same amount, THORChain selected, and th
   await expect(routes(page)).toBeVisible();
   await expect(routes(page).locator('legend')).toHaveText(en['compare.title']);
   await expect(row(page, 'thorchain').getByRole('radio')).toBeChecked();
-  await expect(row(page, 'atom')).toContainText('You receive about 1.00 USDC');
+  await expect(row(page, 'atom')).toContainText(rowAmount('1\\.00', 'USDC'));
   await expect(row(page, 'atom')).toContainText('Network fees: 4700 sats on Bitcoin Cash + 69234 gas units on Base');
   await expect(row(page, 'atom')).toContainText('Measured: about 29 min, from 1 run.');
   await row(page, 'atom').locator('summary').click();
@@ -58,7 +58,7 @@ test('Bring in to PUSD shows the atom row for USDC on Base', async ({ page }) =>
   const quote = page.waitForResponse((r) => r.url().includes('/atom/api/quote'));
   await page.locator('.in .field__input').first().fill('2');
   await quote;
-  await expect(row(page, 'atom')).toContainText('You receive about 2.00 PUSD');
+  await expect(row(page, 'atom')).toContainText(rowAmount('2\\.00', 'PUSD'));
   await expect(row(page, 'atom')).toContainText('Network fees: 178012 gas units on Base + 0 sats on Bitcoin Cash');
   await expect(row(page, 'thorchain').getByRole('radio')).toBeChecked();
   expect(seen.atom.filter((p) => p.endsWith('/quote'))).not.toHaveLength(0);

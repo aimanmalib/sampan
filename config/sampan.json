@@ -25,7 +25,7 @@
     "oneClick": false,
     "nostrSend": false,
     "watchDemo": true,
-    "keepCompare": false
+    "keepCompare": true
   },
   "route": {
     "active": "thorchain",

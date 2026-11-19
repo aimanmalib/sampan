@@ -5,7 +5,7 @@
 import { expect, test, type Page, type Request, type Route } from '@playwright/test';
 import en from '../lang/en.json' with { type: 'json' };
 import { ONECLICK_PORT_OFFSET } from '../playwright.config.js';
-import { primary, routes, row, watch } from './atom-fake.js';
+import { primary, routes, row, rowAmount, watch } from './atom-fake.js';
 
 test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server');
 
@@ -54,7 +54,7 @@ test('Send out: THORChain halted on Ethereum and Base, 1Click still quotes Ether
 
   const oc = row(page, 'near-intents');
   await expect(routes(page)).toBeVisible();
-  await expect(oc).toContainText(/You receive about [0-9]+\.[0-9]{2} USDC/);
+  await expect(oc).toContainText(rowAmount('[0-9]+\\.[0-9]{2}', 'USDC'));
   await oc.getByRole('radio').check();
   await expect(oc.getByRole('radio')).toBeChecked();
   await expect(primary(page)).toHaveText(en['wallet.connect']);
@@ -76,7 +76,7 @@ test('Bring in: THORChain halted, 1Click still quotes Ethereum; the tab is not "
   await page.locator('.in .field__input').first().fill('2');
   await page.getByPlaceholder('bitcoincash:…').fill(BCH_ADDRESS);
   expect((await quoted).request().postDataJSON()).toMatchObject({ route: 'near-intents' });
-  await expect(row(page, 'near-intents')).toContainText(/You receive about/);
+  await expect(row(page, 'near-intents')).toContainText(rowAmount('[0-9.]+', '[A-Z]+'));
   expect(asked.thor).toEqual([]);
   expect(seen.errors).toEqual([]);
 });

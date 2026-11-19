@@ -6,7 +6,7 @@ import { expect, test, type Page, type Request } from '@playwright/test';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import en from '../lang/en.json' with { type: 'json' };
 import { ONECLICK_PORT_OFFSET } from '../playwright.config.js';
-import { noHorizontalOverflow, primary, routeOn, routes, row, service, watch } from './atom-fake.js';
+import { noHorizontalOverflow, primary, routeOn, routes, row, rowAmount, service, watch } from './atom-fake.js';
 
 test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server');
 
@@ -46,7 +46,7 @@ test('Send out shows THORChain, the atomic swap and 1Click for the same amount; 
   await expect(row(page, 'thorchain').getByRole('radio')).toBeChecked();
   const oc = row(page, 'near-intents');
   await expect(oc).toContainText(ROUTE);
-  await expect(oc).toContainText(/You receive about [0-9]+\.[0-9]{2} USDC/);
+  await expect(oc).toContainText(rowAmount('[0-9]+\\.[0-9]{2}', 'USDC'));
   await expect(oc).toContainText(en['compare.time.none']);
   await expect(oc).toContainText(en['compare.time.estimateRoute'].replace('{route}', ROUTE).replace('{minutes}', '2'));
   await oc.locator('summary').click();
@@ -65,7 +65,7 @@ test('Send out shows THORChain, the atomic swap and 1Click for the same amount; 
   await expect(page.locator('.out .swap__receive')).toContainText(/You receive about [0-9.]+ USDC/);
   await expect(page.locator('.out .card__note')).toBeVisible();
   // The cost card reads the same 1Click quote (USDC in its own 6 decimals): what it says arrives matches the row.
-  const about = (await oc.locator('.routes__receive').innerText()).match(/about ([0-9]+\.[0-9]{2})/)![1]!;
+  const about = (await oc.locator('.routes__receive').innerText()).match(/(?:about|keep) ([0-9]+\.[0-9]{2})/)![1]!;
   // The row cuts to two decimals, the card rounds to the nearest cent (as for THORChain): within one cent.
   const card = (await page.locator('.cost__pay').innerText()).match(/receive about USD ([0-9]+\.[0-9]{2})/)![1]!;
   expect(Math.abs(Math.round(Number(card) * 100) - Math.round(Number(about) * 100))).toBeLessThanOrEqual(1);
@@ -89,7 +89,7 @@ test('Bring in to BCH shows the 1Click row next to THORChain and keeps THORChain
   await quoted;
   await expect(routes(page).locator('.routes__row')).toHaveCount(2);
   await expect(row(page, 'thorchain').getByRole('radio')).toBeChecked();
-  await expect(row(page, 'near-intents')).toContainText(/You receive about [0-9.]+ BCH/);
+  await expect(row(page, 'near-intents')).toContainText(rowAmount('[0-9.]+', 'BCH'));
   await row(page, 'near-intents').getByRole('radio').check();
   await expect(row(page, 'near-intents').getByRole('radio')).toBeChecked();
   // Without an EVM wallet there is nothing to sign with: the button waits.
