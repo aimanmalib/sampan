@@ -136,6 +136,7 @@
   "wallet.disconnect": "Disconnect",
   "wallet.fakeName": "Test wallet (no real funds)",
   "swap.direction": "Swap direction",
+  "swap.token": "Stablecoin",
   "swap.buy": "BCH to {symbol}",
   "swap.sell": "{symbol} to BCH",
   "swap.amount": "You pay",

@@ -90,6 +90,23 @@ describe('POST /api/in/*', () => {
     expect(view.landingId).toBe(body.landing.crossingId);
   });
 
+  it('refuses MUSD while its flag is off, and lands MUSD through its own landing address when it is on (MUSa)', async () => {
+    await start(crossOn);
+    expect((await post('/api/in/quote', ask('MUSD'))).statusCode).toBe(400);
+    await app!.close();
+    await start(patchConfig(crossOn, JSON.stringify({ features: { musd: true } })));
+    const quoted = await post('/api/in/quote', ask('MUSD'));
+    expect(quoted.statusCode).toBe(200);
+    const q = quoted.json().quote as { minSats: string; convert?: { category: string } };
+    expect(q.convert?.category.toLowerCase()).toBe(base.tokens.MUSD!.category.toLowerCase());
+    const res = await post('/api/in/plan', { ...ask('MUSD'), minSats: q.minSats });
+    expect(res.statusCode).toBe(200);
+    const card = (res.json() as { landing: { card: { address: string } } }).landing.card;
+    const musd = { ownerAddress: userAddress, returnAfter: base.landing.returnAfterBlocks, prefix: 'bitcoincash' as const };
+    expect(() => acceptCard(card, { ...musd, token: 'MUSD', category: base.tokens.MUSD!.category })).not.toThrow();
+    expect(() => acceptCard(card, { ...musd, token: 'PUSD', category: base.tokens.PUSD!.category })).toThrow();
+  });
+
   it('refuses a plan when the price moved past the minimum shown', async () => {
     await start(crossOn);
     const res = await post('/api/in/plan', { ...ask('BCH'), minSats: '99999999999' });

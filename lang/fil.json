@@ -136,6 +136,7 @@
   "wallet.disconnect": "Mag-disconnect",
   "wallet.fakeName": "Test wallet (walang totoong pondo)",
   "swap.direction": "Direksyon ng swap",
+  "swap.token": "Stablecoin",
   "swap.buy": "BCH papuntang {symbol}",
   "swap.sell": "{symbol} papuntang BCH",
   "swap.amount": "Babayaran mo",

@@ -1,10 +1,10 @@
 // One measured Bring in (G3a, G4, KP17) without a browser: the page's own client code (core/client/in.ts runIn, its
 // plan checks included: memo destination and limit, the landing address recomputed from its card) against the built
 // server on this host with the crossing switched on for one asset, the EVM side signed by the EVM test key through a
-// local EIP-1193 provider. With --receive PUSD the route pays a landing address and the server's finisher converts it
+// local EIP-1193 provider. With --receive PUSD (or MUSD: features.musd switched on in this local server only) the route pays a landing address and the server's finisher converts it
 // (flow g3a with --g3a, else in); with --receive BCH the route pays the owner directly (flow in). The crossing is traced
 // until the BCH (and, for a landing, the conversion) is seen, and one Runs row is appended with --write.
-//   npx tsx tools/measure/in-run.ts --asset ETH.USDC-0X… --amount 2 --receive PUSD|BCH [--owner 14] [--g3a] [--port 4187] [--quote-only] [--write]
+//   npx tsx tools/measure/in-run.ts --asset ETH.USDC-0X… --amount 2 --receive PUSD|MUSD|BCH [--owner 14] [--g3a] [--port 4187] [--quote-only] [--write]
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Hex } from 'viem';
@@ -40,8 +40,8 @@ async function main(): Promise<void> {
   const tokenEntry = evm.tokens[entry.symbol]!;
   const receive = need('--receive');
   const landing = receive !== 'BCH';
-  const token = config.tokens[config.defaultToken]!;
-  if (landing && receive !== config.defaultToken) throw new Error(`--receive is BCH or ${config.defaultToken}`);
+  const token = config.tokens[receive];
+  if (landing && !token) throw new Error(`--receive is BCH or one of ${Object.keys(config.tokens).join(', ')}`);
   const amount = parseUnits(need('--amount'), 8);
   if (amount === undefined || amount <= 0n) throw new Error('--amount is not a valid amount of the stablecoin');
 
@@ -62,7 +62,7 @@ async function main(): Promise<void> {
     patch: {
       compliance: { crossChainEnabled: true },
       ...livePatch(config.thorchain.assets, [assetName]),
-      features: { landing: true },
+      features: { landing: true, ...(receive === 'MUSD' ? { musd: true } : {}) },
       ops: { testAddresses: [owner.address] },
     },
   });
@@ -92,7 +92,7 @@ async function main(): Promise<void> {
         receive,
         address: owner.address,
         minSats: BigInt(quote.minSats),
-        ...(landing ? { landing: { category: token.category, returnAfter: config.landing.returnAfterBlocks, prefix: 'bitcoincash' as const } } : {}),
+        ...(landing ? { landing: { category: token!.category, returnAfter: config.landing.returnAfterBlocks, prefix: 'bitcoincash' as const } } : {}),
       },
       timing: { pollMs: pub.evm.receiptPollSeconds * 1000, waitMs: pub.evm.receiptWaitSeconds * 1000, replanMs: pub.evm.replanSeconds * 1000 },
       onStep: (s) => {

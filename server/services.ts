@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { CashPrefix } from '../core/address.js';
-import { routeAssetsOf, type SampanConfig } from '../core/config.js';
+import { routeAssetsOf, tokenOffered, type SampanConfig } from '../core/config.js';
 import { poolV0LockingHex } from '../core/pools/template.js';
 import { ElectrumChain } from './chain/electrum.js';
 import { FakeChain } from './chain/fake.js';
@@ -98,31 +98,44 @@ export interface ServiceOptions {
 /** Fake wallet balance handed to the first address of a scan that has never been seen. */
 export const FAKE_WALLET = { sats: 2_000_000n, tokenSats: 1000n, tokens: 10_000n } as const;
 
+/** A txid for the i-th extra token's copy of a captured pool coin: the last byte replaced. */
+const fakeTxid = (txid: string, i: number): string => txid.slice(0, 62) + (0xe0 + i).toString(16);
+
 export function fakeNetwork(
   config: SampanConfig,
   fixtureFile: string,
 ): { chain: FakeChain; fund: (lock: string) => void; fetchActive: FetchActive } {
   const fixture = JSON.parse(readFileSync(fixtureFile, 'utf8')) as { active: IndexerPool[] };
-  const category = config.tokens[config.defaultToken]!.category;
+  // The default token's pools as captured; every other offered token (MUSD while its flag is on) gets the same pools at
+  // the same locks under its own category, with a txid of its own so the two never name one coin.
+  const others = Object.keys(config.tokens).filter((symbol) => symbol !== config.defaultToken && tokenOffered(config, symbol));
+  const categories = [config.defaultToken, ...others].map((symbol) => config.tokens[symbol]!.category);
   const chain = new FakeChain();
-  for (const p of fixture.active) {
-    chain.add(poolV0LockingHex(p.owner_pkh), {
-      txid: p.txid,
-      vout: p.tx_pos,
-      sats: BigInt(p.sats),
-      height: 1,
-      token: { category, amount: BigInt(p.tokens) },
-    });
-  }
+  categories.forEach((category, i) => {
+    for (const p of fixture.active) {
+      chain.add(poolV0LockingHex(p.owner_pkh), {
+        txid: i === 0 ? p.txid : fakeTxid(p.txid, i),
+        vout: p.tx_pos,
+        sats: BigInt(p.sats),
+        height: 1,
+        token: { category, amount: BigInt(p.tokens) },
+      });
+    }
+  });
   let n = 0;
   const fund = (lock: string): void => {
     if (chain.historyOf(lock) > 0) return;
     n += 1;
     const txid = (n.toString(16).padStart(8, '0') + 'fa'.repeat(28)).slice(0, 64);
     chain.add(lock, { txid, vout: 0, sats: FAKE_WALLET.sats, height: 1 });
-    chain.add(lock, { txid, vout: 1, sats: FAKE_WALLET.tokenSats, height: 1, token: { category, amount: FAKE_WALLET.tokens } });
+    categories.forEach((category, i) => chain.add(lock, { txid, vout: 1 + i, sats: FAKE_WALLET.tokenSats, height: 1, token: { category, amount: FAKE_WALLET.tokens } }));
   };
-  return { chain, fund, fetchActive: async () => fixture.active };
+  const byCategory = new Map(categories.map((c, i) => [c.toLowerCase(), i]));
+  const fetchActive: FetchActive = async (_indexer, category) => {
+    const i = byCategory.get(category.toLowerCase()) ?? 0;
+    return i === 0 ? fixture.active : fixture.active.map((p) => ({ ...p, txid: fakeTxid(p.txid, i) }));
+  };
+  return { chain, fund, fetchActive };
 }
 
 export function createServices(o: ServiceOptions): Services {

@@ -1,8 +1,9 @@
 // Measured mainnet swaps through the real page and the headless test wallet (G1, KP3 flow "swap").
-//   npx tsx tools/measure/swap.ts [--rounds 3] [--bch 0.001] [--port 4183] [--fee-bps 30 --fee-address bitcoincash:q...] [--buy-only]
+//   npx tsx tools/measure/swap.ts [--token MUSD] [--rounds 3] [--bch 0.001] [--port 4183] [--fee-bps 30 --fee-address bitcoincash:q...] [--buy-only]
 // Starts the built server (dist/) against the real network with the swap tab switched on, opens the page in
 // Chromium, pairs the test wallet through the page's own WizardConnect link, then per round buys PUSD for the
-// given BCH and sells the whole PUSD balance back. Each swap appends one row to docs/MEASURED.md, failures
+// given BCH and sells the whole PUSD balance back. --token MUSD trades MUSD instead: features.musd is switched on in
+// this local server only and the page's stablecoin choice is pressed; rows then name MUSD. Each swap appends one row to docs/MEASURED.md, failures
 // included, and the run stops at the first failure. The test wallet signs only what passes checkTransaction
 // against what the page showed and stays inside state/budget.json. --fee-bps switches the Sampan fee on in this
 // local server only (business.feeBps; the public config stays 0); point --fee-address at the test wallet's own
@@ -30,7 +31,9 @@ const MEASURED = 'docs/MEASURED.md';
 const SWAP_TIMEOUT_MS = 180_000;
 
 const config = loadConfig('config/sampan.json');
-const token = config.tokens[config.defaultToken]!;
+const TOKEN = arg('--token', config.defaultToken);
+if (!config.tokens[TOKEN]) throw new Error(`--token is one of ${Object.keys(config.tokens).join(', ')}`);
+const token = config.tokens[TOKEN]!;
 const category = token.category.toLowerCase();
 
 const FEE_BPS = Number(arg('--fee-bps', '0'));
@@ -40,7 +43,7 @@ const business = { feeBps: FEE_BPS, feeAddress: FEE_ADDRESS };
 const feeLock = feeLockingHex(business, prefixOf(FEE_ADDRESS));
 
 // Swap tab on; the Sampan fee only when asked for.
-const SERVER_PATCH = { features: { swap: true }, ...(FEE_BPS > 0 ? { business } : {}) };
+const SERVER_PATCH = { features: { swap: true, ...(TOKEN === 'MUSD' ? { musd: true } : {}) }, ...(FEE_BPS > 0 ? { business } : {}) };
 
 async function quote(side: 'buy' | 'sell', amount: bigint): Promise<{ usd: number; minReceive: string }> {
   const res = await fetch(`${BASE}/api/swap/quote`, {
@@ -134,6 +137,7 @@ async function main(): Promise<void> {
       stdio: ['ignore', 'inherit', 'inherit'],
     });
     await page.locator('.swap__wallet').filter({ hasText: 'In your wallet' }).waitFor({ timeout: 90_000 });
+    if (TOKEN !== config.defaultToken) await page.getByRole('radio', { name: token.symbol, exact: true }).click();
     console.log(await page.locator('.swap__wallet').textContent());
     const buySats = parseUnits(BUY_BCH, 8)!;
     for (let round = 1; round <= ROUNDS; round++) {

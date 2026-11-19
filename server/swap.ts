@@ -4,7 +4,7 @@
 import { hexToBin } from '@bitauth/libauth';
 import { parseAddress, type CashPrefix } from '../core/address.js';
 import { feeLockingHex, sampanFeeSats } from '../core/business.js';
-import type { SampanConfig } from '../core/config.js';
+import { tokenOffered, type SampanConfig } from '../core/config.js';
 import { selectTrade, type SelectedTrade, type TradeSide } from '../core/pools/trade.js';
 import { tradeCost } from '../core/cost.js';
 import { buildSwapTx, swapSizeEstimate, SwapBuildError } from '../core/tx/swap.js';
@@ -78,8 +78,7 @@ export class SwapService {
 
   private category(token: string): { category: string; decimals: number } {
     const t = this.o.config.tokens[token];
-    const enabled = token === this.o.config.defaultToken || (token === 'MUSD' && this.o.config.features.musd);
-    if (!t || !enabled) throw new SwapError('bad_request', `token ${token} is not offered`);
+    if (!t || !tokenOffered(this.o.config, token)) throw new SwapError('bad_request', `token ${token} is not offered`);
     return { category: t.category, decimals: t.decimals };
   }
 

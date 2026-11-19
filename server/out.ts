@@ -3,7 +3,7 @@
 // directly. The deposit amount for step 1 is what the swap pays minus a safety margin and both network fees,
 // so the user never needs BCH of their own. Limits from config are enforced here on every quote.
 import { parseAddress, type CashPrefix } from '../core/address.js';
-import type { RouteId, SampanConfig } from '../core/config.js';
+import { tokenOffered, type RouteId, type SampanConfig } from '../core/config.js';
 import { depositSize, DepositBuildError } from '../core/tx/deposit.js';
 import type { Payment, WalletCoin } from '../core/tx/payment.js';
 import { BCH_DUST_SATS } from '../core/tx/types.js';
@@ -82,7 +82,7 @@ export class OutService {
   private async depositSats(r: OutRequest): Promise<{ sats: bigint; swap?: Quote }> {
     const { config } = this.o;
     if (r.source === BCH) return { sats: r.amount };
-    if (r.source !== config.defaultToken) throw new RouteError('bad_request', `${r.source} cannot be sent out`);
+    if (!tokenOffered(config, r.source)) throw new RouteError('bad_request', `${r.source} cannot be sent out`);
     const swap = await this.o.swaps.quote({ token: r.source, side: 'sell', amount: r.amount });
     const safe = (swap.minReceive * BigInt(10_000 - config.cauldron.outSafetyBps)) / 10_000n;
     // Step 2 fee at a generous rate for an 80-byte memo; step 1 fee at its cap; change must stay spendable.

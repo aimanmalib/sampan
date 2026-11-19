@@ -136,6 +136,7 @@
   "wallet.disconnect": "Putuskan",
   "wallet.fakeName": "Dompet uji (tanpa dana nyata)",
   "swap.direction": "Arah penukaran",
+  "swap.token": "Stablecoin",
   "swap.buy": "BCH ke {symbol}",
   "swap.sell": "{symbol} ke BCH",
   "swap.amount": "Anda bayar",

@@ -46,10 +46,11 @@ function failKey(e: unknown): TextKey {
 export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wallet }) {
   const { t } = useText();
   const evm = useEvm();
-  const token = config.tokens[config.defaultToken]!;
   const networks = useNetworks(config, 'in');
   const [amountText, setAmountText] = useState('');
-  const [receive, setReceive] = useState(token.symbol);
+  const [receive, setReceive] = useState(config.defaultToken);
+  // The stablecoin received through a landing address (BCH = the route pays the user directly).
+  const token = config.tokens[receive] ?? config.tokens[config.defaultToken]!;
   const [addressText, setAddressText] = useState('');
   const [run, setRun] = useState<Run>({ phase: 'idle' });
   const src = networks.pick;
@@ -162,7 +163,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
         </span>
       </label>
       <div className="swap__sides" role="radiogroup" aria-label={t('in.receive')}>
-        {[token.symbol, BCH].map((s) => (
+        {[...Object.keys(config.tokens), BCH].map((s) => (
           <button key={s} type="button" role="radio" aria-checked={receive === s} className="swap__side" disabled={busy} onClick={() => setReceive(s)}>
             {t('in.receiveAs', { asset: s })}
           </button>

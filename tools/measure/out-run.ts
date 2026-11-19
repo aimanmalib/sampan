@@ -5,7 +5,7 @@
 // appended to docs/MEASURED.md (with --write). Spends stay inside state/budget.json and are recorded in the ledger.
 // --route near-intents measures the 1Click route instead (flow oc-out): the server offers only that asset through
 // 1Click, with the env file's ONECLICK_JWT when there is one, and the crossing is traced through its status endpoint.
-//   npx tsx tools/measure/out-run.ts --asset ETH.USDC-0X… --source PUSD|BCH --amount 1.80 --to 0x… [--route near-intents] [--port 4186] [--quote-only] [--write]
+//   npx tsx tools/measure/out-run.ts --asset ETH.USDC-0X… --source PUSD|MUSD|BCH --amount 1.80 --to 0x… [--route near-intents] [--port 4186] [--quote-only] [--write]
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { hashTransaction, hexToBin } from '@bitauth/libauth';
@@ -36,8 +36,10 @@ async function main(): Promise<void> {
   const entry = config.thorchain.assets.find((a) => a.asset === assetName);
   if (!entry) throw new Error(`${assetName} is not in config thorchain.assets`);
   const { chain: evmChain, token: tokenContract, rpc } = crossingAsset(config, assetName);
-  const token = config.tokens[config.defaultToken]!;
   const source = need('--source');
+  // The token sold in step 1 (MUSD: features.musd switched on in this local server only); BCH has no step 1.
+  const token = config.tokens[source === 'BCH' ? config.defaultToken : source];
+  if (!token) throw new Error(`--source is BCH or one of ${Object.keys(config.tokens).join(', ')}`);
   const decimals = source === 'BCH' ? 8 : token.decimals;
   const amount = parseUnits(need('--amount'), decimals);
   if (amount === undefined || amount <= 0n) throw new Error('--amount is not a valid amount of the source');
@@ -61,6 +63,7 @@ async function main(): Promise<void> {
     dataDir: 'state/measure-data',
     patch: {
       compliance: { crossChainEnabled: true },
+      ...(source === 'MUSD' ? { features: { musd: true } } : {}),
       ...(route ? oneClickLivePatch(config.oneClick.assets, entry.chain, entry.symbol, 'out') : livePatch(config.thorchain.assets, [assetName])),
     },
     ...(route && oneClickKey ? { env: { ONECLICK_JWT: oneClickKey } } : {}),

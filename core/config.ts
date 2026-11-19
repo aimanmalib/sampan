@@ -437,13 +437,17 @@ export function normalizeConfig(c: SampanConfig): SampanConfig {
 }
 
 /** Assets the active route may offer: the live THORChain assets, or none for any other route. */
+/** A token the server trades, lands and routes: the default token, and MUSD while its flag is on. */
+export const tokenOffered = (c: Pick<SampanConfig, 'tokens' | 'defaultToken' | 'features'>, symbol: string): boolean =>
+  c.tokens[symbol] !== undefined && (symbol === c.defaultToken || (symbol === 'MUSD' && c.features.musd));
+
 export const routeAssetsOf = (c: SampanConfig): RouteAsset[] => (c.route.active === 'thorchain' ? liveAssets(c.thorchain.assets) : []);
 
 export function publicConfig(c: SampanConfig): PublicConfig {
   const assets = routeAssetsOf(c);
   return {
     tokens: Object.fromEntries(
-      Object.entries(c.tokens).filter(([key]) => key === c.defaultToken || (key === 'MUSD' && c.features.musd)),
+      Object.entries(c.tokens).filter(([key]) => tokenOffered(c, key)),
     ),
     defaultToken: c.defaultToken,
     features: c.features,

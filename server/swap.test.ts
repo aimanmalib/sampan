@@ -70,6 +70,30 @@ describe('SwapService.quote', () => {
   });
 });
 
+describe('MUSD behind features.musd (MUSa)', () => {
+  const musdOn = { ...config, features: { ...config.features, musd: true } };
+  const setupOn = () => {
+    const net = fakeNetwork(musdOn, FIXTURE);
+    net.fund(userLockHex);
+    const pools = new PoolDirectory({ indexers: ['https://i.example'], cacheSeconds: 5, chain: net.chain, fetchActive: net.fetchActive });
+    return new SwapService({ config: musdOn, chain: net.chain, pools, prefix: 'bitcoincash' });
+  };
+
+  it('quotes and builds MUSD in its own category, and leaves the PUSD quote as it was', async () => {
+    const swaps = setupOn();
+    const musd = musdOn.tokens.MUSD!.category.toLowerCase();
+    const q = await swaps.quote({ token: 'MUSD', side: 'buy', amount: 300_000n });
+    expect(q.category.toLowerCase()).toBe(musd);
+    const b = await swaps.build({ token: 'MUSD', side: 'buy', amount: 300_000n, minReceive: q.minReceive, addresses: wallet, payoutAddress: userTokenAddress, changeAddress: userAddress });
+    const paid = b.built.transaction.outputs.filter((o) => o.token && binToHex(o.token.category) === musd);
+    expect(paid.length).toBeGreaterThan(0);
+    expect(b.built.transaction.outputs.some((o) => o.token && binToHex(o.token.category) === PUSD.toLowerCase())).toBe(false);
+    const pusdOn = await swaps.quote({ token: 'PUSD', side: 'buy', amount: 300_000n });
+    const pusdOff = await setup().swaps.quote({ token: 'PUSD', side: 'buy', amount: 300_000n });
+    expect(pusdOn.demand).toBe(pusdOff.demand);
+  });
+});
+
 describe('SwapService.build', () => {
   for (const side of ['buy', 'sell'] as const) {
     it(`${side}: the page's checkTransaction accepts it and the signed transaction passes the VM`, async () => {

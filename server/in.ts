@@ -3,7 +3,7 @@
 // user wants the stablecoin, a landing address priced at the route's minimum output becomes the destination and the
 // route is asked again for it, right before the wallet signs. Limits from config are enforced on every quote.
 import { parseAddress, type CashPrefix } from '../core/address.js';
-import type { RouteId, SampanConfig } from '../core/config.js';
+import { tokenOffered, type RouteId, type SampanConfig } from '../core/config.js';
 import type { LandingCard } from '../core/landing-card.js';
 import type { LandingService } from './landing/service.js';
 import { routeTarget } from './route-target.js';
@@ -19,7 +19,7 @@ export interface InRequest {
   chain: string;
   /** Source amount in the route's 1e8 units. */
   amount: bigint;
-  /** 'BCH', or the default token (the BCH then lands at a landing address and converts). */
+  /** 'BCH', or an offered token (the BCH then lands at a landing address and converts). */
   receive: string;
   /** The user's BCH address: the destination for BCH, the owner of the landing address for the token. */
   address: string;
@@ -71,7 +71,7 @@ export class InService {
   private source(r: InRequest): { asset: string; token: string } {
     const { config } = this.o;
     const { asset, token } = routeTarget(config, 'in', r, this.o.chainOpen ?? (() => true), this.pick(r.route).id);
-    if (r.receive !== BCH && r.receive !== config.defaultToken) throw new RouteError('bad_request', `${r.receive} cannot be received`);
+    if (r.receive !== BCH && !tokenOffered(config, r.receive)) throw new RouteError('bad_request', `${r.receive} cannot be received`);
     if (typeof parseAddress(r.address, this.o.prefix) === 'string') throw new RouteError('bad_request', 'the BCH address is not valid');
     return { asset, token: token.address };
   }

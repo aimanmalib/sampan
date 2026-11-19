@@ -2,7 +2,7 @@
 // The minimum rate comes from the worst case the PRD names: the smallest payment shown, less the convert fee and
 // the token output's dust, priced on today's pools and lowered by the direct tolerance.
 import { parseAddress, type CashPrefix } from '../../core/address.js';
-import type { SampanConfig } from '../../core/config.js';
+import { tokenOffered, type SampanConfig } from '../../core/config.js';
 import { makeCard, type LandingCard } from '../../core/landing-card.js';
 import { LANDING_RATE_DEN, landingLockingHex, rateNumFor, type LandingParams } from '../../core/landing.js';
 import { selectTrade } from '../../core/pools/trade.js';
@@ -45,8 +45,7 @@ export class LandingService {
   private token(symbol: string): { category: string } {
     const { config } = this.o;
     const t = config.tokens[symbol];
-    const enabled = symbol === config.defaultToken || (symbol === 'MUSD' && config.features.musd);
-    if (!t || !enabled) throw new SwapError('bad_request', `token ${symbol} is not offered`);
+    if (!t || !tokenOffered(config, symbol)) throw new SwapError('bad_request', `token ${symbol} is not offered`);
     return { category: t.category.toLowerCase() };
   }
 

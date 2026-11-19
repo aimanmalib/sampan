@@ -1,4 +1,4 @@
-// Tab "Swap on BCH": BCH <-> the default token through Cauldron pools, one signature. The transaction is
+// Tab "Swap on BCH": BCH <-> an offered token (the default, or MUSD behind its flag) through Cauldron pools, one signature. The transaction is
 // checked in this browser against the numbers shown here before the wallet is asked to sign.
 import { useState } from 'react';
 import { runSwap, type SwapStep } from '../../../core/client/swap';
@@ -14,6 +14,7 @@ import { UnitChip } from '../chips/Chip';
 import { codeKey, errorKey } from './errors';
 import { useQuote } from './useQuote';
 import { PegNote } from '../peg/PegNote';
+import { TokenPick } from './TokenPick';
 
 const BCH_DECIMALS = 8;
 const QUOTE_PAUSE_MS = 400;
@@ -28,7 +29,8 @@ const pct = (num: bigint, den: bigint): string => (Number((num * 10000n) / den) 
 
 export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wallet }) {
   const { t } = useText();
-  const token = config.tokens[config.defaultToken]!;
+  const [symbol, setSymbol] = useState(config.defaultToken);
+  const token = config.tokens[symbol] ?? config.tokens[config.defaultToken]!;
   const [side, setSide] = useState<TradeSide>('buy');
   const [text, setText] = useState(config.limits.judgeSwapBch);
   const [run, setRun] = useState<Run>({ phase: 'idle' });
@@ -50,6 +52,13 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
     if (next === side || busy) return;
     setSide(next);
     setText(next === 'buy' ? config.limits.judgeSwapBch : '');
+    setRun({ phase: 'idle' });
+  };
+
+  const pickToken = (next: string): void => {
+    if (next === symbol || busy) return;
+    setSymbol(next);
+    if (side === 'sell') setText('');
     setRun({ phase: 'idle' });
   };
 
@@ -113,6 +122,7 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
           </button>
         ))}
       </div>
+      <TokenPick config={config} value={symbol} disabled={busy} onPick={pickToken} />
       <label className="field">
         <span className="field__label">{t('swap.amount')}</span>
         <span className="field__row">
