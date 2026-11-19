@@ -5,6 +5,7 @@ import { encodeLockingBytecodeP2pkh, lockingBytecodeToCashAddress } from '@bitau
 import { expect, test, type Page } from '@playwright/test';
 import { openFlows, openTabs, type FlowFlags } from '../core/flows.js';
 import en from '../lang/en.json' with { type: 'json' };
+import { judgeFolded } from './judge-config.js';
 
 test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server');
 // Second fake server from playwright.config.ts (port E2E_PORT + 1), started with the landing flow on.
@@ -84,8 +85,10 @@ test('the no-wallet hint is in the landing panel only, not in the judge strip as
   await noHorizontalOverflow(page);
 });
 
+// The folded strip (judge.openOnPhone off); the unfolded box under the card is e2e/judge-open.spec.ts.
 test('opened judge steps at 320 px take the full row and Fill sits below them', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
+  await judgeFolded(page);
   await page.goto('/');
   await page.locator('.judge__title').click();
   await expect(page.locator('.judge__steps')).toBeVisible();
@@ -98,6 +101,7 @@ test('opened judge steps at 320 px take the full row and Fill sits below them', 
 
 test('the judge strip links to the proof table one tap from the first screen, with no scroll', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
+  await judgeFolded(page);
   await page.goto('/');
   await page.locator('.judge__title').click();
   const proof = page.locator('.judge').getByRole('link', { name: en['judge.proof'] });

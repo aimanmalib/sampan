@@ -83,6 +83,17 @@ describe('appendJudge and parseJudge', () => {
     expect(parseJudge(text)).toEqual([{ engine: 'webkit-iphone13', path: 'see', seconds: 4.3 }]);
   });
 
+  it('reads the docs/JUDGE.md walk rows (judge-md, judge-md-cheat) beside see and do', () => {
+    const f = file(RUNS);
+    appendJudge(f, [row({ path: 'judge-md', seconds: 6.04, pageActions: 3 }), row({ path: 'judge-md-cheat', seconds: 5, pageActions: 4 })]);
+    const text = readFileSync(f, 'utf8');
+    expect(text).toContain('| judge-md | 6.0 | 3 page actions |');
+    expect(parseJudge(text)).toEqual([
+      { engine: 'webkit-iphone13', path: 'judge-md', seconds: 6 },
+      { engine: 'webkit-iphone13', path: 'judge-md-cheat', seconds: 5 },
+    ]);
+  });
+
   it('creates the file when it does not exist', () => {
     const f = file();
     appendJudge(f, [row()]);

@@ -667,6 +667,7 @@
   "how.nostr.server": "Semua ini berjalan dalam pelayar anda. Tiada pelayan identiti ditanya, dan pelayan Sampan tidak pernah melihat identiti yang anda taip. Nama seperti nama@contoh.com dicari pada domainnya sendiri sahaja.",
   "how.nostr.limit": "Relay masih boleh menyorok event yang lebih baharu daripada anda. Sebab itu halaman ini bertanya semua relay di atas dan menyimpan event paling baharu yang dipulangkan mana-mana relay.",
   "judge.watch": "Tonton satu larian pendaratan, tanpa dompet",
+  "judge.box": "Langkah untuk juri",
   "watch.title": "Tonton ia berjalan",
   "watch.lead": "Main semula satu pendaratan yang diukur di mainnet. Dompet di bawah memegang wang main: tiada apa-apa dihantar dari halaman ini.",
   "watch.play": "Wang main, tiada apa-apa dihantar",

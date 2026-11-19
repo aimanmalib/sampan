@@ -2,6 +2,7 @@
 // on screen, in WebKit on an iPhone 13 and in Chromium on a 1440x900 desktop.
 //   npx tsx tools/measure/judge-path.ts [--engine webkit-iphone13|chromium-desktop|both] [--path see|do|both]
 //     [--base https://sampan.sasateguh.com] [--commit <short hash>] [--write]
+//   npx tsx tools/measure/judge-path.ts --judge-md [--write]   (WebKit iPhone 13; tools/measure/judge-md.ts)
 // see: no wallet. Front page, then the judge strip's "Or see the transactions already made" link, until the first transaction id link of the proof
 //      table is inside the viewport.
 // do:  the headless test wallet pairs through the page's own Copy link, then the page's default swap
@@ -17,7 +18,8 @@ import { chromium, devices, webkit, type Browser, type BrowserContextOptions, ty
 import en from '../../lang/en.json' with { type: 'json' };
 import { formatUnits, parseUnits } from '../../core/wallet.js';
 import { loadConfig } from '../../server/config.js';
-import { appendJudge, countActions, ENGINES, PATHS, type Engine, type JudgePath, type JudgeRow, type Step } from './judge-table.js';
+import { JUDGE_MD_TAP_TARGET, walkToExplorer, walkToRefusal } from './judge-md.js';
+import { appendJudge, countActions, ENGINES, JUDGE_MD_PATHS, PATHS, type Engine, type JudgePath, type JudgeRow, type Step } from './judge-table.js';
 import { appendRuns, type Run } from './runs.js';
 import { CLIPBOARD_SPY } from './server.js';
 
@@ -29,8 +31,9 @@ const pick = <T extends string>(value: string, all: readonly T[]): T[] =>
   value === 'both' ? [...all] : all.includes(value as T) ? [value as T] : (() => { throw new Error(`unknown value ${value}`); })();
 
 const BASE = arg('--base', 'https://sampan.sasateguh.com').replace(/\/$/, '');
-const ENGINE_LIST = pick(arg('--engine', 'both'), ENGINES);
-const PATH_LIST = pick(arg('--path', 'both'), PATHS);
+const JUDGE_MD = process.argv.includes('--judge-md');
+const ENGINE_LIST = pick(arg('--engine', JUDGE_MD ? 'webkit-iphone13' : 'both'), ENGINES);
+const PATH_LIST: JudgePath[] = JUDGE_MD ? [...JUDGE_MD_PATHS] : pick(arg('--path', 'both'), PATHS);
 const COMMIT = arg('--commit', readFileSync('deploy/CURRENT_TAG', 'utf8').trim().split('-')[0]!);
 const WRITE = process.argv.includes('--write');
 const SHOTS = 'state/judge-path';
@@ -102,10 +105,10 @@ async function see(page: Page, clock: Clock): Promise<string> {
   clock.begin();
   await page.goto(BASE, { waitUntil: 'load' });
   await clock.step('load', 'front page loaded');
-  // The judge strip's proof link: folded under its title on phones (one tap to open), open on tall wide screens.
-  const strip = page.locator('.judge');
-  await strip.waitFor({ timeout: STEP_TIMEOUT_MS });
-  const how = strip.getByRole('link', { name: en['judge.proof'] });
+  // The judge box's proof link: open under the card on phones (judge.openOnPhone), beside the picture on wide screens, or folded under the title.
+  const strip = page.locator('.judge, .judgebox');
+  await strip.first().waitFor({ timeout: STEP_TIMEOUT_MS });
+  const how = strip.getByRole('link', { name: en['judge.proof'] }).first();
   if (!(await how.isVisible())) {
     await page.locator('.judge__title').click();
     await clock.step('click', `"${en['judge.title']}" (opens the steps)`);
@@ -202,8 +205,17 @@ async function measure(engine: Engine, path: JudgePath): Promise<boolean> {
     const stamp = new Date().toISOString().replace(/[:.]/g, '').slice(0, 15);
     const clock = new Clock(page, `${SHOTS}/${stamp}-${engine}-${path}`);
     let shown = '';
+    const bring = (target: Locator, what: string, waitMs = 0) => bringIntoView(page, clock, target, what, waitMs);
     if (path === 'see') shown = await see(page, clock);
-    else {
+    else if (path === 'judge-md') shown = await walkToExplorer(page, BASE, clock, bring);
+    else if (path === 'judge-md-cheat') {
+      const said = await walkToRefusal(page, BASE, clock, bring);
+      if (said === null) {
+        console.log(`${engine} ${path}: the judge box has no "Try to cheat it" link (features.cheatPanel off), no row`);
+        return true;
+      }
+      shown = said;
+    } else {
       const run = await doSwap(page, clock, wallet);
       if (WRITE) appendRuns(MEASURED, [run]);
       if (!run.ok) {
@@ -216,6 +228,9 @@ async function measure(engine: Engine, path: JudgePath): Promise<boolean> {
     for (const s of clock.steps) console.log(`  ${s.at.toFixed(1).padStart(6)} s  ${s.kind.padEnd(6)} ${s.what}`);
     const row: JudgeRow = { utc: new Date(), engine, path, seconds, ...countActions(clock.steps), commit: COMMIT };
     console.log(`${engine} ${path}: ${seconds.toFixed(1)} s, ${row.pageActions} page + ${row.walletActions} wallet actions, ${shown}`);
+    if (path.startsWith('judge-md') && row.pageActions > JUDGE_MD_TAP_TARGET) {
+      console.log(`  ${row.pageActions} taps, over the target of ${JUDGE_MD_TAP_TARGET}: cut a step from docs/JUDGE.md`);
+    }
     if (WRITE) appendJudge(MEASURED, [row]);
     return true;
   } finally {

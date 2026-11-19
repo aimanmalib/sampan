@@ -139,6 +139,9 @@ export interface SampanConfig {
   rate: { quotesPerMinute: number; crossingsPerHour: number; invoicesPerHour: number; cloudflareCidrs: string[] };
   compliance: { blockedCountries: string[]; crossChainEnabled: boolean };
   banner: { deckUrl: string; repoUrl: string; tokenAddress: string; note: boolean };
+  /** The "Judging?" box on the front page. `openOnPhone`: its steps start unfolded on every screen; on a phone they
+   *  sit right under the card so the card's primary button stays on the first screen (false = folded, as before). */
+  judge: { openOnPhone: boolean };
   /** `url` is the public origin; `ogImage` is the link preview picture under web/public; `proofRuns` = rows of the
    *  newest measured runs on /how (the full list is docs/MEASURED.md); `finished` = the BCH transaction id of one
    *  measured crossing per direction that Send out and Bring in link to ("" = no link); `watch` = the replay on
@@ -206,6 +209,7 @@ export interface PublicConfig {
   landing: Pick<SampanConfig['landing'], 'toleranceBps' | 'toleranceBpsDirect' | 'returnAfterBlocks' | 'validHours' | 'pagePollSeconds' | 'dustSats' | 'convertFeeSats'>;
   compliance: { crossChainEnabled: boolean };
   banner: SampanConfig['banner'];
+  judge: SampanConfig['judge'];
   site: SampanConfig['site'];
   legal: SampanConfig['legal'];
   connect: SampanConfig['connect'] & { gapLimit: number; feeCapSats: number; satsPerByte: number; tokenDustSats: number };
@@ -394,6 +398,7 @@ export function validateConfig(c: SampanConfig): string[] {
   need(typeof c.features?.oneClick === 'boolean', 'features.oneClick: true or false');
   need(typeof c.features?.nostrSend === 'boolean', 'features.nostrSend: true or false');
   need(typeof c.features?.watchDemo === 'boolean', 'features.watchDemo: true or false');
+  need(typeof c.judge?.openOnPhone === 'boolean', 'judge.openOnPhone: true or false');
   errors.push(...validateNostrId(c.nostrId));
   need(!c.features?.oneClick || c.oneClick.baseUrl !== '', 'oneClick.baseUrl: required while features.oneClick is true');
   return errors;
@@ -459,6 +464,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     },
     compliance: { crossChainEnabled: c.compliance.crossChainEnabled },
     banner: c.banner,
+    judge: { openOnPhone: c.judge.openOnPhone },
     site: c.site,
     legal: c.legal,
     connect: { ...c.connect, gapLimit: c.wallet.gapLimit, feeCapSats: c.fees.capSats, satsPerByte: c.fees.satsPerByte, tokenDustSats: c.landing.tokenDustSats },

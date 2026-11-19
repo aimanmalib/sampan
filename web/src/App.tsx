@@ -4,7 +4,7 @@ import { ActionCard, cardTabs } from './ActionCard';
 import { fetchConfig, useConfig } from './config';
 import { Footer } from './Footer';
 import { useHealth } from './health';
-import { JudgeStrip } from './JudgeStrip';
+import { JudgeBox, judgeBelow, JudgeStrip } from './JudgeStrip';
 import { applyLanguages, useText } from './i18n';
 import { LangPicker } from './LangPicker';
 import { Scene } from './Scene';
@@ -108,6 +108,7 @@ export function App() {
           />
         ) : null}
         <ActionCard config={config} wallet={wallet} chosen={chosen} onChoose={setChosen} fill={fill} />
+        {judge && judgeBelow(judge) ? <JudgeBox config={judge} /> : null}
         {/* Below the card so the card and its one primary button stay on the first screen (ADR 0053). */}
         {flows.cross && route !== 'none' ? <p className="hero__honest">{t('hero.honest', { route: t(`route.${route}`) })}</p> : null}
         <Measured link />

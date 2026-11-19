@@ -5,7 +5,7 @@
 <p align="center"><a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-0f6b5c" alt="Licence: MIT"></a> <a href="https://sampan.sasateguh.com"><img src="https://img.shields.io/badge/demo-live-0f6b5c" alt="Live demo"></a> <a href="#what-is-measured"><img src="https://img.shields.io/badge/BCH-mainnet-0f6b5c" alt="Measured on BCH mainnet"></a></p>
 
 <p align="center"><b>Dollar stablecoins in and out of Bitcoin Cash, signed in your own wallet.</b> · <i>Stablecoin dolar masuk dan keluar Bitcoin Cash, ditandatangani dalam dompet anda sendiri.</i><br>
-<a href="https://sampan.sasateguh.com"><b>live demo</b></a> · <a href="#try-it-in-a-minute">Try it</a> · <a href="#run-it">Run it</a> · <a href="#what-is-measured">What is measured</a> · <a href="#limits">Limits</a> · <a href="README.ms.md">Bahasa Melayu</a><br>
+<a href="https://sampan.sasateguh.com"><b>live demo</b></a> · <a href="docs/JUDGE.md"><b>Judging? Start here</b></a> · <a href="#try-it-in-a-minute">Try it</a> · <a href="#run-it">Run it</a> · <a href="#what-is-measured">What is measured</a> · <a href="#limits">Limits</a> · <a href="README.ms.md">Bahasa Melayu</a><br>
 Built in Malaysia by <a href="https://aimanmalib.com">Aiman Malib</a> · <a href="https://sasateguh.com">Sasa Teguh</a></p>
 
 Sampan swaps BCH and the PUSD stablecoin through existing Cauldron pools on Bitcoin Cash mainnet, and gives you a landing

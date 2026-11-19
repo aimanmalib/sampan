@@ -8,7 +8,11 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 export const ENGINES = ['webkit-iphone13', 'chromium-desktop'] as const;
 export type Engine = (typeof ENGINES)[number];
 export const PATHS = ['see', 'do'] as const;
-export type JudgePath = (typeof PATHS)[number];
+/** The docs/JUDGE.md walk on a phone (--judge-md): taps from load to an explorer transaction page, and to a refusal
+ *  shown on the "Try to cheat it" panel. Target: 6 taps or fewer each (KMN4). */
+export const JUDGE_MD_PATHS = ['judge-md', 'judge-md-cheat'] as const;
+export type JudgePath = (typeof PATHS)[number] | (typeof JUDGE_MD_PATHS)[number];
+const ALL_PATHS: readonly string[] = [...PATHS, ...JUDGE_MD_PATHS];
 
 /** One timed step of a path, for the step list kept outside the repository and for the action count. */
 export interface Step {
@@ -63,7 +67,7 @@ export function parseJudge(text: string): Array<{ engine: string; path: string; 
   for (const line of text.split('\n').slice(start + 1)) {
     if (line.startsWith('## ')) break;
     const c = line.trim().replace(/^\||\|$/g, '').split('|').map((x) => x.trim());
-    if (c.length >= 6 && (PATHS as readonly string[]).includes(c[2]!) && /^\d+(\.\d+)?$/.test(c[3]!)) {
+    if (c.length >= 6 && ALL_PATHS.includes(c[2]!) && /^\d+(\.\d+)?$/.test(c[3]!)) {
       rows.push({ engine: c[1]!, path: c[2]!, seconds: Number(c[3]) });
     }
   }
