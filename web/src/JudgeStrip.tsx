@@ -5,6 +5,7 @@
 // on /how, so a judge reaches a mainnet transaction id without scrolling or waiting for /api/stats.
 import type { LoadedConfig } from './config';
 import { useText } from './i18n';
+import { watchPath, watchRun } from './watch/WatchPage';
 
 /** Steps start unfolded only on the two-column layout (styles.css breakpoint) when the screen is tall enough. */
 const ROOMY = '(min-width: 56rem) and (min-height: 50rem)';
@@ -26,6 +27,14 @@ export function JudgeStrip({ config, onFill }: { config: LoadedConfig; onFill: (
         <p className="judge__proof">
           <a href="/how#proof">{t('judge.proof')}</a>
         </p>
+        {/* The no-wallet replay, only while features.watchDemo is on and the measured run is in this build (KMN2). */}
+        {watchRun(config) ? (
+          <p className="judge__proof">
+            <a href={watchPath('land')} data-watch-link>
+              {t('judge.watch')}
+            </a>
+          </p>
+        ) : null}
       </details>
       <button type="button" className="button button--quiet judge__fill" onClick={onFill}>
         {t('judge.fill')}

@@ -665,5 +665,22 @@
   "how.nostr.s5": "Kapag pumasa lang ang bawat hakbang ipapakita at gagamitin ang address. Kung hindi, makikita mo ang dahilan at mananatiling naka-off ang button.",
   "how.nostr.relays": "Mga relay na tinatanong ng page na ito:",
   "how.nostr.server": "Tumatakbo ang lahat ng ito sa iyong browser. Walang identity server na tinatanong, at hindi kailanman nakikita ng server ng Sampan ang identity na tina-type mo. Ang pangalang tulad ng name@example.com ay hinahanap lang sa sarili nitong domain.",
-  "how.nostr.limit": "Puwede pa ring itago ng isang relay ang mas bagong event. Kaya tinatanong ng page ang lahat ng relay sa itaas at itinatabi ang pinakabagong event na ibinalik ng alinman sa kanila."
+  "how.nostr.limit": "Puwede pa ring itago ng isang relay ang mas bagong event. Kaya tinatanong ng page ang lahat ng relay sa itaas at itinatabi ang pinakabagong event na ibinalik ng alinman sa kanila.",
+  "judge.watch": "Panoorin ang isang landing run, walang wallet na kailangan",
+  "watch.title": "Panoorin itong gumana",
+  "watch.lead": "Replay ng isang landing na sinukat sa mainnet. Laruang pera ang laman ng wallet sa ibaba: walang ipinapadala mula sa pahinang ito.",
+  "watch.play": "Laruang pera, walang ipinapadala",
+  "watch.wallet": "Wallet",
+  "watch.address": "Landing address",
+  "watch.owner": "May-ari",
+  "watch.step1": "Nagbabayad ng BCH ang isang wallet sa isang landing address.",
+  "watch.step2": "Pinapalitan ng landing address ang BCH na iyon ng {symbol} sa iisang transaction.",
+  "watch.step3": "Dumarating ang {symbol} sa address ng may-ari.",
+  "watch.tx": "Tingnan sa totoong transaction",
+  "watch.run": "Sinukat na run",
+  "watch.clock.faster": "Ni-replay nang {n}× na mas mabilis. Totoong oras {real}.",
+  "watch.clock.slower": "Pinabagal nang {n}× para masundan ang bawat hakbang. Totoong oras {real}.",
+  "watch.clock.same": "Ni-replay sa totoong bilis. Totoong oras {real}.",
+  "watch.again": "I-play muli",
+  "watch.try": "Subukan gamit ang sarili mong wallet"
 }

@@ -112,6 +112,6 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
     services.db.close();
   });
 
-  await registerWeb(app, options.webDist, errorPages, config.ui.theme);
+  await registerWeb(app, options.webDist, errorPages, config.ui.theme, { watch: config.features.watchDemo });
   return app;
 }

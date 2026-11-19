@@ -665,5 +665,22 @@
   "how.nostr.s5": "Hanya bila setiap langkah lulus alamat itu dipapar dan digunakan. Jika tidak, anda melihat sebabnya dan butang kekal mati.",
   "how.nostr.relays": "Relay yang ditanya halaman ini:",
   "how.nostr.server": "Semua ini berjalan dalam pelayar anda. Tiada pelayan identiti ditanya, dan pelayan Sampan tidak pernah melihat identiti yang anda taip. Nama seperti nama@contoh.com dicari pada domainnya sendiri sahaja.",
-  "how.nostr.limit": "Relay masih boleh menyorok event yang lebih baharu daripada anda. Sebab itu halaman ini bertanya semua relay di atas dan menyimpan event paling baharu yang dipulangkan mana-mana relay."
+  "how.nostr.limit": "Relay masih boleh menyorok event yang lebih baharu daripada anda. Sebab itu halaman ini bertanya semua relay di atas dan menyimpan event paling baharu yang dipulangkan mana-mana relay.",
+  "judge.watch": "Tonton satu larian pendaratan, tanpa dompet",
+  "watch.title": "Tonton ia berjalan",
+  "watch.lead": "Main semula satu pendaratan yang diukur di mainnet. Dompet di bawah memegang wang main: tiada apa-apa dihantar dari halaman ini.",
+  "watch.play": "Wang main, tiada apa-apa dihantar",
+  "watch.wallet": "Dompet",
+  "watch.address": "Alamat pendaratan",
+  "watch.owner": "Pemilik",
+  "watch.step1": "Sebuah dompet membayar BCH ke alamat pendaratan.",
+  "watch.step2": "Alamat pendaratan menukar BCH itu kepada {symbol} dalam satu transaksi.",
+  "watch.step3": "{symbol} tiba di alamat pemilik.",
+  "watch.tx": "Lihat dalam transaksi sebenar",
+  "watch.run": "Larian diukur",
+  "watch.clock.faster": "Dimainkan semula {n}× lebih laju. Masa sebenar {real}.",
+  "watch.clock.slower": "Diperlahankan {n}× supaya setiap langkah boleh diikuti. Masa sebenar {real}.",
+  "watch.clock.same": "Dimainkan semula pada kelajuan sebenar. Masa sebenar {real}.",
+  "watch.again": "Main semula",
+  "watch.try": "Cuba dengan dompet anda sendiri"
 }

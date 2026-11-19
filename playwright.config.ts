@@ -12,9 +12,10 @@ const live = process.env.E2E_BASE_URL;
 // The local fake server shows the swap flow alone (the landing flow has its own server below; crossings are off here
 // whatever the shipped config says), and its rate
 // limits are lifted because every browser in the run shares one IP.
-const e2ePatch = { features: { swap: true, landing: false }, compliance: { crossChainEnabled: false }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } };
-// The page asks for a landing's status every 2 s here (e2e/qr-close.spec.ts waits on it), not every 10 s as shipped.
-const landingPatch = { ...e2ePatch, features: { swap: true, landing: true }, landing: { pagePollSeconds: 2 } };
+const e2ePatch = { features: { swap: true, landing: false, watchDemo: false }, compliance: { crossChainEnabled: false }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } };
+// The page asks for a landing's status every 2 s here (e2e/qr-close.spec.ts waits on it), not every 10 s as shipped,
+// and the no-wallet landing replay /watch is on (e2e/watch.spec.ts; the main server above keeps it off).
+const landingPatch = { ...e2ePatch, features: { swap: true, landing: true, watchDemo: true }, landing: { pagePollSeconds: 2 } };
 // Crossings run against the fake THORNode, which reports Base open: Base USDC is switched live on this server only.
 // Every asset starts off here, so a server's live list is exactly the one its patch names (not what the file marks live).
 const shippedAssets = (JSON.parse(readFileSync('config/sampan.json', 'utf8')) as { thorchain: { assets: RouteAsset[] } }).thorchain.assets.map(

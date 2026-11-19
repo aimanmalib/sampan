@@ -1,5 +1,6 @@
 // Serves the built page. Hashed assets are cached for a year; every other GET path without a file extension that is
-// not /api gets index.html. Other misses: JSON 404 under /api/, the static 404 page elsewhere.
+// not /api gets index.html, except a feature page whose feature is off. Other misses: JSON 404 under /api/, the
+// static 404 page elsewhere.
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import fastifyStatic from '@fastify/static';
@@ -15,7 +16,19 @@ export function withTheme(html: string, theme: string): string {
   return html.replace(/(<html\b[^>]*\sdata-theme=)"[^"]*"/, `$1"${theme}"`);
 }
 
-export async function registerWeb(app: FastifyInstance, webDist: string, errorPages: ErrorPages, theme: string): Promise<void> {
+/** Page paths that exist only while their feature is on; while it is off they get the static 404 page. */
+export interface FeaturePaths {
+  /** /watch, the no-wallet replay (features.watchDemo). */
+  watch: boolean;
+}
+
+export async function registerWeb(
+  app: FastifyInstance,
+  webDist: string,
+  errorPages: ErrorPages,
+  theme: string,
+  features: FeaturePaths = { watch: true },
+): Promise<void> {
   const indexFile = path.join(webDist, 'index.html');
   const hasWeb = existsSync(indexFile);
   if (hasWeb) {
@@ -36,6 +49,7 @@ export async function registerWeb(app: FastifyInstance, webDist: string, errorPa
     const pathname = request.url.split('?')[0] ?? '/';
     if (pathname.startsWith('/api/') || !hasWeb) return reply.code(404).send({ error: 'not_found' });
     if (request.method !== 'GET' || path.extname(pathname) !== '') return errorPages.notFound(reply);
+    if (pathname === '/watch' && !features.watch) return errorPages.notFound(reply);
     return reply.type('text/html; charset=utf-8').send(indexHtml);
   });
 }

@@ -15,6 +15,7 @@ import { LegalPage } from './legal/LegalPage';
 import { Measured } from './Measured';
 import { PayPages, payRoute } from './pay/PayPages';
 import { useWallet } from './wallet/useWallet';
+import { WatchPage } from './watch/WatchPage';
 
 export function App() {
   const { t } = useText();
@@ -33,6 +34,7 @@ export function App() {
   const crossing = /^\/c\/([0-9a-f]{32})$/.exec(location.pathname)?.[1];
   const done = doneRoute(location.pathname);
   const how = location.pathname === '/how';
+  const watch = location.pathname === '/watch';
   const legal = location.pathname === '/terms' ? 'terms' : location.pathname === '/risks' ? 'risks' : null;
   // Sampan Pay pages exist only with features.pay; until the config says so nothing is drawn, then the front page.
   const pay = payRoute(location.pathname);
@@ -63,6 +65,10 @@ export function App() {
       {payShown ? (
         <main className="page">
           <PayPages route={payShown} config={config} />
+        </main>
+      ) : watch ? (
+        <main className="page">
+          <WatchPage config={config} />
         </main>
       ) : how ? (
         <main>

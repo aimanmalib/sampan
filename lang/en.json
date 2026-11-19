@@ -665,5 +665,22 @@
   "how.nostr.s5": "Only when every step passes is the address shown and used. Otherwise you see the reason and the button stays off.",
   "how.nostr.relays": "Relays this page asks:",
   "how.nostr.server": "All of this runs in your browser. No identity server is asked, and Sampan's server never sees the identity you type. A name like name@example.com is looked up on its own domain only.",
-  "how.nostr.limit": "A relay can still hide a newer event from you. That is why the page asks all the relays above and keeps the newest event any of them returns."
+  "how.nostr.limit": "A relay can still hide a newer event from you. That is why the page asks all the relays above and keeps the newest event any of them returns.",
+  "judge.watch": "Watch a landing run, no wallet needed",
+  "watch.title": "Watch it run",
+  "watch.lead": "A replay of one landing measured on mainnet. The wallet below holds play money: nothing is sent from this page.",
+  "watch.play": "Play money, nothing is sent",
+  "watch.wallet": "Wallet",
+  "watch.address": "Landing address",
+  "watch.owner": "Owner",
+  "watch.step1": "A wallet pays BCH to a landing address.",
+  "watch.step2": "The landing address swaps that BCH for {symbol} in one transaction.",
+  "watch.step3": "{symbol} arrives at the owner's address.",
+  "watch.tx": "See it in the real transaction",
+  "watch.run": "Measured run",
+  "watch.clock.faster": "Replayed {n}× faster. Real time {real}.",
+  "watch.clock.slower": "Slowed down {n}× so each step can be followed. Real time {real}.",
+  "watch.clock.same": "Replayed at real speed. Real time {real}.",
+  "watch.again": "Play again",
+  "watch.try": "Try it with your own wallet"
 }

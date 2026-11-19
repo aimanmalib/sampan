@@ -38,7 +38,7 @@ export interface SampanConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
   /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
-  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean; nostrSend: boolean };
+  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean; nostrSend: boolean; watchDemo: boolean };
   /** symbols: the symbols of the live thorchain.assets, repeated here and checked against them (texts name them). */
   route: { active: ActiveRoute; symbols: string[] };
   thorchain: {
@@ -141,8 +141,17 @@ export interface SampanConfig {
   banner: { deckUrl: string; repoUrl: string; tokenAddress: string; note: boolean };
   /** `url` is the public origin; `ogImage` is the link preview picture under web/public; `proofRuns` = rows of the
    *  newest measured runs on /how (the full list is docs/MEASURED.md); `finished` = the BCH transaction id of one
-   *  measured crossing per direction that Send out and Bring in link to ("" = no link). */
-  site: { url: string; noindex: boolean; feedbackUrl: string; ogImage: string; proofRuns: number; finished: { out: string; in: string } };
+   *  measured crossing per direction that Send out and Bring in link to ("" = no link); `watch` = the replay on
+   *  /watch?dir=land: `land` the BCH transaction id of one measured landing run ("" = no page), `stepMs` each step's length. */
+  site: {
+    url: string;
+    noindex: boolean;
+    feedbackUrl: string;
+    ogImage: string;
+    proofRuns: number;
+    finished: { out: string; in: string };
+    watch: { land: string; stepMs: number };
+  };
   /** /terms and /risks: who runs the site and which sections to show (text in lang/ under terms.<key>.* and risks.<key>.*). */
   legal: { operator: string; terms: LegalSection[]; risks: LegalSection[] };
   ops: {
@@ -356,6 +365,8 @@ export function validateConfig(c: SampanConfig): string[] {
     [c.site.finished?.out, c.site.finished?.in].every((id) => typeof id === 'string' && /^([0-9a-f]{64})?$/.test(id)),
     'site.finished.out and .in: a BCH transaction id in lower case hex, or ""',
   );
+  need(typeof c.site.watch?.land === 'string' && /^([0-9a-f]{64})?$/.test(c.site.watch.land), 'site.watch.land: a BCH transaction id in lower case hex, or ""');
+  need(posInt(c.site.watch?.stepMs) && c.site.watch.stepMs >= 400 && c.site.watch.stepMs <= 5000, 'site.watch.stepMs: integer, 400 to 5000');
   need(typeof c.legal?.operator === 'string' && c.legal.operator.trim() !== '', 'legal.operator: who runs the site');
   for (const list of [c.legal?.terms, c.legal?.risks]) {
     need(
@@ -382,6 +393,7 @@ export function validateConfig(c: SampanConfig): string[] {
   need(typeof c.features?.atom === 'boolean', 'features.atom: true or false');
   need(typeof c.features?.oneClick === 'boolean', 'features.oneClick: true or false');
   need(typeof c.features?.nostrSend === 'boolean', 'features.nostrSend: true or false');
+  need(typeof c.features?.watchDemo === 'boolean', 'features.watchDemo: true or false');
   errors.push(...validateNostrId(c.nostrId));
   need(!c.features?.oneClick || c.oneClick.baseUrl !== '', 'oneClick.baseUrl: required while features.oneClick is true');
   return errors;

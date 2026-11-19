@@ -153,3 +153,11 @@ export function finishedCrossing(p: Proof, flow: 'out' | 'in', bchTxid: string):
     ) ?? null
   );
 }
+
+/** The landing run `site.watch.land` names: an ok `land` row whose BCH transaction id is `bchTxid` and which has a
+ *  measured time. Null otherwise, so the replay only ever shows a run the measurements record. */
+export function landRun(p: Proof, bchTxid: string): ProofRun | null {
+  const id = bchTxid.toLowerCase();
+  if (!BCH_TXID.test(id)) return null;
+  return p.runs.find((r) => r.flow === 'land' && r.ok && r.seconds !== null && r.txids.some((x) => x.chain === 'bch' && x.id === id)) ?? null;
+}
