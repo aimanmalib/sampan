@@ -2,6 +2,7 @@
 // (docs/decisions/0070-event-deck-pdf.md). Every number here must appear in docs/MEASURED.md, config/sampan.json or the
 // README business-model block that scripts/business-model.ts makes from config: tests/deck.test.ts checks it.
 // Transaction ids are rows of docs/MEASURED.md. Text only; tools/deck/html.ts lays it out.
+import { createHash } from 'node:crypto';
 
 export interface Slide {
   /** The template's slide title (kept, so the deck reads as the template asks). */
@@ -49,7 +50,7 @@ export function slides(f: DeckFacts): Slide[] {
         'Press Connect wallet and pair Selene, Paytaca or Cashonize through WizardConnect.',
         'Swap on BCH: 0.001 BCH to PUSD, read the request in your wallet and approve it.',
         'Bring in: pay 0.001 BCH to your landing address from any wallet. It arrives as PUSD.',
-        'Judge path on the live site, measured: 14.2 s on an iPhone 13 and 13.6 s on a desktop, 3 page actions + 3 wallet actions.',
+        'Judge path on the live site, measured with a scripted test wallet: 14.2 s of page time in WebKit set up as an iPhone 13 and 13.6 s in desktop Chromium, 3 page actions; the 3 wallet approvals a person makes are counted, not timed.',
       ],
       foot: ['Judging? The judging guide in the repository walks the same steps with transaction ids.'],
     },
@@ -59,7 +60,7 @@ export function slides(f: DeckFacts): Slide[] {
       points: [
         'They send the client one Sampan address. The client pays it like any BCH address, from the wallet they already have.',
         '0.001 BCH paid to a landing address arrived as 0.20 PUSD at the owner\'s address: median 3.0 s over the three runs of 2026-11-15.',
-        'On the live site, watched on an iPhone 13 browser: 3.1 s from payment to arrival.',
+        'On the live site, watched in WebKit set up as an iPhone 13: 3.1 s from payment to arrival.',
         'A client holding USDC on BNB Smart Chain sent 1.6 USDC to the same kind of address. It arrived as PUSD in 63.0 s.',
       ],
       foot: [
@@ -121,3 +122,6 @@ export const TEMPLATE_TITLES = [
   'The Vision for Sampan',
   'Thank you',
 ] as const;
+
+/** Fingerprint of the slide text the PDF was printed from (tools/deck/printed.sha256), so a stale PDF fails the test. */
+export const slidesHash = (list: Slide[]): string => createHash('sha256').update(JSON.stringify(list)).digest('hex');

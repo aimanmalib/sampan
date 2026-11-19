@@ -2,7 +2,7 @@
 // the network, and the committed PDF fits the banner link (ADR 0070).
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { slides, TEMPLATE_TITLES, type Slide } from '../tools/deck/content.js';
+import { slides, slidesHash, TEMPLATE_TITLES, type Slide } from '../tools/deck/content.js';
 import { deckHtml } from '../tools/deck/html.js';
 import { END, START } from '../scripts/business-model.js';
 
@@ -74,6 +74,23 @@ describe('event deck', () => {
     expect(html).not.toMatch(/url\(['"]?https?:/);
     expect(html.match(/<section class="slide/g)).toHaveLength(8);
     expect(html).toContain(`<a href="${facts.repoUrl}">`);
+  });
+
+  it('calls a measured iPhone 13 run what it was: WebKit set up as one, wallet approvals not timed', () => {
+    const lines = all.split('\n').filter((l) => l.includes('iPhone 13'));
+    expect(lines.length).toBeGreaterThan(0);
+    expect(lines.filter((l) => !l.includes('WebKit set up as an iPhone 13'))).toEqual([]);
+    expect(all).not.toMatch(/on a desktop\b/);
+    expect(lines.filter((l) => l.includes('wallet approvals') && !l.includes('not timed'))).toEqual([]);
+  });
+
+  it('the committed PDF was printed from the current slide text (rebuild with npm run deck)', () => {
+    expect(read('tools/deck/printed.sha256').trim()).toBe(slidesHash(deck));
+  });
+
+  it('a slide text change makes the printed fingerprint stale', () => {
+    const changed = deck.map((s, i) => (i === 3 ? { ...s, lead: `${s.lead ?? ''}.` } : s));
+    expect(slidesHash(changed)).not.toBe(read('tools/deck/printed.sha256').trim());
   });
 
   it('the committed PDF is the banner deck: a PDF of eight pages under 3 MB', () => {

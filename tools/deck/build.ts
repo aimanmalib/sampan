@@ -4,11 +4,12 @@
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
-import { slides } from './content.js';
+import { slides, slidesHash } from './content.js';
 import { deckHtml } from './html.js';
 
 const root = (p: string): string => fileURLToPath(new URL(`../../${p}`, import.meta.url));
 const DECK_FILE = 'web/public/deck/sampan-blaze-2026.pdf';
+const HASH_FILE = 'tools/deck/printed.sha256';
 const MAX_BYTES = 3 * 1024 * 1024;
 
 /** Rewrites the fonts.css url('./x.woff2') references as data: URLs. */
@@ -53,6 +54,7 @@ async function main(): Promise<void> {
     if (pdf.length > MAX_BYTES) throw new Error(`deck is ${pdf.length} bytes, over ${MAX_BYTES}`);
     mkdirSync(root('web/public/deck'), { recursive: true });
     writeFileSync(root(DECK_FILE), pdf);
+    writeFileSync(root(HASH_FILE), `${slidesHash(list)}\n`);
     console.log(`wrote ${DECK_FILE}: ${pdf.length} bytes, ${list.length} slides`);
   } finally {
     await browser.close();
