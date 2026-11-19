@@ -77,18 +77,21 @@ function Rows({ rows, lang }: { rows: ActivityRow[]; lang: string }) {
   const when = new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeStyle: 'short' });
   return (
     <ul className="activity__list">
-      {rows.map((r) => (
-        <li key={r.id} className="activity__row" data-state={activityState(r.status)}>
-          <a href={r.url} className="activity__link">
-            <span className="activity__kind">{t(`crossing.kind.${r.kind}`)}</span>
-            <span className="activity__asset mono">{r.chain ? `${r.asset} · ${r.chain}` : r.asset}</span>
-            <span className="activity__state">{t(`activity.state.${activityState(r.status)}`)}</span>
-            <time className="activity__time" dateTime={new Date(r.createdAt).toISOString()}>
-              {when.format(r.createdAt)}
-            </time>
-          </a>
-        </li>
-      ))}
+      {rows.map((r) => {
+        const state = activityState(r.kind, r.status);
+        return state === null ? null : (
+          <li key={r.id} className="activity__row" data-state={state}>
+            <a href={r.url} className="activity__link">
+              <span className="activity__kind">{t(`crossing.kind.${r.kind}`)}</span>
+              <span className="activity__asset mono">{r.chain ? `${r.asset} · ${r.chain}` : r.asset}</span>
+              <span className="activity__state">{t(`activity.state.${state}`)}</span>
+              <time className="activity__time" dateTime={new Date(r.createdAt).toISOString()}>
+                {when.format(r.createdAt)}
+              </time>
+            </a>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -126,13 +129,13 @@ export function ActivityPage({ config, wallet }: { config: LoadedConfig | null; 
       <FindTx />
       <div className="activity__mine">
         <h2 className="activity__heading">{t('activity.list.title')}</h2>
+        {key === '' ? <p className="activity__note">{t(wallet.status === 'scanning' ? 'wallet.scanning' : 'activity.list.connect')}</p> : null}
         {wallet.session ? null : (
           <button type="button" className="button button--quiet" disabled={wallet.status === 'connecting'} onClick={wallet.connect}>
             {t(wallet.status === 'connecting' ? 'wallet.connecting' : 'wallet.connect')}
           </button>
         )}
         <EvmWallets chain={symbolList(config.evm.chains.map((c) => c.name), t('text.and'))} config={config} />
-        {key === '' ? <p className="activity__note">{t(wallet.status === 'scanning' ? 'wallet.scanning' : 'activity.list.connect')}</p> : null}
         {list.at === 'busy' ? <p className="activity__note">{t('crossing.loading')}</p> : null}
         {list.at === 'error' ? (
           <p className="swap__error" role="alert">

@@ -13,6 +13,7 @@
   border-top: 1px solid var(--line);
 }
 .activity__find .field__input {
+  font-family: var(--font-mono);
   font-size: 1rem;
 }
 .activity__find .button {

@@ -46,20 +46,38 @@ export interface ActivityRow {
   url: string;
 }
 
-/** What the page says about a stored status: four words cover every flow. */
-export type ActivityState = 'done' | 'refunded' | 'failed' | 'open';
+/**
+ * What the page says about a row. A crossing out or in keeps its last known status: the server writes "broadcast" or
+ * "sent" when the deposit goes out and the final answer (completed, refunded, failed) only when the route is asked,
+ * which the status page does. So a sent crossing out or in reads "sent" (open it for the status), never "done" by itself.
+ */
+export type ActivityState = 'done' | 'refunded' | 'failed' | 'open' | 'sent';
 
-const STATES: Record<string, ActivityState> = {
-  completed: 'done',
-  converted: 'done',
-  broadcast: 'done',
-  refunded: 'refunded',
-  returned: 'refunded',
-  failed: 'failed',
-  stale: 'failed',
+type Kind = ActivityRow['kind'];
+
+/**
+ * Every status the server writes, per kind (server/api/swap, out, in, broadcast, crossings and the landing watcher).
+ * null: built or planned but never signed, so not a crossing yet and not listed.
+ */
+export const ACTIVITY_STATES: Record<Kind, Record<string, ActivityState | null>> = {
+  swap: { built: null, broadcast: 'done', stale: 'failed', failed: 'failed' },
+  land: { open: 'open', seen: 'open', converted: 'done', returned: 'refunded' },
+  out: { built: null, broadcast: 'sent', stale: 'failed', failed: 'failed', completed: 'done', refunded: 'refunded' },
+  in: { planned: null, sent: 'sent', completed: 'done', refunded: 'refunded', failed: 'failed' },
 };
 
-export const activityState = (status: string): ActivityState => STATES[status] ?? 'open';
+/** The word for a row, or null for one never signed. A status not in the table reads "sent": open it for the status. */
+export function activityState(kind: Kind, status: string): ActivityState | null {
+  const known = ACTIVITY_STATES[kind];
+  return known && Object.hasOwn(known, status) ? (known[status] ?? null) : 'sent';
+}
+
+/** The (kind, status) pairs that were never signed: the server leaves them out of the list. */
+export const UNSIGNED: ReadonlyArray<readonly [Kind, string]> = (Object.keys(ACTIVITY_STATES) as Kind[]).flatMap((k) =>
+  Object.entries(ACTIVITY_STATES[k])
+    .filter(([, v]) => v === null)
+    .map(([st]) => [k, st] as const),
+);
 
 /**
  * The addresses the page asks about: every address the BCH wallet scan derived (plain and token form) and the

@@ -22,7 +22,12 @@ Some come back with a transaction id from their wallet or an explorer, others wi
   link, never the addresses. It has no way to list anything else. Crossings out are stored with the EVM address they
   paid; swaps, landings and crossings in with the BCH address, so the page says which wallet finds which.
 - Matching: EVM addresses in lower case, CashAddr without its prefix (`addressKey`), on both sides.
-- The four words a row shows (done, refunded, not sent, in progress) come from the stored status (`activityState`).
+- The word a row shows comes from its kind and stored status (`activityState`, `ACTIVITY_STATES` in
+  `core/activity.ts`), as the server writes them: a swap is done once broadcast; a landing is in progress until its
+  watcher converts or returns the coins; a crossing out or in is "sent, open it for the status" once its deposit goes
+  out, because the server stores the route's final answer (completed, refunded, failed) only when its status page asks
+  the route. The list never calls a crossing out or in done before that. Quotes built or planned but never signed
+  (`UNSIGNED`) are not crossings and are left out of the list by the server.
 - Limits in config `activity`: `maxAddresses` per request and `maxRows` returned, validated in `core/config.ts`.
   Both endpoints share the quote rate limit (`rate.quotesPerMinute`).
 - Text in `lang/*.json` (`activity.*`, `footer.activity`) for every language in `config.i18n`.

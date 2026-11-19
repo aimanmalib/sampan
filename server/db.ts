@@ -5,6 +5,7 @@ import { randomBytes } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { UNSIGNED } from '../core/activity.js';
 
 export type CrossingKind = 'swap' | 'land' | 'out' | 'in';
 export type Origin = 'test' | 'public';
@@ -213,9 +214,14 @@ export class Db {
   crossingsFor(keys: string[], limit: number): CrossingRow[] {
     if (keys.length === 0) return [];
     const marks = keys.map(() => '?').join(', ');
+    // Quotes built or planned but never signed are not crossings yet (core/activity UNSIGNED).
+    const unsigned = UNSIGNED.map(() => '(kind = ? AND status = ?)').join(' OR ');
     return this.db
-      .prepare(`SELECT * FROM crossings WHERE lower(substr(address, instr(address, ':') + 1)) IN (${marks}) ORDER BY created_at DESC, id LIMIT ?`)
-      .all(...keys, limit) as unknown as CrossingRow[];
+      .prepare(
+        `SELECT * FROM crossings WHERE lower(substr(address, instr(address, ':') + 1)) IN (${marks}) AND NOT (${unsigned})
+         ORDER BY created_at DESC, id LIMIT ?`,
+      )
+      .all(...keys, ...UNSIGNED.flat(), limit) as unknown as CrossingRow[];
   }
 
   /**

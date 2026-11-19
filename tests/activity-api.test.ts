@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import shipped from '../config/sampan.json' with { type: 'json' };
-import { addressKey, bareTxid } from '../core/activity.js';
+import { activityState, addressKey, bareTxid } from '../core/activity.js';
 import { normalizeConfig, patchConfig, validateConfig, type SampanConfig } from '../core/config.js';
 import { buildApp } from '../server/app.js';
 import { createServices, type Services } from '../server/services.js';
@@ -35,8 +35,10 @@ afterEach(async () => {
 
 const get = (url: string) => app!.inject({ method: 'GET', url });
 const activity = (addresses: unknown) => app!.inject({ method: 'POST', url: '/api/activity', payload: { addresses } as Record<string, unknown> });
-const row = (kind: 'swap' | 'land' | 'out' | 'in', address: string, txid?: string) => {
-  const id = services.db.createCrossing({ kind, status: 'submitted', asset: kind === 'out' || kind === 'in' ? 'BASE.USDC' : 'PUSD', amount: '1000', address, origin: 'public' });
+// A status the server really writes once the user has signed (core/activity ACTIVITY_STATES).
+const SIGNED = { swap: 'broadcast', land: 'open', out: 'broadcast', in: 'sent' } as const;
+const row = (kind: 'swap' | 'land' | 'out' | 'in', address: string, txid?: string, status: string = SIGNED[kind]) => {
+  const id = services.db.createCrossing({ kind, status, asset: kind === 'out' || kind === 'in' ? 'BASE.USDC' : 'PUSD', amount: '1000', address, origin: 'public' });
   if (txid) services.db.updateCrossing(id, { txid });
   return id;
 };
@@ -123,6 +125,18 @@ describe('POST /api/activity', () => {
     expect(list.map((c) => c.id).sort()).toEqual([swap, out].sort());
     expect(list.find((c) => c.id === out)).toMatchObject({ kind: 'out', chain: 'BASE', url: `/c/${out}` });
     expect(JSON.stringify(list)).not.toContain(EVM.toLowerCase());
+  });
+
+  it('leaves out quotes built or planned but never signed, and lists a sent crossing out as sent, not done', async () => {
+    await start();
+    row('swap', userAddress, undefined, 'built');
+    row('out', EVM, undefined, 'built');
+    row('in', userAddress, undefined, 'planned');
+    const out = row('out', EVM, SEEN);
+    const into = row('in', userAddress, UNSEEN);
+    const list = (await activity([userAddress, EVM])).json().crossings as Array<{ id: string; kind: 'out' | 'in'; status: string }>;
+    expect(list.map((c) => c.id).sort()).toEqual([out, into].sort());
+    expect(list.map((c) => activityState(c.kind, c.status))).toEqual(['sent', 'sent']);
   });
 
   it('returns at most activity.maxRows and refuses more than activity.maxAddresses', async () => {
