@@ -354,6 +354,10 @@
     "maxNetworks": 4,
     "debounceMs": 700
   },
+  "activity": {
+    "maxAddresses": 200,
+    "maxRows": 50
+  },
   "ui": {
     "ferryMotion": true,
     "qrAutoOpen": true,

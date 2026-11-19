@@ -209,6 +209,31 @@ export class Db {
     this.db.prepare(`UPDATE landings SET ${sets}, updated_at = ? WHERE address = ?`).run(...values, this.now(), address);
   }
 
+  /** "My activity": crossings made for any of these address keys (core/activity addressKey: no CashAddr prefix), newest first. */
+  crossingsFor(keys: string[], limit: number): CrossingRow[] {
+    if (keys.length === 0) return [];
+    const marks = keys.map(() => '?').join(', ');
+    return this.db
+      .prepare(`SELECT * FROM crossings WHERE lower(substr(address, instr(address, ':') + 1)) IN (${marks}) ORDER BY created_at DESC, id LIMIT ?`)
+      .all(...keys, limit) as unknown as CrossingRow[];
+  }
+
+  /**
+   * The crossing a transaction id belongs to (bare, lower case): the row's own txid, the payment or finishing
+   * transaction of its landing address, or the payout kept in its receipt.
+   */
+  crossingByTxid(bare: string): string | undefined {
+    const row = this.db
+      .prepare(
+        `SELECT id FROM crossings WHERE lower(txid) IN (?, ?)
+         UNION ALL SELECT crossing_id AS id FROM landings WHERE lower(utxo) LIKE ? OR lower(finish_txid) = ?
+         UNION ALL SELECT id FROM crossings WHERE instr(lower(receipt_json), ?) > 0
+         LIMIT 1`,
+      )
+      .get(bare, `0x${bare}`, `${bare}:%`, bare, bare) as { id: string } | undefined;
+    return row?.id;
+  }
+
   /** Rows counted as other people's, with the user address each was made for. */
   publicCrossings(): Array<{ id: string; address: string; txid: string | null }> {
     return this.db.prepare(`SELECT id, address, txid FROM crossings WHERE origin = 'public'`).all() as Array<{

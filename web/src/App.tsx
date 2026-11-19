@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { descriptionKey, heroSubKey, openFlows, openSymbols, symbolList, type TabId } from '../../core/flows';
 import { ActionCard, cardTabs } from './ActionCard';
+import { ActivityPage } from './activity/ActivityPage';
 import { fetchConfig, useConfig } from './config';
 import { Footer } from './Footer';
 import { useHealth } from './health';
@@ -35,6 +36,7 @@ export function App() {
   const done = doneRoute(location.pathname);
   const how = location.pathname === '/how';
   const watch = location.pathname === '/watch';
+  const activity = location.pathname === '/activity';
   const legal = location.pathname === '/terms' ? 'terms' : location.pathname === '/risks' ? 'risks' : null;
   // Sampan Pay pages exist only with features.pay; until the config says so nothing is drawn, then the front page.
   const pay = payRoute(location.pathname);
@@ -69,6 +71,10 @@ export function App() {
       ) : watch ? (
         <main className="page">
           <WatchPage config={config} />
+        </main>
+      ) : activity ? (
+        <main className="page">
+          <ActivityPage config={config} wallet={wallet} />
         </main>
       ) : how ? (
         <main>

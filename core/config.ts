@@ -6,6 +6,7 @@ import { validateBusiness, type BusinessConfig } from './business.js';
 import { validatePay, type PayConfig } from './pay/config.js';
 import { nostrIdPublic, validateNostrId, type NostrIdConfig } from './nostr-config.js';
 import { validatePeg, type PegConfig } from './peg.js';
+import { validateActivity, type ActivityConfig } from './activity.js';
 import { validateKeep, type KeepConfig } from './keep.js';
 import { chainsOf, liveAssets, symbolsOf, validateAssets, validateEvmChain, type EvmChain, type RouteAsset } from './route-assets.js';
 
@@ -174,6 +175,8 @@ export interface SampanConfig {
   pay: PayConfig;
   /** "You keep" per network before signing (features.keepCompare): how many networks are quoted and after what pause. */
   keepCompare: KeepConfig;
+  /** "My activity": how many addresses one request asks about and how many crossings come back. */
+  activity: ActivityConfig;
   /**
    * How the status pages draw; not a flow. ferryMotion: the ferry on every status page and the landing card, moving while a step is under way.
    * qrAutoOpen: the landing card opens the address and shows its QR as soon as the owner is known (false = the "Get my landing address" button).
@@ -225,6 +228,7 @@ export interface PublicConfig {
   /** Sampan Pay as its pages show it: how long an invoice is open, the invoice range and the demo shop's price. */
   pay: Pick<PayConfig, 'validMinutes' | 'minUsd' | 'maxUsd'> & { demoPriceUsd: number };
   keepCompare: KeepConfig;
+  activity: ActivityConfig;
   /** The atomic swap route's client file, contract and service path (the page loads nothing from it while features.atom is false). */
   atom: AtomConfig;
   /** 1Click as a second route: offered assets and timings only (core/oneclick-config.ts). */
@@ -404,6 +408,7 @@ export function validateConfig(c: SampanConfig): string[] {
   need(typeof c.features?.watchDemo === 'boolean', 'features.watchDemo: true or false');
   need(typeof c.features?.keepCompare === 'boolean', 'features.keepCompare: true or false');
   errors.push(...validateKeep(c.keepCompare));
+  errors.push(...validateActivity(c.activity));
   need(typeof c.judge?.openOnPhone === 'boolean', 'judge.openOnPhone: true or false');
   errors.push(...validateNostrId(c.nostrId));
   need(!c.features?.oneClick || c.oneClick.baseUrl !== '', 'oneClick.baseUrl: required while features.oneClick is true');
@@ -483,6 +488,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     peg: { warnBps: c.peg.warnBps, refuseBps: c.peg.refuseBps },
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
     keepCompare: c.keepCompare,
+    activity: c.activity,
     atom: c.atom,
     oneClick: oneClickPublic(c.oneClick),
     nostrId: nostrIdPublic(c.features.nostrSend, c.nostrId),
