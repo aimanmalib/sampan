@@ -29,6 +29,7 @@
     "finisher": "tsx scripts/finisher.ts",
     "business-model": "tsx scripts/business-model.ts",
     "crossings": "tsx scripts/crossings-table.ts",
+    "deck": "tsx tools/deck/build.ts",
     "og-image": "tsx tools/og-image.tsx",
     "mcp": "tsx mcp/server.ts"
   },

@@ -234,8 +234,8 @@
     "crossChainEnabled": true
   },
   "banner": {
-    "deckUrl": "",
-    "repoUrl": "",
+    "deckUrl": "/deck/sampan-blaze-2026.pdf",
+    "repoUrl": "https://github.com/aimanmalib/sampan",
     "tokenAddress": "bitcoincash:zplrydnf2z4pj4z9rv7uhmwsuxyrm8hj7uken87e7q",
     "note": true
   },

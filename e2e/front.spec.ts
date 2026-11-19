@@ -59,11 +59,14 @@ test('headline, picture, card and primary button fit on the first screen', async
   }
 });
 
+// Links inside a sentence (the banner note's deck and source links, ADR 0070) follow the text, as WCAG 2.5.8 allows
+// and e2e/a11y.spec.ts already counts them; every other button and link is checked.
 test('touch targets are at least 44 px tall', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('.banner__copy')).toBeVisible();
+  await expect(page.locator('.banner__lead a')).toHaveCount(2);
   const small = await page.evaluate(() =>
-    [...document.querySelectorAll<HTMLElement>('button, a[href]')]
+    [...document.querySelectorAll<HTMLElement>('button, a[href]:not(p a)')]
       .filter((el) => el.offsetParent !== null && el.getBoundingClientRect().height < 44)
       .map((el) => el.className || el.tagName),
   );

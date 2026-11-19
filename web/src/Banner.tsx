@@ -23,8 +23,13 @@ export function Banner() {
   return (
     <div className="banner__inner">
       <strong className="banner__event">{t('banner.event')}</strong>
-      {banner?.deckUrl ? <a href={banner.deckUrl}>{t('banner.presentation')}</a> : null}
-      {banner?.repoUrl ? <a href={banner.repoUrl}>{t('banner.source')}</a> : null}
+      {/* The note and the two links share one paragraph: on a phone they run as one line of small text (inline links),
+          so the links add no row above the card; on a wide screen the paragraph dissolves into the banner row. */}
+      <p className="banner__lead">
+        {banner?.note !== false ? <span className="banner__note">{t('banner.note')}</span> : null}
+        {banner?.deckUrl ? <a href={banner.deckUrl}>{t('banner.presentation')}</a> : null}
+        {banner?.repoUrl ? <a href={banner.repoUrl}>{t('banner.source')}</a> : null}
+      </p>
       {banner?.tokenAddress ? (
         <span className="banner__address">
           <span className="banner__label">{t('banner.address')}</span>
@@ -41,7 +46,6 @@ export function Banner() {
           </button>
         </span>
       ) : null}
-      {banner?.note !== false ? <span className="banner__note">{t('banner.note')}</span> : null}
     </div>
   );
 }
