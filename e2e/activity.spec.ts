@@ -123,6 +123,4 @@ test('rows are a two-column grid and keep words whole at 320 px', async ({ page 
   for (const s of shapes) expect(s).toEqual({ display: 'grid', kindLeftOfState: true, assetBelowKind: true, assetLines: 1 });
   await noOverflow(page);
   expect(errors).toEqual([]);
-  // After the error check: the screenshot injects a style the page's CSP refuses, which WebKit logs as an error.
-  if (process.env.AUTOPILOT_BUKTI_DIR) await page.screenshot({ path: `${process.env.AUTOPILOT_BUKTI_DIR}/activity-rows-${test.info().project.name}.png`, fullPage: true });
 });
