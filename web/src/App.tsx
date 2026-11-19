@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { descriptionKey, heroSubKey, openFlows, symbolList, type TabId } from '../../core/flows';
+import { descriptionKey, heroSubKey, openFlows, openSymbols, symbolList, type TabId } from '../../core/flows';
 import { ActionCard, cardTabs } from './ActionCard';
 import { fetchConfig, useConfig } from './config';
 import { Footer } from './Footer';
+import { useHealth } from './health';
 import { JudgeStrip } from './JudgeStrip';
 import { applyLanguages, useText } from './i18n';
 import { LangPicker } from './LangPicker';
@@ -19,8 +20,10 @@ export function App() {
   const { t } = useText();
   const config = useConfig();
   const route = config?.route.active ?? 'none';
-  const flows = openFlows(config);
-  const vars = { symbols: symbolList(config?.route.symbols ?? [], t('text.and')) };
+  // Hero text promises a crossing only while the route's last health check sees a live asset's chain open (KMN1).
+  const health = useHealth();
+  const flows = openFlows(config, health);
+  const vars = { symbols: symbolList(openSymbols(config, health), t('text.and')) };
   const description = config ? t(descriptionKey(flows), vars) : null;
   const wallet = useWallet(config, t('wallet.fakeName'));
   const [chosen, setChosen] = useState<TabId | null>(null);

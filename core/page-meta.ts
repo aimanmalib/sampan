@@ -1,6 +1,6 @@
 // Fills the %…% placeholders in web/index.html at build time, so the static HTML (what link previews read)
 // carries the same text as the app and the preview picture comes from config/sampan.json.
-import { descriptionKey, openFlows, symbolList, type FlowFlags } from './flows.js';
+import { descriptionKey, openFlows, type FlowFlags } from './flows.js';
 
 export interface PageMetaConfig extends FlowFlags {
   site: { url: string; ogImage: string };
@@ -30,6 +30,13 @@ function contentVersion(bytes: Uint8Array): string {
   return h.toString(16).padStart(8, '0');
 }
 
+/**
+ * The description written into the HTML when it is served: a link preview is read later and cached elsewhere, so it
+ * never promises a crossing, whose route can pause at any time (KMN1, ADR 0067). The page sets its own description
+ * from the route's live state once it runs.
+ */
+export const staticDescriptionKey = (config: FlowFlags): string => descriptionKey({ ...openFlows(config), cross: false });
+
 const escapeAttr = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 
@@ -44,11 +51,10 @@ export function fillPageMeta(
   config: PageMetaConfig,
   ogImageBytes: Uint8Array,
 ): string {
-  const vars: Record<string, string> = { symbols: symbolList(config.route.symbols, en['text.and'] ?? 'and') };
   const text = (key: string): string => {
     const value = en[key];
     if (value === undefined) throw new Error(`index.html uses missing lang key ${key}`);
-    return escapeAttr(value.replace(/\{(\w+)\}/g, (m, name: string) => vars[name] ?? m));
+    return escapeAttr(value);
   };
   const { width, height } = pngSize(ogImageBytes);
   const version = contentVersion(ogImageBytes);
@@ -60,7 +66,7 @@ export function fillPageMeta(
     theme: config.ui.theme,
   };
   const out = html
-    .replace(/%flows:description%/g, () => text(descriptionKey(openFlows(config))))
+    .replace(/%flows:description%/g, () => text(staticDescriptionKey(config)))
     .replace(/%lang:([\w.-]+)%/g, (_m, key: string) => text(key))
     .replace(/%site:([\w-]+)%/g, (_m, name: string) => {
       const value = site[name];
