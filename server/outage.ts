@@ -5,7 +5,8 @@
 //   api      - every /api/ path answers 503, /api/config included (what a crashed or unreachable server looks like)
 //   chunk    - every script under /assets/ answers 404 (a tab left open across a deploy, or a broken upload)
 //   render   - /api/config sends a config the Swap tab cannot draw (a page bug in one tab)
-//   app      - /api/config sends a config without its route, which the page itself reads (a bug outside every tab)
+//   app      - /api/config sends a config without its chains, which the page itself reads for the crossing claims (a
+//              bug outside every tab)
 import type { FastifyInstance } from 'fastify';
 import { ChainUnavailableError, type Chain } from './chain/types.js';
 import type { FetchActive } from './indexer.js';
@@ -61,7 +62,7 @@ export function registerOutage(app: FastifyInstance, outage: Outage | null): voi
     app.addHook('onSend', async (request, _reply, payload) => {
       if (request.url !== '/api/config' || typeof payload !== 'string') return payload;
       const body = JSON.parse(payload) as Record<string, unknown>;
-      delete body.route;
+      delete body.evm;
       return JSON.stringify(body);
     });
   }
