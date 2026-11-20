@@ -739,7 +739,6 @@
   "demo.lead": "Recording ng live na site na may totoong mainnet na transaksyon. Nakalista sa bawat kabanata ang mga transaksyong ipinapakita nito: buksan ang alinman sa isang explorer.",
   "demo.noVideo": "Hindi ma-play ng browser na ito ang video.",
   "demo.chapters": "Mga kabanata",
-  "demo.jump": "I-play mula {time}: {title}",
   "demo.txids": "Mga transaksyon sa kabanatang ito",
   "demo.receipt": "Status page ng tawid na ito",
   "demo.more": "at {n} pa sa talaan ng patunay",

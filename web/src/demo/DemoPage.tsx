@@ -63,7 +63,7 @@ export function DemoPage({ config }: { config: LoadedConfig | null }) {
           const more = c.txids.length - shown.length;
           return (
             <li key={c.id} className="demo__chapter" data-chapter={c.id}>
-              <button type="button" className="demo__jump" data-start={c.start} aria-label={t('demo.jump', { time: clock(c.start), title })} onClick={() => jump(c.start)}>
+              <button type="button" className="demo__jump" data-start={c.start} onClick={() => jump(c.start)}>
                 <span className="demo__time mono">{clock(c.start)}</span>
                 <span className="demo__title">{title}</span>
               </button>

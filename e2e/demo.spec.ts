@@ -35,7 +35,8 @@ test('chapters list their transactions and move the video', async ({ page }) => 
   await expect(chapters).toHaveCount(chapterFile.chapters.length);
   for (const c of chapterFile.chapters) {
     const item = page.locator(`[data-chapter="${c.id}"]`);
-    await expect(item.getByRole('button')).toContainText(en[c.titleKey as keyof typeof en]);
+    const title = en[c.titleKey as keyof typeof en].replace(/\{(\w+)\}/g, (m, k: string) => (chapterFile.vars as Record<string, string>)[k] ?? m);
+    await expect(item.getByRole('button')).toContainText(title);
     const first = item.locator('[data-txid]').first();
     await expect(first).toHaveText(c.txids[0]!);
     expect(await first.getAttribute('href')).toContain(c.txids[0]!);

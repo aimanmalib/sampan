@@ -739,7 +739,6 @@
   "demo.lead": "Rakaman laman sebenar dengan transaksi mainnet sebenar. Setiap bab menyenaraikan transaksi yang ditunjukkannya: buka mana-mana dalam penjelajah blok.",
   "demo.noVideo": "Pelayar ini tidak dapat memainkan video.",
   "demo.chapters": "Bab",
-  "demo.jump": "Main dari {time}: {title}",
   "demo.txids": "Transaksi dalam bab ini",
   "demo.receipt": "Halaman status lintasan ini",
   "demo.more": "dan {n} lagi dalam jadual bukti",

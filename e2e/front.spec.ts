@@ -64,7 +64,8 @@ test('headline, picture, card and primary button fit on the first screen', async
 test('touch targets are at least 44 px tall', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('.banner__copy')).toBeVisible();
-  await expect(page.locator('.banner__lead a')).toHaveCount(2);
+  // Presentation and source code, plus Demo while features.demo is on.
+  await expect(page.locator('.banner__lead a')).toHaveCount(repoConfig.features.demo ? 3 : 2);
   const small = await page.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('button, a[href]:not(p a)')]
       .filter((el) => el.offsetParent !== null && el.getBoundingClientRect().height < 44)
