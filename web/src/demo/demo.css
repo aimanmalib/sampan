@@ -1,0 +1,85 @@
+/* /demo: the video at the reading column's width, then one card per chapter. Theme tokens only; a full transaction id
+   breaks anywhere so nothing scrolls sideways at 320 px. No motion here beyond the browser's own player. */
+.demo__video {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background: var(--ink);
+  border-radius: var(--radius);
+}
+.demo__also {
+  margin: 0.5rem 0 0;
+}
+.how .demo__heading {
+  margin-top: 1.5rem;
+}
+.demo__chapters {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+.demo__chapter {
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.demo__jump {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  min-height: var(--touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--river);
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+.demo__jump:focus-visible {
+  outline: var(--focus);
+  outline-offset: 2px;
+}
+.demo__time {
+  flex: none;
+}
+.demo__title {
+  min-width: 0;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.demo__label {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+.demo__txids {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+}
+.demo__txids li {
+  min-width: 0;
+}
+.demo__chain {
+  color: var(--ink-soft);
+}
+.demo__txid {
+  overflow-wrap: anywhere;
+}
+.demo__more {
+  margin: 0.375rem 0 0;
+  font-size: 0.875rem;
+}

@@ -7,6 +7,7 @@ import { validatePay, type PayConfig } from './pay/config.js';
 import { nostrIdPublic, validateNostrId, type NostrIdConfig } from './nostr-config.js';
 import { validatePeg, type PegConfig } from './peg.js';
 import { validateActivity, type ActivityConfig } from './activity.js';
+import { validateDemo, type DemoConfig } from './demo.js';
 import { validateKeep, type KeepConfig } from './keep.js';
 import { chainsOf, liveAssets, symbolsOf, validateAssets, validateEvmChain, type EvmChain, type RouteAsset } from './route-assets.js';
 
@@ -40,7 +41,7 @@ export interface SampanConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
   /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
-  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean; nostrSend: boolean; watchDemo: boolean; keepCompare: boolean };
+  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean; nostrSend: boolean; watchDemo: boolean; keepCompare: boolean; demo: boolean };
   /** symbols: the symbols of the live thorchain.assets, repeated here and checked against them (texts name them). */
   route: { active: ActiveRoute; symbols: string[] };
   thorchain: {
@@ -177,6 +178,8 @@ export interface SampanConfig {
   keepCompare: KeepConfig;
   /** "My activity": how many addresses one request asks about and how many crossings come back. */
   activity: ActivityConfig;
+  /** The /demo page (features.demo): the video and poster on this site, the owner's own upload link, ids listed per chapter. */
+  demo: DemoConfig;
   /** The front page's "Measured" card: `proof` = counts from docs/MEASURED.md made when the page is built (the same counter as
    *  the README bounty table), with this server's own records as a small second line; `stats` = the server's records only. */
   measured: MeasuredConfig;
@@ -243,6 +246,7 @@ export interface PublicConfig {
   pay: Pick<PayConfig, 'validMinutes' | 'minUsd' | 'maxUsd'> & { demoPriceUsd: number };
   keepCompare: KeepConfig;
   activity: ActivityConfig;
+  demo: DemoConfig;
   measured: MeasuredConfig;
   quote: QuoteConfig;
   /** The atomic swap route's client file, contract and service path (the page loads nothing from it while features.atom is false). */
@@ -432,6 +436,8 @@ export function validateConfig(c: SampanConfig): string[] {
   need(typeof c.features?.keepCompare === 'boolean', 'features.keepCompare: true or false');
   errors.push(...validateKeep(c.keepCompare));
   errors.push(...validateActivity(c.activity));
+  need(typeof c.features?.demo === 'boolean', 'features.demo: true or false');
+  errors.push(...validateDemo(c.demo));
   need((MEASURED_SOURCES as readonly string[]).includes(String(c.measured?.source)), `measured.source: one of ${MEASURED_SOURCES.join(', ')}`);
   const refresh = c.quote?.autoRefreshMs;
   need(
@@ -519,6 +525,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
     keepCompare: c.keepCompare,
     activity: c.activity,
+    demo: c.demo,
     measured: { source: c.measured.source },
     quote: { autoRefreshMs: c.quote.autoRefreshMs },
     atom: c.atom,

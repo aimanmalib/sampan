@@ -15,6 +15,7 @@ export function Footer() {
         <span>{t('footer.built')}</span> <span>{t('footer.license')}</span>
         <a href="/how">{t('footer.how')}</a>
         <a href="/activity">{t('footer.activity')}</a>
+        {config?.features.demo ? <a href="/demo">{t('footer.demo')}</a> : null}
         <a href="/terms">{t('footer.terms')}</a>
         <a href="/risks">{t('footer.risks')}</a>
         {config?.features.pay ? <a href="/pay">{t('footer.merchants')}</a> : null}

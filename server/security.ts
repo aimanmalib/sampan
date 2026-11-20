@@ -23,6 +23,8 @@ export function contentSecurityPolicy(config: SampanConfig): string {
     "style-src 'self'",
     "img-src 'self' data:",
     "font-src 'self'",
+    // The /demo video and its subtitle tracks come from this site only.
+    "media-src 'self'",
     `connect-src ${[...new Set(connect)].join(' ')}`,
     // WalletConnect Verify attests the page's origin in a frame of its own; no other frame is allowed.
     ...(walletConnect ? [`frame-src ${new URL(config.evm.walletConnectVerify).origin}`] : []),

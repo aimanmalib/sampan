@@ -12,6 +12,7 @@ import { LangPicker } from './LangPicker';
 import { Scene } from './Scene';
 import { CrossingPage } from './CrossingPage';
 import { doneRoute, FinishedPage } from './cross/Finished';
+import { DemoPage } from './demo/DemoPage';
 import { HowPage } from './how/HowPage';
 import { LegalPage } from './legal/LegalPage';
 import { Measured } from './Measured';
@@ -39,6 +40,8 @@ export function App() {
   const how = location.pathname === '/how';
   const watch = location.pathname === '/watch';
   const activity = location.pathname === '/activity';
+  // /demo only with features.demo; the server answers the 404 page while it is off.
+  const demo = location.pathname === '/demo' && config?.features.demo === true;
   const legal = location.pathname === '/terms' ? 'terms' : location.pathname === '/risks' ? 'risks' : null;
   // Sampan Pay pages exist only with features.pay; until the config says so nothing is drawn, then the front page.
   const pay = payRoute(location.pathname);
@@ -77,6 +80,10 @@ export function App() {
       ) : activity ? (
         <main className="page">
           <ActivityPage config={config} wallet={wallet} />
+        </main>
+      ) : demo ? (
+        <main>
+          <DemoPage config={config} />
         </main>
       ) : how ? (
         <main>

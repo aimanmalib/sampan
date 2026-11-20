@@ -20,6 +20,8 @@ export function withTheme(html: string, theme: string): string {
 export interface FeaturePaths {
   /** /watch, the no-wallet replay (features.watchDemo). */
   watch: boolean;
+  /** /demo, the demo video with its chapters (features.demo). */
+  demo: boolean;
 }
 
 export async function registerWeb(
@@ -27,7 +29,7 @@ export async function registerWeb(
   webDist: string,
   errorPages: ErrorPages,
   theme: string,
-  features: FeaturePaths = { watch: true },
+  features: FeaturePaths = { watch: true, demo: true },
 ): Promise<void> {
   const indexFile = path.join(webDist, 'index.html');
   const hasWeb = existsSync(indexFile);
@@ -50,6 +52,7 @@ export async function registerWeb(
     if (pathname.startsWith('/api/') || !hasWeb) return reply.code(404).send({ error: 'not_found' });
     if (request.method !== 'GET' || path.extname(pathname) !== '') return errorPages.notFound(reply);
     if (pathname === '/watch' && !features.watch) return errorPages.notFound(reply);
+    if (pathname === '/demo' && !features.demo) return errorPages.notFound(reply);
     return reply.type('text/html; charset=utf-8').send(indexHtml);
   });
 }

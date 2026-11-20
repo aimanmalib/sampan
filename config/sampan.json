@@ -25,7 +25,8 @@
     "oneClick": true,
     "nostrSend": false,
     "watchDemo": true,
-    "keepCompare": true
+    "keepCompare": true,
+    "demo": true
   },
   "route": {
     "active": "thorchain",
@@ -357,6 +358,12 @@
   "activity": {
     "maxAddresses": 200,
     "maxRows": 50
+  },
+  "demo": {
+    "youtubeUrl": "",
+    "video": "/demo/sampan-demo.mp4",
+    "poster": "/demo/sampan-demo.jpg",
+    "txidsShown": 3
   },
   "measured": {
     "source": "proof"

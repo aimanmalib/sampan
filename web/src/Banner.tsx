@@ -27,6 +27,7 @@ export function Banner() {
           so the links add no row above the card; on a wide screen the paragraph dissolves into the banner row. */}
       <p className="banner__lead">
         {banner?.note !== false ? <span className="banner__note">{t('banner.note')}</span> : null}
+        {config?.features.demo ? <a href="/demo">{t('banner.demo')}</a> : null}
         {banner?.deckUrl ? <a href={banner.deckUrl}>{t('banner.presentation')}</a> : null}
         {banner?.repoUrl ? <a href={banner.repoUrl}>{t('banner.source')}</a> : null}
       </p>

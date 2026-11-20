@@ -10,7 +10,7 @@ import vectors from '../tests/fixtures/tambat-vectors.json' with { type: 'json' 
 import { NOSTR_PORT_OFFSET, PAY_PORT_OFFSET } from '../playwright.config.js';
 import { answerRelays } from './nostr-relays.js';
 
-const PAGES = ['/', '/how', '/terms', '/risks'];
+const PAGES = ['/', '/how', '/terms', '/risks', ...(shipped.features.demo ? ['/demo'] : [])];
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 /** Controls a finger has to hit. Links inside running text are exempt (WCAG 2.5.8 "inline"). */
 const CONTROLS = 'button, select, input:not([type=hidden]), textarea, summary, [role=tab], a:not(p a):not(li a):not(td a)';
