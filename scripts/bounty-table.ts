@@ -40,6 +40,8 @@ export interface BountyConfig extends CrossingsConfig { tokens: Record<string, u
 export interface Stats {
   crossings: number; inCount: number; outStable: number; thorchain: number; pusd: number;
   chains: string[]; symbols: string[]; bothWays: string[]; bchStables: string[];
+  /** Distinct mainnet transaction ids across the ok crossings (every leg: BCH, the far chain, the conversion). */
+  txids: number;
 }
 
 const isOut = (r: Run): boolean => r.flow.endsWith('out');
@@ -81,6 +83,7 @@ export function countStats(cfg: BountyConfig, measured: string): Stats {
     symbols: [...symbols].sort(),
     bothWays: order.filter((n) => ways.get(n)?.size === 2),
     bchStables: [...stables].sort(),
+    txids: new Set(runs.flatMap((r) => legs(r.txid).map(([, tx]) => tx.toLowerCase()))).size,
   };
 }
 

@@ -358,6 +358,9 @@
     "maxAddresses": 200,
     "maxRows": 50
   },
+  "measured": {
+    "source": "proof"
+  },
   "ui": {
     "ferryMotion": true,
     "qrAutoOpen": true,

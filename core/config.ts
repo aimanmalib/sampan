@@ -177,6 +177,9 @@ export interface SampanConfig {
   keepCompare: KeepConfig;
   /** "My activity": how many addresses one request asks about and how many crossings come back. */
   activity: ActivityConfig;
+  /** The front page's "Measured" card: `proof` = counts from docs/MEASURED.md made when the page is built (the same counter as
+   *  the README bounty table), with this server's own records as a small second line; `stats` = the server's records only. */
+  measured: MeasuredConfig;
   /**
    * How the status pages draw; not a flow. ferryMotion: the ferry on every status page and the landing card, moving while a step is under way.
    * qrAutoOpen: the landing card opens the address and shows its QR as soon as the owner is known (false = the "Get my landing address" button).
@@ -229,6 +232,7 @@ export interface PublicConfig {
   pay: Pick<PayConfig, 'validMinutes' | 'minUsd' | 'maxUsd'> & { demoPriceUsd: number };
   keepCompare: KeepConfig;
   activity: ActivityConfig;
+  measured: MeasuredConfig;
   /** The atomic swap route's client file, contract and service path (the page loads nothing from it while features.atom is false). */
   atom: AtomConfig;
   /** 1Click as a second route: offered assets and timings only (core/oneclick-config.ts). */
@@ -239,6 +243,9 @@ export interface PublicConfig {
   ui: Omit<SampanConfig['ui'], 'themes'>;
   i18n: I18nConfig;
 }
+
+export const MEASURED_SOURCES = ['proof', 'stats'] as const;
+export interface MeasuredConfig { source: (typeof MEASURED_SOURCES)[number] }
 
 const HEX32 = /^[0-9a-fA-F]{64}$/;
 const ROUTES: readonly ActiveRoute[] = ['none', 'near-intents', 'thorchain'];
@@ -409,6 +416,7 @@ export function validateConfig(c: SampanConfig): string[] {
   need(typeof c.features?.keepCompare === 'boolean', 'features.keepCompare: true or false');
   errors.push(...validateKeep(c.keepCompare));
   errors.push(...validateActivity(c.activity));
+  need((MEASURED_SOURCES as readonly string[]).includes(String(c.measured?.source)), `measured.source: one of ${MEASURED_SOURCES.join(', ')}`);
   need(typeof c.judge?.openOnPhone === 'boolean', 'judge.openOnPhone: true or false');
   errors.push(...validateNostrId(c.nostrId));
   need(!c.features?.oneClick || c.oneClick.baseUrl !== '', 'oneClick.baseUrl: required while features.oneClick is true');
@@ -489,6 +497,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     pay: { validMinutes: c.pay.validMinutes, minUsd: c.pay.minUsd, maxUsd: c.pay.maxUsd, demoPriceUsd: c.pay.demo.priceUsd },
     keepCompare: c.keepCompare,
     activity: c.activity,
+    measured: { source: c.measured.source },
     atom: c.atom,
     oneClick: oneClickPublic(c.oneClick),
     nostrId: nostrIdPublic(c.features.nostrSend, c.nostrId),

@@ -38,3 +38,29 @@ export function measuredParts(s: Stats, t: (key: MeasuredKey, vars?: Record<stri
   parts.push(t('measured.returned', { k: String(s.all.returned) }), t('measured.lost', { l: String(s.all.lost) }));
   return parts;
 }
+
+/** The proof headline: counted from docs/MEASURED.md when the page is built, by the counter of the README bounty table. */
+export interface Headline {
+  crossings: number;
+  chains: string[];
+  symbols: string[];
+  /** Chains with an ok crossing in each direction. */
+  bothWays: string[];
+  txids: number;
+}
+
+export type HeadlineKey = 'measured.headline' | 'measured.bothWays' | 'measured.txids';
+
+/** The headline as text parts; "both ways" is left out while no chain has an ok crossing each way. */
+export function headlineParts(
+  h: Headline,
+  t: (key: HeadlineKey, vars?: Record<string, string>) => string,
+  list: (items: string[]) => string,
+): string[] {
+  const parts = [
+    t('measured.headline', { crossings: String(h.crossings), chains: String(h.chains.length), chainNames: list(h.chains), symbols: list(h.symbols) }),
+  ];
+  if (h.bothWays.length > 0) parts.push(t('measured.bothWays', { names: list(h.bothWays) }));
+  parts.push(t('measured.txids', { n: String(h.txids) }));
+  return parts;
+}

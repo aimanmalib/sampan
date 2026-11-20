@@ -28,7 +28,7 @@ test('/how shows the open flows, the whole contract, the checks anyone can run a
   await expect(page.getByText(en['how.finish.after'])).toBeVisible();
   await expect(page.getByRole('heading', { name: en['how.exists.title'] })).toBeVisible();
   await expect(page.getByText(en['how.exists.bchbull'].slice(0, en['how.exists.bchbull'].indexOf('{symbol}')))).toBeVisible();
-  await expect(page.locator('.measured__line')).toContainText(/\d+ landings and crossings completed/);
+  await expect(page.locator('.measured__headline')).toContainText(/^\d+ stablecoin crossings on mainnet/);
   const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
   expect(scroll).toBeLessThanOrEqual(client);
   await page.getByRole('combobox', { name: en['lang.label'] }).selectOption('ms');
@@ -42,7 +42,7 @@ test('/how lists what MEASURED.md records, with every transaction id linked in f
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/');
-  await page.getByRole('link', { name: en['measured.how'] }).click();
+  await page.getByRole('link', { name: en['measured.see'] }).click();
   await expect(page).toHaveURL(/\/how#proof$/);
   const section = page.locator('#proof');
   await expect(section.getByRole('heading', { name: en['proof.title'] })).toBeInViewport();
