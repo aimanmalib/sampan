@@ -22,7 +22,7 @@
     "landing": true,
     "pay": true,
     "atom": false,
-    "oneClick": false,
+    "oneClick": true,
     "nostrSend": false,
     "watchDemo": true,
     "keepCompare": true
@@ -56,8 +56,8 @@
     "timeoutMs": 10000,
     "bchAsset": "nep141:bch.omft.near",
     "assets": [
-      { "id": "nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near", "chain": "ETH", "symbol": "USDC", "decimals": 6, "live": { "out": false, "in": false } },
-      { "id": "nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near", "chain": "BASE", "symbol": "USDC", "decimals": 6, "live": { "out": false, "in": false } }
+      { "id": "nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near", "chain": "ETH", "symbol": "USDC", "decimals": 6, "live": { "out": true, "in": true } },
+      { "id": "nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near", "chain": "BASE", "symbol": "USDC", "decimals": 6, "live": { "out": true, "in": true } }
     ],
     "placeholders": { "bch": "bitcoincash:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqfnhks603", "evm": "0x0000000000000000000000000000000000000001" },
     "cacheSeconds": 20,

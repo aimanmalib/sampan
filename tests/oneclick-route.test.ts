@@ -38,12 +38,11 @@ const setup = (o: { key?: string; now?: () => number; http?: OneClickHttp } = {}
 const coin = { txid: 'ab'.repeat(32), vout: 0, sats: 3_000_000n, lockingHex: userLockHex, path: 'receive/0', hasToken: false };
 
 describe('oneClick config', () => {
-  it('ships switched off, with no Sampan fee, a cache within 24 hours and the THORChain route still active', () => {
+  it('ships with no Sampan fee, a cache within 24 hours, the THORChain route still active and the flag on only with a live asset', () => {
     expect(validateConfig(config)).toEqual([]);
-    expect(config.features.oneClick).toBe(false);
     expect(config.route.active).toBe('thorchain');
     expect(oc.appFeeBps).toBe(0);
-    expect(oc.assets.every((a) => !a.live.out && !a.live.in)).toBe(true);
+    expect(config.features.oneClick).toBe(oc.assets.some((a) => a.live.out || a.live.in));
   });
 
   it('refuses a cache over 24 hours, an app fee and an asset with other decimals than its chain', () => {

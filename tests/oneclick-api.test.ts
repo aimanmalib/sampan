@@ -22,7 +22,7 @@ import { userAddress, userLockHex } from './helpers/wallet.js';
 const base = normalizeConfig(shipped as unknown as SampanConfig);
 const live = base.oneClick.assets.map((a) => ({ ...a, live: { out: true, in: true } }));
 const rate = { quotesPerMinute: 1000, crossingsPerHour: 1000 };
-const crossOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, rate }));
+const crossOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, rate, features: { oneClick: false } }));
 const oneClickOn = patchConfig(base, JSON.stringify({ compliance: { crossChainEnabled: true }, rate, features: { oneClick: true }, oneClick: { assets: live } }));
 const DEST = '0x1a877169bB03400fA69EC4813889E78994D194Cb';
 // Made up for the test; shaped like a JWT so a leak would be easy to spot.
