@@ -29,6 +29,8 @@ test('Measured card shows the counted MEASURED headline, also at 320 px', async 
   const head = measuredHeadline();
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  // A server that has completed nothing: answered here, since the live server keeps its own records.
+  await page.route('**/api/stats', (route) => route.fulfill({ json: { all: counts({}), test: counts({}), public: counts({}) } }));
   await page.goto('/');
   const card = page.locator('.measured__headline');
   await expect(card).toContainText(en['measured.headline'].split('{crossings}')[1]!.split('{chains}')[0]!.trim());
@@ -37,7 +39,7 @@ test('Measured card shows the counted MEASURED headline, also at 320 px', async 
   await expect(card).toContainText(en['measured.txids'].replace('{n}', String(head.txids)));
   if (head.bothWays.length === 0) await expect(card).not.toContainText(en['measured.bothWays'].split(' {')[0]!);
   await expect(page.getByRole('link', { name: en['measured.see'] })).toHaveAttribute('href', '/how#proof');
-  // The fake server has completed nothing: under the proof headline its line stays away rather than show a 0.
+  // Nothing completed: under the proof headline the server's line stays away rather than show a 0.
   await expect(page.locator('.measured__line')).toHaveCount(0);
   await page.setViewportSize({ width: 320, height: 640 });
   await card.scrollIntoViewIfNeeded();
