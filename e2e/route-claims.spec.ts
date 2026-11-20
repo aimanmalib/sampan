@@ -33,9 +33,18 @@ async function serve(page: Page, edit: (c: Cfg) => Cfg = (c) => c): Promise<() =
 
 const chainOf = (c: ClaimOffer, name: string) => c.evm.chains.find((x) => x.name === name)!.key;
 
+/**
+ * Leaving a page while its reads (/api/depth, /api/stats) are in flight makes WebKit report each cancelled fetch as a page
+ * error ("due to access control checks"), so every navigation here waits for the page before to go quiet.
+ */
+async function go(page: Page, path: string): Promise<void> {
+  await page.waitForLoadState('networkidle');
+  await page.goto(path);
+}
+
 async function expectClaims(page: Page, cfg: Cfg): Promise<void> {
   const claims = routeClaims(cfg);
-  await page.goto('/how');
+  await go(page, '/how');
   for (const dir of ['in', 'out'] as const) {
     const item = page.locator(`[data-adds="${dir}"]`);
     const reach = claimsFor(claims, dir);
@@ -49,7 +58,7 @@ async function expectClaims(page: Page, cfg: Cfg): Promise<void> {
   const routes = liveRoutes(claims).map((r) => en[`route.${r}` as keyof typeof en]);
   // One node per route that carries a claim, in the diagram's middle box.
   await expect(nodes).toHaveText(routes);
-  await page.goto('/');
+  await go(page, '/');
   const chips = page.getByRole('list', { name: en['hero.chips.label'] });
   for (const c of claims) {
     const text = en[chipKey(c)].replace('{name}', c.name);
