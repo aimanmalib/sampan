@@ -10,7 +10,7 @@ import { fakeOneClick, type FakeOneClickLog } from '../server/routes/fake-onecli
 import { OneClickApi, OneClickError, type OneClickHttp } from '../server/routes/oneclick-api.js';
 import { OneClickRoute } from '../server/routes/oneclick.js';
 import { RouteError } from '../server/routes/types.js';
-import { userAddress, userLockHex } from './helpers/wallet.js';
+import { userAddress, userLockHex, userTokenAddress } from './helpers/wallet.js';
 
 const config = normalizeConfig(shipped as unknown as SampanConfig);
 const oc = config.oneClick;
@@ -159,6 +159,18 @@ describe('OneClickRoute out', () => {
 });
 
 describe('OneClickRoute in and status', () => {
+  it('gives 1Click the plain form of a token address (z...), as recipient in and as refund address out', async () => {
+    const { route, log } = setup();
+    await route.quoteIn({ asset: USDC, amount: 200_000_000n, destination: userTokenAddress });
+    await route.quoteIn({ asset: USDC, amount: 200_000_000n, destination: userTokenAddress, refundTo: DEST });
+    await route.quoteOut({ sats: 1_000_000n, asset: USDC, destination: DEST, refundTo: userTokenAddress });
+    expect(log.requests.map((r) => r.body)).toMatchObject([{ dry: true, recipient: userAddress }, { dry: false, recipient: userAddress }, { dry: false, refundTo: userAddress }]);
+    // The fake answers as the real API does: a token-aware BCH address is refused.
+    const api = new OneClickApi({ baseUrl: oc.baseUrl, userAgent: oc.userAgent, timeoutMs: oc.timeoutMs, cacheSeconds: 0, http: fakeOneClick(oc.bchAsset, () => 6) });
+    const body = { dry: true, swapType: 'EXACT_INPUT' as const, slippageTolerance: 100, originAsset: USDC, depositType: 'ORIGIN_CHAIN' as const, destinationAsset: oc.bchAsset, amount: '2000000', refundTo: DEST, refundType: 'ORIGIN_CHAIN' as const, recipient: userTokenAddress, recipientType: 'DESTINATION_CHAIN' as const, deadline: new Date(0).toISOString() };
+    await expect(api.quote(body)).rejects.toThrow(/recipient is not valid/);
+  });
+
   it('converts the page amount (1e8) to token units and plans one plain transfer', async () => {
     const { route, log } = setup();
     const q = await route.quoteIn({ asset: USDC, amount: 200_000_000n, destination: userAddress, refundTo: DEST });

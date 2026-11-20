@@ -12,6 +12,8 @@ interface Fixture {
   status: Record<string, unknown>;
 }
 
+const PLAIN_BCH = /^(bitcoincash|bchtest):[qp][02-9ac-hj-np-z]{41}$/;
+
 export interface FakeOneClickLog {
   /** Every request as the fake saw it (tests read headers and bodies from here). */
   requests: Array<{ method: string; url: string; headers: Record<string, string>; body: unknown }>;
@@ -26,6 +28,9 @@ export function fakeOneClick(bchAsset: string, decimalsOf: (id: string) => numbe
     const u = new URL(r.url);
     if (r.method === 'POST' && u.pathname === '/v0/quote') {
       const q = body as QuoteRequest;
+      // Like the real API: a BCH address must be a plain cash address (q... or p...); a token-aware one is refused.
+      const bchSide = q.originAsset === bchAsset ? q.refundTo : q.destinationAsset === bchAsset ? q.recipient : undefined;
+      if (bchSide !== undefined && !PLAIN_BCH.test(bchSide)) return { status: 400, body: { message: q.originAsset === bchAsset ? 'refundTo is not valid' : 'recipient is not valid' } };
       const amount = BigInt(q.amount);
       const out = q.originAsset === bchAsset;
       const gross = out

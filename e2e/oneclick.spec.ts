@@ -5,6 +5,7 @@
 import { expect, test, type Page, type Request } from '@playwright/test';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import en from '../lang/en.json' with { type: 'json' };
+import { parseAddress, tokenAddressOf } from '../core/address.js';
 import { ONECLICK_PORT_OFFSET } from '../playwright.config.js';
 import { noHorizontalOverflow, primary, routeOn, routes, row, rowAmount, service, watch } from './atom-fake.js';
 
@@ -16,6 +17,8 @@ const offUrl = `http://127.0.0.1:${base + 2}`;
 const DEST = '0x1a877169bB03400fA69EC4813889E78994D194Cb';
 const BCH_ADDRESS = 'bitcoincash:qqyuz8zh06c8h39guuedjpfvnlvjeg394ucvfe6ltt';
 const ROUTE = en['route.near-intents'];
+// The field for receiving the stablecoin asks for the token address (z...), the form wallets show for CashTokens.
+const TOKEN_ADDRESS = tokenAddressOf((parseAddress(BCH_ADDRESS, 'bitcoincash') as { lockingHex: string }).lockingHex, 'bitcoincash');
 
 /** True for a quote request the page made for the 1Click route. */
 const ocQuote = (path: string) => (r: Request) => r.url().endsWith(path) && r.method() === 'POST' && (r.postDataJSON() as { route?: string } | null)?.route === 'near-intents';
@@ -103,6 +106,24 @@ test('Bring in to BCH shows the 1Click row next to THORChain and keeps THORChain
   // Console first: a WebKit screenshot injects a style element that the page's CSP refuses (a capture artifact).
   expect(seen.errors).toEqual([]);
   await page.screenshot({ path: test.info().outputPath(`sampan-oc-card-in-${test.info().project.name}.png`), fullPage: true });
+});
+
+test('Bring in as PUSD (the default) to a token address gets a 1Click quote with its measured time', async ({ page }) => {
+  const seen = watch(page);
+  await page.goto(ocUrl);
+  await page.getByRole('tab', { name: en['tabs.in'] }).click();
+  await expect(page.getByRole('radio', { name: en['in.receiveAs'].replace('{asset}', 'PUSD') })).toBeChecked();
+  const quoted = page.waitForResponse((r) => ocQuote('/api/in/quote')(r.request()) && r.ok());
+  await page.locator('.in .field__input').first().fill('5');
+  await page.getByPlaceholder('bitcoincash:…').fill(TOKEN_ADDRESS);
+  await quoted;
+  const oc = row(page, 'near-intents');
+  await expect(oc).toContainText(ROUTE);
+  await expect(oc).not.toContainText(en['swap.err.generic']);
+  await expect(oc.getByRole('radio')).toBeEnabled();
+  await expect(oc).not.toContainText(en['compare.time.none']);
+  await expect(row(page, 'thorchain').getByRole('radio')).toBeChecked();
+  expect(seen.errors).toEqual([]);
 });
 
 test('a refused 1Click quote is shown with its reason and cannot be chosen', async ({ page }) => {

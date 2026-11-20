@@ -3,7 +3,7 @@
 // the exact amountIn with change back to input 0 and no memo (checkTransaction rule 6, two outputs). Bringing tokens in
 // is one plain ERC-20 transfer to the deposit address. Quotes the page shows while typing are dry, to addresses nobody
 // holds; a real quote to such an address is refused here (terms 4.1(h)). Status is asked by deposit address.
-import { parseAddress } from '../../core/address.js';
+import { parseAddress, plainAddress } from '../../core/address.js';
 import { isPlaceholder, type OneClickConfig } from '../../core/oneclick-config.js';
 import { buildDeposit } from '../../core/tx/deposit.js';
 import { openMapOf, type OpenMap } from '../../core/route-assets.js';
@@ -103,7 +103,8 @@ export class OneClickRoute implements Route {
 
   async quoteOut(r: OutRequest): Promise<OutQuote> {
     const decimals = this.decimalsOf(r.asset);
-    const q = await this.ask('out', this.o.config.bchAsset, r.asset, r.sats, r.destination, r.refundTo);
+    // 1Click takes only plain BCH addresses; a token-aware one (z...) is the same key in its plain form.
+    const q = await this.ask('out', this.o.config.bchAsset, r.asset, r.sats, r.destination, r.refundTo === undefined ? undefined : plainAddress(r.refundTo));
     const expectedOut = units(q.amountOut, 'output amount');
     return {
       route: this.id,
@@ -136,7 +137,8 @@ export class OneClickRoute implements Route {
     // The page counts stablecoins in 1e8 units; 1Click counts them in the token's own decimals.
     const tokenUnits = decimals >= 8 ? r.amount * 10n ** BigInt(decimals - 8) : r.amount / 10n ** BigInt(8 - decimals);
     if (tokenUnits <= 0n) throw new RouteError('bad_request', 'amount must be positive');
-    const q = await this.ask('in', r.asset, this.o.config.bchAsset, tokenUnits, r.destination, r.refundTo);
+    // The token address the page asks for (z...) is refused by 1Click; its plain form pays the same key.
+    const q = await this.ask('in', r.asset, this.o.config.bchAsset, tokenUnits, plainAddress(r.destination), r.refundTo);
     const expectedSats = units(q.amountOut, 'output amount');
     return {
       route: this.id,

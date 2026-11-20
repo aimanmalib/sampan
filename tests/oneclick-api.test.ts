@@ -17,7 +17,7 @@ import { buildApp } from '../server/app.js';
 import type { FakeChain } from '../server/chain/fake.js';
 import { createServices, type Services } from '../server/services.js';
 import { testKey } from './helpers/pools.js';
-import { userAddress, userLockHex } from './helpers/wallet.js';
+import { userAddress, userLockHex, userTokenAddress } from './helpers/wallet.js';
 
 const base = normalizeConfig(shipped as unknown as SampanConfig);
 const live = base.oneClick.assets.map((a) => ({ ...a, live: { out: true, in: true } }));
@@ -104,6 +104,18 @@ describe('1Click through /api/out and /api/in', () => {
     expect((await post(`/api/in/${plan.json().crossingId}/sent`, { txHash: hash })).statusCode).toBe(200);
     const status = (await app!.inject({ method: 'GET', url: `/api/crossings/${plan.json().crossingId}` })).json();
     expect(status).toMatchObject({ kind: 'in', route: 'near-intents', txid: hash.toLowerCase(), status: 'completed', out: { stage: 'done' } });
+  });
+
+  it('quotes and plans in to PUSD from the token address the field asks for (z...), which 1Click takes only in its plain form', async () => {
+    await start(oneClickOn);
+    const pusd = { ...into, receive: 'PUSD', address: userTokenAddress };
+    const q = await post('/api/in/quote', pusd);
+    expect(q.statusCode).toBe(200);
+    expect(q.json().quote).toMatchObject({ route: 'near-intents' });
+    const plan = await post('/api/in/plan', { ...pusd, minSats: q.json().quote.minSats as string, from: DEST });
+    expect(plan.statusCode).toBe(200);
+    expect(plan.json().deposit).toMatchObject({ kind: 'transfer', amount: '2000000' });
+    expect(plan.json().landing?.card.address).toMatch(/^bitcoincash:p/);
   });
 
   it('never sends the API key to the page', async () => {
