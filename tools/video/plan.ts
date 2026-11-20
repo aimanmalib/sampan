@@ -58,6 +58,18 @@ export function runVars(shots: Shot[], measured: string): Record<string, string>
   return vars;
 }
 
+/** English UI strings as caption placeholders: {en.hero.title} is the hero title of lang/en.json, never retyped. */
+export function langVars(en: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(Object.entries(en).map(([k, v]) => [`en.${k}`, v]));
+}
+
+/** The transactions of every shot a cut shows, and those of them docs/MEASURED.md does not hold (must be none). */
+export function sceneTxids(shots: Shot[], scenes: SceneSpec[], measured: string): { txids: string[]; missing: string[] } {
+  const used = new Set(scenes.flatMap((s) => (s.clips ?? []).map((c) => c.shot)));
+  const txids = [...new Set(shots.filter((s) => used.has(`${s.scene}/${s.engine}`)).flatMap((s) => s.txids))];
+  return { txids, missing: txids.filter((t) => !measured.includes(t)) };
+}
+
 /** A clip window in seconds of its clip file. Shots marked ok: false (a dropped broadcast on screen) are refused. */
 export function clipWindow(shots: Shot[], clip: Clip): Window {
   const [scene, engine] = clip.shot.split('/');
@@ -96,10 +108,10 @@ export function placeScenes(scenes: SceneSpec[], windows: Window[][], voice: num
   });
 }
 
-/** Splits a line into subtitle chunks of at most `max` characters, at sentence ends first, then at word gaps. */
+/** Splits a line into subtitle chunks of at most `max` characters, at sentence ends first (a stop followed by a space or the end, so a web address stays whole), then at word gaps. */
 export function chunks(text: string, max: number): string[] {
   const out: string[] = [];
-  for (const sentence of text.match(/[^.!?]+[.!?]*/g) ?? []) {
+  for (const sentence of text.match(/\S.*?(?:[.!?]+(?=\s|$)|$)/g) ?? []) {
     let cur = '';
     for (const word of sentence.trim().split(/\s+/)) {
       if (cur && (cur + ' ' + word).length > max) {

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { ass, assColour, chunks, clipWindow, cueTimes, fill, placeScenes, runVars, srt, vtt, type Captions } from '../tools/video/plan.js';
+import { ass, assColour, chunks, clipWindow, cueTimes, fill, langVars, placeScenes, runVars, sceneTxids, srt, vtt, type Captions } from '../tools/video/plan.js';
 import type { Shot } from '../tools/video/shots.js';
 
 const TX = 'a'.repeat(64);
@@ -50,6 +50,10 @@ describe('demo video plan', () => {
     expect(placed[0]!.voiceAt).toBe(0.5);
   });
 
+  it('keeps a web address whole: a dot inside a word is not a sentence end', () => {
+    expect(chunks('Try it at sampan.sasateguh.com.', 46)).toEqual(['Try it at sampan.sasateguh.com.']);
+  });
+
   it('splits subtitles at sentence ends and word gaps within the length limit', () => {
     const parts = chunks('Paste your address and you get a landing address. Any wallet can pay it with plain BCH.', 30);
     expect(parts.every((p) => p.length <= 30)).toBe(true);
@@ -78,5 +82,25 @@ describe('demo video plan', () => {
   it('keeps the tracked words free of typed numbers and declares the synthetic voice on the end card', () => {
     for (const s of captions.scenes) expect(`${s.caption} ${s.text}`).not.toMatch(/\d+(\.\d+)?\s?s\b/);
     expect(captions.scenes.at(-1)?.card).toContain('Narration voice generated with ElevenLabs');
+  });
+
+  it('fills {en.<key>} from the English UI strings and lists the shown transactions missing from MEASURED', () => {
+    expect(fill('{en.hero.title}', langVars({ 'hero.title': 'Stablecoins.' }))).toBe('Stablecoins.');
+    const scenes = [{ id: 'a', caption: '', text: '', clips: [{ shot: 'land/chromium-desktop', from: ['x', 0] as [string, number], to: ['y', 0] as [string, number] }] }];
+    const shots = [shot({ txids: [TX] }), shot({ scene: 'swap', txids: [DROPPED] })];
+    expect(sceneTxids(shots, scenes, MEASURED)).toEqual({ txids: [TX], missing: [] });
+    expect(sceneTxids([shot({ txids: ['f'.repeat(64)] })], scenes, MEASURED).missing).toEqual(['f'.repeat(64)]);
+  });
+
+  it('plans the one minute cut as what, why, one crossing and proof, with no typed number and the voice declared', () => {
+    const short = JSON.parse(readFileSync('tools/video/captions-60.json', 'utf8')) as Captions;
+    expect(short.scenes.map((s) => s.id)).toEqual(['open', 'why', 'cross', 'proof', 'end']);
+    expect(short.scenes[0]?.caption).toBe('{en.hero.title}');
+    expect(short.scenes.find((s) => s.id === 'proof')?.caption).toBe('{headline}');
+    expect(short.voice).toEqual(captions.voice);
+    for (const s of short.scenes) expect(`${s.caption} ${s.text}`).not.toMatch(/\d+(\.\d+)?\s?s\b/);
+    expect(short.scenes.at(-1)?.card).toContain('Narration voice generated with ElevenLabs');
+    const fixed = short.scenes.reduce((n, s) => n + (s.seconds ?? 0), 0);
+    expect(fixed).toBeLessThan(30);
   });
 });
