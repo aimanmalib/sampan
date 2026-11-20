@@ -47,7 +47,10 @@ test('Send out shows THORChain, the atomic swap and 1Click for the same amount; 
   const oc = row(page, 'near-intents');
   await expect(oc).toContainText(ROUTE);
   await expect(oc).toContainText(rowAmount('[0-9]+\\.[0-9]{2}', 'USDC'));
-  await expect(oc).toContainText(en['compare.time.none']);
+  // The time comes from the oc-out rows of MEASURED.md, never from the THORChain runs.
+  const measuredTime = new RegExp(en['compare.time.many'].replace(/[.*+?^()[\]\\|]/g, '\\$&').replace('{minutes}', '[0-9]+').replace('{count}', '[0-9]+'));
+  await expect(oc).toContainText(measuredTime);
+  await expect(oc).not.toContainText(en['compare.time.none']);
   await expect(oc).toContainText(en['compare.time.estimateRoute'].replace('{route}', ROUTE).replace('{minutes}', '2'));
   await oc.locator('summary').click();
   await expect(oc).toContainText(en['compare.trust.deposit'].replace('{minutes}', String(shipped.oneClick.deadlineMinutes.out)));
