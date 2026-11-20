@@ -397,6 +397,8 @@ written before any code is in [`preparation/PLAN.md`](preparation/PLAN.md), and 
 The research, design and code in this repository were produced with Claude Code under my direction. I registered for the
 event, did the roll call, and funded the mainnet test wallet myself.
 
+The narration voice of the demo video was generated with ElevenLabs (`tools/video/edit.sh`, ADR 0081).
+
 ## Disclaimer
 
 Sampan is a hackathon build that moves real coins on BCH mainnet. Use small amounts. PUSD (ParyonUSD) is a third-party token;

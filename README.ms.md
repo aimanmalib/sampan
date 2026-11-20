@@ -327,6 +327,8 @@ baris dalam [`docs/BUILD-LOG.md`](docs/BUILD-LOG.md).
 Penyelidikan, reka bentuk dan kod dalam repositori ini dihasilkan dengan Claude Code di bawah arahan saya. Saya mendaftar untuk
 acara ini, membuat roll call, dan membiayai dompet ujian mainnet sendiri.
 
+Suara narasi video demo dijana dengan ElevenLabs (`tools/video/edit.sh`, ADR 0081).
+
 ## Penafian
 
 Sampan ialah binaan hackathon yang memindahkan syiling sebenar di mainnet BCH. Gunakan amaun kecil. PUSD (ParyonUSD) ialah
