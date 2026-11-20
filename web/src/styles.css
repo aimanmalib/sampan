@@ -395,7 +395,8 @@ a {
   .banner__lead a {
     display: inline;
     min-height: 0;
-    margin-left: 0.75rem;
+    /* Three links (Demo, deck, source) still share the note's lines in every language (first-screen.spec). */
+    margin-left: 0.5rem;
     text-decoration: underline;
   }
   .banner__lead > a:first-child {
