@@ -4,6 +4,7 @@ import { ActionCard, cardTabs } from './ActionCard';
 import { ActivityPage } from './activity/ActivityPage';
 import { fetchConfig, useConfig } from './config';
 import { Footer } from './Footer';
+import { HeroChips } from './HeroChips';
 import { useHealth } from './health';
 import { JudgeBox, judgeBelow, JudgeStrip } from './JudgeStrip';
 import { applyLanguages, useText } from './i18n';
@@ -31,6 +32,7 @@ export function App() {
   const [chosen, setChosen] = useState<TabId | null>(null);
   const [fill, setFill] = useState(0);
   const [serverDown, setServerDown] = useState(false);
+  const heroCard = config?.ui.hero === 'card';
   const judge = config && flows.land && cardTabs(config).includes('in') ? config : null;
   const crossing = /^\/c\/([0-9a-f]{32})$/.exec(location.pathname)?.[1];
   const done = doneRoute(location.pathname);
@@ -94,9 +96,10 @@ export function App() {
         </main>
       ) : (
       <main className={judge ? 'page page--judge' : 'page'}>
-        <section className="hero">
+        <section className={heroCard ? 'hero hero--card' : 'hero'}>
           <h1 className="hero__title">{t('hero.title')}</h1>
-          {config ? <p className="hero__sub">{t(heroSubKey(flows), vars)}</p> : null}
+          {config && heroCard ? <HeroChips config={config} cross={flows.cross} /> : null}
+          {config && !heroCard ? <p className="hero__sub">{t(heroSubKey(flows), vars)}</p> : null}
         </section>
         <Scene />
         {serverDown ? (
@@ -116,6 +119,8 @@ export function App() {
         <ActionCard config={config} wallet={wallet} chosen={chosen} onChoose={setChosen} fill={fill} />
         {judge && judgeBelow(judge) ? <JudgeBox config={judge} /> : null}
         {/* Below the card so the card and its one primary button stay on the first screen (ADR 0053). */}
+        {/* ui.hero "card": the headline's longer sentence moves under the card, so the first screen is one line and the card. */}
+        {config && heroCard ? <p className="hero__sub hero__sub--after">{t(heroSubKey(flows), vars)}</p> : null}
         {flows.cross && route !== 'none' ? <p className="hero__honest">{t('hero.honest', { route: t(`route.${route}`) })}</p> : null}
         <Measured link />
       </main>

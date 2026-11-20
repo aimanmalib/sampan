@@ -17,7 +17,7 @@ describe('config/sampan.json', () => {
   it('has every top-level section the code reads', () => {
     const sections = [
       'tokens', 'defaultToken', 'features', 'route', 'thorchain', 'oneClick', 'nostrId', 'evm', 'cauldron', 'electrum', 'wallet', 'connect',
-      'landing', 'limits', 'fees', 'rate', 'compliance', 'banner', 'judge', 'site', 'legal', 'ops', 'business', 'peg', 'pay', 'keepCompare', 'activity', 'measured', 'ui', 'i18n', 'atom',
+      'landing', 'limits', 'fees', 'rate', 'compliance', 'banner', 'judge', 'site', 'legal', 'ops', 'business', 'peg', 'pay', 'keepCompare', 'activity', 'measured', 'quote', 'ui', 'i18n', 'atom',
     ];
     expect(Object.keys(shipped).sort()).toEqual([...sections].sort());
   });
@@ -244,6 +244,27 @@ describe('ui.qrCloseMs and ui.arriveMs', () => {
     for (const ui of [{ qrCloseMs: 150, arriveMs: 800 }, { qrCloseMs: 1500, arriveMs: 6000 }]) {
       expect(validateConfig({ ...shipped, ui: { ...shipped.ui, ...ui } })).toEqual([]);
     }
+  });
+});
+
+describe('quote.autoRefreshMs and ui.hero', () => {
+  it('reach the page as the shipped config has them', () => {
+    expect(publicConfig(shipped).quote).toEqual({ autoRefreshMs: shipped.quote.autoRefreshMs });
+    expect(publicConfig(shipped).ui.hero).toBe(shipped.ui.hero);
+  });
+  it.each([1999, 60001, 5000.5, -1, '5000', undefined])('rejects quote.autoRefreshMs = %s', (value) => {
+    const bad = { ...shipped, quote: { autoRefreshMs: value } } as unknown as typeof shipped;
+    expect(validateConfig(bad)).toContain('quote.autoRefreshMs: 0 (off) or an integer from 2000 to 60000');
+  });
+  it.each([0, 2000, 60000])('accepts quote.autoRefreshMs = %s', (value) => {
+    expect(validateConfig({ ...shipped, quote: { autoRefreshMs: value } })).toEqual([]);
+  });
+  it.each(['banner', '', undefined])('rejects ui.hero = %s', (value) => {
+    const bad = { ...shipped, ui: { ...shipped.ui, hero: value } } as unknown as typeof shipped;
+    expect(validateConfig(bad)).toContain('ui.hero: one of card, phone');
+  });
+  it('accepts both hero kinds', () => {
+    for (const hero of ['card', 'phone'] as const) expect(validateConfig({ ...shipped, ui: { ...shipped.ui, hero } })).toEqual([]);
   });
 });
 

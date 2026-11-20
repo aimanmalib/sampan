@@ -1,0 +1,25 @@
+.quote-age {
+  margin: -0.35rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+/* Swap: the age sits at the right end of the Fees line, so it adds no height to the card. */
+.swap__foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.swap__foot > .swap__fees {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.swap__foot > .quote-age {
+  flex: none;
+  margin: 0;
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+}

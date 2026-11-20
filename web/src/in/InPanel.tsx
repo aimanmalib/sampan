@@ -20,6 +20,8 @@ import { errorKey } from '../swap/errors';
 import type { Wallet } from '../wallet/useWallet';
 import { useInQuote } from './useInQuote';
 import { AtomSwap } from '../atom/AtomSwap';
+import { QuoteAge } from '../quote/QuoteAge';
+import { useRefreshTick } from '../quote/refresh';
 import { CHAIN_HALTED, useRouteChoice } from '../atom/RouteChoice';
 import { NetworkPicker } from '../cross/NetworkPicker';
 import { useNetworks } from '../cross/useNetworks';
@@ -61,10 +63,12 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
   const ask = { symbol: src?.symbol ?? '', chain: src?.chain.key ?? '', amount, receive, address, addressOk };
   // THORChain is asked only for a network it offers now; a network only 1Click offers gets no THORChain request.
   const thorOffered = src?.thor === true;
-  const thorQuote = useInQuote({ ...ask, enabled: thorOffered }, QUOTE_PAUSE_MS);
+  // Both prices ask again by themselves while nothing is being signed (config quote.autoRefreshMs).
+  const tick = useRefreshTick(config.quote.autoRefreshMs, run.phase !== 'running');
+  const thorQuote = useInQuote({ ...ask, enabled: thorOffered }, QUOTE_PAUSE_MS, tick);
   // 1Click is asked (by the server, dry) only while the flag is on and config offers this asset in.
   const ocOffered = src !== undefined && offersOneClick(config.features.oneClick, config.oneClick, 'in', src.chain.key, src.symbol);
-  const ocQuote = useInQuote({ ...ask, route: 'near-intents', enabled: ocOffered }, config.oneClick.dryDebounceMs);
+  const ocQuote = useInQuote({ ...ask, route: 'near-intents', enabled: ocOffered }, config.oneClick.dryDebounceMs, tick);
   const side = (s: typeof thorQuote) => (s.status === 'ok' ? thorFromIn(s.quote, ROUTE_DECIMALS) : { error: s.status === 'error' ? s.code : 'pending' });
   const minFor = (id: string): string => String(Math.max(config.limits.minUsd, config.limits.routeMinUsd[id as 'thorchain'] ?? 0));
   const ocVars = { route: t('route.near-intents'), symbol: src?.symbol ?? '', chain: src?.chain.name ?? '', token: token.symbol, min: minFor('near-intents'), max: String(config.limits.maxUsd) };
@@ -189,6 +193,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
               ? t(outCodeKey(quote.code), limitVars)
               : t('in.enter', vars)}
       </p>
+      <QuoteAge at={quote.status === 'ok' && config.quote.autoRefreshMs > 0 ? quote.at : null} />
       {q && receive !== BCH ? <p className="card__note">{t('in.priceMoves', vars)}</p> : null}
       <PegNote />
       {q && evm.connected ? <p className="card__note">{t(oneClick ? 'in.signs.transfer' : 'in.signs', { ...vars, amount: amountText.trim() })}</p> : null}

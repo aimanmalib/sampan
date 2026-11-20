@@ -11,8 +11,9 @@ const outPort = port + 2;
 const live = process.env.E2E_BASE_URL;
 // The local fake server shows the swap flow alone (the landing flow has its own server below; crossings are off here
 // whatever the shipped config says), and its rate
-// limits are lifted because every browser in the run shares one IP.
-const e2ePatch = { features: { swap: true, landing: false, watchDemo: false, oneClick: false }, compliance: { crossChainEnabled: false }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 } };
+// limits are lifted because every browser in the run shares one IP. Prices do not refresh by themselves here, so the
+// flow specs see one quote per input; the shipped-config server keeps quote.autoRefreshMs (e2e/hero.spec.ts).
+const e2ePatch = { features: { swap: true, landing: false, watchDemo: false, oneClick: false }, compliance: { crossChainEnabled: false }, rate: { quotesPerMinute: 1000, crossingsPerHour: 1000 }, quote: { autoRefreshMs: 0 } };
 // The page asks for a landing's status every 2 s here (e2e/qr-close.spec.ts waits on it), not every 10 s as shipped,
 // and the no-wallet landing replay /watch is on (e2e/watch.spec.ts; the main server above keeps it off).
 const landingPatch = { ...e2ePatch, features: { swap: true, landing: true, watchDemo: true, oneClick: false }, landing: { pagePollSeconds: 2 } };

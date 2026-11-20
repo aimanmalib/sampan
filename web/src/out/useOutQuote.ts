@@ -1,10 +1,9 @@
-// Live "Send out" quote while the user types: waits for a pause and drops answers to older requests.
-import { useEffect, useState } from 'react';
-import { ApiFailure } from '../../../core/client/api';
+// Live "Send out" quote while the user types: waits for a pause and drops answers to older requests, and asks again on each refresh tick.
 import { quoteOut, type WireOutQuote } from '../../../core/client/out';
 import { api } from '../api';
+import { useLiveQuote, type LiveQuote } from '../quote/useLiveQuote';
 
-export type OutQuoteState = { status: 'none' } | { status: 'loading' } | { status: 'ok'; quote: WireOutQuote } | { status: 'error'; code: string };
+export type OutQuoteState = LiveQuote<WireOutQuote>;
 
 export interface OutAsk {
   source: string;
@@ -18,24 +17,9 @@ export interface OutAsk {
   enabled?: boolean;
 }
 
-export function useOutQuote(ask: OutAsk, pauseMs: number): OutQuoteState {
+export function useOutQuote(ask: OutAsk, pauseMs: number, tick = 0): OutQuoteState {
   const { source, amount, symbol, chain, destination, route } = ask;
   const ready = ask.enabled !== false && amount !== undefined && amount > 0n && /^0x[0-9a-fA-F]{40}$/.test(destination);
   const key = ready ? `${route ?? ''}:${source}:${amount}:${symbol}:${chain}:${destination.toLowerCase()}` : null;
-  const [result, setResult] = useState<{ key: string; state: OutQuoteState } | null>(null);
-  useEffect(() => {
-    if (key === null || amount === undefined) return;
-    let live = true;
-    const timer = setTimeout(() => {
-      quoteOut(api, { source, amount, symbol, chain, destination, ...(route ? { route } : {}) })
-        .then((quote) => live && setResult({ key, state: { status: 'ok', quote } }))
-        .catch((e: unknown) => live && setResult({ key, state: { status: 'error', code: e instanceof ApiFailure ? e.code : 'error' } }));
-    }, pauseMs);
-    return () => {
-      live = false;
-      clearTimeout(timer);
-    };
-  }, [key, source, amount, symbol, chain, destination, route, pauseMs]);
-  if (key === null) return { status: 'none' };
-  return result?.key === key ? result.state : { status: 'loading' };
+  return useLiveQuote(key, () => quoteOut(api, { source, amount: amount ?? 0n, symbol, chain, destination, ...(route ? { route } : {}) }), pauseMs, tick);
 }

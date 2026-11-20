@@ -19,6 +19,8 @@ import { shortEvm, useEvm } from '../evm/store';
 import { AtomSwap } from '../atom/AtomSwap';
 import { bchPayer } from '../atom/payBch';
 import { shortAmount } from '../atom/run';
+import { QuoteAge } from '../quote/QuoteAge';
+import { useRefreshTick } from '../quote/refresh';
 import { CHAIN_HALTED, useRouteChoice } from '../atom/RouteChoice';
 import { NetworkPicker } from '../cross/NetworkPicker';
 import { useNetworks } from '../cross/useNetworks';
@@ -64,10 +66,12 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
   const ask = { source, amount, symbol: pick?.symbol ?? '', chain: pick?.chain.key ?? '', destination: destination.trim() };
   // THORChain is asked only for a network it offers now; a network only 1Click offers gets no THORChain request.
   const thorOffered = pick?.thor === true;
-  const thorQuote = useOutQuote({ ...ask, enabled: thorOffered }, QUOTE_PAUSE_MS);
+  // Both prices ask again by themselves while nothing is being signed (config quote.autoRefreshMs).
+  const tick = useRefreshTick(config.quote.autoRefreshMs, run.phase !== 'running');
+  const thorQuote = useOutQuote({ ...ask, enabled: thorOffered }, QUOTE_PAUSE_MS, tick);
   // 1Click is asked (by the server, dry) only while the flag is on and config offers this asset out.
   const ocOffered = pick !== undefined && offersOneClick(config.features.oneClick, config.oneClick, 'out', pick.chain.key, pick.symbol);
-  const ocQuote = useOutQuote({ ...ask, route: 'near-intents', enabled: ocOffered }, config.oneClick.dryDebounceMs);
+  const ocQuote = useOutQuote({ ...ask, route: 'near-intents', enabled: ocOffered }, config.oneClick.dryDebounceMs, tick);
   const view = wallet.view;
   const have = view ? (source === BCH ? view.sats : (view.tokens[token.category.toLowerCase()] ?? 0n)) : undefined;
   const lacking = have !== undefined && amount !== undefined && amount > have;
@@ -235,6 +239,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
               ? t(outCodeKey(quote.code), limitVars)
               : t('out.enter', vars)}
       </p>
+      <QuoteAge at={quote.status === 'ok' && config.quote.autoRefreshMs > 0 ? quote.at : null} />
       {q && !costShown && q.fees.totalBps > config.limits.feeWarnBps ? <p className="swap__error">{t('out.feeHigh', { pct: feePct })}</p> : null}
       {source !== BCH && !atom ? <p className="card__note">{t('out.twoSteps', vars)}</p> : null}
       {lacking ? <p className="swap__error">{t('swap.err.short')}</p> : null}

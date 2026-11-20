@@ -15,6 +15,8 @@ import { codeKey, errorKey } from './errors';
 import { useQuote } from './useQuote';
 import { PegNote } from '../peg/PegNote';
 import { TokenPick } from './TokenPick';
+import { QuoteAge } from '../quote/QuoteAge';
+import { useRefreshTick } from '../quote/refresh';
 
 const BCH_DECIMALS = 8;
 const QUOTE_PAUSE_MS = 400;
@@ -39,7 +41,9 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
   const payUnit = side === 'buy' ? 'BCH' : token.symbol;
   const getUnit = side === 'buy' ? token.symbol : 'BCH';
   const amount = parseUnits(text, payDecimals);
-  const quote = useQuote(token.symbol, side, amount, QUOTE_PAUSE_MS);
+  // The price asks again by itself while nothing is being signed (config quote.autoRefreshMs).
+  const tick = useRefreshTick(config.quote.autoRefreshMs, run.phase !== 'running');
+  const quote = useQuote(token.symbol, side, amount, QUOTE_PAUSE_MS, tick);
   const view = wallet.view;
   const have = view ? (side === 'buy' ? view.sats : (view.tokens[token.category.toLowerCase()] ?? 0n)) : undefined;
   const short = have !== undefined && amount !== undefined && amount > have;
@@ -183,17 +187,21 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
         {primary.hat ? <WizardHat /> : null}
         {primary.label}
       </button>
-      <details className="swap__fees">
-        <summary>{t('swap.fees')}</summary>
-        <p>{t('swap.poolFee', { pct: pct(POOL_V0_FEE_NUMERATOR, POOL_V0_FEE_DENOMINATOR) })}</p>
-        <p>{t('swap.networkFee', { fee: formatUnits(BigInt(config.connect.feeCapSats), BCH_DECIMALS) })}</p>
-        <p>
-          {config.business.feeBps > 0 ? t('swap.sampanFee', { pct: pct(BigInt(config.business.feeBps), 10000n) }) : t('swap.sampanFeeNone')}
-          {quote.status === 'ok' && BigInt(quote.quote.sampanFeeSats) > 0n
-            ? ` ${t('swap.sampanFeeQuote', { fee: formatUnits(BigInt(quote.quote.sampanFeeSats), BCH_DECIMALS) })}`
-            : null}
-        </p>
-      </details>
+      {/* The price's age shares the Fees line, so the card is no taller (first screen, ADR 0078). */}
+      <div className="swap__foot">
+        <details className="swap__fees">
+          <summary>{t('swap.fees')}</summary>
+          <p>{t('swap.poolFee', { pct: pct(POOL_V0_FEE_NUMERATOR, POOL_V0_FEE_DENOMINATOR) })}</p>
+          <p>{t('swap.networkFee', { fee: formatUnits(BigInt(config.connect.feeCapSats), BCH_DECIMALS) })}</p>
+          <p>
+            {config.business.feeBps > 0 ? t('swap.sampanFee', { pct: pct(BigInt(config.business.feeBps), 10000n) }) : t('swap.sampanFeeNone')}
+            {quote.status === 'ok' && BigInt(quote.quote.sampanFeeSats) > 0n
+              ? ` ${t('swap.sampanFeeQuote', { fee: formatUnits(BigInt(quote.quote.sampanFeeSats), BCH_DECIMALS) })}`
+              : null}
+          </p>
+        </details>
+        <QuoteAge at={quote.status === 'ok' && config.quote.autoRefreshMs > 0 ? quote.at : null} />
+      </div>
     </div>
   );
 }

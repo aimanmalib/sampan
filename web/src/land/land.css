@@ -294,3 +294,23 @@
     transition: none;
   }
 }
+
+/* ui.hero "card" (ADR 0078). Phone: the status chips follow the card, so the headline and the whole card stay on the
+   first screen. Wide screen: the chips take the sentence's place beside the card; the sentence follows the judge strip. */
+@media (max-width: 55.99rem) {
+  .page--judge .hero__chips {
+    order: 1;
+    margin: 0;
+  }
+}
+@media (min-width: 56rem) {
+  .page--judge .hero__chips {
+    grid-column: 1;
+    grid-row: 2;
+    margin: 0;
+    align-self: start;
+  }
+  .page--judge .hero__sub--after {
+    grid-row: auto;
+  }
+}

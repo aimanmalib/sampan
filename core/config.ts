@@ -180,6 +180,7 @@ export interface SampanConfig {
   /** The front page's "Measured" card: `proof` = counts from docs/MEASURED.md made when the page is built (the same counter as
    *  the README bounty table), with this server's own records as a small second line; `stats` = the server's records only. */
   measured: MeasuredConfig;
+  quote: QuoteConfig;
   /**
    * How the status pages draw; not a flow. ferryMotion: the ferry on every status page and the landing card, moving while a step is under way.
    * qrAutoOpen: the landing card opens the address and shows its QR as soon as the owner is known (false = the "Get my landing address" button).
@@ -188,8 +189,18 @@ export interface SampanConfig {
    * themes: the looks the build carries, each web/src/themes/<name>.css; always includes "paper", the way back.
    * theme: the one the page wears, written into <html data-theme> when the page is built.
    * icons: token symbol or chain key → icon file web/src/icons/<file>.svg; a name not listed gets a one-letter monogram.
+   * hero: the front page's top, one of HERO_KINDS.
    */
-  ui: { ferryMotion: boolean; qrAutoOpen: boolean; qrCloseMs: number; arriveMs: number; themes: string[]; theme: string; icons: Record<string, string> };
+  ui: {
+    ferryMotion: boolean;
+    qrAutoOpen: boolean;
+    qrCloseMs: number;
+    arriveMs: number;
+    themes: string[];
+    theme: string;
+    icons: Record<string, string>;
+    hero: (typeof HERO_KINDS)[number];
+  };
   /** Languages the page offers, in menu order, each by its own name; every code has a lang/<code>.json. default: shown until a visitor picks one. */
   i18n: I18nConfig;
 }
@@ -233,6 +244,7 @@ export interface PublicConfig {
   keepCompare: KeepConfig;
   activity: ActivityConfig;
   measured: MeasuredConfig;
+  quote: QuoteConfig;
   /** The atomic swap route's client file, contract and service path (the page loads nothing from it while features.atom is false). */
   atom: AtomConfig;
   /** 1Click as a second route: offered assets and timings only (core/oneclick-config.ts). */
@@ -246,6 +258,10 @@ export interface PublicConfig {
 
 export const MEASURED_SOURCES = ['proof', 'stats'] as const;
 export interface MeasuredConfig { source: (typeof MEASURED_SOURCES)[number] }
+/** The front page's top: `card` = one headline, live status chips, then the action card; `phone` = the earlier headline with its sentence (ADR 0071). */
+export const HERO_KINDS = ['card', 'phone'] as const;
+/** autoRefreshMs: how often a shown price asks again while the tab is visible and no dialog is open (0 = never; else 2000 to 60000). */
+export interface QuoteConfig { autoRefreshMs: number }
 
 const HEX32 = /^[0-9a-fA-F]{64}$/;
 const ROUTES: readonly ActiveRoute[] = ['none', 'near-intents', 'thorchain'];
@@ -417,6 +433,12 @@ export function validateConfig(c: SampanConfig): string[] {
   errors.push(...validateKeep(c.keepCompare));
   errors.push(...validateActivity(c.activity));
   need((MEASURED_SOURCES as readonly string[]).includes(String(c.measured?.source)), `measured.source: one of ${MEASURED_SOURCES.join(', ')}`);
+  const refresh = c.quote?.autoRefreshMs;
+  need(
+    typeof refresh === 'number' && Number.isInteger(refresh) && (refresh === 0 || (refresh >= 2000 && refresh <= 60000)),
+    'quote.autoRefreshMs: 0 (off) or an integer from 2000 to 60000',
+  );
+  need((HERO_KINDS as readonly string[]).includes(String(c.ui?.hero)), `ui.hero: one of ${HERO_KINDS.join(', ')}`);
   need(typeof c.judge?.openOnPhone === 'boolean', 'judge.openOnPhone: true or false');
   errors.push(...validateNostrId(c.nostrId));
   need(!c.features?.oneClick || c.oneClick.baseUrl !== '', 'oneClick.baseUrl: required while features.oneClick is true');
@@ -498,10 +520,11 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     keepCompare: c.keepCompare,
     activity: c.activity,
     measured: { source: c.measured.source },
+    quote: { autoRefreshMs: c.quote.autoRefreshMs },
     atom: c.atom,
     oneClick: oneClickPublic(c.oneClick),
     nostrId: nostrIdPublic(c.features.nostrSend, c.nostrId),
-    ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen, qrCloseMs: c.ui.qrCloseMs, arriveMs: c.ui.arriveMs, theme: c.ui.theme, icons: c.ui.icons },
+    ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen, qrCloseMs: c.ui.qrCloseMs, arriveMs: c.ui.arriveMs, theme: c.ui.theme, icons: c.ui.icons, hero: c.ui.hero },
     i18n: { default: c.i18n.default, languages: c.i18n.languages.map(({ code, name, machine }) => (machine ? { code, name, machine } : { code, name })) },
   };
 }

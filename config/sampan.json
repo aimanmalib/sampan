@@ -361,6 +361,9 @@
   "measured": {
     "source": "proof"
   },
+  "quote": {
+    "autoRefreshMs": 5000
+  },
   "ui": {
     "ferryMotion": true,
     "qrAutoOpen": true,
@@ -368,6 +371,7 @@
     "arriveMs": 2400,
     "themes": ["paper", "night", "linen", "ink"],
     "theme": "paper",
+    "hero": "card",
     "icons": { "BCH": "bch", "USDC": "usdc", "USDT": "usdt", "ETH": "eth", "BNB": "bnb", "BSC": "bnb", "AVAX": "avax", "TRON": "trx", "TRX": "trx" }
   },
   "i18n": {

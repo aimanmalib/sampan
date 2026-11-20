@@ -519,3 +519,51 @@ a {
     transition: none !important;
   }
 }
+
+/* ui.hero "card": live status chips under the headline (HeroChips.tsx). Colour and type from theme tokens only; no
+   motion, no filters. One line that scrolls sideways on a narrow phone, wrapping on a wide screen. */
+.hero__chips {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  gap: 0.375rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.hero__chips::-webkit-scrollbar {
+  display: none;
+}
+.hero__chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.hero__chip::before {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--line);
+}
+.hero__chip--open::before {
+  background: var(--river);
+}
+.hero__chip--paused::before {
+  background: var(--lamp);
+}
+@media (min-width: 56rem) {
+  .hero__chips {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
