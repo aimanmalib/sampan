@@ -27,6 +27,8 @@ import type { Take } from './take.js';
 
 const LEDGER = 'state/test-ledger.jsonl';
 export const WALLET_NAME = 'Test EVM wallet';
+/** Approval and deposit, each waiting for its receipt (evm.receiptWaitSeconds at most). */
+const SIGN_TIMEOUT_MS = 600_000;
 
 /** The page side of the stand-in: announces a wallet whose every request goes to this process. */
 export const EVM_BRIDGE = `(() => {
@@ -121,7 +123,7 @@ export async function bringIn(t: Take, d: InDeps): Promise<SceneValue> {
       await ok.click();
     }
     t.mark('the EVM wallet signs: approval, then deposit');
-    await page.locator('.swap__done').or(page.locator('.swap__error[role="alert"]')).first().waitFor({ timeout: evm.key === 'ETH' ? 600_000 : 300_000 });
+    await page.locator('.swap__done').or(page.locator('.swap__error[role="alert"]')).first().waitFor({ timeout: SIGN_TIMEOUT_MS });
     if (await page.locator('.swap__error[role="alert"]').isVisible()) throw new Error(`the page reports: ${await page.locator('.swap__error[role="alert"]').textContent()}`);
     const deposit = sent.at(-1);
     if (!deposit) throw new Error('the page sent no transaction');

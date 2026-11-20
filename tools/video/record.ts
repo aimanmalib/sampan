@@ -1,7 +1,7 @@
 // Records the raw clips of the demo video (KP24): real pages, real mainnet transactions, a clock in the corner.
 //   npx tsx tools/video/record.ts --scene front|how|swap|land|in|all [--engine chromium-desktop|webkit-iphone13|both]
 //     [--base https://sampan.sasateguh.com] [--out state/video] [--write]
-//     land: [--land-owner 9] [--land-bch 0.001]   in: [--asset AVAX.USDC-0X…] [--amount 1.6] [--receive PUSD] [--in-owner 19] [--port 4189]
+//     land: [--land-owner 9] [--land-bch 0.001]   in: --asset <thorchain.assets name> [--amount 1.6] [--receive PUSD] [--in-owner 19] [--port 4189]
 // front, how, swap and land run on the live site; in runs the built server of this commit (dist/, npm run build) on
 // this host with the one asset switched on (tools/video/scene-in.ts). swap, land and in spend from the test wallets
 // inside state/budget.json. Clips go to <out>/<scene>-<engine>.webm and every take to <out>/shots.json (scene, clip,
@@ -15,7 +15,7 @@ import { ElectrumChain } from '../../server/chain/electrum.js';
 import { loadConfig } from '../../server/config.js';
 import { SECRET_KEYS, parseEnv } from '../test-wallet/keys.js';
 import { appendRuns } from '../measure/runs.js';
-import { arg, runCli } from '../measure/run-cli.js';
+import { arg, need, runCli } from '../measure/run-cli.js';
 import { bringIn, EVM_BRIDGE } from './scene-in.js';
 import { front, how, land, swap, type SceneValue } from './scene-live.js';
 import { addShot, missingTxids, SCENES, type Scene, type ShotsFile } from './shots.js';
@@ -64,7 +64,7 @@ async function main(): Promise<void> {
           config,
           en,
           chain,
-          asset: arg('--asset') ?? 'AVAX.USDC-0XB97EF9EF8734C71904D8002F8B6BC66DD9C48A6E',
+          asset: need('--asset'),
           amount: arg('--amount') ?? '1.6',
           receive: arg('--receive') ?? config.defaultToken,
           owner: receive(Number(arg('--in-owner') ?? '19')),
