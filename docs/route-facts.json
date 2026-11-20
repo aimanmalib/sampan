@@ -1,0 +1,559 @@
+{
+  "generated_at": "2026-11-20T23:17:49.681Z",
+  "signatures_counted_at": "2026-11-20T23:14:08.185Z",
+  "routes": [
+    {
+      "id": "swap",
+      "label": "tabs.swap",
+      "flow": "swap",
+      "route": null,
+      "chain": null,
+      "symbols": [],
+      "time": {
+        "median_s": 3,
+        "n": 22,
+        "min_s": 1.4,
+        "max_s": 4.4,
+        "rows": [
+          "3ab8f28d873185c1206eb558d31692d2aa2d3ac22d10813ef9cb03d016af6f26",
+          "a7dc452a9225a43f6d8565a6560cf0e19d79f0cd38a354f6d2006afc4287605e",
+          "4178ec6e73e9babe0932a1efd3fb249e505ccd135e63af2e47cf6143e82ddbeb",
+          "18f728af257d3a9f90a8b91ab61a05a4a7d219bf5bb5dbc3722f52150e59d98b",
+          "f2ba7ddd2712927e339d7294ef1d95ad4814245896643380bb2ed14fc82359be",
+          "c5a9641d388051aeedccc918e27d7a71e25b880e36f8ea68380a280f19eed14d",
+          "348a19cf7c15fb1751cb76746539db2bee6cce3091f84dd99066c9b94419e064",
+          "796c730ded97cf41ee144c60270bde7a70adc4fd84ce4999ef600af5124c04a4",
+          "cc419c612d7ae9474c8e1b33585a5dcc55d968db2f6e83ecee3d95aecc154da2",
+          "35b4f68d212b93df1089951cd998115dbf708a046b323a0b3b479c27911c92d4",
+          "11ab321b49204daad4187444e07b1d0e000fdc8281cfcfa68716f83fda7575fe",
+          "dd1b6c416a19acb5371674cdd5ba179d00067d625c2d1f30751d9a8771adb2df",
+          "26f9aab0dc21774ab687e0f3a9ceb04fd3d03d7b0501e73190064c44eecc4398",
+          "f9c4f0f3ce552d5f4e70c0500968d26791904fe22fe5e2d5b452a17215844e44",
+          "600b815b45d36066daadbf8f42b75ea16a5eeb03ba2eeba5e711afbcfa38e389",
+          "2f3d3c9aac9bb00689c47d06074da707efdc2c6d72bc119228ffd192965a7f6e",
+          "0ea316d91af1ad7b76f88d35f19fc6c2f7f58db99d7efc2783d98b0d3cfc2ec8",
+          "89886202943d6af7ceef74b89977882f8e67c16deb6bc63b8b2fdc1398b26595",
+          "896abfaf68f42349d2202029e108da920824f080f60aaf4efc8eadac4c259735",
+          "310060b0d26ad0c90b1103863010a4d44094b0477f4da821f60d9720553dcc84",
+          "4f9b5b01dba4132d9ea35d57f367db44e0ea25dcab439fa87488e3d345332c1b",
+          "bac74ab72a6541a44a2bc786ac681c0e11af8fe2b58b1cbb9e2f439c0c3c80db"
+        ]
+      },
+      "signatures": 1,
+      "payments": 0,
+      "fees": {
+        "2": {
+          "usd": 0.01,
+          "pct": 0.35,
+          "impact_usd": 0,
+          "quoted_at": "2026-11-20T23:17:23.577Z",
+          "network": "included"
+        },
+        "20": {
+          "usd": 0.06,
+          "pct": 0.31,
+          "impact_usd": 0,
+          "quoted_at": "2026-11-20T23:17:23.745Z",
+          "network": "included"
+        },
+        "100": {
+          "usd": 0.31,
+          "pct": 0.31,
+          "impact_usd": 0.09,
+          "quoted_at": "2026-11-20T23:17:23.840Z",
+          "network": "included"
+        }
+      }
+    },
+    {
+      "id": "land",
+      "label": "land.source",
+      "flow": "land",
+      "route": null,
+      "chain": null,
+      "symbols": [],
+      "time": {
+        "median_s": 3.4,
+        "n": 7,
+        "min_s": 1,
+        "max_s": 4.5,
+        "rows": [
+          "3c04bd0a95e8432b0f36cbead20cc8aff32b017e2f88951ed7766cd02d251a79",
+          "418fe0c9d58fcb671e9d5cda5fd40c081be9f9496a114a59142048fa19375b6d",
+          "f75dbacac674f8d835e69d245ccb8100181bea8f1ec5bd4cafb6e2901de2c7fe",
+          "a9ceff4389d276597f2c6e958c01f31d580ad4573191ea2c17f7e7142400f0b7",
+          "ea8582c8768b1a0c9d393b281b000e312e8f79081c15cca82b4207a995b86b70",
+          "dc947e6248dbef310493fb239c425d1de87c39102d099cb4be9345e13135e4f1",
+          "046aed2ea0b99dbf190698371dd93544cd1839972f1f18cd5283d4b8e69dd6ee"
+        ]
+      },
+      "signatures": 0,
+      "payments": 1,
+      "fees": {
+        "2": {
+          "usd": 0.01,
+          "pct": 0.37,
+          "impact_usd": 0,
+          "quoted_at": "2026-11-20T23:17:23.874Z",
+          "network": "excluded"
+        },
+        "20": {
+          "usd": 0.06,
+          "pct": 0.31,
+          "impact_usd": 0,
+          "quoted_at": "2026-11-20T23:17:23.967Z",
+          "network": "excluded"
+        },
+        "100": {
+          "usd": 0.31,
+          "pct": 0.31,
+          "impact_usd": 0.09,
+          "quoted_at": "2026-11-20T23:17:24.052Z",
+          "network": "excluded"
+        }
+      }
+    },
+    {
+      "id": "out:thorchain:ETH",
+      "label": "tabs.out",
+      "flow": "out",
+      "route": "thorchain",
+      "chain": "ETH",
+      "symbols": [
+        "USDC"
+      ],
+      "time": {
+        "median_s": 466.6,
+        "n": 3,
+        "min_s": 373.7,
+        "max_s": 1104,
+        "rows": [
+          "80a72627cdc8f8155b3b1b9ea4d47d6500f82481c060ec9a372407bfb3acbf84",
+          "fa3bdc53bf3a3d7ce25dc4f2c6fbc0c262c238141b5300fad07f720737c0f577",
+          "c803bfef5923eb065de8857580f0b90ac338509d3ca0249dd41a80e9c7d76fd0"
+        ]
+      },
+      "signatures": 2,
+      "payments": 0,
+      "fees": {
+        "2": {
+          "usd": 0.26,
+          "pct": 13.13,
+          "impact_usd": -0.02,
+          "quoted_at": "2026-11-20T23:17:24.572Z",
+          "network": "included"
+        },
+        "20": {
+          "usd": 0.35,
+          "pct": 1.77,
+          "impact_usd": -0.22,
+          "quoted_at": "2026-11-20T23:17:25.175Z",
+          "network": "included"
+        },
+        "100": {
+          "usd": 0.76,
+          "pct": 0.76,
+          "impact_usd": -0.97,
+          "quoted_at": "2026-11-20T23:17:25.745Z",
+          "network": "included"
+        }
+      }
+    },
+    {
+      "id": "out:thorchain:BSC",
+      "label": "tabs.out",
+      "flow": "out",
+      "route": "thorchain",
+      "chain": "BSC",
+      "symbols": [
+        "USDC",
+        "USDT"
+      ],
+      "time": {
+        "median_s": 107.15,
+        "n": 2,
+        "min_s": 98.4,
+        "max_s": 115.9,
+        "rows": [
+          "ad48fa1102e1ef02869dbddc7ba6a104501e42794ff084dbfa8219e935c4e7ed",
+          "925b00383b749442fdded5c1f0919bc9581c0e44b2c50da54e95e8dfee83e259"
+        ]
+      },
+      "signatures": 2,
+      "payments": 0,
+      "fees": {
+        "2": {
+          "usd": 0.26,
+          "pct": 13.14,
+          "impact_usd": -0.02,
+          "quoted_at": "2026-11-20T23:17:26.059Z",
+          "network": "included"
+        },
+        "20": {
+          "usd": 0.35,
+          "pct": 1.77,
+          "impact_usd": -0.21,
+          "quoted_at": "2026-11-20T23:17:26.457Z",
+          "network": "included"
+        },
+        "100": {
+          "usd": 0.77,
+          "pct": 0.77,
+          "impact_usd": -0.89,
+          "quoted_at": "2026-11-20T23:17:26.960Z",
+          "network": "included"
+        }
+      }
+    },
+    {
+      "id": "out:thorchain:AVAX",
+      "label": "tabs.out",
+      "flow": "out",
+      "route": "thorchain",
+      "chain": "AVAX",
+      "symbols": [
+        "USDC",
+        "USDT"
+      ],
+      "time": {
+        "median_s": 3344.25,
+        "n": 2,
+        "min_s": 3283.4,
+        "max_s": 3405.1,
+        "rows": [
+          "55621bde55adf3aba3bfb64fea956cd07f8f13d6a73b6c601cb40a6a1a1c14bf",
+          "3efcc889b2dd837646ffcb45b638438da365cd94fbd1d7288a7620edc8315649"
+        ]
+      },
+      "signatures": 2,
+      "payments": 0,
+      "fees": {
+        "2": {
+          "usd": 0.26,
+          "pct": 13.13,
+          "impact_usd": -0.02,
+          "quoted_at": "2026-11-20T23:17:27.271Z",
+          "network": "included"
+        },
+        "20": {
+          "usd": 0.35,
+          "pct": 1.77,
+          "impact_usd": -0.21,
+          "quoted_at": "2026-11-20T23:17:27.681Z",
+          "network": "included"
+        },
+        "100": {
+          "usd": 0.79,
+          "pct": 0.79,
+          "impact_usd": -0.85,
+          "quoted_at": "2026-11-20T23:17:28.057Z",
+          "network": "included"
+        }
+      }
+    },
+    {
+      "id": "out:near-intents:ETH",
+      "label": "tabs.out",
+      "flow": "out",
+      "route": "near-intents",
+      "chain": "ETH",
+      "symbols": [
+        "USDC"
+      ],
+      "time": {
+        "median_s": 2129.6,
+        "n": 1,
+        "min_s": 2129.6,
+        "max_s": 2129.6,
+        "rows": [
+          "6ee09d11784219d146d3985bc30b372a2b95bfc0d6f65f8925eb246f5ba0cf44"
+        ]
+      },
+      "signatures": 2,
+      "payments": 0,
+      "fees": {
+        "2": {
+          "usd": 0.31,
+          "pct": 15.37,
+          "impact_usd": 0.01,
+          "quoted_at": "2026-11-20T23:17:30.252Z",
+          "network": "included"
+        },
+        "20": {
+          "usd": 0.36,
+          "pct": 1.81,
+          "impact_usd": 0.07,
+          "quoted_at": "2026-11-20T23:17:31.277Z",
+          "network": "included"
+        },
+        "100": {
+          "usd": 0.6,
+          "pct": 0.6,
+          "impact_usd": 0.44,
+          "quoted_at": "2026-11-20T23:17:32.245Z",
+          "network": "included"
+        }
+      }
+    },
+    {
+      "id": "out:near-intents:BASE",
+      "label": "tabs.out",
+      "flow": "out",
+      "route": "near-intents",
+      "chain": "BASE",
+      "symbols": [
+        "USDC"
+      ],
+      "time": {
+        "median_s": 2067.5,
+        "n": 1,
+        "min_s": 2067.5,
+        "max_s": 2067.5,
+        "rows": [
+          "bb5ff09565004e7c1b3294a6b09892440af22adf616b1ed6b67f8fd3f83dcd94"
+        ]
+      },
+      "signatures": 2,
+      "payments": 0,
+      "fees": {
+        "2": {
+          "usd": 0.01,
+          "pct": 0.49,
+          "impact_usd": 0.01,
+          "quoted_at": "2026-11-20T23:17:33.044Z",
+          "network": "included"
+        },
+        "20": {
+          "usd": 0.06,
+          "pct": 0.32,
+          "impact_usd": 0.06,
+          "quoted_at": "2026-11-20T23:17:33.745Z",
+          "network": "included"
+        },
+        "100": {
+          "usd": 0.3,
+          "pct": 0.3,
+          "impact_usd": 0.4,
+          "quoted_at": "2026-11-20T23:17:34.540Z",
+          "network": "included"
+        }
+      }
+    },
+    {
+      "id": "in:thorchain:ETH",
+      "label": "tabs.in",
+      "flow": "in",
+      "route": "thorchain",
+      "chain": "ETH",
+      "symbols": [
+        "USDC"
+      ],
+      "time": {
+        "median_s": 219,
+        "n": 3,
+        "min_s": 94.8,
+        "max_s": 2021.1,
+        "rows": [
+          "99262bb4ba739b2cd93ab0197c15166da0c6f57f6d1f2abd0a20ae3b1f330d5a",
+          "93f6c6a533cb817d59b78ed0ce5046292003e6ad5c09405fdfb6c75fe9d3f201",
+          "ee69844983f8798eebcf5640745a9ad382f7e223bc060c7c0cfd7d172921fea8"
+        ]
+      },
+      "signatures": 2,
+      "payments": 0,
+      "fees": {
+        "2": {
+          "usd": 0.29,
+          "pct": 14.41,
+          "impact_usd": 0.02,
+          "quoted_at": "2026-11-20T23:17:36.486Z",
+          "network": "included"
+        },
+        "20": {
+          "usd": 0.38,
+          "pct": 1.91,
+          "impact_usd": 0.22,
+          "quoted_at": "2026-11-20T23:17:36.941Z",
+          "network": "included"
+        },
+        "100": {
+          "usd": 0.78,
+          "pct": 0.78,
+          "impact_usd": 1.21,
+          "quoted_at": "2026-11-20T23:17:37.445Z",
+          "network": "included"
+        }
+      }
+    },
+    {
+      "id": "in:thorchain:BSC",
+      "label": "tabs.in",
+      "flow": "in",
+      "route": "thorchain",
+      "chain": "BSC",
+      "symbols": [
+        "USDC",
+        "USDT"
+      ],
+      "time": {
+        "median_s": 55.7,
+        "n": 2,
+        "min_s": 48.4,
+        "max_s": 63,
+        "rows": [
+          "3265f9b3269a28cd6dfefad986375f85a671122418d37e25890aee5e32051e0b",
+          "dde7a35b834e62ec93525e2892ab67bfcf2943ef236d03325031aa6b41e4ad88"
+        ]
+      },
+      "signatures": 2,
+      "payments": 0,
+      "fees": {
+        "2": {
+          "usd": 0.26,
+          "pct": 13.18,
+          "impact_usd": 0.02,
+          "quoted_at": "2026-11-20T23:17:38.261Z",
+          "network": "included"
+        },
+        "20": {
+          "usd": 0.35,
+          "pct": 1.77,
+          "impact_usd": 0.28,
+          "quoted_at": "2026-11-20T23:17:38.847Z",
+          "network": "included"
+        },
+        "100": {
+          "usd": 0.77,
+          "pct": 0.77,
+          "impact_usd": 1.56,
+          "quoted_at": "2026-11-20T23:17:39.441Z",
+          "network": "included"
+        }
+      }
+    },
+    {
+      "id": "in:thorchain:AVAX",
+      "label": "tabs.in",
+      "flow": "in",
+      "route": "thorchain",
+      "chain": "AVAX",
+      "symbols": [
+        "USDC"
+      ],
+      "time": null,
+      "signatures": 2,
+      "payments": 0,
+      "fees": {
+        "2": {
+          "usd": 0.27,
+          "pct": 13.31,
+          "impact_usd": 0.02,
+          "quoted_at": "2026-11-20T23:17:40.240Z",
+          "network": "included"
+        },
+        "20": {
+          "usd": 0.36,
+          "pct": 1.78,
+          "impact_usd": 0.23,
+          "quoted_at": "2026-11-20T23:17:41.039Z",
+          "network": "included"
+        },
+        "100": {
+          "usd": 0.79,
+          "pct": 0.79,
+          "impact_usd": 1.36,
+          "quoted_at": "2026-11-20T23:17:42.956Z",
+          "network": "included"
+        }
+      }
+    },
+    {
+      "id": "in:near-intents:ETH",
+      "label": "tabs.in",
+      "flow": "in",
+      "route": "near-intents",
+      "chain": "ETH",
+      "symbols": [
+        "USDC"
+      ],
+      "time": {
+        "median_s": 1327,
+        "n": 1,
+        "min_s": 1327,
+        "max_s": 1327,
+        "rows": [
+          "d5aa3825d4f2cc1c9ecd73d6e5fdfd356e2b12b001d730327f36c5e078b0dfe5"
+        ]
+      },
+      "signatures": 1,
+      "payments": 0,
+      "fees": {
+        "2": {
+          "usd": 0.01,
+          "pct": 0.42,
+          "impact_usd": 0,
+          "quoted_at": "2026-11-20T23:17:44.348Z",
+          "network": "excluded"
+        },
+        "20": {
+          "usd": 0.06,
+          "pct": 0.31,
+          "impact_usd": 0.05,
+          "quoted_at": "2026-11-20T23:17:45.250Z",
+          "network": "excluded"
+        },
+        "100": {
+          "usd": 0.3,
+          "pct": 0.3,
+          "impact_usd": 0.34,
+          "quoted_at": "2026-11-20T23:17:46.047Z",
+          "network": "excluded"
+        }
+      }
+    },
+    {
+      "id": "in:near-intents:BASE",
+      "label": "tabs.in",
+      "flow": "in",
+      "route": "near-intents",
+      "chain": "BASE",
+      "symbols": [
+        "USDC"
+      ],
+      "time": {
+        "median_s": 399.1,
+        "n": 1,
+        "min_s": 399.1,
+        "max_s": 399.1,
+        "rows": [
+          "3f2690d8d026ba8cf3ae537e0ae4bc2b11f2972652d8d0c9b2f16c495e9cee2d"
+        ]
+      },
+      "signatures": 1,
+      "payments": 0,
+      "fees": {
+        "2": {
+          "usd": 0.01,
+          "pct": 0.42,
+          "impact_usd": 0,
+          "quoted_at": "2026-11-20T23:17:46.851Z",
+          "network": "excluded"
+        },
+        "20": {
+          "usd": 0.06,
+          "pct": 0.31,
+          "impact_usd": 0.05,
+          "quoted_at": "2026-11-20T23:17:47.655Z",
+          "network": "excluded"
+        },
+        "100": {
+          "usd": 0.3,
+          "pct": 0.3,
+          "impact_usd": 0.32,
+          "quoted_at": "2026-11-20T23:17:49.681Z",
+          "network": "excluded"
+        }
+      }
+    }
+  ]
+}
