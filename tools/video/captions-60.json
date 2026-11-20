@@ -1,0 +1,186 @@
+{
+  "_note": "The one minute cut (tools/video/edit.sh --captions tools/video/captions-60.json): what, why, one real crossing, proof. Same voice, style and audio as captions.json; clip windows are marks of state/video/shots.json plus offsets. {en.<key>} is a string of lang/en.json, {headline} and {<scene>.seconds} come from docs/MEASURED.md; nothing here is typed by hand.",
+  "frame": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "pageTop": 150,
+    "pageScale": 0.86
+  },
+  "voice": {
+    "provider": "ElevenLabs",
+    "voiceId": "Xb7hH8MSUJpSbSDYk0k2",
+    "voiceName": "Alice",
+    "model": "eleven_multilingual_v2",
+    "language": "en"
+  },
+  "style": {
+    "paper": "#f4f1ea",
+    "ink": "#12261f",
+    "river": "#0e6b5c",
+    "lamp": "#e8a23a",
+    "card": "#fffdf8",
+    "display": "Fraunces",
+    "text": "IBM Plex Sans",
+    "mono": "IBM Plex Mono",
+    "fontsDir": "web/src/fonts"
+  },
+  "audio": {
+    "lufs": -16,
+    "truePeak": -1.5,
+    "lra": 11,
+    "musicDb": -27,
+    "musicChord": [
+      110,
+      164.81,
+      220,
+      277.18,
+      329.63
+    ],
+    "musicSwellSeconds": 9,
+    "leadSeconds": 0.4,
+    "tailSeconds": 0.7
+  },
+  "subtitle": {
+    "maxChars": 46,
+    "size": 60,
+    "captionSize": 38
+  },
+  "scenes": [
+    {
+      "id": "open",
+      "seconds": 8,
+      "clips": [
+        {
+          "shot": "front/chromium-desktop",
+          "from": [
+            "front page loaded",
+            -0.4
+          ],
+          "to": [
+            "price refreshed by itself",
+            -0.6
+          ]
+        }
+      ],
+      "caption": "{en.hero.title}",
+      "text": "Sampan moves stablecoins in and out of Bitcoin Cash, from the wallet you already use."
+    },
+    {
+      "id": "why",
+      "seconds": 10,
+      "clips": [
+        {
+          "shot": "land/chromium-desktop",
+          "from": [
+            "Bring in tab: a landing address for any BCH wallet",
+            -0.5
+          ],
+          "to": [
+            "landing address and QR shown",
+            3
+          ]
+        }
+      ],
+      "caption": "Your coins stay yours: a contract converts them, or gives them back",
+      "text": "Most dollar stablecoins live on other chains. Sampan brings them into your Bitcoin Cash wallet as PUSD, and it never holds your coins."
+    },
+    {
+      "id": "cross",
+      "clips": [
+        {
+          "shot": "in/chromium-desktop",
+          "from": [
+            "Bring in",
+            -0.3
+          ],
+          "to": [
+            "quote and cost shown",
+            1.5
+          ],
+          "endsBefore": "BCH arrived and turned into PUSD"
+        },
+        {
+          "shot": "in/chromium-desktop",
+          "from": [
+            "deposit sent",
+            -1.5
+          ],
+          "to": [
+            "deposit sent",
+            1.5
+          ],
+          "endsBefore": "BCH arrived and turned into PUSD"
+        },
+        {
+          "shot": "in/chromium-desktop",
+          "from": [
+            "crossing status page",
+            0
+          ],
+          "to": [
+            "crossing status page",
+            4
+          ],
+          "endsBefore": "BCH arrived and turned into PUSD"
+        },
+        {
+          "shot": "in/chromium-desktop",
+          "from": [
+            "BCH arrived and turned into PUSD",
+            -6
+          ],
+          "to": [
+            "BCH arrived and turned into PUSD",
+            -1.5
+          ],
+          "endsBefore": "BCH arrived and turned into PUSD"
+        },
+        {
+          "shot": "receipt/chromium-desktop",
+          "from": [
+            "landing status page: converted",
+            0
+          ],
+          "to": [
+            "landing status page: converted",
+            6
+          ]
+        }
+      ],
+      "caption": "USDC on Avalanche C-Chain arrives as PUSD · the wait is cut, the clock in the corner is real",
+      "text": "Here, USDC on Avalanche comes in. One deposit on that chain lands as BCH at a landing address, and the contract turns it into PUSD. The wait is cut, and the clock in the corner keeps the real time. The receipt links every transaction."
+    },
+    {
+      "id": "proof",
+      "clips": [
+        {
+          "shot": "how/chromium-desktop",
+          "from": [
+            "proof table",
+            -1
+          ],
+          "to": [
+            "proof table",
+            5
+          ]
+        }
+      ],
+      "caption": "{headline}",
+      "text": "Every number here is counted from mainnet transactions you can open in a block explorer."
+    },
+    {
+      "id": "end",
+      "layout": "card",
+      "seconds": 4,
+      "card": [
+        "sampan.sasateguh.com",
+        "Open source, MIT",
+        "Narration voice generated with ElevenLabs"
+      ],
+      "caption": "",
+      "text": "Try it at sampan.sasateguh.com.",
+      "say": "Try it at sampan dot sasateguh dot com."
+    }
+  ]
+}

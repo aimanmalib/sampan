@@ -5,7 +5,9 @@
 // --web-out also writes the cut for the /demo page (ADR 0082): the same picture with the scene titles and the end card
 // but no spoken subtitles burned in, because the page adds a subtitle track per language on top of the picture.
 //   tools/video/edit.sh --out <file.mp4> [--web-out <file.mp4>] [--clips state/video] [--work state/video/edit]
-//     [--key-file <env file>] [--no-voice]
+//     [--captions tools/video/captions.json] [--report <file.json>] [--key-file <env file>] [--no-voice]
+// --captions picks another scene file (tools/video/captions-60.json is the one minute cut); --report writes the
+// measurements there too. Every transaction a shown shot holds must be in docs/MEASURED.md, or the cut is refused.
 // The ElevenLabs key comes from ELEVENLABS_API_KEY or the ELEVENLABS_API_KEY line of --key-file; it is sent only as a
 // request header and never written. Narration is cached by text, so a second run makes no request.
 import { spawnSync } from 'node:child_process';
@@ -16,7 +18,7 @@ import path from 'node:path';
 import { headlineParts } from '../../core/client/measured.js';
 import { measuredHeadline } from '../../scripts/measured-json.js';
 import { arg, runCli } from '../measure/run-cli.js';
-import { ass, chunks, pageX, clipWindow, cueTimes, fill, placeScenes, runVars, srt, vtt, type Alignment, type Captions, type Cue, type Placed } from './plan.js';
+import { ass, chunks, pageX, clipWindow, cueTimes, fill, langVars, placeScenes, runVars, sceneTxids, srt, vtt, type Alignment, type Captions, type Cue, type Placed } from './plan.js';
 import type { ShotsFile } from './shots.js';
 
 function run(cmd: string, args: string[]): string {
@@ -118,12 +120,15 @@ async function main(): Promise<void> {
   const voiceOn = !process.argv.includes('--no-voice');
   mkdirSync(path.join(work, 'voice'), { recursive: true });
   mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
-  const c = JSON.parse(readFileSync('tools/video/captions.json', 'utf8')) as Captions;
+  const c = JSON.parse(readFileSync(arg('--captions') ?? 'tools/video/captions.json', 'utf8')) as Captions;
   const shots = (JSON.parse(readFileSync(path.join(clips, 'shots.json'), 'utf8')) as ShotsFile).shots;
   const en = JSON.parse(readFileSync('lang/en.json', 'utf8')) as Record<string, string>;
   const list = (items: string[]): string => new Intl.ListFormat('en', { type: 'conjunction' }).format(items);
   const headline = headlineParts(measuredHeadline(), (k, v) => fill(en[k] ?? '', v ?? {}), list).join(' · ');
-  const vars = { headline, ...runVars(shots, readFileSync('docs/MEASURED.md', 'utf8')) };
+  const measured = readFileSync('docs/MEASURED.md', 'utf8');
+  const shown = sceneTxids(shots, c.scenes, measured);
+  if (shown.missing.length) throw new Error(`shown transactions not in docs/MEASURED.md: ${shown.missing.join(', ')}`);
+  const vars = { headline, ...langVars(en), ...runVars(shots, measured) };
   const captions = c.scenes.map((s) => fill(s.caption, vars));
   const texts = c.scenes.map((s) => fill(s.text, vars));
 
@@ -145,6 +150,7 @@ async function main(): Promise<void> {
   }
   writeFileSync(out.replace(/\.mp4$/, '.srt'), srt(cues));
   writeFileSync(path.join(work, 'sampan-demo.en.vtt'), vtt(cues));
+  writeFileSync(out.replace(/\.mp4$/, '.vtt'), vtt(cues));
   // burnedSubtitles.web: false only when this run wrote a web cut; tools/video/demo-files.ts refuses anything else.
   const burnedSubtitles = { full: true, web: webOut ? false : null };
   writeFileSync(path.join(work, 'plan.json'), `${JSON.stringify({ total, captions, placed, burnedSubtitles }, null, 2)}\n`);
@@ -183,8 +189,8 @@ async function main(): Promise<void> {
     ffmpeg(['-ss', String(t), '-i', out, '-frames:v', '1', path.join(work, `frame-${t}s.png`)]);
     ffmpeg(['-ss', String(t), '-i', out, '-frames:v', '1', '-vf', 'scale=390:-2', path.join(work, `frame-${t}s-390.png`)]);
   }
-  const report = { ...measure(out, total), voice: voiceOn ? `${c.voice.provider} ${c.voice.voiceName} (${c.voice.model})` : 'none', scenes: placed.map((p) => ({ id: p.id, start: p.start, duration: p.duration })) };
-  writeFileSync(path.join(work, 'measure.json'), `${JSON.stringify(report, null, 2)}\n`);
+  const report = { ...measure(out, total), voice: voiceOn ? `${c.voice.provider} ${c.voice.voiceName} (${c.voice.model})` : 'none', scenes: placed.map((p) => ({ id: p.id, start: p.start, duration: p.duration })), txids: shown.txids };
+  for (const f of [path.join(work, 'measure.json'), arg('--report')]) if (f) writeFileSync(f, `${JSON.stringify(report, null, 2)}\n`);
   console.log(JSON.stringify(report));
 }
 
