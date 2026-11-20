@@ -109,7 +109,7 @@ export function App() {
       ) : (
       <main className={judge ? 'page page--judge' : 'page'}>
         <section className={heroCard ? 'hero hero--card' : 'hero'}>
-          <HeroPitch />
+          <HeroPitch symbols={vars.symbols} />
           {config && heroCard ? <HeroChips config={config} cross={flows.cross} /> : null}
           {config && !heroCard ? <p className="hero__sub">{t(heroSubKey(flows), vars)}</p> : null}
         </section>

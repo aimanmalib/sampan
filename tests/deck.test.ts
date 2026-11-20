@@ -7,15 +7,17 @@ import { deckHtml } from '../tools/deck/html.js';
 import { END, START } from '../scripts/business-model.js';
 import { measuredHeadline } from '../scripts/measured-json.js';
 import { pitchFrom } from '../core/pitch.js';
+import { symbolList } from '../core/flows.js';
 
 const read = (p: string): string => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 const config = JSON.parse(read('config/sampan.json')) as {
   site: { url: string };
   banner: { deckUrl: string; repoUrl: string; tokenAddress: string };
+  route: { symbols: string[] };
 };
 const en = JSON.parse(read('lang/en.json')) as Record<string, string>;
 const headline = measuredHeadline();
-const pitch = pitchFrom(en, headline);
+const pitch = pitchFrom(en, headline, symbolList(config.route.symbols, en['text.and']!));
 const facts = { siteUrl: config.site.url, repoUrl: config.banner.repoUrl, tokenAddress: config.banner.tokenAddress, pitch };
 const deck = slides(facts);
 const text = (s: Slide): string => [s.title, s.lead ?? '', ...(s.points ?? []), ...(s.foot ?? [])].join('\n');

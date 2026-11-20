@@ -12,6 +12,8 @@ the boat picture and the judging strip that the first screen already holds (ADR 
 
 - Three lang keys in every language: `pitch.what` (the headline), `pitch.why` (one sentence for people paid in BCH
   and people holding USDC or USDT) and `pitch.proof`. English stays at 45 words or fewer (`tests/pitch.test.ts`).
+- `pitch.why` names the open stablecoins through `{symbols}`, from config and the route's health like the hero sub;
+  while no crossing is open, `pitch.whyBch` says the BCH half only. No asset name is typed in a lang file.
 - The proof's numbers are placeholders filled from the front page headline that `scripts/measured-json.ts` counts
   from `docs/MEASURED.md` with the README bounty-table counter (`core/pitch.ts`). No number is typed. The proof is a
   link to the table of every transaction on `/how#proof`.

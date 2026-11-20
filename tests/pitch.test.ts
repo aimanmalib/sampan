@@ -16,7 +16,8 @@ const fixture: Headline = { crossings: 9, chains: ['Ethereum', 'Base'], symbols:
 describe('pitch (K6P4)', () => {
   it('has the three keys, filled in, in every language the config offers', () => {
     for (const [code, text] of Object.entries(langs)) {
-      for (const k of PITCH_KEYS) expect(text[k]?.trim(), `${code} ${k}`).toBeTruthy();
+      for (const k of [...PITCH_KEYS, 'pitch.whyBch']) expect(text[k]?.trim(), `${code} ${k}`).toBeTruthy();
+      expect(text['pitch.why'], code).toContain('{symbols}');
       expect(text['pitch.proof'], code).toMatch(/\{crossings\}.*\{chains\}.*\{txids\}/);
     }
   });
@@ -27,17 +28,22 @@ describe('pitch (K6P4)', () => {
   });
 
   it('takes the proof numbers from the headline it is given', () => {
-    const p = pitchFrom(langs.en!, fixture);
+    const p = pitchFrom(langs.en!, fixture, 'EURC');
     expect(p.proof).toContain('9');
     expect(p.proof).toContain('2');
     expect(p.proof).toContain('31');
     expect(p.proof).not.toMatch(/\{/);
-    expect(pitchFrom(langs.en!, { ...fixture, txids: 32 }).proof).not.toBe(p.proof);
+    expect(pitchFrom(langs.en!, { ...fixture, txids: 32 }, 'EURC').proof).not.toBe(p.proof);
+  });
+
+  it('names the open assets it is given in "why", and only the BCH half with none open', () => {
+    expect(pitchFrom(langs.en!, fixture, 'EURC').why).toContain('EURC');
+    expect(pitchFrom(langs.en!, fixture, '').why).toBe(langs.en!['pitch.whyBch']);
   });
 
   it('on the built page counts from docs/MEASURED.md with the bounty-table counter', () => {
     const h = measuredHeadline();
-    expect(pitchFrom(langs.en!, h).proof).toContain(`${h.crossings} `);
-    expect(pitchFrom(langs.en!, h).proof).toContain(`${h.txids} `);
+    expect(pitchFrom(langs.en!, h, '').proof).toContain(`${h.crossings} `);
+    expect(pitchFrom(langs.en!, h, '').proof).toContain(`${h.txids} `);
   });
 });

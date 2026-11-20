@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { slides, slidesHash } from './content.js';
 import { pitchFrom } from '../../core/pitch.js';
+import { symbolList } from '../../core/flows.js';
 import { measuredHeadline } from '../../scripts/measured-json.js';
 import { deckHtml } from './html.js';
 
@@ -24,20 +25,24 @@ function fontCss(): string {
 }
 
 /** Slide 1 reads the page's pitch.what / pitch.why / pitch.proof (English), with the proof counted from MEASURED. */
-const enPitch = () => pitchFrom(JSON.parse(readFileSync(root('lang/en.json'), 'utf8')) as Record<string, string>, measuredHeadline());
+function enPitch(symbols: string[]) {
+  const en = JSON.parse(readFileSync(root('lang/en.json'), 'utf8')) as Record<string, string>;
+  return pitchFrom(en, measuredHeadline(), symbolList(symbols, en['text.and'] ?? 'and'));
+}
 
 async function main(): Promise<void> {
   const config = JSON.parse(readFileSync(root('config/sampan.json'), 'utf8')) as {
     site: { url: string };
     banner: { repoUrl: string; tokenAddress: string };
     ui: { theme: string };
+    route: { symbols: string[] };
   };
   if (!config.banner.repoUrl) throw new Error('config banner.repoUrl is empty: the deck names the repository');
   const list = slides({
     siteUrl: config.site.url,
     repoUrl: config.banner.repoUrl,
     tokenAddress: config.banner.tokenAddress,
-    pitch: enPitch(),
+    pitch: enPitch(config.route.symbols),
   });
   const html = deckHtml(list, {
     theme: config.ui.theme,

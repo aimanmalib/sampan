@@ -3,7 +3,7 @@
 // without scrolling, the headline, the why and proof lines of the pitch (K6P4), the boat picture with both labelled banks, the judge strip with Fill, the whole card
 // (tabs, amount, filled price line and its one primary button) are fully in view, in every language config offers, on an iPhone 13 and two desktop sizes.
 // After "Fill this in for me" the primary button is still in view without scrolling.
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page, type Route } from '@playwright/test';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import en from '../lang/en.json' with { type: 'json' };
 import fil from '../lang/fil.json' with { type: 'json' };
@@ -35,6 +35,18 @@ async function inView(page: Page, selector: string, label: string): Promise<void
   expect(box!.y + box!.height, `${label}: ${selector} bottom at ${height}px high`).toBeLessThanOrEqual(height);
 }
 
+/** The live site's health: the route open on every chain the config lists, so the hero's "why" names the open
+ *  stablecoins (the longer line) as a visitor sees it. The fake server alone has no route to report on. */
+async function routeOpen(page: Page): Promise<void> {
+  const chains = Object.fromEntries(['BCH', ...shipped.evm.chains.map((c) => c.key)].map((k) => [k, true]));
+  await page.route('**/api/health', async (route: Route) => {
+    const res = await route.fetch();
+    const body = (await res.json()) as { route: Record<string, unknown> | null };
+    body.route = { ...body.route, open: true, chains };
+    await route.fulfill({ response: res, json: body });
+  });
+}
+
 /** With E2E_SHOTS_DIR set, saves the first screen (viewport only) for review. */
 async function shot(page: Page, name: string): Promise<void> {
   const dir = process.env.E2E_SHOTS_DIR;
@@ -45,6 +57,7 @@ for (const [lang, text] of Object.entries(LANGS)) {
   test(`first screen holds headline, picture, judge strip, tabs and one primary button (${lang})`, async ({ page }, info) => {
     const sizes = info.project.name.includes('desktop') ? DESKTOP_SIZES : [null];
     await page.addInitScript((value) => localStorage.setItem('sampan.lang', value), lang);
+    await routeOpen(page);
     for (const size of sizes) {
       if (size) await page.setViewportSize(size);
       const viewport = page.viewportSize()!;
@@ -52,8 +65,10 @@ for (const [lang, text] of Object.entries(LANGS)) {
       await page.goto('/');
       await expect(page.locator('html')).toHaveAttribute('data-theme', E2E_THEME ?? shipped.ui.theme);
       await expect(page.locator('h1')).toHaveText(text['pitch.what']);
-      await expect(page.locator('.hero__why')).toHaveText(text['pitch.why']);
-      await expect(page.locator('.hero__proof')).toHaveText(pitchFrom(text, measuredHeadline()).proof);
+      // "why" names the assets the fake server's health reports open ({symbols}): the longer line is the one measured.
+      const why = text['pitch.why'].split('{symbols}').map((s) => s.replace(/[.*+?^$()|[\]\\]/g, '\\$&')).join('\\S.+');
+      await expect(page.locator('.hero__why')).toHaveText(new RegExp(`^${why}$`));
+      await expect(page.locator('.hero__proof')).toHaveText(pitchFrom(text, measuredHeadline(), '').proof);
       await expect(page.locator('.judge__fill')).toHaveText(text['judge.fill']);
       await expect(page.locator('.button--primary')).toHaveCount(1);
       // Measure the card as a visitor sees it: with the price line filled in (it adds a line once the quote arrives).
