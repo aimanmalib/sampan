@@ -7,7 +7,7 @@ import { validatePay, type PayConfig } from './pay/config.js';
 import { nostrIdPublic, validateNostrId, type NostrIdConfig } from './nostr-config.js';
 import { validatePeg, type PegConfig } from './peg.js';
 import { validateActivity, type ActivityConfig } from './activity.js';
-import { validateDemo, type DemoConfig } from './demo.js';
+import { validateDemo, validateMedia, type DemoConfig, type MediaConfig } from './demo.js';
 import { validateKeep, type KeepConfig } from './keep.js';
 import { chainsOf, liveAssets, symbolsOf, validateAssets, validateEvmChain, type EvmChain, type RouteAsset } from './route-assets.js';
 
@@ -178,8 +178,10 @@ export interface SampanConfig {
   keepCompare: KeepConfig;
   /** "My activity": how many addresses one request asks about and how many crossings come back. */
   activity: ActivityConfig;
-  /** The /demo page (features.demo): the video and poster on this site, the owner's own upload link, ids listed per chapter. */
+  /** The /demo page (features.demo): the videos on the media host, poster and tracks on this site, the owner's own upload link. */
   demo: DemoConfig;
+  /** The second host name that serves the video files (/media/*), so video never goes through the site's CDN. */
+  media: MediaConfig;
   /** The front page's "Measured" card: `proof` = counts from docs/MEASURED.md made when the page is built (the same counter as
    *  the README bounty table), with this server's own records as a small second line; `stats` = the server's records only. */
   measured: MeasuredConfig;
@@ -437,7 +439,8 @@ export function validateConfig(c: SampanConfig): string[] {
   errors.push(...validateKeep(c.keepCompare));
   errors.push(...validateActivity(c.activity));
   need(typeof c.features?.demo === 'boolean', 'features.demo: true or false');
-  errors.push(...validateDemo(c.demo));
+  errors.push(...validateMedia(c.media, String(c.site?.url)));
+  errors.push(...validateDemo(c.demo, String(c.media?.host)));
   need((MEASURED_SOURCES as readonly string[]).includes(String(c.measured?.source)), `measured.source: one of ${MEASURED_SOURCES.join(', ')}`);
   const refresh = c.quote?.autoRefreshMs;
   need(

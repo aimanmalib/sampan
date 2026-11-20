@@ -1,7 +1,7 @@
-// Puts the cut demo video on the site (ADR 0082, K5P4): copies the web cut of tools/video/edit.sh --web-out into
-// web/public/demo/ (H.264 + AAC with faststart, under the 25 MB limit, no spoken subtitles burned in; anything else is
-// refused, not re-encoded here),
-// takes a poster frame, writes docs/demo/chapters.json from the edit plan, state/video/shots.json and the ok rows of
+// Puts the cut demo video on the site (ADR 0082, ADR 0084): copies the web cut of tools/video/edit.sh --web-out into
+// media/ at the path of config demo.videoLong, served by the media host only, never by the site host (H.264 + AAC
+// with faststart, under the 25 MB limit, no spoken subtitles burned in; anything else is refused, not re-encoded here),
+// takes a poster frame into web/public/, writes docs/demo/chapters.json from the edit plan, state/video/shots.json and the ok rows of
 // docs/MEASURED.md, and writes one WebVTT track per page language (English from the edit, the rest from lang/).
 //   npx tsx tools/video/demo-files.ts [--video state/video/edit-out/sampan-demo-web.mp4] [--work state/video/edit]
 //     [--clips state/video] [--poster-at 4]
@@ -9,10 +9,10 @@ import { spawnSync } from 'node:child_process';
 import { copyFileSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { loadConfig } from '../../server/config.js';
-import { assetOfAmount, buildChapters, checkChapters, type ChapterRun, type DemoFile } from '../../core/demo.js';
+import { assetOfAmount, buildChapters, checkChapters, mediaFile, trackPath, type ChapterRun, type DemoFile } from '../../core/demo.js';
 import { parseRuns } from '../../core/proof.js';
 import { arg, runCli } from '../measure/run-cli.js';
-import { translatedTrack, trackName } from './demo-subs.js';
+import { translatedTrack } from './demo-subs.js';
 import type { Captions, Placed } from './plan.js';
 import type { ShotsFile } from './shots.js';
 
@@ -41,8 +41,10 @@ async function main(): Promise<void> {
   const work = arg('--work') ?? 'state/video/edit';
   const clips = arg('--clips') ?? 'state/video';
   const posterAt = arg('--poster-at') ?? '4';
-  const publicDir = path.join('web/public', path.dirname(config.demo.video));
-  mkdirSync(publicDir, { recursive: true });
+  const videoOut = mediaFile(config.demo.videoLong, config.media.host);
+  if (!videoOut) throw new Error('demo.videoLong is not a media host URL');
+  mkdirSync(path.dirname(videoOut), { recursive: true });
+  mkdirSync(path.join('web/public', path.dirname(config.demo.tracks)), { recursive: true });
   mkdirSync('docs/demo', { recursive: true });
 
   checkVideo(video);
@@ -63,14 +65,13 @@ async function main(): Promise<void> {
   const problems = checkChapters(file, runs);
   if (problems.length) throw new Error(`chapters:\n${problems.join('\n')}`);
 
-  const videoOut = path.join('web/public', config.demo.video);
   copyFileSync(video, videoOut);
   run('ffmpeg', ['-hide_banner', '-nostdin', '-y', '-ss', posterAt, '-i', video, '-frames:v', '1', '-vf', 'scale=1280:-2', '-q:v', '5', path.join('web/public', config.demo.poster)]);
   writeFileSync('docs/demo/chapters.json', `${JSON.stringify(file, null, 2)}\n`);
   const maxChars = readJson<Captions>('tools/video/captions.json').subtitle.maxChars;
   for (const { code } of config.i18n.languages) {
     const track = code === 'en' ? readFileSync(path.join(work, 'sampan-demo.en.vtt'), 'utf8') : translatedTrack(file, readJson(`lang/${code}.json`), maxChars);
-    writeFileSync(path.join('web/public', trackName(config.demo.video, code)), track);
+    writeFileSync(path.join('web/public', trackPath(config.demo.tracks, code)), track);
   }
   console.log(`${file.chapters.length} chapters (${file.chapters.map((c) => c.id).join(', ')}), ${statSync(videoOut).size} bytes`);
 }

@@ -1,4 +1,4 @@
-// The /demo page (ADR 0082): the chapters file and its rules, the subtitle tracks in other languages, the config it
+// The /demo page (ADR 0082, ADR 0084): the chapters file and its rules, the subtitle tracks in other languages, the config it
 // reads, and the server answering /demo only while features.demo is on.
 import type { FastifyInstance } from 'fastify';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -8,12 +8,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import chapterFile from '../docs/demo/chapters.json' with { type: 'json' };
 import { normalizeConfig, patchConfig, type SampanConfig } from '../core/config.js';
-import { assetOfAmount, buildChapters, checkChapters, fillVars, validateDemo, type ChapterRun, type DemoConfig, type DemoFile } from '../core/demo.js';
+import { assetOfAmount, buildChapters, checkChapters, fillVars, mediaFile, trackPath, validateDemo, type ChapterRun, type DemoConfig, type DemoFile } from '../core/demo.js';
 import { parseRuns } from '../core/proof.js';
 import { buildApp } from '../server/app.js';
 import { contentSecurityPolicy } from '../server/security.js';
 import { createServices } from '../server/services.js';
-import { evenChunks, subKey, trackName, translatedTrack } from '../tools/video/demo-subs.js';
+import { evenChunks, subKey, translatedTrack } from '../tools/video/demo-subs.js';
 
 const config = normalizeConfig(shipped as unknown as SampanConfig);
 const file = chapterFile as DemoFile;
@@ -102,15 +102,19 @@ describe('the shipped demo files', () => {
   it('tracks in other languages are what tools/video/demo-subs.ts writes from lang/', () => {
     const maxChars = (JSON.parse(readFileSync('tools/video/captions.json', 'utf8')) as { subtitle: { maxChars: number } }).subtitle.maxChars;
     for (const { code } of config.i18n.languages) {
-      const f = path.join('web/public', trackName(config.demo.video, code));
+      const f = path.join('web/public', trackPath(config.demo.tracks, code));
       expect(existsSync(f), f).toBe(true);
       if (code !== 'en') expect(readFileSync(f, 'utf8')).toBe(translatedTrack(file, lang(code), maxChars));
     }
   });
-  it('the video and poster are in web/public, the video under 25 MB', () => {
-    const video = readFileSync(path.join('web/public', config.demo.video));
-    expect(video.length).toBeLessThanOrEqual(25 * 1024 * 1024);
-    expect(video.subarray(0, 64 * 1024).toString('latin1')).toContain('moov');
+  it('the videos are in media/ (not web/public, which the site host serves), each under 25 MB with its index first', () => {
+    for (const url of [config.demo.video, config.demo.videoLong]) {
+      const f = mediaFile(url, config.media.host);
+      expect(f, url).toMatch(/^media\//);
+      const video = readFileSync(f!);
+      expect(video.length).toBeLessThanOrEqual(25 * 1024 * 1024);
+      expect(video.subarray(0, 64 * 1024).toString('latin1')).toContain('moov');
+    }
     expect(existsSync(path.join('web/public', config.demo.poster))).toBe(true);
   });
 });
@@ -137,9 +141,11 @@ describe('evenChunks', () => {
 });
 
 describe('demo config', () => {
-  const good: DemoConfig = { youtubeUrl: '', video: '/demo/v.mp4', poster: '/demo/v.jpg', txidsShown: 3 };
+  const M = 'media.example.test';
+  const good: DemoConfig = { youtubeUrl: '', video: `https://${M}/media/v.mp4`, videoLong: `https://${M}/media/w.mp4`, tracks: '/demo/w', poster: '/demo/v.jpg', txidsShown: 3 };
   it('ships valid, with the owner link empty and features.demo a boolean', () => {
-    expect(validateDemo(shipped.demo as DemoConfig)).toEqual([]);
+    expect(validateDemo(good, M)).toEqual([]);
+    expect(validateDemo(shipped.demo as DemoConfig, shipped.media.host)).toEqual([]);
     expect(shipped.demo.youtubeUrl).toBe('');
     expect(typeof shipped.features.demo).toBe('boolean');
   });
@@ -151,10 +157,10 @@ describe('demo config', () => {
     [{ poster: 'v.jpg' }, 'demo.poster'],
     [{ txidsShown: 0 }, 'demo.txidsShown'],
   ])('refuses %o', (patch, key) => {
-    expect(validateDemo({ ...good, ...patch } as DemoConfig).join(' ')).toContain(key);
+    expect(validateDemo({ ...good, ...patch } as DemoConfig, M).join(' ')).toContain(key);
   });
-  it('lets media come from this site only', () => {
-    expect(contentSecurityPolicy(config)).toContain("media-src 'self'");
+  it('lets media come from this site and the media host only', () => {
+    expect(contentSecurityPolicy(config)).toContain(`media-src 'self' https://${config.media.host};`);
   });
 });
 

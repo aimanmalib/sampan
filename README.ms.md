@@ -50,8 +50,9 @@ jadi gunakan amaun yang kecil.
 
 Di halaman utama, **Isikan untuk saya** membuka tab Bawa masuk untuk langkah 3.
 
-[Video demo](https://sampan.sasateguh.com/demo) bersuara ada di laman dalam bab, dan setiap bab menyenaraikan transaksi
-mainnet yang ditunjukkannya, dengan sari kata Inggeris, Melayu, Indonesia dan Filipino.
+[Video seminit](https://sampan-media.sasateguh.com/media/demo/sampan-demo-60.mp4) menunjukkan satu lintasan dari mula
+hingga tiba. Panduan penuh bersuara ada di [halaman demo](https://sampan.sasateguh.com/demo) dalam bab, dan setiap bab
+menyenaraikan transaksi mainnet yang ditunjukkannya, dengan sari kata Inggeris, Melayu, Indonesia dan Filipino.
 
 <p align="center"><img src="docs/images/home-ms-desktop.png" width="720" alt="Halaman utama Sampan dalam Bahasa Melayu pada pelayar desktop"> <img src="docs/images/home-ms-iphone.png" width="200" alt="Halaman yang sama pada iPhone 13 dalam WebKit"></p>
 

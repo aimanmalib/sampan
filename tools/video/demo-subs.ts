@@ -47,5 +47,3 @@ export function translatedTrack(file: DemoFile, text: Record<string, string>, ma
   return vtt(cues);
 }
 
-/** Track file name of a language, beside the video. */
-export const trackName = (video: string, code: string): string => video.replace(/\.mp4$/, `.${code}.vtt`);

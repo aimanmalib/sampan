@@ -12,7 +12,7 @@ cd "$(dirname "$0")"
 [ -r hos.env ] || { echo "deploy/hos.env missing (copy hos.env.example)"; exit 1; }
 # shellcheck disable=SC1091
 . ./hos.env
-: "${SAMPAN_NETWORK:?}" "${SAMPAN_DOMAIN:?}" "${PROXY_CONTAINER:?}" "${PROXY_DYNAMIC_DIR:?}" "${CERT_RESOLVER:?}"
+: "${SAMPAN_NETWORK:?}" "${SAMPAN_DOMAIN:?}" "${MEDIA_DOMAIN:?}" "${PROXY_CONTAINER:?}" "${PROXY_DYNAMIC_DIR:?}" "${CERT_RESOLVER:?}"
 BUILD_CMD=${BUILD_CMD:-docker build}
 MIN_FREE_GB=${MIN_FREE_GB:-8}
 BROWSER_CMD=${BROWSER_CMD:-}
@@ -74,7 +74,9 @@ SAMPAN_TAG=$TAG $DC up -d --force-recreate sampan
 echo "$TAG" > CURRENT_TAG
 
 route=$(mktemp)
-sed -e "s|@DOMAIN@|$SAMPAN_DOMAIN|g" -e "s|@CERT_RESOLVER@|$CERT_RESOLVER|g" traefik.yaml.tmpl > "$route"
+sed -e "s|@DOMAIN@|$SAMPAN_DOMAIN|g" -e "s|@MEDIA_DOMAIN@|$MEDIA_DOMAIN|g" -e "s|@CERT_RESOLVER@|$CERT_RESOLVER|g" traefik.yaml.tmpl > "$route"
+# The media name has its own routers, so if it does not resolve only the videos are missing; say so.
+getent ahosts "$MEDIA_DOMAIN" >/dev/null || echo "WARNING: $MEDIA_DOMAIN does not resolve: the demo videos will not load" >&2
 chmod 644 "$route"
 docker cp "$route" "$PROXY_CONTAINER:$PROXY_DYNAMIC_DIR/sampan.yaml"; rm -f "$route"
 

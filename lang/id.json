@@ -744,6 +744,7 @@
   "demo.lead": "Rekaman situs langsung dengan transaksi mainnet sungguhan. Setiap bab mencantumkan transaksi yang ditampilkannya: buka salah satunya di penjelajah blok.",
   "demo.noVideo": "Peramban ini tidak dapat memutar video.",
   "demo.chapters": "Bab",
+  "demo.full": "Panduan lengkap ({time})",
   "demo.txids": "Transaksi dalam bab ini",
   "demo.receipt": "Halaman status penyeberangan ini",
   "demo.more": "dan {n} lagi di tabel bukti",

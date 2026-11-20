@@ -744,6 +744,7 @@
   "demo.lead": "A recording of the live site with real mainnet transactions. Each chapter lists the transactions it shows: open any of them in an explorer.",
   "demo.noVideo": "This browser cannot play the video.",
   "demo.chapters": "Chapters",
+  "demo.full": "The full walkthrough ({time})",
   "demo.txids": "Transactions in this chapter",
   "demo.receipt": "Status page of this crossing",
   "demo.more": "and {n} more in the proof table",

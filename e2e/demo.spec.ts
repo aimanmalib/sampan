@@ -1,14 +1,39 @@
-// /demo (ADR 0082, features.demo): the browser's own player with the video from this site and a subtitle track per page
-// language; every chapter lists full transaction ids that open in an explorer, and its button moves the video to the
-// chapter's start. Footer, banner and /how link to it. No sideways scroll at 320 px and no console error. Runs on the
-// local server and against the live site.
+// /demo (ADR 0082, ADR 0084, features.demo): the one minute cut, then the full walkthrough with a subtitle track per
+// page language, both in the browser's own player and both from the media host; every chapter lists full transaction
+// ids that open in an explorer, and its button moves the full walkthrough to the chapter's start. Footer, banner and
+// /how link to it. No sideways scroll at 320 px and no console error. Runs on the local server and against the live
+// site. Locally the media host is not reachable, so its URLs are answered from media/ here, with ranges as it does.
+import { readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { mediaFile, trackPath } from '../core/demo.js';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import chapterFile from '../docs/demo/chapters.json' with { type: 'json' };
 import en from '../lang/en.json' with { type: 'json' };
 
 test.skip(!shipped.features.demo, 'features.demo is off');
+
+const live = Boolean(process.env.E2E_BASE_URL);
+const mediaHost = shipped.media.host;
+const vtt = (code: string): string => trackPath(shipped.demo.tracks, code);
+
+test.beforeEach(async ({ page }) => {
+  if (live) return;
+  await page.route(`https://${mediaHost}/media/**`, async (route) => {
+    const file = mediaFile(route.request().url(), mediaHost);
+    if (!file) return route.fulfill({ status: 404 });
+    const body = readFileSync(file);
+    const m = /bytes=(\d+)-(\d*)/.exec((await route.request().headerValue('range')) ?? '');
+    if (!m) return route.fulfill({ status: 200, body, headers: { 'content-type': 'video/mp4', 'accept-ranges': 'bytes' } });
+    const start = Number(m[1]);
+    const end = m[2] ? Math.min(Number(m[2]), body.length - 1) : body.length - 1;
+    return route.fulfill({
+      status: 206,
+      body: body.subarray(start, end + 1),
+      headers: { 'content-type': 'video/mp4', 'accept-ranges': 'bytes', 'content-range': `bytes ${start}-${end}/${body.length}` },
+    });
+  });
+});
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -26,8 +51,10 @@ test('chapters list their transactions and move the video', async ({ page }) => 
   const errors = collectErrors(page);
   await page.goto('/demo');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(en['demo.title']);
-  const video = page.locator('[data-demo-video]');
-  await expect(video.locator('source')).toHaveAttribute('src', shipped.demo.video);
+  await expect(page.locator('[data-demo-video="short"] source')).toHaveAttribute('src', shipped.demo.video);
+  await expect(page.locator('[data-demo-video="short"] track')).toHaveCount(0);
+  const video = page.locator('[data-demo-video="long"]');
+  await expect(video.locator('source')).toHaveAttribute('src', shipped.demo.videoLong);
   await expect(video.locator('track')).toHaveCount(shipped.i18n.languages.length);
   await expect(video.locator('track[default]')).toHaveAttribute('srclang', 'en');
 
@@ -53,12 +80,32 @@ test('chapters list their transactions and move the video', async ({ page }) => 
   expect(errors).toEqual([]);
 });
 
-test('the video answers a range request, as a player asks for it', async ({ page }) => {
-  const res = await page.request.get(shipped.demo.video, { headers: { Range: 'bytes=0-1023' } });
-  expect(res.status()).toBe(206);
-  expect(res.headers()['content-type']).toContain('video/mp4');
+test('both videos load from the media host, and this site has no video', async ({ page }) => {
+  await page.goto('/demo');
+  for (const which of ['short', 'long']) {
+    await expect.poll(() => page.locator(`[data-demo-video="${which}"]`).evaluate((v: HTMLVideoElement) => v.readyState), { timeout: 20_000 }).toBeGreaterThanOrEqual(1);
+    expect(await page.locator(`[data-demo-video="${which}"]`).evaluate((v: HTMLVideoElement) => new URL(v.currentSrc).host)).toBe(mediaHost);
+  }
+  // The site host: no video at the old path or under /media/ (the media host name alone serves those).
+  for (const p of ['/demo/sampan-demo.mp4', new URL(shipped.demo.video).pathname]) {
+    const res = await page.request.get(p, { headers: { Range: 'bytes=0-1023' } });
+    expect(res.status(), p).toBe(404);
+    expect(res.headers()['content-type'] ?? '', p).not.toContain('video');
+  }
+});
+
+test('the media host answers a range request, as a player asks for it', async ({ page }) => {
+  test.skip(!live, 'the media host is checked on the live site; tests/media-host.test.ts covers the server');
+  for (const url of [shipped.demo.video, shipped.demo.videoLong]) {
+    const res = await page.request.get(url, { headers: { Range: 'bytes=0-1023' } });
+    expect(res.status(), url).toBe(206);
+    expect(res.headers()['content-type'], url).toContain('video/mp4');
+  }
+});
+
+test('the subtitle tracks come from this site', async ({ page }) => {
   for (const { code } of shipped.i18n.languages) {
-    const t = await page.request.get(shipped.demo.video.replace(/\.mp4$/, `.${code}.vtt`));
+    const t = await page.request.get(vtt(code));
     expect(t.status()).toBe(200);
     expect((await t.text()).startsWith('WEBVTT')).toBe(true);
   }
@@ -97,13 +144,13 @@ for (const lang of ['en', 'ms'] as const) {
     await page.goto('/demo');
     if (lang !== 'en') await page.getByRole('combobox', { name: en['lang.label'] }).selectOption(lang);
     await expect(page.locator('html')).toHaveAttribute('lang', lang);
-    const video = page.locator('[data-demo-video]');
+    const video = page.locator('[data-demo-video="long"]');
     const modes = (): Promise<Record<string, string>> =>
       video.evaluate((v: HTMLVideoElement) => Object.fromEntries(Array.from(v.textTracks).map((t) => [t.language, t.mode])));
     const want = Object.fromEntries(shipped.i18n.languages.map(({ code }) => [code, code === lang ? 'showing' : 'disabled']));
     await expect.poll(modes, { timeout: 15_000 }).toEqual(want);
 
-    const cue = cueNear(await (await page.request.get(shipped.demo.video.replace(/\.mp4$/, `.${lang}.vtt`))).text(), 30);
+    const cue = cueNear(await (await page.request.get(vtt(lang))).text(), 30);
     await video.evaluate((v: HTMLVideoElement, at: number) => {
       v.muted = true;
       v.currentTime = at;

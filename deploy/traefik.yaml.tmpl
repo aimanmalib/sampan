@@ -1,5 +1,6 @@
 # Route for the public host name to the sampan container, on its own router so a certificate problem here
-# cannot affect any other name. deploy/deploy.sh fills the @...@ values from deploy/hos.env and copies the
+# cannot affect any other name. The media host name (video files, not proxied by the CDN, ADR 0084) has routers of
+# its own with their own certificate, for /media/ only and without compression. deploy/deploy.sh fills the @...@ values from deploy/hos.env and copies the
 # result into the proxy's dynamic configuration folder.
 # HTML is sent with `Cache-Control: no-transform`, so a CDN in front does not compress it: the `compress`
 # middleware does, with its 1024-byte floor lowered so the small index page is compressed too.
@@ -19,11 +20,24 @@ http:
       service: sampan-svc
       middlewares: [sampan-https]
       priority: 100
+    sampan-media:
+      entryPoints: [https]
+      rule: Host(`@MEDIA_DOMAIN@`) && PathPrefix(`/media/`)
+      service: sampan-svc
+      tls:
+        certResolver: @CERT_RESOLVER@
+      priority: 100
+    sampan-media-http:
+      entryPoints: [http]
+      rule: Host(`@MEDIA_DOMAIN@`)
+      service: sampan-svc
+      middlewares: [sampan-https]
+      priority: 100
   middlewares:
     sampan-compress:
       compress:
         minResponseBodyBytes: 256
-        excludedContentTypes: [image/png, image/jpeg, image/webp, font/woff2]
+        excludedContentTypes: [image/png, image/jpeg, image/webp, font/woff2, video/mp4]
     sampan-https:
       redirectScheme:
         scheme: https

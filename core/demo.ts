@@ -1,26 +1,61 @@
-// The /demo page (ADR 0082): the demo video served from this site, its chapters and its subtitle tracks. Pure helpers
-// shared by tools/video/demo-files.ts (which writes docs/demo/chapters.json and web/public/demo/), the tests and the page.
+// The /demo page (ADR 0082, ADR 0084): the demo videos served from the media host, the chapters and the subtitle
+// tracks. Pure helpers shared by tools/video/demo-files.ts (which writes docs/demo/chapters.json, the full walkthrough
+// into media/ and its tracks into web/public/demo/), the tests and the page.
 // A chapter is a scene of the cut that shows at least one mainnet transaction kept by the network (an ok row of
 // docs/MEASURED.md); scenes without one (the opening, the end card) have no chapter but keep their subtitles.
 
 export interface DemoConfig {
   /** The owner's own upload of the same video, shown as a second link when set. Only the owner fills it. */
   youtubeUrl: string;
-  /** Path of the video file on this site. */
+  /** The one minute cut (English subtitles burned in), served from the media host: https://<media.host>/media/….mp4. */
   video: string;
+  /** The full walkthrough the chapters belong to (no subtitles burned in), served from the media host the same way. */
+  videoLong: string;
+  /** Subtitle tracks of the full walkthrough on this site: <tracks>.<language>.vtt (a track needs the page's own origin). */
+  tracks: string;
   /** Path of the still image shown before the video plays. */
   poster: string;
   /** How many transaction ids a chapter lists before "and N more" links to the proof table. */
   txidsShown: number;
 }
 
-export function validateDemo(d: DemoConfig | undefined): string[] {
+/**
+ * Video files are not served by the site's own host name (its CDN terms do not cover video): a second host name that
+ * points at the same server without the CDN serves /media/* and nothing else (ADR 0084).
+ */
+export interface MediaConfig {
+  /** Host name the server answers /media/* for; every other host gets 404 there. */
+  host: string;
+  /** Cache-Control of a media file. */
+  cacheControl: string;
+}
+
+export function validateMedia(m: MediaConfig | undefined, siteUrl: string): string[] {
+  const errors: string[] = [];
+  const site = /^https?:\/\/([^/:]+)/.exec(siteUrl)?.[1]?.toLowerCase();
+  if (!(typeof m?.host === 'string' && /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(m.host) && m.host !== site)) {
+    errors.push('media.host: a lower-case host name other than the site\'s own');
+  }
+  if (!(typeof m?.cacheControl === 'string' && /^[a-z0-9=, -]{1,100}$/.test(m.cacheControl))) errors.push('media.cacheControl: a Cache-Control value');
+  return errors;
+}
+
+/** Repository path of a media URL (https://<media.host>/media/demo/x.mp4 → media/demo/x.mp4), or null for any other URL. */
+export function mediaFile(url: string, host: string): string | null {
+  const m = /^https:\/\/([^/]+)\/(media\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*\.[a-z0-9]+)$/.exec(url);
+  return m && m[1] === host ? m[2]! : null;
+}
+
+export function validateDemo(d: DemoConfig | undefined, mediaHost: string): string[] {
   const errors: string[] = [];
   const path = (v: unknown): boolean => typeof v === 'string' && /^\/[A-Za-z0-9/_.-]+$/.test(v);
   if (!(d?.youtubeUrl === '' || (typeof d?.youtubeUrl === 'string' && /^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(d.youtubeUrl)))) {
     errors.push('demo.youtubeUrl: empty or an https YouTube link');
   }
-  if (!path(d?.video) || !String(d?.video).endsWith('.mp4')) errors.push('demo.video: a path on this site ending in .mp4');
+  for (const k of ['video', 'videoLong'] as const) {
+    if (!String(mediaFile(String(d?.[k]), mediaHost)).endsWith('.mp4')) errors.push(`demo.${k}: https://${mediaHost}/media/….mp4`);
+  }
+  if (!path(d?.tracks) || /\.[a-z0-9]+$/.test(String(d?.tracks))) errors.push('demo.tracks: a path on this site without an extension');
   if (!path(d?.poster)) errors.push('demo.poster: a path on this site');
   if (!(Number.isInteger(d?.txidsShown) && (d?.txidsShown as number) >= 1 && (d?.txidsShown as number) <= 50)) {
     errors.push('demo.txidsShown: an integer from 1 to 50');
@@ -128,3 +163,6 @@ export function checkChapters(file: DemoFile, runs: ChapterRun[]): string[] {
   for (const [k, v] of Object.entries(file.vars)) if (!/^[A-Za-z0-9 .-]{1,40}$/.test(v)) errors.push(`vars.${k}: ${v} is not a plain word`);
   return errors;
 }
+
+/** Site path of the full walkthrough's subtitle track in one page language. */
+export const trackPath = (tracks: string, code: string): string => `${tracks}.${code}.vtt`;

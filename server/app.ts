@@ -17,12 +17,15 @@ import { registerSecurityHeaders } from './security.js';
 import { sendError } from './api/guard.js';
 import { createServices, type Services } from './services.js';
 import { registerWeb } from './static.js';
+import { registerMedia } from './media.js';
 import { registerOutage, type Outage } from './outage.js';
 import { registerErrorPages } from './error-page.js';
 
 export interface AppOptions {
   config: SampanConfig;
   webDist: string;
+  /** Folder of the video files served to the media host (default media/ in the working folder). */
+  mediaDir?: string;
   fake: boolean;
   /** SAMPAN_FAKE_OUTAGE, honoured only with the fake network (server/outage.ts). */
   outage?: Outage | null;
@@ -114,6 +117,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
     services.db.close();
   });
 
+  await registerMedia(app, options.mediaDir ?? 'media', config.media, errorPages);
   await registerWeb(app, options.webDist, errorPages, config.ui.theme, { watch: config.features.watchDemo, demo: config.features.demo });
   return app;
 }

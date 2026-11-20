@@ -1,10 +1,11 @@
-// /demo (ADR 0082, features.demo): the demo video served from this site in the browser's own player, with a subtitle
-// track for every page language, and its chapters from docs/demo/chapters.json. A chapter button moves the video to
+// /demo (ADR 0082, ADR 0084, features.demo): the one minute cut first (English subtitles burned in), then the full
+// walkthrough with a subtitle track for every page language and its chapters from docs/demo/chapters.json, both in the
+// browser's own player and both from the media host (config media.host), never from this site's host. A chapter button moves the video to
 // the chapter and plays it from there (only on that click); every chapter lists the mainnet transaction ids it shows,
 // each opening in the explorer config names, and the status page of the crossing when it is on this site.
 import { useEffect, useRef } from 'react';
 import chapterFile from '../../../docs/demo/chapters.json';
-import type { DemoFile } from '../../../core/demo';
+import { trackPath, type DemoFile } from '../../../core/demo';
 import { normalTxid, type ProofTxid } from '../../../core/proof';
 import proof from 'virtual:sampan-proof';
 import type { LoadedConfig } from '../config';
@@ -59,10 +60,15 @@ export function DemoPage({ config }: { config: LoadedConfig | null }) {
       </p>
       <h1 className="how__title">{t('demo.title')}</h1>
       <p className="how__lead">{t('demo.lead')}</p>
-      <video ref={video} className="demo__video" controls playsInline preload="metadata" poster={config.demo.poster} data-demo-video>
+      <video className="demo__video" controls playsInline preload="metadata" poster={config.demo.poster} data-demo-video="short">
         <source src={config.demo.video} type="video/mp4" />
+        {t('demo.noVideo')}
+      </video>
+      <h2 className="demo__heading">{t('demo.full', { time: clock(file.seconds) })}</h2>
+      <video ref={video} className="demo__video" controls playsInline preload="metadata" poster={config.demo.poster} data-demo-video="long">
+        <source src={config.demo.videoLong} type="video/mp4" />
         {config.i18n.languages.map((l) => (
-          <track key={l.code} kind="subtitles" srcLang={l.code} label={l.name} src={config.demo.video.replace(/\.mp4$/, `.${l.code}.vtt`)} default={l.code === lang} />
+          <track key={l.code} kind="subtitles" srcLang={l.code} label={l.name} src={trackPath(config.demo.tracks, l.code)} default={l.code === lang} />
         ))}
         {t('demo.noVideo')}
       </video>

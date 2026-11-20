@@ -361,9 +361,15 @@
   },
   "demo": {
     "youtubeUrl": "",
-    "video": "/demo/sampan-demo.mp4",
+    "video": "https://sampan-media.sasateguh.com/media/demo/sampan-demo-60.mp4",
+    "videoLong": "https://sampan-media.sasateguh.com/media/demo/sampan-demo.mp4",
+    "tracks": "/demo/sampan-demo",
     "poster": "/demo/sampan-demo.jpg",
     "txidsShown": 3
+  },
+  "media": {
+    "host": "sampan-media.sasateguh.com",
+    "cacheControl": "public, max-age=86400"
   },
   "measured": {
     "source": "proof"
