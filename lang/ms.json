@@ -436,6 +436,8 @@
   "proof.flow.in": "Dibawa masuk dari rantaian lain",
   "proof.flow.g3a": "Laluan membayar alamat pendaratan",
   "proof.flow.refund": "Bayaran balik",
+  "proof.flow.oc-out": "Dihantar keluar melalui NEAR Intents",
+  "proof.flow.oc-in": "Dibawa masuk melalui NEAR Intents",
   "proof.chain.bch": "BCH",
   "proof.full": "Semua larian, dengan nota tentang yang gagal: docs/MEASURED.md",
   "proof.fullFile": "Semua larian, dengan nota tentang yang gagal, ada dalam docs/MEASURED.md dalam kod sumber.",

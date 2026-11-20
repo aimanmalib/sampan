@@ -39,6 +39,23 @@ describe('route comparison with 1Click', () => {
     expect(thorFromOut(q, 'USDC')).toMatchObject({ receive: '1.38', receiveSymbol: 'USDC', fees: { total: '0.3', totalBps: 1786 } });
   });
 
+  it('takes the 1Click time from its own oc-out and oc-in runs, not from the THORChain runs', () => {
+    const tx = (n: number) => String(n).repeat(64);
+    const md = [
+      '| UTC | flow | amount | txid | seconds | result |',
+      '|---|---|---|---|---|---|',
+      `| 2026-01-01T00:00:00Z | oc-out | 1 BCH to ETH.USDC | bch ${tx(1)} · eth 0x${tx(2)} | 100.0 | ok |`,
+      `| 2026-01-01T00:01:00Z | oc-out | 1 BCH to BASE.USDC | bch ${tx(3)} · base 0x${tx(4)} | 300.0 | ok |`,
+      `| 2026-01-01T00:02:00Z | oc-in | 1 ETH.USDC to PUSD | bch ${tx(5)} · eth 0x${tx(6)} | 50.0 | ok |`,
+      `| 2026-01-01T00:03:00Z | out | 1 PUSD to ETH.USDC | bch ${tx(7)} · eth 0x${tx(8)} | 900.0 | ok |`,
+    ].join('\n');
+    const proof = buildProof(md);
+    expect(compareRoutes(input({ proof })).rows[1]!.seconds).toMatchObject({ median: 200, count: 2 });
+    expect(compareRoutes(input({ proof })).rows[0]!.seconds).toMatchObject({ median: 900, count: 1 });
+    const inRow = compareRoutes(input({ proof, flow: IN, thor: { ...thor, receiveSymbol: 'BCH' }, oneClick: { ...oc, amount: '2', receiveSymbol: 'BCH' } })).rows[1]!;
+    expect(inRow.seconds).toMatchObject({ median: 50, count: 1 });
+  });
+
   it('adds a 1Click row next to THORChain, with its fee, its own estimate apart and its deadline', () => {
     const c = compareRoutes(input());
     expect(c.selected).toBe('thorchain');

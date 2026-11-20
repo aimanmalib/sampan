@@ -436,6 +436,8 @@
   "proof.flow.in": "Brought in from another chain",
   "proof.flow.g3a": "Route paid a landing address",
   "proof.flow.refund": "Refund",
+  "proof.flow.oc-out": "Sent out through NEAR Intents",
+  "proof.flow.oc-in": "Brought in through NEAR Intents",
   "proof.chain.bch": "BCH",
   "proof.full": "Every run, with notes on the failed ones: docs/MEASURED.md",
   "proof.fullFile": "Every run, with notes on the failed ones, is in docs/MEASURED.md in the source code.",

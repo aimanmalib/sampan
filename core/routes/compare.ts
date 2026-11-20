@@ -176,7 +176,7 @@ function atomRow(input: CompareInput, flow: AtomFlow, q: AtomQuote): RouteRow {
 
 /** The 1Click row: shown only for an asset config offers in this direction; its time is measured on its own runs. */
 function oneClickRow(input: CompareInput, offer: Pick<OneClickPublic, 'deadlineMinutes'>, q: ThorSide | { error: string }): RouteRow {
-  const ran = input.proof.flows.find((f) => (f.flow as string) === `oc-${input.flow.kind}`);
+  const ran = input.proof.flows.find((f) => f.flow === `oc-${input.flow.kind}`);
   const measured = { median: ran?.medianSeconds ?? null, count: ran?.ok ?? 0 };
   const trust: RouteTrust = { kind: 'deposit', deadlineMinutes: offer.deadlineMinutes[input.flow.kind] };
   let reason = 'error' in q ? q.error : undefined;

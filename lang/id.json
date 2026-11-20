@@ -436,6 +436,8 @@
   "proof.flow.in": "Dibawa masuk dari chain lain",
   "proof.flow.g3a": "Rute membayar alamat pendaratan",
   "proof.flow.refund": "Pengembalian dana",
+  "proof.flow.oc-out": "Dikirim keluar melalui NEAR Intents",
+  "proof.flow.oc-in": "Dibawa masuk melalui NEAR Intents",
   "proof.chain.bch": "BCH",
   "proof.full": "Setiap putaran, dengan catatan untuk yang gagal: docs/MEASURED.md",
   "proof.fullFile": "Setiap putaran, dengan catatan untuk yang gagal, ada di docs/MEASURED.md dalam kode sumber.",

@@ -436,6 +436,8 @@
   "proof.flow.in": "Ipinasok mula sa ibang chain",
   "proof.flow.g3a": "Binayaran ng route ang isang landing address",
   "proof.flow.refund": "Refund",
+  "proof.flow.oc-out": "Inilabas sa pamamagitan ng NEAR Intents",
+  "proof.flow.oc-in": "Ipinasok sa pamamagitan ng NEAR Intents",
   "proof.chain.bch": "BCH",
   "proof.full": "Bawat run, may mga tala sa mga pumalya: docs/MEASURED.md",
   "proof.fullFile": "Nasa docs/MEASURED.md sa source code ang bawat run, may mga tala sa mga pumalya.",

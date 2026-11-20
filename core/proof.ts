@@ -1,7 +1,7 @@
 // Reads docs/MEASURED.md (the Runs table and the Wallets checked table) into the summary the /how page shows.
 // Pure: no file access, so the page build, the tests and the CLI share one parser.
 //   | UTC | flow | amount | txid | seconds | result |
-export const PROOF_FLOWS = ['swap', 'land', 'giveBack', 'out', 'in', 'g3a', 'refund'] as const;
+export const PROOF_FLOWS = ['swap', 'land', 'giveBack', 'out', 'in', 'g3a', 'refund', 'oc-out', 'oc-in'] as const;
 export type ProofFlowId = (typeof PROOF_FLOWS)[number];
 
 export interface ProofTxid {
