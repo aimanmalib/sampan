@@ -4,7 +4,10 @@
 // local EIP-1193 provider. With --receive PUSD (or MUSD: features.musd switched on in this local server only) the route pays a landing address and the server's finisher converts it
 // (flow g3a with --g3a, else in); with --receive BCH the route pays the owner directly (flow in). The crossing is traced
 // until the BCH (and, for a landing, the conversion) is seen, and one Runs row is appended with --write.
-//   npx tsx tools/measure/in-run.ts --asset ETH.USDC-0X… --amount 2 --receive PUSD|MUSD|BCH [--owner 14] [--g3a] [--port 4187] [--quote-only] [--write]
+// --route near-intents measures the 1Click route instead (flow oc-in): the server offers only that asset through 1Click,
+// with the env file's ONECLICK_JWT when there is one; the token goes to a one-time deposit address in one transfer and
+// the crossing is traced through the page's status endpoint.
+//   npx tsx tools/measure/in-run.ts --asset ETH.USDC-0X… --amount 2 --receive PUSD|MUSD|BCH [--route near-intents] [--owner 14] [--g3a] [--port 4187] [--quote-only] [--write]
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Hex } from 'viem';
@@ -22,9 +25,9 @@ import { record, spentOn } from '../test-wallet/ledger.js';
 import { crossingAsset, traceCrossing } from './cross.js';
 import { jsonRpcOver, keyProvider } from './evm-key-provider.js';
 import { convertedTxid, inLabel, type LandingView } from './in-plan.js';
-import { overBudget } from './out-plan.js';
+import { oneClickLivePatch, overBudget } from './out-plan.js';
 import { appendRuns } from './runs.js';
-import { arg, need, runCli, traceDeps } from './run-cli.js';
+import { arg, crossingStatus, need, runCli, traceDeps } from './run-cli.js';
 import { startServer, waitHealthy } from './server.js';
 
 const LEDGER = 'state/test-ledger.jsonl';
@@ -49,6 +52,10 @@ async function main(): Promise<void> {
   const phrase = env.get(SECRET_KEYS.bchMainnet);
   const key = env.get(SECRET_KEYS.evm);
   if (!phrase || !key) throw new Error('the env file needs the mainnet phrase and the EVM test key');
+  const routeArg = arg('--route');
+  if (routeArg !== undefined && routeArg !== 'near-intents') throw new Error('--route is near-intents (absent = the active route)');
+  const route = routeArg as 'near-intents' | undefined;
+  const oneClickKey = env.get('ONECLICK_JWT');
   const ownerIndex = Number(arg('--owner') ?? '14');
   const owner = deriveAddress(hdKeysFromPhrase(phrase).publicKey('receive', ownerIndex), 'receive', ownerIndex, 'bitcoincash');
   const budget = JSON.parse(readFileSync('state/budget.json', 'utf8')) as { maxUsdPerTx: number; maxUsdPerDay: number };
@@ -61,16 +68,17 @@ async function main(): Promise<void> {
     dataDir: 'state/measure-data',
     patch: {
       compliance: { crossChainEnabled: true },
-      ...livePatch(config.thorchain.assets, [assetName]),
-      features: { landing: true, ...(receive === 'MUSD' ? { musd: true } : {}) },
+      ...(route ? { oneClick: oneClickLivePatch(config.oneClick.assets, entry.chain, entry.symbol, 'in').oneClick } : livePatch(config.thorchain.assets, [assetName])),
+      features: { landing: true, ...(route ? { oneClick: true } : {}), ...(receive === 'MUSD' ? { musd: true } : {}) },
       ops: { testAddresses: [owner.address] },
     },
+    ...(route && oneClickKey ? { env: { ONECLICK_JWT: oneClickKey } } : {}),
   });
   const chain = new ElectrumChain(config.electrum.servers);
   try {
     await waitHealthy(base);
     const api = makeApi((p, init) => fetch(`${base}${p}`, init));
-    const quote = await quoteIn(api, { symbol: entry.symbol, chain: entry.chain, amount, receive, address: owner.address });
+    const quote = await quoteIn(api, { symbol: entry.symbol, chain: entry.chain, amount, receive, address: owner.address, ...(route ? { route } : {}) });
     const usd = Math.round(quote.usd * 100) / 100;
     const label = inLabel({ amount, symbol: entry.symbol, chain: entry.chain, receive, landing }, BigInt(quote.minSats));
     console.log(JSON.stringify({ label, usd, owner: `receive/${ownerIndex}`, from: provider.address, expectedSats: quote.expectedSats, minSats: quote.minSats, fees: quote.fees, seconds: quote.seconds }));
@@ -92,6 +100,7 @@ async function main(): Promise<void> {
         receive,
         address: owner.address,
         minSats: BigInt(quote.minSats),
+        ...(route ? { route } : {}),
         ...(landing ? { landing: { category: token!.category, returnAfter: config.landing.returnAfterBlocks, prefix: 'bitcoincash' as const } } : {}),
       },
       timing: { pollMs: pub.evm.receiptPollSeconds * 1000, waitMs: pub.evm.receiptWaitSeconds * 1000, replanMs: pub.evm.replanSeconds * 1000 },
@@ -114,9 +123,10 @@ async function main(): Promise<void> {
     }
     const landingId = res.landingId;
     const run = await traceCrossing(
-      { flow: landing && process.argv.includes('--g3a') ? 'g3a' : 'in', chain: evmKey, firstTxid: res.hash, broadcastAt, amount: label, destination },
+      { flow: route ? 'oc-in' : landing && process.argv.includes('--g3a') ? 'g3a' : 'in', chain: evmKey, firstTxid: res.hash, broadcastAt, amount: label, destination },
       {
         ...traceDeps(config, rpc, chain),
+        ...(route ? { status: crossingStatus((p) => api.get(p), res.crossingId, 'BCH') } : {}),
         ...(landingId ? { convert: async (bchTxid: string) => convertedTxid(await view(landingId), bchTxid) } : {}),
       },
     );

@@ -26,6 +26,20 @@ export function traceDeps(config: SampanConfig, rpc: string[], chain: ElectrumCh
   };
 }
 
+/**
+ * 1Click names a crossing by its deposit address, which the server keeps on the crossing row: ask the page's own status
+ * endpoint. 1Click does not name the chain of the transaction it sent; it is the far side of the crossing (the asset's
+ * chain out, BCH in), and the tracer still checks that transaction on that chain.
+ */
+export function crossingStatus(get: (path: string) => Promise<unknown>, crossingId: string, sentOn: string): CrossDeps['status'] {
+  return async () => {
+    const v = (await get(`/api/crossings/${crossingId}`)) as { out?: { stage?: string; outTxid?: string | null } | null };
+    const stage = v.out?.stage;
+    if (stage !== 'unseen' && stage !== 'pending' && stage !== 'done' && stage !== 'refunded' && stage !== 'failed') throw new Error('no answer');
+    return { stage, ...(v.out?.outTxid ? { outTxid: v.out.outTxid, outChain: sentOn } : {}) };
+  };
+}
+
 export function runCli(main: () => Promise<void>): void {
   void main().then(
     () => process.exit(0),

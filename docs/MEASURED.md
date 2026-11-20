@@ -56,6 +56,8 @@
 | 2026-11-19T01:52:26Z | out | 0.0092 BCH to AVAX.USDT (at least 1.60678716 USDT) | bch 3efcc889b2dd837646ffcb45b638438da365cd94fbd1d7288a7620edc8315649 · avax 0x1a6546d031b94d1517771aafbe4bada72d05354dabb36c07f4958f29e8991d25 | 3283.4 | ok |
 | 2026-11-20T00:02:17Z | oc-out | 0.0068 BCH to BASE.USDC (at least 1.386024 USDC) | bch bb5ff09565004e7c1b3294a6b09892440af22adf616b1ed6b67f8fd3f83dcd94 · base 0xa3c317d83254ae2ca23767cdf5778fe81aefa2f29efe98841d3d20796884e9ea | 2067.5 | ok |
 | 2026-11-20T00:01:48Z | oc-out | 0.0068 BCH to ETH.USDC (at least 1.091439 USDC) | bch 6ee09d11784219d146d3985bc30b372a2b95bfc0d6f65f8925eb246f5ba0cf44 · eth 0x08b6da890b0d27a3f1cdd64378952883efebdf5a63a6bd204b8faeb4dacf24f2 | 2129.6 | ok |
+| 2026-11-20T00:55:52Z | oc-in | 1.2 ETH.USDC to PUSD (landing address, at least 0.00576333 BCH arriving) | bch d5aa3825d4f2cc1c9ecd73d6e5fdfd356e2b12b001d730327f36c5e078b0dfe5 · eth 0x481f3363c72a7a92949df73897275a66082a943e6ae30c0bc5d705cc61192258 · convert 37c08d5764a72200d36546d2e361846a0df816d7f5131893679b3048ab959bcd | 1327.0 | ok |
+| 2026-11-20T01:48:03Z | oc-in | 1.35 BASE.USDC to PUSD (landing address, at least 0.00645228 BCH arriving) | bch 3f2690d8d026ba8cf3ae537e0ae4bc2b11f2972652d8d0c9b2f16c495e9cee2d · base 0x65630991ab9c47ea7f0124b6b890cc5136a4eda124b40932b5493e22270fc9e5 · convert f7d37e8e93a9d9a99cf5fd7e438feb6d820edf6bc92fef1a8216c053ffc341ac | 399.1 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from

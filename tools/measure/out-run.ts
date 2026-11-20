@@ -21,10 +21,10 @@ import { loadConfig } from '../../server/config.js';
 import { SECRET_KEYS, parseEnv } from '../test-wallet/keys.js';
 import { record, spentOn } from '../test-wallet/ledger.js';
 import { costShown, writeCostShown } from './cost-shown.js';
-import { crossingAsset, traceCrossing, type CrossDeps } from './cross.js';
+import { crossingAsset, traceCrossing } from './cross.js';
 import { oneClickLivePatch, outIntent, outLabel, overBudget } from './out-plan.js';
 import { appendRuns } from './runs.js';
-import { arg, need, runCli, traceDeps } from './run-cli.js';
+import { arg, crossingStatus, need, runCli, traceDeps } from './run-cli.js';
 import { startServer, waitHealthy } from './server.js';
 
 const LEDGER = 'state/test-ledger.jsonl';
@@ -129,7 +129,7 @@ async function main(): Promise<void> {
     const deps = traceDeps(config, rpc, chain);
     const run = await traceCrossing(
       { flow: route ? 'oc-out' : 'out', chain: evmChain, firstTxid: res.txid, broadcastAt, amount: label, destination, token: tokenContract },
-      route ? { ...deps, status: crossingStatus(api, res.crossingId, evmChain) } : deps,
+      route ? { ...deps, status: crossingStatus((p) => api.get(p), res.crossingId, evmChain) } : deps,
     );
     console.log(JSON.stringify({ ...run, utc: run.utc.toISOString() }));
     if (process.argv.includes('--write')) appendRuns('docs/MEASURED.md', [run]);
@@ -137,20 +137,6 @@ async function main(): Promise<void> {
     await chain.close();
     server.kill();
   }
-}
-
-/**
- * 1Click names a crossing by its deposit address, which the server keeps on the crossing row: ask the page's own status
- * endpoint. 1Click does not name the chain of the transaction it sent; it is the asset's chain, and the tracer still
- * reads that transaction's receipt there and checks it pays the destination.
- */
-function crossingStatus(api: ReturnType<typeof makeApi>, crossingId: string, evmChain: string): CrossDeps['status'] {
-  return async () => {
-    const v = await api.get<{ out: { stage: string; outTxid: string | null } | null }>(`/api/crossings/${crossingId}`);
-    const stage = v.out?.stage;
-    if (stage !== 'unseen' && stage !== 'pending' && stage !== 'done' && stage !== 'refunded' && stage !== 'failed') throw new Error('no answer');
-    return { stage, ...(v.out?.outTxid ? { outTxid: v.out.outTxid, outChain: evmChain } : {}) };
-  };
 }
 
 runCli(main);
