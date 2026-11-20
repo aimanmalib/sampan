@@ -1,6 +1,6 @@
 // The in-process finisher on the fake chain: a payment seen through the subscription converts with no kick, an
 // impossible rate gives the BCH back once the coin is old enough, quiet addresses stop being watched, and a new
-// process picks up where the old one stopped.
+// process picks up where the old one stopped, and a dropped conversion is made again.
 import { binToHex } from '@bitauth/libauth';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -86,6 +86,26 @@ describe('landing watcher', () => {
     const owner = await chain.listUnspent(binToHex(userLock));
     expect(owner.some((u) => u.token?.category === PUSD && u.token.amount > 0n)).toBe(true);
     expect(db.stats('public').completed).toBe(1);
+  });
+
+  it('converts again when the first conversion was dropped and the coin is back at the address (ADR 0080)', async () => {
+    const { id, lock } = open(params(1n));
+    const w = watcher();
+    pay(lock);
+    await w.tick();
+    const first = db.getCrossing(id)!.txid;
+    expect(db.getCrossing(id)!.status).toBe('converted');
+    // The network kept another spend of the pool coin: the conversion is gone and the payment is unspent again.
+    pay(lock);
+    clock += 60_000;
+    await w.tick();
+    const c = db.getCrossing(id)!;
+    expect(c.status).toBe('converted');
+    expect(c.txid).toMatch(/^[0-9a-f]{64}$/);
+    expect(c.txid).not.toBe(first);
+    expect(await chain.transaction(c.txid!)).not.toBeNull();
+    expect(db.landingOf(id)!.finish_txid).toBe(c.txid);
+    expect(await chain.listUnspent(lock)).toEqual([]);
   });
 
   it('waits while the rate cannot be met, then gives the BCH back after returnAfterBlocks', async () => {

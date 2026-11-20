@@ -22,6 +22,8 @@ export interface Shot {
   txids: string[];
   /** Status page of the crossing shown, when there is one. */
   receipt?: string;
+  /** Paid scenes: false when a transaction on screen was not seen by enough servers (a dropped broadcast). */
+  ok?: boolean;
   /** Where the page came from when it is not the live site. */
   site: string;
   marks: Mark[];

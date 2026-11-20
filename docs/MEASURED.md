@@ -61,8 +61,9 @@
 | 2026-11-20T11:37:00Z | land | 0.001 BCH to 0.19 PUSD (plain payment, demo video) | ea8582c8768b1a0c9d393b281b000e312e8f79081c15cca82b4207a995b86b70 | 4.5 | ok |
 | 2026-11-20T11:38:50Z | land | 0.001 BCH to 0.19 PUSD (plain payment, demo video) | dc947e6248dbef310493fb239c425d1de87c39102d099cb4be9345e13135e4f1 | 3.4 | ok |
 | 2026-11-20T11:40:46Z | land | 0.001 BCH to 0.19 PUSD (plain payment, demo video) | 046aed2ea0b99dbf190698371dd93544cd1839972f1f18cd5283d4b8e69dd6ee | 4.3 | ok |
-| 2026-11-20T11:41:20Z | swap | 0.001 BCH to at least 0.19 PUSD · demo video | 7a3ea36c165e1646e70f83de60283fa17caab14601fca81002e9b4f47b38a366 | 2.1 | ok |
-| 2026-11-20T11:43:59Z | in | 1.6 AVAX.USDC to PUSD (landing address, at least 0.00662708 BCH arriving) | bch cdcc100d17c5abd68a6027af149b310b47fcc64e6746b52a83b03d2177734f52 · avax 0xa96ca364099151ad92a13adb66378c610812b2140642a8b53c286b7f4a885b66 · convert a11e06bd4888e8edc5598ff0fb8bf37b761fd95219488d86e1e842b8be74e8e7 | 50.4 | ok |
+| 2026-11-20T11:41:20Z | swap | 0.001 BCH to at least 0.19 PUSD · demo video | 7a3ea36c165e1646e70f83de60283fa17caab14601fca81002e9b4f47b38a366 | 2.1 | fail (broadcast dropped: the pool coin it spent went to another trade first; no server knows the transaction) |
+| 2026-11-20T11:43:59Z | in | 1.6 AVAX.USDC to PUSD (landing address, at least 0.00662708 BCH arriving) | bch cdcc100d17c5abd68a6027af149b310b47fcc64e6746b52a83b03d2177734f52 · avax 0xa96ca364099151ad92a13adb66378c610812b2140642a8b53c286b7f4a885b66 · convert a11e06bd4888e8edc5598ff0fb8bf37b761fd95219488d86e1e842b8be74e8e7 | 50.4 | fail (broadcast dropped: the conversion spent a pool coin of the dropped swap above; no server knows it) |
+| 2026-11-20T12:16:45Z | in | 1.6 AVAX.USDC to PUSD (landing address, at least 0.00662708 BCH arriving; converted again by the landing finisher after the first conversion was dropped) | bch cdcc100d17c5abd68a6027af149b310b47fcc64e6746b52a83b03d2177734f52 · avax 0xa96ca364099151ad92a13adb66378c610812b2140642a8b53c286b7f4a885b66 · convert f30306b8239f99062a1d1a2a0ae690f711f094279fdad2682477765d1c8ea293 | - | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from
@@ -115,6 +116,16 @@ at the merchant address, and the receiver accepted the signature of an `invoice.
 
 ### Notes on failed runs
 
+- 2026-11-20 11:41 (swap, demo video) and 11:43 (Bring in, demo video): both pages showed the transaction as done,
+  and both transactions were later dropped; no Electrum server of `electrum.servers` knows them. The pool coin left
+  by the last landing conversion (`046aed2e…:1`) went to a third-party trade `ccf02c56…` in block 978164 (12:04 UTC),
+  the block that holds the three landings; the swap, built on the pool as it stood at 11:41, is not in it. The
+  likeliest cause is that both spent the same pool coin and the network kept the other one; the Bring in conversion
+  built on the pool after that swap and went with it. The BCH from THORChain stayed unspent at the landing
+  address. Started again with the same database at 12:16, the landing finisher converted it in its first round
+  (`f30306b8…`, block 978168, PUSD at the owner address); that is the `in` row of 12:16. Since then the measuring and
+  recording tools write a row as ok only when every BCH transaction of it is known to at least two servers
+  (`tools/measure/seen.ts`, ADR 0080).
 - 2026-11-17 12:01 (first Send out, PUSD to USDC on Ethereum): step 1 (Cauldron swap `de394a4cdc306d304cf15722490d6a543f8f6b2bab5cc9c778fef0d69080dd7f`) was sent, then the measuring tool stopped before step 2 was broadcast: its own hook that saves the cost card read the txid with the wrong type. Nothing went to the route; the BCH stayed in the test wallet. Fixed in `tools/measure/out-run.ts`, and step 2 was resumed from that swap (the 12:03 row; its seconds start at the deposit signature, not at step 1).
 - 2026-11-15 12:51 and 12:52 (PUSD to BCH): the test wallet refused to sign, as designed when its own check
   fails. Cause: its policy lowercased the `BCH` receive marker into a token id, so a sell could never pass rule 4.

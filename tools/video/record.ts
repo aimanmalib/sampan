@@ -6,7 +6,9 @@
 // this host with the one asset switched on (tools/video/scene-in.ts). swap, land and in spend from the test wallets
 // inside state/budget.json. Clips go to <out>/<scene>-<engine>.webm and every take to <out>/shots.json (scene, clip,
 // UTC start and end, marks, transaction ids shown). With --write each paid scene adds its row to the Runs table of
-// docs/MEASURED.md, so every transaction id in shots.json is in MEASURED. Nothing here goes into the site.
+// docs/MEASURED.md, so every transaction id in shots.json is in MEASURED. A paid scene is ok only once its BCH
+// transactions are known to --seen-min Electrum servers (tools/measure/seen.ts); a dropped broadcast is written as a
+// failure and its shot is marked ok: false, so the edit leaves it out. Nothing here goes into the site.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { hdKeysFromPhrase } from '../../core/client/session.js';
@@ -15,6 +17,7 @@ import { ElectrumChain } from '../../server/chain/electrum.js';
 import { loadConfig } from '../../server/config.js';
 import { SECRET_KEYS, parseEnv } from '../test-wallet/keys.js';
 import { appendRuns } from '../measure/runs.js';
+import { checkRun, electrumLookup, SEEN_DEFAULTS } from '../measure/seen.js';
 import { arg, need, runCli } from '../measure/run-cli.js';
 import { bringIn, EVM_BRIDGE } from './scene-in.js';
 import { front, how, land, swap, type SceneValue } from './scene-live.js';
@@ -51,6 +54,14 @@ async function main(): Promise<void> {
   const live = { base, config, en, intentFile: path.join(out, 'intent.json') };
   const chain = new ElectrumChain(config.electrum.servers);
   const shotsPath = path.join(out, 'shots.json');
+  const seen = electrumLookup();
+  const seenOpts = {
+    servers: config.electrum.servers,
+    min: Number(arg('--seen-min') ?? SEEN_DEFAULTS.min),
+    tries: Number(arg('--seen-tries') ?? SEEN_DEFAULTS.tries),
+    waitMs: Number(arg('--seen-wait-ms') ?? SEEN_DEFAULTS.waitMs),
+    lookup: seen.lookup,
+  };
   let shots: ShotsFile = existsSync(shotsPath) ? (JSON.parse(readFileSync(shotsPath, 'utf8')) as ShotsFile) : { shots: [] };
 
   const play: Record<Scene, { run: (t: Take) => Promise<SceneValue>; init?: string[]; site: string }> = {
@@ -80,12 +91,14 @@ async function main(): Promise<void> {
       for (const engine of enginesFor(scene)) {
         const { run, init, site } = play[scene];
         const take = await recordTake(out, scene, engine, run, init);
-        const { txids, receipt, run: row } = take.value;
+        const { txids, receipt, run: said } = take.value;
+        const row = said ? await checkRun(said, seenOpts) : undefined;
         if (row) {
+          if (said?.ok && !row.ok) console.error(`${scene}/${engine}: the page said done but ${row.note}`);
           console.log(`Runs row: ${JSON.stringify({ ...row, utc: row.utc.toISOString() })}`);
           if (write) appendRuns('docs/MEASURED.md', [row]);
         }
-        shots = addShot(shots, { scene, engine, clip: take.clip, startUtc: take.startUtc, endUtc: take.endUtc, txids, ...(receipt ? { receipt } : {}), site, marks: take.marks });
+        shots = addShot(shots, { scene, engine, clip: take.clip, startUtc: take.startUtc, endUtc: take.endUtc, txids, ...(receipt ? { receipt } : {}), ...(row ? { ok: row.ok } : {}), site, marks: take.marks });
         writeFileSync(shotsPath, `${JSON.stringify(shots, null, 2)}\n`);
       }
     }
@@ -93,6 +106,7 @@ async function main(): Promise<void> {
     if (missing.length) console.error(`transaction ids not in docs/MEASURED.md (run with --write): ${missing.join(', ')}`);
   } finally {
     await chain.close();
+    await seen.close();
   }
 }
 

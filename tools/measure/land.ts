@@ -21,6 +21,7 @@ import { loadConfig } from '../../server/config.js';
 import { SECRET_KEYS, parseEnv } from '../test-wallet/keys.js';
 import { openAddress, shownLanding, tokensAtOwner, waitFinished, type Shown } from './land-page.js';
 import { appendRuns, type Run } from './runs.js';
+import { checkRun, electrumLookup, SEEN_DEFAULTS } from './seen.js';
 import { CLIPBOARD_SPY, startServer, waitHealthy } from './server.js';
 
 const arg = (name: string, fallback: string): string => {
@@ -149,11 +150,14 @@ async function main(): Promise<void> {
   const server = startServer({ port: PORT, dataDir: 'state/measure-land', patch: SERVER_PATCH });
   const chain = new ElectrumChain(config.electrum.servers);
   const browser = await chromium.launch();
+  const seen = electrumLookup();
   try {
     await waitHealthy(BASE);
     const plan = [...Array<'wallet'>(WALLET_RUNS).fill('wallet'), ...Array<'plain'>(PLAIN_RUNS).fill('plain')];
     for (const [i, kind] of plan.entries()) {
-      const run = kind === 'wallet' ? await walletRun(browser, chain) : await plainRun(browser, chain, PLAIN_OWNER_FIRST + i);
+      // Ok only once enough servers know the conversion: the server's "converted" can be a broadcast later dropped.
+      const said = kind === 'wallet' ? await walletRun(browser, chain) : await plainRun(browser, chain, PLAIN_OWNER_FIRST + i);
+      const run = await checkRun(said, { servers: config.electrum.servers, ...SEEN_DEFAULTS, lookup: seen.lookup });
       appendRuns(MEASURED, [run]);
       console.log(`${kind}: ${run.ok ? 'ok' : 'fail'} ${run.txid ?? run.note ?? ''} ${run.seconds?.toFixed(1) ?? '-'} s`);
       if (!run.ok) break;
@@ -161,6 +165,7 @@ async function main(): Promise<void> {
   } finally {
     await browser.close();
     await chain.close();
+    await seen.close();
     server.kill();
   }
 }
