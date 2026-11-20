@@ -301,10 +301,10 @@ does not match its own address; both are refused before any wallet is asked to s
 
 ## Limits
 
-- **Cross-chain covers what was measured.** Send out and Bring in run through THORChain only for the assets marked `live` in
-  `thorchain.assets` ([`config/sampan.json`](config/sampan.json)), and an asset is marked only after two measured crossings
-  in that direction ([Crossings](#crossings)). When THORChain halts a chain, the
-  page shows the route as paused instead of offering it.
+- **Cross-chain covers what was measured.** Send out and Bring in offer only the assets marked `live` for that direction in
+  `thorchain.assets` and `oneClick.assets` ([`config/sampan.json`](config/sampan.json)), and an asset is marked only after
+  a measured crossing that arrived in that direction ([Crossings](#crossings)). The page builds its sentences about chains
+  and routes from those marks. When a route halts a chain, the page shows that network as paused instead of offering it.
 - **MUSD is off** (`features.musd` is `false`). PUSD is the one token offered.
 - **Small amounts.** A swap is at most 250 USD and the BCH side at least 50000 satoshis; the same minimum applies to a
   landing (`limits` in config).

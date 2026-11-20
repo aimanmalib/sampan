@@ -39,7 +39,7 @@ export function slides(f: DeckFacts): Slide[] {
       points: [
         'Swap BCH and PUSD through Cauldron pools, in one transaction your own wallet signs.',
         'A landing address: pay BCH to it from any wallet and it reaches your address as PUSD.',
-        'Send PUSD out as USDC or USDT on other chains, and bring them in, through THORChain.',
+        'Send PUSD out as USDC or USDT on other chains, and bring them in, on the routes and chains marked live in config.',
       ],
       foot: [host(f.repoUrl)],
     },

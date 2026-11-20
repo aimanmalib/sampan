@@ -1,9 +1,9 @@
-// Live status under the headline (ui.hero "card"): each chain a crossing reaches, open or paused (GET /api/health
-// through the network rows), the PUSD price and the Cauldron pools counted (GET /api/depth). Nothing is drawn for a
+// Live status under the headline (ui.hero "card"): each chain a crossing reaches, open both ways, one way only or
+// paused (GET /api/health through core/route-claims.ts, the rows the network lists use; K6P1), the PUSD price and the Cauldron pools counted (GET /api/depth). Nothing is drawn for a
 // reading that is missing: no zeros, no guesses (KJG4).
-import { chainChips, pegPrice } from '../../core/hero-chips';
+import { pegPrice } from '../../core/hero-chips';
 import { routeOpenMap } from '../../core/client/health';
-import { networkStatus } from '../../core/cross-choices';
+import { chipKey, routeClaims } from '../../core/route-claims';
 import type { LoadedConfig } from './config';
 import { useHealth } from './health';
 import { useText } from './i18n';
@@ -13,19 +13,15 @@ export function HeroChips({ config, cross }: { config: LoadedConfig; cross: bool
   const { t } = useText();
   const health = useHealth();
   const depth = useDepth();
-  const open = routeOpenMap(health);
-  const oc = { enabled: config.features.oneClick, assets: config.oneClick.assets };
-  const chains = cross
-    ? chainChips(
-        networkStatus(config.routeAssets, config.evm.chains, 'out', open, oc),
-        networkStatus(config.routeAssets, config.evm.chains, 'in', open, oc),
-      )
-    : [];
+  const chains = cross ? routeClaims(config, routeOpenMap(health)) : [];
   const read = typeof depth === 'string' ? null : depth;
   const price = read ? pegPrice(read) : null;
   const known = health !== null && health.checkedAt !== null;
   const chips = [
-    ...(known ? chains : []).map((c) => ({ id: `chain-${c.key}`, state: c.open ? 'open' : 'paused', text: t(c.open ? 'hero.chip.open' : 'hero.chip.paused', { name: c.name }) })),
+    ...(known ? chains : []).map((c) => {
+      const key = chipKey(c);
+      return { id: `chain-${c.key}`, state: key === 'hero.chip.paused' ? 'paused' : 'open', text: t(key, { name: c.name }) };
+    }),
     ...(read && price ? [{ id: 'price', state: 'info', text: t('hero.chip.price', { symbol: read.symbol, price }) }] : []),
     ...(read && read.pools > 0 ? [{ id: 'pools', state: 'info', text: t('hero.chip.pools', { count: String(read.pools) }) }] : []),
   ];

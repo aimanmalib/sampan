@@ -6,6 +6,9 @@ import { fetchConfig, useConfig } from './config';
 import { Footer } from './Footer';
 import { HeroChips } from './HeroChips';
 import { useHealth } from './health';
+import { routeOpenMap } from '../../core/client/health';
+import { liveRoutes, routeClaims } from '../../core/route-claims';
+import { routeNames } from './routeText';
 import { JudgeBox, judgeBelow, JudgeStrip } from './JudgeStrip';
 import { applyLanguages, useText } from './i18n';
 import { LangPicker } from './LangPicker';
@@ -23,11 +26,12 @@ import { WatchPage } from './watch/WatchPage';
 export function App() {
   const { t } = useText();
   const config = useConfig();
-  const route = config?.route.active ?? 'none';
   // Hero text promises a crossing only while the route's last health check sees a live asset's chain open (KMN1).
   const health = useHealth();
   const flows = openFlows(config, health);
   const vars = { symbols: symbolList(openSymbols(config, health), t('text.and')) };
+  // Who carries a crossing: every route with an open asset now (K6P1), not route.active alone.
+  const routes = config ? liveRoutes(routeClaims(config, routeOpenMap(health))) : [];
   const description = config ? t(descriptionKey(flows), vars) : null;
   const wallet = useWallet(config, t('wallet.fakeName'));
   const [chosen, setChosen] = useState<TabId | null>(null);
@@ -128,7 +132,7 @@ export function App() {
         {/* Below the card so the card and its one primary button stay on the first screen (ADR 0053). */}
         {/* ui.hero "card": the headline's longer sentence moves under the card, so the first screen is one line and the card. */}
         {config && heroCard ? <p className="hero__sub hero__sub--after">{t(heroSubKey(flows), vars)}</p> : null}
-        {flows.cross && route !== 'none' ? <p className="hero__honest">{t('hero.honest', { route: t(`route.${route}`) })}</p> : null}
+        {flows.cross && routes.length > 0 ? <p className="hero__honest">{t('hero.honest', { route: routeNames(t, routes) })}</p> : null}
         <Measured link />
       </main>
       )}

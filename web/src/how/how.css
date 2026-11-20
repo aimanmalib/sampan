@@ -94,6 +94,11 @@
 .diagram__label {
   font-weight: 600;
 }
+/* A box carried by more than one route lists each as its own node. */
+.diagram__label + .diagram__label {
+  border-top: 1px dashed var(--river);
+  padding-top: 0.25rem;
+}
 .diagram__note {
   font-size: 0.8125rem;
   color: var(--ink-soft);

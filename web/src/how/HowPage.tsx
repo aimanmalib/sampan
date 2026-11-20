@@ -1,10 +1,12 @@
 // /how: what each open flow does, the whole landing contract, how to check an address and finish a landing without
 // Sampan, and what already exists. A flow whose flag is off is not described (same rule as the front page).
 import { openFlows, symbolList } from '../../../core/flows';
+import { claimsFor, liveRoutes, routeClaims } from '../../../core/route-claims';
 import { useEffect } from 'react';
 import source from '../../../contracts/landing.cash?raw';
 import type { LoadedConfig } from '../config';
 import { useText, type TextKey } from '../i18n';
+import { assetPlaces } from '../routeText';
 import { Measured } from '../Measured';
 import { Diagram } from './Diagram';
 import { ProofTable } from './ProofTable';
@@ -27,6 +29,10 @@ export function HowPage({ config }: { config: LoadedConfig | null }) {
   const chainNames = config.evm.chains.filter((c) => config.routeChains.includes(c.key)).map((c) => c.name);
   const chains = symbolList(chainNames, t('text.and'));
   const v = { symbol, blocks, route, symbols, chains };
+  // What the crossings reach and who carries them, from config (K6P1): no chain, asset or route is named in a sentence.
+  const claims = routeClaims(config);
+  const reach = { out: claimsFor(claims, 'out'), in: claimsFor(claims, 'in') };
+  const carriers = liveRoutes(claims).map((r) => t(`route.${r}` as TextKey));
   const repo = config.banner.repoUrl;
   return (
     <article className="how">
@@ -70,7 +76,7 @@ export function HowPage({ config }: { config: LoadedConfig | null }) {
           <h2>{t('how.cross.title')}</h2>
           <Diagram
             label={t('how.cross.title')}
-            steps={[{ label: t('how.cross.d.bch') }, { label: route, tone: 'contract' }, { label: chainNames.length === 1 ? chains : t('how.cross.d.chains') }]}
+            steps={[{ label: t('how.cross.d.bch') }, { label: carriers, tone: 'contract' }, { label: chainNames.length === 1 ? chains : t('how.cross.d.chains') }]}
           />
           <p>{t('how.cross.text', v)}</p>
         </section>
@@ -122,7 +128,8 @@ export function HowPage({ config }: { config: LoadedConfig | null }) {
         <h3>{t('how.adds.title')}</h3>
         <ul>
           {flows.land ? <li>{t('how.adds.land', v)}</li> : null}
-          {flows.cross ? <li>{t('how.adds.cross', v)}</li> : null}
+          {flows.cross && reach.in.length > 0 ? <li data-adds="in">{t('how.adds.in', { symbol, assets: assetPlaces(t, reach.in) })}</li> : null}
+          {flows.cross && reach.out.length > 0 ? <li data-adds="out">{t('how.adds.out', { symbol, assets: assetPlaces(t, reach.out) })}</li> : null}
         </ul>
         {config.features.pay ? (
           <p className="how__pay">

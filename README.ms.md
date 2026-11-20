@@ -230,10 +230,11 @@ dompet diminta menandatangani.
 
 ## Had
 
-- **Rentas rantaian meliputi apa yang diukur.** Hantar keluar dan Bawa masuk berjalan melalui THORChain hanya untuk aset
-  yang ditanda `live` dalam `thorchain.assets` ([`config/sampan.json`](config/sampan.json)), dan aset ditanda hanya selepas
-  dua lintasan diukur dalam arah itu ([Lintasan](#lintasan)).
-  Bila THORChain menghentikan satu rantaian, laman memaparkan laluan itu dijeda dan tidak menawarkannya.
+- **Rentas rantaian meliputi apa yang diukur.** Hantar keluar dan Bawa masuk hanya menawarkan aset yang ditanda `live` bagi
+  arah itu dalam `thorchain.assets` dan `oneClick.assets` ([`config/sampan.json`](config/sampan.json)), dan aset ditanda
+  hanya selepas satu lintasan diukur yang tiba dalam arah itu ([Lintasan](#lintasan)). Laman membina ayatnya tentang
+  rantaian dan laluan daripada tanda itu. Bila satu laluan menghentikan satu rantaian, laman memaparkan rangkaian itu
+  dijeda dan tidak menawarkannya.
 - **MUSD dimatikan** (`features.musd` ialah `false`). PUSD satu-satunya token yang ditawarkan.
 - **Amaun kecil.** Satu pertukaran paling banyak 250 USD dan bahagian BCH sekurang-kurangnya 50000 satoshi; minimum yang sama
   terpakai pada pendaratan (`limits` dalam config).
