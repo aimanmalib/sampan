@@ -2,7 +2,7 @@
 // track for every page language, and its chapters from docs/demo/chapters.json. A chapter button moves the video to
 // the chapter and plays it from there (only on that click); every chapter lists the mainnet transaction ids it shows,
 // each opening in the explorer config names, and the status page of the crossing when it is on this site.
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import chapterFile from '../../../docs/demo/chapters.json';
 import type { DemoFile } from '../../../core/demo';
 import { normalTxid, type ProofTxid } from '../../../core/proof';
@@ -21,6 +21,22 @@ export const clock = (s: number): string => `${Math.floor(s / 60)}:${String(Math
 export function DemoPage({ config }: { config: LoadedConfig | null }) {
   const { lang, t } = useText();
   const video = useRef<HTMLVideoElement>(null);
+  // WebKit ignores `default` when deciding which subtitles to show, so the page language's track is shown by setting its
+  // mode once the tracks exist (now, on loadedmetadata, as each track is added) and again when the language changes.
+  useEffect(() => {
+    const v = video.current;
+    if (!v) return;
+    const show = (): void => {
+      for (const tr of Array.from(v.textTracks)) tr.mode = tr.language === lang ? 'showing' : 'disabled';
+    };
+    show();
+    v.addEventListener('loadedmetadata', show);
+    v.textTracks.addEventListener('addtrack', show);
+    return () => {
+      v.removeEventListener('loadedmetadata', show);
+      v.textTracks.removeEventListener('addtrack', show);
+    };
+  }, [lang, config]);
   if (!config) return null;
   const links = runText(config, t);
 

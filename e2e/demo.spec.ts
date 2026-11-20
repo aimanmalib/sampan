@@ -79,3 +79,41 @@ test('320 px wide: no sideways scroll, no axe failure', async ({ page }) => {
   const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
   expect(violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
 });
+
+// WebKit shows no subtitles from `default` alone: the page sets the page language's track to showing and the others to
+// disabled, and changes it with the language. Near 30 s the shown track holds that language's line.
+const cueNear = (vtt: string, at: number): { start: number; text: string } => {
+  const secs = (x: string): number => x.split(':').reduce((a, b) => a * 60 + Number(b), 0);
+  const cues = vtt.split(/\n\n+/).flatMap((b) => {
+    const m = /^([\d:.]+) --> ([\d:.]+)\n([\s\S]+)$/.exec(b.trim());
+    return m ? [{ start: secs(m[1]!), end: secs(m[2]!), text: m[3]!.trim() }] : [];
+  });
+  return cues.find((c) => c.start >= at) ?? cues[cues.length - 1]!;
+};
+
+for (const lang of ['en', 'ms'] as const) {
+  test(`the ${lang} page shows its own subtitle track`, async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto('/demo');
+    if (lang !== 'en') await page.getByRole('combobox', { name: en['lang.label'] }).selectOption(lang);
+    await expect(page.locator('html')).toHaveAttribute('lang', lang);
+    const video = page.locator('[data-demo-video]');
+    const modes = (): Promise<Record<string, string>> =>
+      video.evaluate((v: HTMLVideoElement) => Object.fromEntries(Array.from(v.textTracks).map((t) => [t.language, t.mode])));
+    const want = Object.fromEntries(shipped.i18n.languages.map(({ code }) => [code, code === lang ? 'showing' : 'disabled']));
+    await expect.poll(modes, { timeout: 15_000 }).toEqual(want);
+
+    const cue = cueNear(await (await page.request.get(shipped.demo.video.replace(/\.mp4$/, `.${lang}.vtt`))).text(), 30);
+    await video.evaluate((v: HTMLVideoElement, at: number) => {
+      v.muted = true;
+      v.currentTime = at;
+      void v.play().catch(() => undefined);
+    }, cue.start + 0.2);
+    await expect
+      .poll(() => video.evaluate((v: HTMLVideoElement) => Array.from(v.textTracks).flatMap((t) => (t.mode === 'showing' ? Array.from(t.activeCues ?? []).map((c) => (c as VTTCue).text) : []))), { timeout: 15_000 })
+      .toContain(cue.text);
+    await video.evaluate((v: HTMLVideoElement) => v.pause());
+    expect(await modes()).toEqual(want);
+    expect(errors).toEqual([]);
+  });
+}
