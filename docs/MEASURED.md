@@ -58,6 +58,11 @@
 | 2026-11-20T00:01:48Z | oc-out | 0.0068 BCH to ETH.USDC (at least 1.091439 USDC) | bch 6ee09d11784219d146d3985bc30b372a2b95bfc0d6f65f8925eb246f5ba0cf44 · eth 0x08b6da890b0d27a3f1cdd64378952883efebdf5a63a6bd204b8faeb4dacf24f2 | 2129.6 | ok |
 | 2026-11-20T00:55:52Z | oc-in | 1.2 ETH.USDC to PUSD (landing address, at least 0.00576333 BCH arriving) | bch d5aa3825d4f2cc1c9ecd73d6e5fdfd356e2b12b001d730327f36c5e078b0dfe5 · eth 0x481f3363c72a7a92949df73897275a66082a943e6ae30c0bc5d705cc61192258 · convert 37c08d5764a72200d36546d2e361846a0df816d7f5131893679b3048ab959bcd | 1327.0 | ok |
 | 2026-11-20T01:48:03Z | oc-in | 1.35 BASE.USDC to PUSD (landing address, at least 0.00645228 BCH arriving) | bch 3f2690d8d026ba8cf3ae537e0ae4bc2b11f2972652d8d0c9b2f16c495e9cee2d · base 0x65630991ab9c47ea7f0124b6b890cc5136a4eda124b40932b5493e22270fc9e5 · convert f7d37e8e93a9d9a99cf5fd7e438feb6d820edf6bc92fef1a8216c053ffc341ac | 399.1 | ok |
+| 2026-11-20T11:37:00Z | land | 0.001 BCH to 0.19 PUSD (plain payment, demo video) | ea8582c8768b1a0c9d393b281b000e312e8f79081c15cca82b4207a995b86b70 | 4.5 | ok |
+| 2026-11-20T11:38:50Z | land | 0.001 BCH to 0.19 PUSD (plain payment, demo video) | dc947e6248dbef310493fb239c425d1de87c39102d099cb4be9345e13135e4f1 | 3.4 | ok |
+| 2026-11-20T11:40:46Z | land | 0.001 BCH to 0.19 PUSD (plain payment, demo video) | 046aed2ea0b99dbf190698371dd93544cd1839972f1f18cd5283d4b8e69dd6ee | 4.3 | ok |
+| 2026-11-20T11:41:20Z | swap | 0.001 BCH to at least 0.19 PUSD · demo video | 7a3ea36c165e1646e70f83de60283fa17caab14601fca81002e9b4f47b38a366 | 2.1 | ok |
+| 2026-11-20T11:43:59Z | in | 1.6 AVAX.USDC to PUSD (landing address, at least 0.00662708 BCH arriving) | bch cdcc100d17c5abd68a6027af149b310b47fcc64e6746b52a83b03d2177734f52 · avax 0xa96ca364099151ad92a13adb66378c610812b2140642a8b53c286b7f4a885b66 · convert a11e06bd4888e8edc5598ff0fb8bf37b761fd95219488d86e1e842b8be74e8e7 | 50.4 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from
