@@ -58,7 +58,7 @@ export function DemoPage({ config }: { config: LoadedConfig | null }) {
       <h2 className="demo__heading">{t('demo.chapters')}</h2>
       <ol className="demo__chapters">
         {file.chapters.map((c) => {
-          const title = t(c.titleKey as TextKey);
+          const title = t(c.titleKey as TextKey, file.vars);
           const shown = c.txids.slice(0, config.demo.txidsShown);
           const more = c.txids.length - shown.length;
           return (

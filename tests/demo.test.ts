@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import shipped from '../config/sampan.json' with { type: 'json' };
 import chapterFile from '../docs/demo/chapters.json' with { type: 'json' };
 import { normalizeConfig, patchConfig, type SampanConfig } from '../core/config.js';
-import { buildChapters, checkChapters, validateDemo, type ChapterRun, type DemoConfig, type DemoFile } from '../core/demo.js';
+import { assetOfAmount, buildChapters, checkChapters, fillVars, validateDemo, type ChapterRun, type DemoConfig, type DemoFile } from '../core/demo.js';
 import { parseRuns } from '../core/proof.js';
 import { buildApp } from '../server/app.js';
 import { contentSecurityPolicy } from '../server/security.js';
@@ -52,6 +52,7 @@ describe('buildChapters', () => {
 describe('checkChapters', () => {
   const ok: DemoFile = {
     seconds: 60,
+    vars: { asset: 'USDC' },
     scenes: [],
     chapters: [1, 2, 3, 4].map((n) => ({ id: `c${n}`, start: n * 10, titleKey: `demo.ch.c${n}`, txids: [A] })),
   };
@@ -80,7 +81,7 @@ describe('the shipped demo files', () => {
   it('says in English what the narration says (tools/video/captions.json)', () => {
     const captions = JSON.parse(readFileSync('tools/video/captions.json', 'utf8')) as { scenes: Array<{ id: string; text: string }> };
     const en = lang('en');
-    for (const s of captions.scenes) expect(en[subKey(s.id)]).toBe(s.text);
+    for (const s of captions.scenes) expect(fillVars(en[subKey(s.id)]!, file.vars)).toBe(s.text);
   });
   it('tracks in other languages are what tools/video/demo-subs.ts writes from lang/', () => {
     const maxChars = (JSON.parse(readFileSync('tools/video/captions.json', 'utf8')) as { subtitle: { maxChars: number } }).subtitle.maxChars;
@@ -95,6 +96,14 @@ describe('the shipped demo files', () => {
     expect(video.length).toBeLessThanOrEqual(25 * 1024 * 1024);
     expect(video.subarray(0, 64 * 1024).toString('latin1')).toContain('moov');
     expect(existsSync(path.join('web/public', config.demo.poster))).toBe(true);
+  });
+});
+
+describe('assetOfAmount and fillVars', () => {
+  it('reads the stablecoin after the chain and fills names it holds, leaving others visible', () => {
+    expect(assetOfAmount('1.6 AVAX.USDC to PUSD (landing address)')).toBe('USDC');
+    expect(assetOfAmount('0.001 BCH to 0.19 PUSD')).toBeNull();
+    expect(fillVars('{asset} on {chain}', { asset: 'USDT' })).toBe('USDT on {chain}');
   });
 });
 

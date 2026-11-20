@@ -747,13 +747,13 @@
   "demo.ch.proof": "Setiap angka dikira dari mainnet",
   "demo.ch.land": "Alamat pendaratan dibayar dengan BCH biasa",
   "demo.ch.swap": "Satu tandatangan menukar BCH kepada PUSD",
-  "demo.ch.in": "USDC di Avalanche masuk sebagai PUSD",
+  "demo.ch.in": "{asset} di Avalanche masuk sebagai PUSD",
   "demo.ch.phone": "Di telefon",
   "demo.sub.open": "Sampan membawa stablecoin masuk dan keluar dari Bitcoin Cash, dari dompet yang anda sudah guna.",
   "demo.sub.proof": "Setiap angka di halaman ini dikira dari transaksi mainnet. Sesiapa pun boleh membuka setiap satu dalam penjelajah blok.",
   "demo.sub.land": "Tampal alamat anda dan anda dapat alamat pendaratan. Mana-mana dompet boleh membayarnya dengan BCH biasa. Satu kontrak menukar syiling itu kepada PUSD untuk anda, atau memulangkannya.",
   "demo.sub.swap": "Atau sambungkan dompet Bitcoin Cash dengan WizardConnect. Satu tandatangan menukar BCH kepada PUSD melalui kolam Cauldron.",
-  "demo.sub.in": "Stablecoin di rantaian lain juga boleh masuk. Di sini, USDC di Avalanche melalui THORChain. Ia mendarat di alamat pendaratan sebagai BCH, dan kontrak menukarnya kepada PUSD. Masa menunggu dipotong, dan jam di penjuru menyimpan masa sebenar.",
+  "demo.sub.in": "Stablecoin di rantaian lain juga boleh masuk. Di sini, {asset} di Avalanche melalui THORChain. Ia mendarat di alamat pendaratan sebagai BCH, dan kontrak menukarnya kepada PUSD. Masa menunggu dipotong, dan jam di penjuru menyimpan masa sebenar.",
   "demo.sub.phone": "Ia berfungsi di telefon juga, dan setiap lintasan dipaut ke penjelajah kedua-dua rantaian.",
   "demo.sub.end": "Cubalah di sampan.sasateguh.com."
 }

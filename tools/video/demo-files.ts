@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { copyFileSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { loadConfig } from '../../server/config.js';
-import { buildChapters, checkChapters, type ChapterRun, type DemoFile } from '../../core/demo.js';
+import { assetOfAmount, buildChapters, checkChapters, type ChapterRun, type DemoFile } from '../../core/demo.js';
 import { parseRuns } from '../../core/proof.js';
 import { arg, runCli } from '../measure/run-cli.js';
 import { translatedTrack, trackName } from './demo-subs.js';
@@ -47,11 +47,17 @@ async function main(): Promise<void> {
   checkVideo(video);
   const plan = readJson<{ total: number; placed: Placed[] }>(path.join(work, 'plan.json'));
   const shots = readJson<ShotsFile>(path.join(clips, 'shots.json')).shots;
-  const runs: ChapterRun[] = parseRuns(readFileSync('docs/MEASURED.md', 'utf8')).map((r) => ({ ok: r.ok, ids: r.txids.map((t) => t.id) }));
+  const measured = parseRuns(readFileSync('docs/MEASURED.md', 'utf8'));
+  const runs: ChapterRun[] = measured.map((r) => ({ ok: r.ok, ids: r.txids.map((t) => t.id) }));
   const round = (n: number): number => Math.round(n * 1000) / 1000;
   const scenes = plan.placed.map((p) => ({ id: p.id, start: round(p.start), duration: round(p.duration), voiceAt: round(p.voiceAt), voiceSeconds: round(p.voiceSeconds) }));
   const placed = plan.placed.map((p, i) => ({ ...scenes[i]!, files: p.windows.map((w) => w.file) }));
-  const file: DemoFile = { seconds: round(plan.total), scenes, chapters: buildChapters(placed, shots, runs, config.site.url) };
+  const chapters = buildChapters(placed, shots, runs, config.site.url);
+  // {asset}: the stablecoin of the ok Bring in run the "in" chapter shows.
+  const inId = chapters.find((c) => c.id === 'in')?.txids[0];
+  const asset = assetOfAmount(measured.find((r) => r.ok && r.flow === 'in' && r.txids.some((t) => t.id === inId))?.amount ?? '');
+  if (!asset) throw new Error('no ok Bring in run for the "in" chapter, so {asset} cannot be filled');
+  const file: DemoFile = { seconds: round(plan.total), vars: { asset }, scenes, chapters };
   const problems = checkChapters(file, runs);
   if (problems.length) throw new Error(`chapters:\n${problems.join('\n')}`);
 

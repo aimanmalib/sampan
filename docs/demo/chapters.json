@@ -1,5 +1,8 @@
 {
   "seconds": 143.785,
+  "vars": {
+    "asset": "USDC"
+  },
   "scenes": [
     {
       "id": "open",

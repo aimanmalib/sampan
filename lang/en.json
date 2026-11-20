@@ -747,13 +747,13 @@
   "demo.ch.proof": "Every number counted from mainnet",
   "demo.ch.land": "A landing address paid with plain BCH",
   "demo.ch.swap": "One signature swaps BCH for PUSD",
-  "demo.ch.in": "USDC on Avalanche comes in as PUSD",
+  "demo.ch.in": "{asset} on Avalanche comes in as PUSD",
   "demo.ch.phone": "On a phone",
   "demo.sub.open": "Sampan moves stablecoins in and out of Bitcoin Cash, from the wallet you already use.",
   "demo.sub.proof": "Every number on this page is counted from mainnet transactions. Anyone can open each one in a block explorer.",
   "demo.sub.land": "Paste your address and you get a landing address. Any wallet can pay it with plain BCH. A contract turns the coins into PUSD for you, or gives them back.",
   "demo.sub.swap": "Or connect a Bitcoin Cash wallet with WizardConnect. One signature swaps BCH for PUSD through Cauldron pools.",
-  "demo.sub.in": "Stablecoins on other chains come in too. Here, USDC on Avalanche goes through THORChain. It lands at a landing address as BCH, and the contract turns it into PUSD. The wait is cut, and the clock in the corner keeps the real time.",
+  "demo.sub.in": "Stablecoins on other chains come in too. Here, {asset} on Avalanche goes through THORChain. It lands at a landing address as BCH, and the contract turns it into PUSD. The wait is cut, and the clock in the corner keeps the real time.",
   "demo.sub.phone": "It works on a phone too, and every crossing links to the explorers of both chains.",
   "demo.sub.end": "Try it at sampan.sasateguh.com."
 }

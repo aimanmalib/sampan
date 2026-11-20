@@ -51,6 +51,8 @@ export interface DemoChapter {
 
 export interface DemoFile {
   seconds: number;
+  /** Words the chapter titles and subtitles fill in, read from the measured runs the video shows (lang/ names no asset). */
+  vars: Record<string, string>;
   scenes: DemoScene[];
   chapters: DemoChapter[];
 }
@@ -90,6 +92,14 @@ export function buildChapters(placed: Array<DemoScene & { files: string[] }>, sh
   return chapters;
 }
 
+/** The stablecoin of a Runs amount such as `1.6 AVAX.USDC to PUSD`: the symbol after the chain, or null. */
+export function assetOfAmount(amount: string): string | null {
+  return /\b[A-Z]+\.([A-Z]+)\b/.exec(amount)?.[1] ?? null;
+}
+
+/** Fills `{name}` from the file's words; a name it does not hold stays visible, so a gap is never silent. */
+export const fillVars = (text: string, vars: Record<string, string>): string => text.replace(/\{(\w+)\}/g, (m, k: string) => vars[k] ?? m);
+
 /** Problems with a chapters file against the ok ids of MEASURED: none means the /demo page may show it. */
 export function checkChapters(file: DemoFile, runs: ChapterRun[]): string[] {
   const ok = new Set(runs.filter((r) => r.ok).flatMap((r) => r.ids.map(bare)));
@@ -104,5 +114,6 @@ export function checkChapters(file: DemoFile, runs: ChapterRun[]): string[] {
     if (c.receipt !== undefined && !/^\/c\/[0-9a-f]{32}$/.test(c.receipt)) errors.push(`${c.id}: receipt ${c.receipt} is not a status page`);
   }
   if (file.chapters.length < 4) errors.push('fewer than 4 chapters');
+  for (const [k, v] of Object.entries(file.vars)) if (!/^[A-Za-z0-9 .-]{1,40}$/.test(v)) errors.push(`vars.${k}: ${v} is not a plain word`);
   return errors;
 }

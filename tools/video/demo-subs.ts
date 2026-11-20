@@ -2,7 +2,7 @@
 // edit itself (timed by the narration's own alignment); every other language takes the scene's text from
 // lang/<code>.json (`demo.sub.<scene>`) and spreads its chunks over the same narration span by share of length.
 // Pure, so tests/demo-files.test.ts can check that the tracked .vtt files are what this writes.
-import type { DemoFile } from '../../core/demo.js';
+import { fillVars, type DemoFile } from '../../core/demo.js';
 import { cueTimes, vtt } from './plan.js';
 
 /**
@@ -42,7 +42,7 @@ export function translatedTrack(file: DemoFile, text: Record<string, string>, ma
   const cues = file.scenes.flatMap((s) => {
     const line = text[subKey(s.id)];
     if (!line) throw new Error(`no ${subKey(s.id)} text`);
-    return cueTimes(evenChunks(line, maxChars), s.voiceAt, s.voiceSeconds);
+    return cueTimes(evenChunks(fillVars(line, file.vars), maxChars), s.voiceAt, s.voiceSeconds);
   });
   return vtt(cues);
 }
