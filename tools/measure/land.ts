@@ -14,13 +14,12 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { chromium, type Browser, type Page } from '@playwright/test';
-import { parseAddress } from '../../core/address.js';
-import { cardFromFragment } from '../../core/landing-card.js';
 import { hdKeysFromPhrase } from '../../core/client/session.js';
 import { deriveAddress, formatUnits, parseUnits } from '../../core/wallet.js';
 import { ElectrumChain } from '../../server/chain/electrum.js';
 import { loadConfig } from '../../server/config.js';
 import { SECRET_KEYS, parseEnv } from '../test-wallet/keys.js';
+import { openAddress, shownLanding, tokensAtOwner, waitFinished, type Shown } from './land-page.js';
 import { appendRuns, type Run } from './runs.js';
 import { CLIPBOARD_SPY, startServer, waitHealthy } from './server.js';
 
@@ -59,16 +58,6 @@ const PLAIN_OWNER_FIRST = 5;
 
 const primary = (page: Page) => page.locator('.button--primary');
 
-/**
- * Opens the landing address once the owner is known. With ui.qrAutoOpen the page opens it by itself (the primary
- * button then pays, so it must not be pressed here); with the flag off it waits for "Get my landing address".
- */
-async function openAddress(page: Page): Promise<void> {
-  // A string, so the bundler's helpers never reach the page.
-  const auto = Boolean(await page.evaluate("fetch('/api/config').then((r) => r.json()).then((c) => c.ui?.qrAutoOpen === true)"));
-  if (!auto) await primary(page).filter({ hasText: en['land.open']! }).click({ timeout: 30_000 });
-  await page.locator('.land__address').waitFor({ timeout: 30_000 });
-}
 const sats = parseUnits(PAY_BCH, 8)!;
 
 async function usdOf(amount: bigint): Promise<number> {
@@ -91,57 +80,12 @@ async function openBringIn(browser: Browser): Promise<Page> {
   return page;
 }
 
-interface Shown {
-  address: string;
-  lockHex: string;
-  crossingId: string;
-  /** Owner lock from the recovery card in the status link. */
-  ownerLock: string;
-  /** Finishing transaction already on the crossing when this owner and rate had an address before. */
-  earlierTxid?: string;
-}
-
-/** Reads the landing address the page shows, and the crossing id and recovery card from its "Follow this landing" link. */
-async function shownLanding(page: Page): Promise<Shown> {
-  const address = ((await page.locator('.land__address').textContent({ timeout: 30_000 })) ?? '').trim();
-  const parsed = parseAddress(address, 'bitcoincash');
-  if (typeof parsed === 'string') throw new Error(`the page shows no landing address: ${parsed}`);
-  const href = (await page.getByRole('link', { name: en['land.follow']! }).getAttribute('href')) ?? '';
-  const crossingId = /\/c\/([0-9a-f]{32})/.exec(href)?.[1];
-  const card = cardFromFragment(href.split('#card=')[1] ?? '');
-  if (!crossingId || typeof card === 'string') throw new Error('no status link with a recovery card on the page');
-  if (card.card.address !== address) throw new Error('the card names another address');
-  const earlier = (await fetch(`${BASE}/api/crossings/${crossingId}`).then((r) => r.json())) as { txid?: string | null };
-  return { address, lockHex: parsed.lockingHex, crossingId, ownerLock: card.params.ownerLockHex, ...(earlier.txid ? { earlierTxid: earlier.txid } : {}) };
-}
-
-/** Polls the crossing until the server reports a new conversion or return. */
-async function waitFinished(shown: Shown): Promise<{ status: string; txid?: string }> {
-  const until = Date.now() + FINISH_TIMEOUT_MS;
-  while (Date.now() < until) {
-    const c = (await fetch(`${BASE}/api/crossings/${shown.crossingId}`).then((r) => r.json())) as { status: string; txid?: string };
-    if ((c.status === 'converted' || c.status === 'returned') && c.txid !== shown.earlierTxid) return c;
-    await new Promise((r) => setTimeout(r, 1000));
-  }
-  return { status: 'timeout' };
-}
-
-/** The conversion output at the owner: output 0 of the finishing transaction, carrying the token. */
-async function tokensAtOwner(chain: ElectrumChain, ownerLock: string, txid: string): Promise<bigint | undefined> {
-  for (let i = 0; i < 10; i++) {
-    const hit = (await chain.listUnspent(ownerLock)).find((u) => u.txid === txid && u.vout === 0);
-    if (hit) return hit.token?.category.toLowerCase() === category ? hit.token.amount : undefined;
-    await new Promise((r) => setTimeout(r, 2000));
-  }
-  return undefined;
-}
-
 async function finishRow(chain: ElectrumChain, how: string, shown: Shown, paidAt: number): Promise<Run> {
-  const done = await waitFinished(shown);
+  const done = await waitFinished(BASE, shown, FINISH_TIMEOUT_MS);
   const seconds = (Date.now() - paidAt) / 1000;
   const label = (tokens?: bigint) => `${PAY_BCH} BCH to ${tokens === undefined ? '?' : formatUnits(tokens, token.decimals, token.decimals)} ${token.symbol} (${how})`;
   if (done.status !== 'converted' || !done.txid) return { utc: new Date(), flow: 'land', amount: label(), seconds, ok: false, note: `server status ${done.status}` };
-  const tokens = await tokensAtOwner(chain, shown.ownerLock, done.txid);
+  const tokens = await tokensAtOwner(chain, category, shown.ownerLock, done.txid);
   const run: Run = { utc: new Date(), flow: 'land', amount: label(tokens), txid: done.txid, seconds, ok: tokens !== undefined };
   return tokens === undefined ? { ...run, note: 'tokens not found at the owner address' } : run;
 }
@@ -157,8 +101,8 @@ async function walletRun(browser: Browser, chain: ElectrumChain): Promise<Run> {
     writeFileSync(INTENT_FILE, '{}');
     wallet = spawn(process.execPath, ['--import', 'tsx', 'tools/test-wallet/connect.ts', uri, INTENT_FILE, '--timeout-seconds', '600'], { stdio: ['ignore', 'inherit', 'inherit'] });
     await page.locator('.land__owner').filter({ hasText: 'Paid to your connected wallet' }).or(page.locator('.land__address')).first().waitFor({ timeout: 90_000 });
-    await openAddress(page);
-    const shown = await shownLanding(page);
+    await openAddress(page, en['land.open']!);
+    const shown = await shownLanding(page, BASE, en['land.follow']!);
     await page.getByRole('textbox').fill(PAY_BCH);
     const intent = {
       spend: { sats: sats.toString() },
@@ -184,8 +128,8 @@ async function plainRun(browser: Browser, chain: ElectrumChain, ownerIndex: numb
     const owner = receive(ownerIndex);
     await page.locator('.field__input--address').fill(owner.tokenAddress);
     await page.locator('.field__input--address').press('Enter');
-    await openAddress(page);
-    const shown = await shownLanding(page);
+    await openAddress(page, en['land.open']!);
+    const shown = await shownLanding(page, BASE, en['land.follow']!);
     const usd = await usdOf(sats);
     const send = spawn(process.execPath, ['--import', 'tsx', 'tools/test-wallet/send.ts', shown.address, PAY_BCH, '--usd', String(usd), '--why', `Pay ${PAY_BCH} BCH to a landing address`], {
       stdio: ['ignore', 'inherit', 'inherit'],
