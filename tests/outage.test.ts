@@ -133,7 +133,7 @@ describe('fake outages (SAMPAN_FAKE_OUTAGE)', () => {
     expect((await a.inject('/api/config')).json().tokens).toEqual({});
   });
 
-  it('app: /api/config comes without the route the page reads', async () => {
+  it('app: /api/config comes without the chains the page reads', async () => {
     const a = await start('app');
     const body = (await a.inject('/api/config')).json();
     expect(body).not.toHaveProperty('evm');
