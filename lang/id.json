@@ -747,7 +747,6 @@
   "demo.ch.land": "Alamat pendaratan dibayar dengan BCH biasa",
   "demo.ch.swap": "Satu tanda tangan menukar BCH ke PUSD",
   "demo.ch.in": "{asset} di Avalanche masuk sebagai PUSD",
-  "demo.ch.phone": "Di ponsel",
   "demo.sub.open": "Sampan memindahkan stablecoin masuk dan keluar dari Bitcoin Cash, dari dompet yang sudah Anda gunakan.",
   "demo.sub.proof": "Setiap angka di halaman ini dihitung dari transaksi mainnet. Siapa pun bisa membuka masing-masing di penjelajah blok.",
   "demo.sub.land": "Tempel alamat Anda dan Anda mendapat alamat pendaratan. Dompet apa pun bisa membayarnya dengan BCH biasa. Sebuah kontrak mengubah koin itu menjadi PUSD untuk Anda, atau mengembalikannya.",

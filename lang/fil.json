@@ -747,7 +747,6 @@
   "demo.ch.land": "Landing address na binayaran ng karaniwang BCH",
   "demo.ch.swap": "Isang pirma ang nagpapalit ng BCH sa PUSD",
   "demo.ch.in": "Pumapasok ang {asset} sa Avalanche bilang PUSD",
-  "demo.ch.phone": "Sa telepono",
   "demo.sub.open": "Inililipat ng Sampan ang stablecoins papasok at palabas ng Bitcoin Cash, mula sa wallet na gamit mo na.",
   "demo.sub.proof": "Bawat numero sa pahinang ito ay binilang mula sa mainnet na transaksyon. Kahit sino ay puwedeng magbukas ng bawat isa sa isang block explorer.",
   "demo.sub.land": "I-paste ang address mo at makakakuha ka ng landing address. Kahit anong wallet ay puwedeng magbayad dito ng karaniwang BCH. Isang kontrata ang nagpapalit ng coins sa PUSD para sa iyo, o ibinabalik ang mga ito.",

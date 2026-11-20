@@ -22,16 +22,17 @@ const lang = (code: string) => JSON.parse(readFileSync(`lang/${code}.json`, 'utf
 const A = 'aa'.repeat(32);
 const B = 'bb'.repeat(32);
 const C = `0x${'cc'.repeat(32)}`;
+const D = 'ee'.repeat(32);
 const scene = (id: string, start: number, files: string[]) => ({ id, start, duration: 10, voiceAt: start + 0.4, voiceSeconds: 5, files });
 
 describe('buildChapters', () => {
   const shots = [
     { clip: 'how.webm', txids: [A], site: 'https://site' },
     { clip: 'in.webm', txids: [B, C.toUpperCase().replace('0X', '0x'), 'dd'.repeat(32)], receipt: '/c/' + '1'.repeat(32), site: 'recording host' },
-    { clip: 'land.webm', txids: [B], receipt: '/c/' + '2'.repeat(32), site: 'https://site' },
+    { clip: 'land.webm', txids: [D], receipt: '/c/' + '2'.repeat(32), site: 'https://site' },
   ];
   const measured: ChapterRun[] = [
-    { ok: true, ids: [A] },
+    { ok: true, ids: [A, D] },
     { ok: true, ids: [B, C] },
     // A dropped broadcast is written only in a fail row: never a chapter id.
     { ok: false, ids: [B, C, 'dd'.repeat(32)] },
@@ -42,6 +43,12 @@ describe('buildChapters', () => {
     expect(ch[1]!.txids).toEqual([B, C]);
     expect(ch[1]!.titleKey).toBe('demo.ch.in');
   });
+  it('lists an id once: a later scene showing only ids already listed is not a chapter', () => {
+    const phone = { clip: 'how-phone.webm', txids: [A], site: 'https://site' };
+    const ch = buildChapters([scene('proof', 10, ['how.webm']), scene('in', 20, ['in.webm', 'how-phone.webm']), scene('phone', 40, ['how-phone.webm'])], [...shots, phone], measured, 'https://site');
+    expect(ch.map((c) => c.id)).toEqual(['proof', 'in']);
+    expect(ch[1]!.txids).toEqual([B, C]);
+  });
   it('links a receipt only when the shot ran on the live site', () => {
     const ch = buildChapters([scene('in', 20, ['in.webm']), scene('land', 30, ['land.webm'])], shots, measured, 'https://site');
     expect(ch[0]!.receipt).toBeUndefined();
@@ -50,20 +57,29 @@ describe('buildChapters', () => {
 });
 
 describe('checkChapters', () => {
+  const ids = [1, 2, 3, 4].map((n) => String(n).repeat(64));
+  const good: ChapterRun[] = [{ ok: true, ids }];
   const ok: DemoFile = {
     seconds: 60,
     vars: { asset: 'USDC' },
+    burnedSubtitles: false,
     scenes: [],
-    chapters: [1, 2, 3, 4].map((n) => ({ id: `c${n}`, start: n * 10, titleKey: `demo.ch.c${n}`, txids: [A] })),
+    chapters: [1, 2, 3, 4].map((n) => ({ id: `c${n}`, start: n * 10, titleKey: `demo.ch.c${n}`, txids: [ids[n - 1]!] })),
   };
   it('passes a good file and names each problem of a bad one', () => {
-    expect(checkChapters(ok, [{ ok: true, ids: [A] }])).toEqual([]);
+    expect(checkChapters(ok, good)).toEqual([]);
     const bad: DemoFile = { ...ok, chapters: [...ok.chapters.slice(0, 3), { id: 'x', start: 5, titleKey: 'demo.ch.x', txids: [B], receipt: '/c/no' }] };
-    const errors = checkChapters(bad, [{ ok: true, ids: [A] }, { ok: false, ids: [B] }]).join('\n');
+    const errors = checkChapters(bad, [...good, { ok: false, ids: [B] }]).join('\n');
     expect(errors).toMatch(/x: start 5 does not come after 30/);
     expect(errors).toMatch(/not in an ok row of MEASURED/);
     expect(errors).toMatch(/is not a status page/);
-    expect(checkChapters({ ...ok, chapters: ok.chapters.slice(0, 3) }, [{ ok: true, ids: [A] }])).toContain('fewer than 4 chapters');
+    expect(checkChapters({ ...ok, chapters: ok.chapters.slice(0, 3) }, good)).toContain('fewer than 4 chapters');
+  });
+  it('refuses a web video with subtitles burned in, and an id listed by two chapters', () => {
+    expect(checkChapters({ ...ok, burnedSubtitles: true }, good).join('\n')).toMatch(/subtitles burned in/);
+    expect(checkChapters({ ...ok, burnedSubtitles: undefined as unknown as boolean }, good).join('\n')).toMatch(/subtitles burned in/);
+    const twice: DemoFile = { ...ok, chapters: [...ok.chapters, { id: 'c5', start: 50, titleKey: 'demo.ch.c5', txids: [ids[0]!] }] };
+    expect(checkChapters(twice, good).join('\n')).toMatch(/c5: .* is already listed by an earlier chapter/);
   });
   it('the shipped chapters file passes against docs/MEASURED.md', () => {
     expect(checkChapters(file, runs)).toEqual([]);

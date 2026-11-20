@@ -69,6 +69,10 @@ describe('demo video plan', () => {
     expect(out).toContain('Caption (x)');
     expect(out).toContain('Narration voice generated with ElevenLabs');
     expect(assColour('#12261f')).toBe('&H001F2612');
+    // The web cut (edit.sh --web-out): scene title and end card stay, no spoken subtitle is burned in.
+    const picture = ass(captions, placed, [], ['Caption {x}'], { start: 6, end: 12, lines: ['site.example'] });
+    expect(picture).not.toMatch(/^Dialogue: [^\n]*,Sub,/m);
+    expect(picture).toContain('Caption (x)');
   });
 
   it('keeps the tracked words free of typed numbers and declares the synthetic voice on the end card', () => {

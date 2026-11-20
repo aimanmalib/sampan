@@ -1,8 +1,9 @@
-// Puts the cut demo video on the site (ADR 0082, K5P4): copies the file of tools/video/edit.sh into web/public/demo/
-// (it is already H.264 + AAC with faststart and under the 25 MB limit; a larger one is refused, not re-encoded here),
+// Puts the cut demo video on the site (ADR 0082, K5P4): copies the web cut of tools/video/edit.sh --web-out into
+// web/public/demo/ (H.264 + AAC with faststart, under the 25 MB limit, no spoken subtitles burned in; anything else is
+// refused, not re-encoded here),
 // takes a poster frame, writes docs/demo/chapters.json from the edit plan, state/video/shots.json and the ok rows of
 // docs/MEASURED.md, and writes one WebVTT track per page language (English from the edit, the rest from lang/).
-//   npx tsx tools/video/demo-files.ts [--video state/video/edit-out/sampan-demo.mp4] [--work state/video/edit]
+//   npx tsx tools/video/demo-files.ts [--video state/video/edit-out/sampan-demo-web.mp4] [--work state/video/edit]
 //     [--clips state/video] [--poster-at 4]
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -36,7 +37,7 @@ function checkVideo(file: string): void {
 
 async function main(): Promise<void> {
   const config = loadConfig('config/sampan.json');
-  const video = arg('--video') ?? 'state/video/edit-out/sampan-demo.mp4';
+  const video = arg('--video') ?? 'state/video/edit-out/sampan-demo-web.mp4';
   const work = arg('--work') ?? 'state/video/edit';
   const clips = arg('--clips') ?? 'state/video';
   const posterAt = arg('--poster-at') ?? '4';
@@ -45,7 +46,8 @@ async function main(): Promise<void> {
   mkdirSync('docs/demo', { recursive: true });
 
   checkVideo(video);
-  const plan = readJson<{ total: number; placed: Placed[] }>(path.join(work, 'plan.json'));
+  const plan = readJson<{ total: number; placed: Placed[]; burnedSubtitles?: { web: boolean | null } }>(path.join(work, 'plan.json'));
+  if (plan.burnedSubtitles?.web !== false) throw new Error('the edit plan has no web cut without burned subtitles: run tools/video/edit.sh with --web-out');
   const shots = readJson<ShotsFile>(path.join(clips, 'shots.json')).shots;
   const measured = parseRuns(readFileSync('docs/MEASURED.md', 'utf8'));
   const runs: ChapterRun[] = measured.map((r) => ({ ok: r.ok, ids: r.txids.map((t) => t.id) }));
@@ -57,7 +59,7 @@ async function main(): Promise<void> {
   const inId = chapters.find((c) => c.id === 'in')?.txids[0];
   const asset = assetOfAmount(measured.find((r) => r.ok && r.flow === 'in' && r.txids.some((t) => t.id === inId))?.amount ?? '');
   if (!asset) throw new Error('no ok Bring in run for the "in" chapter, so {asset} cannot be filled');
-  const file: DemoFile = { seconds: round(plan.total), vars: { asset }, scenes, chapters };
+  const file: DemoFile = { seconds: round(plan.total), vars: { asset }, burnedSubtitles: false, scenes, chapters };
   const problems = checkChapters(file, runs);
   if (problems.length) throw new Error(`chapters:\n${problems.join('\n')}`);
 

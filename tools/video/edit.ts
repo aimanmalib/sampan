@@ -2,7 +2,10 @@
 // tools/video/captions.json, numbers from docs/MEASURED.md, narration from ElevenLabs (declared on the end card and in
 // the README), a quiet original pad made here as music, loudness normalised, English subtitles burned in and written
 // beside the file as SRT and WebVTT. Then measures the result (length, audio length, loudness, silence, frames).
-//   tools/video/edit.sh --out <file.mp4> [--clips state/video] [--work state/video/edit] [--key-file <env file>] [--no-voice]
+// --web-out also writes the cut for the /demo page (ADR 0082): the same picture with the scene titles and the end card
+// but no spoken subtitles burned in, because the page adds a subtitle track per language on top of the picture.
+//   tools/video/edit.sh --out <file.mp4> [--web-out <file.mp4>] [--clips state/video] [--work state/video/edit]
+//     [--key-file <env file>] [--no-voice]
 // The ElevenLabs key comes from ELEVENLABS_API_KEY or the ELEVENLABS_API_KEY line of --key-file; it is sent only as a
 // request header and never written. Narration is cached by text, so a second run makes no request.
 import { spawnSync } from 'node:child_process';
@@ -135,9 +138,16 @@ async function main(): Promise<void> {
   const end = placed.at(-1)!;
   const card = c.scenes.at(-1)?.card ? { start: end.start, end: end.start + end.duration, lines: c.scenes.at(-1)!.card! } : undefined;
   writeFileSync(path.join(work, 'subs.ass'), ass(c, placed, cues, captions, card));
+  const webOut = arg('--web-out');
+  if (webOut) {
+    mkdirSync(path.dirname(path.resolve(webOut)), { recursive: true });
+    writeFileSync(path.join(work, 'picture.ass'), ass(c, placed, [], captions, card));
+  }
   writeFileSync(out.replace(/\.mp4$/, '.srt'), srt(cues));
   writeFileSync(path.join(work, 'sampan-demo.en.vtt'), vtt(cues));
-  writeFileSync(path.join(work, 'plan.json'), `${JSON.stringify({ total, captions, placed }, null, 2)}\n`);
+  // burnedSubtitles.web: false only when this run wrote a web cut; tools/video/demo-files.ts refuses anything else.
+  const burnedSubtitles = { full: true, web: webOut ? false : null };
+  writeFileSync(path.join(work, 'plan.json'), `${JSON.stringify({ total, captions, placed, burnedSubtitles }, null, 2)}\n`);
 
   const parts = placed.map((p, i) => {
     const f = path.join(work, `scene-${i}-${p.id}.mp4`);
@@ -159,12 +169,16 @@ async function main(): Promise<void> {
   const first = ffmpeg(['-i', path.join(work, 'mix.wav'), '-af', `${ln}:print_format=json`, '-f', 'null', '-']);
   const m = JSON.parse(first.slice(first.lastIndexOf('{'), first.lastIndexOf('}') + 1)) as Record<string, string>;
   const second = `${ln}:measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:measured_thresh=${m.input_thresh}:offset=${m.target_offset}:linear=true`;
-  ffmpeg([
-    '-i', path.join(work, 'video.mp4'), '-i', path.join(work, 'mix.wav'),
-    '-vf', `ass=${path.join(work, 'subs.ass')}:fontsdir=${c.style.fontsDir}`, '-af', `${second},aresample=48000,atrim=duration=${total}`,
-    '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-r', String(c.frame.fps),
-    '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-movflags', '+faststart', '-t', String(total), out,
-  ]);
+  const encode = (subs: string, file: string): void => {
+    ffmpeg([
+      '-i', path.join(work, 'video.mp4'), '-i', path.join(work, 'mix.wav'),
+      '-vf', `ass=${path.join(work, subs)}:fontsdir=${c.style.fontsDir}`, '-af', `${second},aresample=48000,atrim=duration=${total}`,
+      '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-r', String(c.frame.fps),
+      '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-movflags', '+faststart', '-t', String(total), file,
+    ]);
+  };
+  encode('subs.ass', out);
+  if (webOut) encode('picture.ass', webOut);
   for (const t of [5, 30, 60]) {
     ffmpeg(['-ss', String(t), '-i', out, '-frames:v', '1', path.join(work, `frame-${t}s.png`)]);
     ffmpeg(['-ss', String(t), '-i', out, '-frames:v', '1', '-vf', 'scale=390:-2', path.join(work, `frame-${t}s-390.png`)]);

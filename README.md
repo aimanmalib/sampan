@@ -46,7 +46,7 @@ amounts small.
 On the front page, **Fill this in for me** opens the Bring in tab for step 3.
 
 The narrated [demo video](https://sampan.sasateguh.com/demo) is on the site in chapters, and each chapter lists the mainnet
-transactions it shows, with English and Malay subtitles.
+transactions it shows, with subtitles in English, Malay, Indonesian and Filipino.
 
 <p align="center"><img src="docs/images/home-desktop.png" width="720" alt="Sampan front page on a desktop browser: the headline, the river picture, the judging steps and the Swap on BCH card with 0.001 BCH to PUSD"></p>
 

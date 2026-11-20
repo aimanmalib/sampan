@@ -53,6 +53,8 @@ export interface DemoFile {
   seconds: number;
   /** Words the chapter titles and subtitles fill in, read from the measured runs the video shows (lang/ names no asset). */
   vars: Record<string, string>;
+  /** False: the web cut carries no spoken subtitles in its picture, so the page's tracks never stack on burned ones. */
+  burnedSubtitles: boolean;
   scenes: DemoScene[];
   chapters: DemoChapter[];
 }
@@ -76,16 +78,19 @@ const bare = (id: string): string => id.toLowerCase().replace(/^0x/, '');
 /**
  * Chapters of the cut: for every placed scene, the shots its windows come from; the ids on screen that an ok run
  * of MEASURED holds (a dropped broadcast is listed only in a fail row, so it never becomes a chapter id); the
- * receipt of a shot recorded on `site`. Scenes left with no id are not chapters.
+ * receipt of a shot recorded on `site`. Ids an earlier chapter already lists are not listed again, and a scene left
+ * with no new id (the opening, the end card, the phone view of the proof table) is not a chapter.
  */
 export function buildChapters(placed: Array<DemoScene & { files: string[] }>, shots: ChapterShot[], runs: ChapterRun[], site: string): DemoChapter[] {
   const kept = new Map<string, string>();
   for (const r of runs) if (r.ok) for (const id of r.ids) kept.set(bare(id), id);
   const chapters: DemoChapter[] = [];
+  const listed = new Set<string>();
   for (const p of placed) {
     const used = shots.filter((s) => p.files.includes(s.clip));
-    const txids = [...new Set(used.flatMap((s) => s.txids.map((t) => kept.get(bare(t)))).filter((t): t is string => Boolean(t)))];
+    const txids = [...new Set(used.flatMap((s) => s.txids.map((t) => kept.get(bare(t)))).filter((t): t is string => Boolean(t) && !listed.has(bare(t!))))];
     if (txids.length === 0) continue;
+    for (const t of txids) listed.add(bare(t));
     const receipt = used.find((s) => s.receipt && s.site === site)?.receipt;
     chapters.push({ id: p.id, start: p.start, titleKey: `demo.ch.${p.id}`, txids, ...(receipt ? { receipt } : {}) });
   }
@@ -104,8 +109,14 @@ export const fillVars = (text: string, vars: Record<string, string>): string => 
 export function checkChapters(file: DemoFile, runs: ChapterRun[]): string[] {
   const ok = new Set(runs.filter((r) => r.ok).flatMap((r) => r.ids.map(bare)));
   const errors: string[] = [];
+  if (file.burnedSubtitles !== false) errors.push('the web video has subtitles burned in: the page tracks would stack on them');
   let last = -1;
+  const seen = new Set<string>();
   for (const c of file.chapters) {
+    for (const t of c.txids) {
+      if (seen.has(bare(t))) errors.push(`${c.id}: ${t} is already listed by an earlier chapter`);
+      seen.add(bare(t));
+    }
     if (!(c.start > last)) errors.push(`${c.id}: start ${c.start} does not come after ${last}`);
     last = c.start;
     if (c.start > file.seconds) errors.push(`${c.id}: starts after the end of the video`);
