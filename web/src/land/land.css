@@ -197,9 +197,10 @@
     min-height: 0;
     padding: 0.5rem 0;
   }
-  /* The headline spans both columns; the card rises beside the hero sub, so the whole card fits a 1280x720 screen. */
+  /* The headline spans both columns; the card rises beside the pitch (K6P4) and the hero sub, so the whole card fits a
+     1280x720 screen. */
   .page--judge {
-    grid-template-rows: auto auto auto 1fr;
+    grid-template-rows: auto auto auto auto 1fr;
   }
   .page--judge .hero {
     display: contents;
@@ -208,17 +209,22 @@
     grid-column: 1 / -1;
     grid-row: 1;
   }
-  .page--judge .hero__sub {
+  .page--judge .hero__pitch {
     grid-column: 1;
     grid-row: 2;
+    margin: 0;
   }
-  .page--judge .scene {
+  .page--judge .hero__sub {
     grid-column: 1;
     grid-row: 3;
   }
-  .page--judge .judge {
+  .page--judge .scene {
     grid-column: 1;
     grid-row: 4;
+  }
+  .page--judge .judge {
+    grid-column: 1;
+    grid-row: 5;
   }
   .page--judge .hero__honest {
     grid-column: 1;
@@ -228,7 +234,7 @@
   }
   .page--judge .card {
     grid-column: 2;
-    grid-row: 2 / span 3;
+    grid-row: 2 / span 4;
   }
 }
 
@@ -306,7 +312,7 @@
 @media (min-width: 56rem) {
   .page--judge .hero__chips {
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 3;
     margin: 0;
     align-self: start;
   }

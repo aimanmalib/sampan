@@ -19,6 +19,7 @@ import { DemoPage } from './demo/DemoPage';
 import { HowPage } from './how/HowPage';
 import { LegalPage } from './legal/LegalPage';
 import { Measured } from './Measured';
+import { HeroPitch } from './HeroPitch';
 import { PayPages, payRoute } from './pay/PayPages';
 import { useWallet } from './wallet/useWallet';
 import { WatchPage } from './watch/WatchPage';
@@ -108,7 +109,7 @@ export function App() {
       ) : (
       <main className={judge ? 'page page--judge' : 'page'}>
         <section className={heroCard ? 'hero hero--card' : 'hero'}>
-          <h1 className="hero__title">{t('hero.title')}</h1>
+          <HeroPitch />
           {config && heroCard ? <HeroChips config={config} cross={flows.cross} /> : null}
           {config && !heroCard ? <p className="hero__sub">{t(heroSubKey(flows), vars)}</p> : null}
         </section>

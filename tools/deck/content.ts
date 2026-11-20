@@ -3,6 +3,7 @@
 // README business-model block that scripts/business-model.ts makes from config: tests/deck.test.ts checks it.
 // Transaction ids are rows of docs/MEASURED.md. Text only; tools/deck/html.ts lays it out.
 import { createHash } from 'node:crypto';
+import type { Pitch } from '../../core/pitch.js';
 
 export interface Slide {
   /** The template's slide title (kept, so the deck reads as the template asks). */
@@ -21,6 +22,8 @@ export interface DeckFacts {
   siteUrl: string;
   repoUrl: string;
   tokenAddress: string;
+  /** Slide 1: the same three lines as the front page (lang/en.json pitch.*, proof counted from MEASURED; K6P4). */
+  pitch: Pitch;
 }
 
 const host = (url: string): string => url.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -30,7 +33,8 @@ export function slides(f: DeckFacts): Slide[] {
     {
       title: 'Sampan',
       cover: true,
-      lead: 'Dollar stablecoins in and out of Bitcoin Cash, signed in your own wallet.',
+      lead: f.pitch.what,
+      points: [f.pitch.why, f.pitch.proof],
       foot: [host(f.siteUrl), 'Aiman Malib, Sasa Teguh (Malaysia). Solo.'],
     },
     {

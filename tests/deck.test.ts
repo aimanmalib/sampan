@@ -5,13 +5,18 @@ import { describe, expect, it } from 'vitest';
 import { slides, slidesHash, TEMPLATE_TITLES, type Slide } from '../tools/deck/content.js';
 import { deckHtml } from '../tools/deck/html.js';
 import { END, START } from '../scripts/business-model.js';
+import { measuredHeadline } from '../scripts/measured-json.js';
+import { pitchFrom } from '../core/pitch.js';
 
 const read = (p: string): string => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 const config = JSON.parse(read('config/sampan.json')) as {
   site: { url: string };
   banner: { deckUrl: string; repoUrl: string; tokenAddress: string };
 };
-const facts = { siteUrl: config.site.url, repoUrl: config.banner.repoUrl, tokenAddress: config.banner.tokenAddress };
+const en = JSON.parse(read('lang/en.json')) as Record<string, string>;
+const headline = measuredHeadline();
+const pitch = pitchFrom(en, headline);
+const facts = { siteUrl: config.site.url, repoUrl: config.banner.repoUrl, tokenAddress: config.banner.tokenAddress, pitch };
 const deck = slides(facts);
 const text = (s: Slide): string => [s.title, s.lead ?? '', ...(s.points ?? []), ...(s.foot ?? [])].join('\n');
 const all = deck.map(text).join('\n');
@@ -29,10 +34,18 @@ function numbers(s: string): string[] {
 function corpus(): Set<string> {
   const readme = read('README.md');
   const block = readme.slice(readme.indexOf(START), readme.indexOf(END));
-  return new Set(numbers([read('docs/MEASURED.md'), read('config/sampan.json'), block].join('\n')));
+  // The pitch's proof counts (crossings, chains, transactions) are counted from MEASURED by the bounty-table counter.
+  const counted = [headline.crossings, headline.chains.length, headline.txids].map(String);
+  return new Set([...numbers([read('docs/MEASURED.md'), read('config/sampan.json'), block].join('\n')), ...counted]);
 }
 
 describe('event deck', () => {
+  it('opens with the front page pitch: the same lang keys, the proof counted from MEASURED (K6P4)', () => {
+    expect(deck[0]!.lead).toBe(en['pitch.what']);
+    expect(deck[0]!.points).toEqual([pitch.why, pitch.proof]);
+    expect(pitch.proof).toContain(String(headline.txids));
+  });
+
   it('keeps the eight template slides in order', () => {
     expect(deck.map((s) => s.title)).toEqual([...TEMPLATE_TITLES]);
   });

@@ -1,6 +1,6 @@
 // PRD 4.10 first-screen rule on the page the live site shows (the shipped flows: landing flow on, so the judge strip
 // is drawn, and crossings as the config file has them):
-// without scrolling, the headline, the boat picture with both labelled banks, the judge strip with Fill, the whole card
+// without scrolling, the headline, the why and proof lines of the pitch (K6P4), the boat picture with both labelled banks, the judge strip with Fill, the whole card
 // (tabs, amount, filled price line and its one primary button) are fully in view, in every language config offers, on an iPhone 13 and two desktop sizes.
 // After "Fill this in for me" the primary button is still in view without scrolling.
 import { expect, test, type Page } from '@playwright/test';
@@ -12,6 +12,8 @@ import ms from '../lang/ms.json' with { type: 'json' };
 import vectors from '../tests/fixtures/tambat-vectors.json' with { type: 'json' };
 import { E2E_THEME, NOSTR_PORT_OFFSET, PAY_PORT_OFFSET, SHIPPED_PORT_OFFSET } from '../playwright.config.js';
 import { answerRelays } from './nostr-relays.js';
+import { pitchFrom } from '../core/pitch.js';
+import { measuredHeadline } from '../scripts/measured-json.js';
 
 test.skip(Boolean(process.env.E2E_BASE_URL), 'needs the fake server with the shipped flows');
 const shippedPort = Number(process.env.E2E_PORT ?? 4173) + SHIPPED_PORT_OFFSET;
@@ -49,7 +51,9 @@ for (const [lang, text] of Object.entries(LANGS)) {
       const label = `${info.project.name} ${viewport.width}x${viewport.height} ${lang}`;
       await page.goto('/');
       await expect(page.locator('html')).toHaveAttribute('data-theme', E2E_THEME ?? shipped.ui.theme);
-      await expect(page.locator('h1')).toHaveText(text['hero.title']);
+      await expect(page.locator('h1')).toHaveText(text['pitch.what']);
+      await expect(page.locator('.hero__why')).toHaveText(text['pitch.why']);
+      await expect(page.locator('.hero__proof')).toHaveText(pitchFrom(text, measuredHeadline()).proof);
       await expect(page.locator('.judge__fill')).toHaveText(text['judge.fill']);
       await expect(page.locator('.button--primary')).toHaveCount(1);
       // Measure the card as a visitor sees it: with the price line filled in (it adds a line once the quote arrives).
@@ -57,7 +61,7 @@ for (const [lang, text] of Object.entries(LANGS)) {
       await expect(page.locator('figure.scene').getByText(text['scene.left'], { exact: true })).toBeVisible();
       await expect(page.locator('figure.scene').getByText(text['scene.right'], { exact: true })).toBeVisible();
       await expect(page.locator('.judge__title')).toHaveText(text['judge.title']);
-      for (const selector of ['h1', 'figure.scene', '.judge__title', '.judge__fill', 'section.card', '[role=tablist]', '.button--primary']) {
+      for (const selector of ['h1', '.hero__why', '.hero__proof', 'figure.scene', '.judge__title', '.judge__fill', 'section.card', '[role=tablist]', '.button--primary']) {
         await inView(page, selector, label);
       }
       expect(await page.evaluate(() => window.scrollY), `${label}: no scroll`).toBe(0);
