@@ -44,9 +44,11 @@ async function expectClaims(page: Page, cfg: Cfg): Promise<void> {
     const absent = claims.filter((c) => c[dir].length === 0).map((c) => c.name);
     for (const name of absent) await expect(item).not.toContainText(name);
   }
-  const nodes = page.locator('.diagram__step--contract [data-node]');
+  const cross = page.locator('.how__flow', { has: page.getByRole('heading', { name: en['how.cross.title'], exact: true }) });
+  const nodes = cross.locator('.diagram__step--contract [data-node]');
   const routes = liveRoutes(claims).map((r) => en[`route.${r}` as keyof typeof en]);
-  if (routes.length > 0) await expect(nodes.filter({ hasText: routes[0] }).first()).toBeVisible();
+  // One node per route that carries a claim, in the diagram's middle box.
+  await expect(nodes).toHaveText(routes);
   await page.goto('/');
   const chips = page.getByRole('list', { name: en['hero.chips.label'] });
   for (const c of claims) {
