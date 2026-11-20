@@ -2,6 +2,7 @@
 //   npx tsx tools/video/record.ts --scene front|how|swap|land|in|all [--engine chromium-desktop|webkit-iphone13|both]
 //     [--base https://sampan.sasateguh.com] [--out state/video] [--write]
 //     land: [--land-owner 9] [--land-bch 0.001]   in: --asset <thorchain.assets name> [--amount 1.6] [--receive PUSD] [--in-owner 19] [--port 4189]
+//     receipt: --asset <the in scene's asset> [--receipt /c/<id>, default: the in shot's] [--port 4189]
 // front, how, swap and land run on the live site; in runs the built server of this commit (dist/, npm run build) on
 // this host with the one asset switched on (tools/video/scene-in.ts). swap, land and in spend from the test wallets
 // inside state/budget.json. Clips go to <out>/<scene>-<engine>.webm and every take to <out>/shots.json (scene, clip,
@@ -21,6 +22,7 @@ import { checkRun, electrumLookup, SEEN_DEFAULTS } from '../measure/seen.js';
 import { arg, need, runCli } from '../measure/run-cli.js';
 import { bringIn, EVM_BRIDGE } from './scene-in.js';
 import { front, how, land, swap, type SceneValue } from './scene-live.js';
+import { receiptScene } from './scene-receipt.js';
 import { addShot, missingTxids, SCENES, type Scene, type ShotsFile } from './shots.js';
 import { ENGINES, recordTake, type Engine, type Take } from './take.js';
 
@@ -31,6 +33,7 @@ const DEFAULT_ENGINES: Record<Scene, Engine[]> = {
   swap: ['chromium-desktop'],
   land: ['chromium-desktop'],
   in: ['chromium-desktop'],
+  receipt: ['chromium-desktop'],
 };
 
 async function main(): Promise<void> {
@@ -82,6 +85,15 @@ async function main(): Promise<void> {
           port: Number(arg('--port') ?? '4189'),
         }),
       init: [EVM_BRIDGE],
+      site: 'built server of this commit on the recording host, mainnet',
+    },
+    receipt: {
+      run: (t) => {
+        const fromIn = shots.shots.find((s) => s.scene === 'in')?.receipt;
+        const receipt = arg('--receipt') ?? fromIn;
+        if (!receipt) throw new Error('--receipt /c/<id> is needed when no in shot names one');
+        return receiptScene(t, { config, receipt, asset: need('--asset'), port: Number(arg('--port') ?? '4189'), dataDir: path.join(out, 'server-data') });
+      },
       site: 'built server of this commit on the recording host, mainnet',
     },
   };

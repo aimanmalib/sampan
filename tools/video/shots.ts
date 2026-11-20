@@ -2,7 +2,7 @@
 // transaction ids it shows, so the edit (captions) and the /demo chapters can name them. Kept in
 // state/video/shots.json, not tracked. Pure helpers, tested in tests/video-shots.test.ts.
 
-export const SCENES = ['front', 'how', 'swap', 'land', 'in'] as const;
+export const SCENES = ['front', 'how', 'swap', 'land', 'in', 'receipt'] as const;
 export type Scene = (typeof SCENES)[number];
 
 export interface Mark {

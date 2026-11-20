@@ -1,0 +1,92 @@
+{
+  "_note": "The demo video edit (tools/video/edit.sh). Scenes in order; each clip window is a mark of state/video/shots.json plus an offset in seconds. {headline} and {<scene>.seconds} are filled from docs/MEASURED.md (scripts/bounty-table.ts counter, Runs row of the scene's transaction); nothing here is typed by hand. `text` is the subtitle, `say` the words read when they differ (a URL read aloud).",
+  "frame": { "width": 1920, "height": 1080, "fps": 30, "pageTop": 150, "pageScale": 0.86 },
+  "voice": { "provider": "ElevenLabs", "voiceId": "Xb7hH8MSUJpSbSDYk0k2", "voiceName": "Alice", "model": "eleven_multilingual_v2", "language": "en" },
+  "style": {
+    "paper": "#f4f1ea",
+    "ink": "#12261f",
+    "river": "#0e6b5c",
+    "lamp": "#e8a23a",
+    "card": "#fffdf8",
+    "display": "Fraunces",
+    "text": "IBM Plex Sans",
+    "mono": "IBM Plex Mono",
+    "fontsDir": "web/src/fonts"
+  },
+  "audio": {
+    "lufs": -16,
+    "truePeak": -1.5,
+    "lra": 11,
+    "musicDb": -27,
+    "musicChord": [110, 164.81, 220, 277.18, 329.63],
+    "musicSwellSeconds": 9,
+    "leadSeconds": 0.4,
+    "tailSeconds": 0.7
+  },
+  "subtitle": { "maxChars": 46, "size": 60, "captionSize": 38 },
+  "scenes": [
+    {
+      "id": "open",
+      "clips": [{ "shot": "front/chromium-desktop", "from": ["front page loaded", -0.4], "to": ["Measured card", -0.4] }],
+      "caption": "Stablecoins in and out of Bitcoin Cash",
+      "text": "Sampan moves stablecoins in and out of Bitcoin Cash, from the wallet you already use."
+    },
+    {
+      "id": "proof",
+      "clips": [
+        { "shot": "front/chromium-desktop", "from": ["Measured card", -0.4], "to": ["Measured card", 5.5] },
+        { "shot": "how/chromium-desktop", "from": ["proof table", -1], "to": ["proof table", 9] }
+      ],
+      "caption": "{headline}",
+      "text": "Every number on this page is counted from mainnet transactions. Anyone can open each one in a block explorer."
+    },
+    {
+      "id": "land",
+      "clips": [
+        { "shot": "land/chromium-desktop", "from": ["Bring in tab: a landing address for any BCH wallet", -0.5], "to": ["landing address and QR shown", 3] },
+        { "shot": "land/chromium-desktop", "from": ["plain BCH payment sent from another wallet", -1], "to": ["arrived on the page", 3] }
+      ],
+      "caption": "A landing address, paid with plain BCH · {land.seconds} s from payment to PUSD, measured",
+      "text": "Paste your address and you get a landing address. Any wallet can pay it with plain BCH. A contract turns the coins into PUSD for you, or gives them back."
+    },
+    {
+      "id": "swap",
+      "clips": [
+        { "shot": "swap/chromium-desktop", "from": ["Copy link: the pairing link for the wallet", -0.8], "to": ["Copy link: the pairing link for the wallet", 3] },
+        { "shot": "swap/chromium-desktop", "from": ["wallet connected, balance shown", -1], "to": ["swap sent, transaction id on screen", 4] }
+      ],
+      "caption": "One signature in your own wallet · {swap.seconds} s from Swap to the transaction, measured",
+      "text": "Or connect a Bitcoin Cash wallet with WizardConnect. One signature swaps BCH for PUSD through Cauldron pools."
+    },
+    {
+      "id": "in",
+      "clips": [
+        { "shot": "in/chromium-desktop", "from": ["Bring in", -0.5], "to": ["deposit sent", 2], "endsBefore": "BCH arrived and turned into PUSD" },
+        { "shot": "in/chromium-desktop", "from": ["crossing status page", 0], "to": ["crossing status page", 6], "endsBefore": "BCH arrived and turned into PUSD" },
+        { "shot": "in/chromium-desktop", "from": ["BCH arrived and turned into PUSD", -10], "to": ["BCH arrived and turned into PUSD", -1.5], "endsBefore": "BCH arrived and turned into PUSD" },
+        { "shot": "receipt/chromium-desktop", "from": ["landing status page: converted", 0], "to": ["landing status page: converted", 7.5] }
+      ],
+      "caption": "USDC on Avalanche C-Chain arrives as PUSD · the wait is cut, the clock in the corner is real",
+      "text": "Stablecoins on other chains come in too. Here, USDC on Avalanche goes through THORChain. It lands at a landing address as BCH, and the contract turns it into PUSD. The wait is cut, and the clock in the corner keeps the real time."
+    },
+    {
+      "id": "phone",
+      "layout": "pair",
+      "clips": [
+        { "shot": "front/webkit-iphone13", "from": ["front page loaded", -0.4], "to": ["Measured card", 1] },
+        { "shot": "how/webkit-iphone13", "from": ["proof table", -1], "to": ["more rows", 3] }
+      ],
+      "caption": "On a phone, every transaction linked",
+      "text": "It works on a phone too, and every crossing links to the explorers of both chains."
+    },
+    {
+      "id": "end",
+      "layout": "card",
+      "seconds": 6,
+      "card": ["sampan.sasateguh.com", "Open source, MIT", "Narration voice generated with ElevenLabs"],
+      "caption": "",
+      "text": "Try it at sampan.sasateguh.com.",
+      "say": "Try it at sampan dot sasateguh dot com."
+    }
+  ]
+}
