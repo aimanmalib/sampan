@@ -107,7 +107,8 @@ async function swapOnce(page: Page, side: 'buy' | 'sell', amount: bigint): Promi
   const started = Date.now();
   await primary(page).click();
   const done = page.locator('.swap__done');
-  const failed = page.locator('.swap__error');
+  // The peg note shares the error style but is a standing status, not this swap's outcome.
+  const failed = page.locator('.swap__error:not([data-peg])');
   await done.or(failed).first().waitFor({ timeout: SWAP_TIMEOUT_MS });
   const seconds = (Date.now() - started) / 1000;
   if (!(await done.isVisible())) return { utc: new Date(), flow: 'swap', amount: label, seconds, ok: false, note: (await failed.textContent()) ?? 'error' };
