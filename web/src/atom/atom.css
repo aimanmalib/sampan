@@ -31,6 +31,12 @@
   border: 1px solid var(--line);
   border-radius: calc(var(--radius) / 2);
   overflow-wrap: anywhere;
+  /* The whole row picks its route (ADR 0093): the label's ::after below covers it. */
+  position: relative;
+  cursor: pointer;
+}
+.routes__row:not(.routes__row--off):hover {
+  border-color: var(--river);
 }
 .routes__row:has(input:checked) {
   border-color: var(--river);
@@ -40,6 +46,7 @@
   color: var(--ink-soft);
   background: var(--card);
   border-style: dashed;
+  cursor: not-allowed;
 }
 .routes__pick {
   display: flex;
@@ -49,10 +56,18 @@
   min-height: var(--touch);
   cursor: pointer;
 }
+.routes__pick::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
 .routes__row--off .routes__pick {
   cursor: not-allowed;
 }
 .routes__pick input {
+  /* Above the row-wide ::after, so the radio itself is still what a click on it hits. */
+  position: relative;
+  z-index: 1;
   width: 1.25rem;
   height: 1.25rem;
   margin: 0;
@@ -92,6 +107,9 @@
   color: var(--ink-soft);
 }
 .routes__how summary {
+  /* Above the row-wide label, so "How" still opens its own details. */
+  position: relative;
+  z-index: 1;
   cursor: pointer;
   min-height: var(--touch);
   display: flex;
