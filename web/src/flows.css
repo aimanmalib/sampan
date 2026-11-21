@@ -246,6 +246,11 @@
   font-size: 1.25rem;
   margin: 0;
 }
+.connect__hat {
+  vertical-align: -0.15em;
+  margin-right: 0.35em;
+  color: var(--ink);
+}
 .connect__close {
   flex: 0 0 auto;
   width: var(--touch);

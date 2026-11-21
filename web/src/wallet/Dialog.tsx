@@ -1,9 +1,9 @@
 // The pairing dialog frame shared by WizardConnect (BCH) and WalletConnect (EVM): title, close button with focus,
-// Escape and a click outside to close, no blurred backdrop.
+// Escape and a click outside to close, no blurred backdrop. An optional icon (hidden from screen readers) leads the title.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useText } from '../i18n';
 
-export function Dialog(props: { title: string; onClose: () => void; children: ReactNode }) {
+export function Dialog(props: { title: string; icon?: ReactNode; onClose: () => void; children: ReactNode }) {
   const { t } = useText();
   const closeRef = useRef<HTMLButtonElement>(null);
   const { onClose } = props;
@@ -22,6 +22,7 @@ export function Dialog(props: { title: string; onClose: () => void; children: Re
       <div className="connect__box" role="dialog" aria-modal="true" aria-labelledby="connect-title">
         <div className="connect__head">
           <h2 id="connect-title" className="connect__title">
+            {props.icon}
             {props.title}
           </h2>
           <button ref={closeRef} type="button" className="connect__close" aria-label={t('wallet.close')} onClick={onClose}>

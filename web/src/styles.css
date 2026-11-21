@@ -301,6 +301,8 @@ a {
 .qrcopy {
   position: relative;
   display: grid;
+  /* A grid track never narrower than its content would push a 240 px code past a narrow dialog (min-width: 0). */
+  grid-template-columns: minmax(0, 1fr);
   justify-items: center;
   gap: 0.25rem;
   width: 100%;
@@ -308,8 +310,10 @@ a {
 }
 .qrcopy__button {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-items: center;
   width: 100%;
+  min-width: 0;
   min-height: var(--touch);
   padding: 0;
   border: 0;
