@@ -792,5 +792,10 @@
   "facts.quoted": "biaya dikutip {at}",
   "facts.quotedAt": "dikutip {at}",
   "facts.shortBoth": "waktu diukur, biaya dikutip",
-  "facts.quotedShort": "biaya dikutip"
+  "facts.quotedShort": "biaya dikutip",
+  "heroProof.label": "Penyeberangan terbaru:",
+  "heroProof.line": "{amount} {symbol} dari {chain} ke PUSD dalam {time}",
+  "heroProof.lineNoTime": "{amount} {symbol} dari {chain} ke PUSD",
+  "heroProof.tx": "tx {chain}",
+  "heroProof.all": "semua percobaan"
 }

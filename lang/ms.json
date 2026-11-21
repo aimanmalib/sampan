@@ -157,7 +157,7 @@
   "quote.updated": "Dikemas kini {seconds} s lalu",
   "quote.updatedNow": "Baru dikemas kini",
   "quote.announce": "Harga dikemas kini pada {time}",
-  "swap.receive": "Anda terima kira-kira {about} {asset}, sekurang-kurangnya {min} {asset}.",
+  "swap.receive": "Terima kira-kira {about} {asset}, minimum {min} {asset}.",
   "swap.fees": "Yuran",
   "swap.poolFee": "Yuran kolam: {pct}% daripada bahagian BCH, disimpan oleh kolam.",
   "swap.networkFee": "Yuran rangkaian: paling banyak {fee} BCH. Dompet anda memapar yuran tepat sebelum anda menandatangani.",
@@ -792,5 +792,10 @@
   "facts.quoted": "yuran disebut harga {at}",
   "facts.quotedAt": "disebut harga {at}",
   "facts.shortBoth": "masa diukur, yuran disebut harga",
-  "facts.quotedShort": "yuran disebut harga"
+  "facts.quotedShort": "yuran disebut harga",
+  "heroProof.label": "Lintasan terkini:",
+  "heroProof.line": "{amount} {symbol} dari {chain} ke PUSD dalam {time}",
+  "heroProof.lineNoTime": "{amount} {symbol} dari {chain} ke PUSD",
+  "heroProof.tx": "tx {chain}",
+  "heroProof.all": "semua larian"
 }

@@ -1,6 +1,6 @@
 // PRD 4.10 first-screen rule on the page the live site shows (the shipped flows: landing flow on, so the judge strip
 // is drawn, and crossings as the config file has them):
-// without scrolling, the headline, the why and proof lines of the pitch (K6P4), the boat picture with both labelled banks, the judge strip with Fill, the whole card
+// without scrolling, the headline, the why and proof lines of the pitch (K6P4), the latest real crossing (K6P6), the boat picture with both labelled banks, the judge strip with Fill, the whole card
 // (tabs, amount, filled price line and its one primary button) are fully in view, in every language config offers, on an iPhone 13 and two desktop sizes.
 // After "Fill this in for me" the primary button is still in view without scrolling.
 import { expect, test, type Page, type Route } from '@playwright/test';
@@ -76,7 +76,9 @@ for (const [lang, text] of Object.entries(LANGS)) {
       await expect(page.locator('figure.scene').getByText(text['scene.left'], { exact: true })).toBeVisible();
       await expect(page.locator('figure.scene').getByText(text['scene.right'], { exact: true })).toBeVisible();
       await expect(page.locator('.judge__title')).toHaveText(text['judge.title']);
-      for (const selector of ['h1', '.hero__why', '.hero__proof', 'figure.scene', '.judge__title', '.judge__fill', 'section.card', '[role=tablist]', '.button--primary']) {
+      // The one real crossing by the card (K6P6) is part of the first screen while config draws it.
+      const heroProof = shipped.ui.heroProof === 'none' ? [] : ['.hero-proof'];
+      for (const selector of ['h1', '.hero__why', '.hero__proof', ...heroProof, 'figure.scene', '.judge__title', '.judge__fill', 'section.card', '[role=tablist]', '.button--primary']) {
         await inView(page, selector, label);
       }
       expect(await page.evaluate(() => window.scrollY), `${label}: no scroll`).toBe(0);

@@ -20,6 +20,7 @@ import { HowPage } from './how/HowPage';
 import { LegalPage } from './legal/LegalPage';
 import { Measured } from './Measured';
 import { HeroPitch } from './HeroPitch';
+import { HeroProof } from './HeroProof';
 import { PayPages, payRoute } from './pay/PayPages';
 import { useWallet } from './wallet/useWallet';
 import { WatchPage } from './watch/WatchPage';
@@ -111,6 +112,8 @@ export function App() {
         <section className={heroCard ? 'hero hero--card' : 'hero'}>
           <HeroPitch symbols={vars.symbols} />
           {config && heroCard ? <HeroChips config={config} cross={flows.cross} /> : null}
+          {/* One real crossing, near the card (K6P6). */}
+          {config ? <HeroProof config={config} /> : null}
           {config && !heroCard ? <p className="hero__sub">{t(heroSubKey(flows), vars)}</p> : null}
         </section>
         <Scene />

@@ -10,6 +10,7 @@ import { validateActivity, type ActivityConfig } from './activity.js';
 import { validateDemo, validateMedia, type DemoConfig, type MediaConfig } from './demo.js';
 import { validateKeep, type KeepConfig } from './keep.js';
 import { chainsOf, liveAssets, symbolsOf, validateAssets, validateEvmChain, type EvmChain, type RouteAsset } from './route-assets.js';
+import { HERO_PROOF_KINDS, type HeroProofKind } from './hero-proof.js';
 
 export type RouteId = 'near-intents' | 'thorchain';
 export type ActiveRoute = RouteId | 'none';
@@ -195,6 +196,9 @@ export interface SampanConfig {
    * theme: the one the page wears, written into <html data-theme> when the page is built.
    * icons: token symbol or chain key → icon file web/src/icons/<file>.svg; a name not listed gets a one-letter monogram.
    * hero: the front page's top, one of HERO_KINDS.
+   * heroProof: the proof line by the card (K6P6), one of HERO_PROOF_KINDS: "latest-in" = the newest ok stablecoin crossing
+   * into PUSD from docs/MEASURED.md, "none" = no line.
+   * heroTab: the card's tab before a visitor picks one (swap, in or out); a tab that is not open falls back to the first.
    */
   ui: {
     ferryMotion: boolean;
@@ -205,6 +209,8 @@ export interface SampanConfig {
     theme: string;
     icons: Record<string, string>;
     hero: (typeof HERO_KINDS)[number];
+    heroProof: HeroProofKind;
+    heroTab: HeroTab;
   };
   /** Languages the page offers, in menu order, each by its own name; every code has a lang/<code>.json. default: shown until a visitor picks one. */
   i18n: I18nConfig;
@@ -266,6 +272,8 @@ export const MEASURED_SOURCES = ['proof', 'stats'] as const;
 export interface MeasuredConfig { source: (typeof MEASURED_SOURCES)[number] }
 /** The front page's top: `card` = one headline, live status chips, then the action card; `phone` = the earlier headline with its sentence (ADR 0071). */
 export const HERO_KINDS = ['card', 'phone'] as const;
+export const HERO_TABS = ['swap', 'in', 'out'] as const;
+export type HeroTab = (typeof HERO_TABS)[number];
 /** autoRefreshMs: how often a shown price asks again while the tab is visible and no dialog is open (0 = never; else 2000 to 60000). */
 export interface QuoteConfig { autoRefreshMs: number }
 
@@ -448,6 +456,8 @@ export function validateConfig(c: SampanConfig): string[] {
     'quote.autoRefreshMs: 0 (off) or an integer from 2000 to 60000',
   );
   need((HERO_KINDS as readonly string[]).includes(String(c.ui?.hero)), `ui.hero: one of ${HERO_KINDS.join(', ')}`);
+  need((HERO_PROOF_KINDS as readonly string[]).includes(String(c.ui?.heroProof)), `ui.heroProof: one of ${HERO_PROOF_KINDS.join(', ')}`);
+  need((HERO_TABS as readonly string[]).includes(String(c.ui?.heroTab)), `ui.heroTab: one of ${HERO_TABS.join(', ')}`);
   need(typeof c.judge?.openOnPhone === 'boolean', 'judge.openOnPhone: true or false');
   errors.push(...validateNostrId(c.nostrId));
   need(!c.features?.oneClick || c.oneClick.baseUrl !== '', 'oneClick.baseUrl: required while features.oneClick is true');
@@ -534,7 +544,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     atom: c.atom,
     oneClick: oneClickPublic(c.oneClick),
     nostrId: nostrIdPublic(c.features.nostrSend, c.nostrId),
-    ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen, qrCloseMs: c.ui.qrCloseMs, arriveMs: c.ui.arriveMs, theme: c.ui.theme, icons: c.ui.icons, hero: c.ui.hero },
+    ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen, qrCloseMs: c.ui.qrCloseMs, arriveMs: c.ui.arriveMs, theme: c.ui.theme, icons: c.ui.icons, hero: c.ui.hero, heroProof: c.ui.heroProof, heroTab: c.ui.heroTab },
     i18n: { default: c.i18n.default, languages: c.i18n.languages.map(({ code, name, machine }) => (machine ? { code, name, machine } : { code, name })) },
   };
 }

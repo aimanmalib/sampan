@@ -58,7 +58,9 @@ export function ActionCard({
 }) {
   const { t } = useText();
   const tabs = cardTabs(config);
-  const tab = chosen && tabs.includes(chosen) ? chosen : tabs[0];
+  // Before a visitor picks, config ui.heroTab chooses (swap as shipped: the judge path); a closed tab falls back to the first.
+  const first = config && tabs.includes(config.ui.heroTab) ? config.ui.heroTab : tabs[0];
+  const tab = chosen && tabs.includes(chosen) ? chosen : first;
   // A crossing tab is paused only while none of its networks is open on any route (KSG3, KSG6): one halted chain is
   // marked in the network list instead.
   const health = useHealth();

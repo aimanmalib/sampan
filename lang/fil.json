@@ -157,7 +157,7 @@
   "quote.updated": "Na-update {seconds}s ang nakalipas",
   "quote.updatedNow": "Kaka-update lang",
   "quote.announce": "Na-update ang presyo nang {time}",
-  "swap.receive": "Matatanggap mo ang mga {about} {asset}, hindi bababa sa {min} {asset}.",
+  "swap.receive": "Makukuha: mga {about} {asset}, minimum {min} {asset}.",
   "swap.fees": "Mga bayad",
   "swap.poolFee": "Bayad sa pool: {pct}% ng BCH side, napupunta sa pool.",
   "swap.networkFee": "Network fee: hindi hihigit sa {fee} BCH. Ipinapakita ng iyong wallet ang eksaktong fee bago ka pumirma.",
@@ -792,5 +792,10 @@
   "facts.quoted": "bayad sinipi {at}",
   "facts.quotedAt": "sinipi {at}",
   "facts.shortBoth": "oras sinukat, bayad sinipi",
-  "facts.quotedShort": "sinipi ang bayad"
+  "facts.quotedShort": "sinipi ang bayad",
+  "heroProof.label": "Pinakabagong tawid:",
+  "heroProof.line": "{amount} {symbol} mula sa {chain} papuntang PUSD sa loob ng {time}",
+  "heroProof.lineNoTime": "{amount} {symbol} mula sa {chain} papuntang PUSD",
+  "heroProof.tx": "tx sa {chain}",
+  "heroProof.all": "lahat ng run"
 }

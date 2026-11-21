@@ -385,6 +385,8 @@
     "themes": ["paper", "night", "linen", "ink"],
     "theme": "paper",
     "hero": "card",
+    "heroProof": "latest-in",
+    "heroTab": "swap",
     "icons": { "BCH": "bch", "USDC": "usdc", "USDT": "usdt", "ETH": "eth", "BNB": "bnb", "BSC": "bnb", "AVAX": "avax", "TRON": "trx", "TRX": "trx" }
   },
   "i18n": {

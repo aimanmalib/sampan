@@ -792,5 +792,10 @@
   "facts.quoted": "fee quoted {at}",
   "facts.quotedAt": "quoted {at}",
   "facts.shortBoth": "time measured, fee quoted",
-  "facts.quotedShort": "fee quoted"
+  "facts.quotedShort": "fee quoted",
+  "heroProof.label": "Latest crossing:",
+  "heroProof.line": "{amount} {symbol} from {chain} to PUSD in {time}",
+  "heroProof.lineNoTime": "{amount} {symbol} from {chain} to PUSD",
+  "heroProof.tx": "{chain} tx",
+  "heroProof.all": "all runs"
 }
