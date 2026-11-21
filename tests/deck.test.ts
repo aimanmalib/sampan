@@ -2,7 +2,8 @@
 // the network, and the committed PDF fits the banner link (ADR 0070).
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { slides, slidesHash, TEMPLATE_TITLES, type Slide } from '../tools/deck/content.js';
+import { slides, TEMPLATE_TITLES, type Slide } from '../tools/deck/content.js';
+import { slidesHash } from '../tools/deck/hash.js';
 import { deckHtml } from '../tools/deck/html.js';
 import { END, START } from '../scripts/business-model.js';
 import { measuredHeadline } from '../scripts/measured-json.js';
@@ -84,7 +85,7 @@ describe('event deck', () => {
   });
 
   it('lays out with no network reference except links', () => {
-    const html = deckHtml(deck, { theme: 'paper', themeCss: '', fontCss: '', logoSvg: '<svg></svg>' });
+    const html = deckHtml(deck, { theme: 'paper', themeCss: '', fontCss: '', logoSvg: '<svg></svg>', layoutCss: '' });
     expect(html).not.toMatch(/(src|srcset)=["']https?:/);
     expect(html).not.toMatch(/url\(['"]?https?:/);
     expect(html.match(/<section class="slide/g)).toHaveLength(8);

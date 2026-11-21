@@ -1,8 +1,8 @@
 // The eight slides of the event deck, in the order and with the titles of the event's "Widget Factory" template
 // (docs/decisions/0070-event-deck-pdf.md). Every number here must appear in docs/MEASURED.md, config/sampan.json or the
 // README business-model block that scripts/business-model.ts makes from config: tests/deck.test.ts checks it.
-// Transaction ids are rows of docs/MEASURED.md. Text only; tools/deck/html.ts lays it out.
-import { createHash } from 'node:crypto';
+// Transaction ids are rows of docs/MEASURED.md. Text only, no Node modules: tools/deck/html.ts lays it out for the PDF and
+// web/src/slides/SlidesPage.tsx for /slides.
 import type { Pitch } from '../../core/pitch.js';
 
 export interface Slide {
@@ -126,6 +126,3 @@ export const TEMPLATE_TITLES = [
   'The Vision for Sampan',
   'Thank you',
 ] as const;
-
-/** Fingerprint of the slide text the PDF was printed from (tools/deck/printed.sha256), so a stale PDF fails the test. */
-export const slidesHash = (list: Slide[]): string => createHash('sha256').update(JSON.stringify(list)).digest('hex');

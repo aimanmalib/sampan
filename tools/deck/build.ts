@@ -4,7 +4,8 @@
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
-import { slides, slidesHash } from './content.js';
+import { slides } from './content.js';
+import { slidesHash } from './hash.js';
 import { pitchFrom } from '../../core/pitch.js';
 import { symbolList } from '../../core/flows.js';
 import { measuredHeadline } from '../../scripts/measured-json.js';
@@ -49,6 +50,7 @@ async function main(): Promise<void> {
     themeCss: readFileSync(root(`web/src/themes/${config.ui.theme}.css`), 'utf8'),
     fontCss: fontCss(),
     logoSvg: readFileSync(root('brand/logo.svg'), 'utf8'),
+    layoutCss: readFileSync(root('tools/deck/deck.css'), 'utf8'),
   });
 
   const browser = await chromium.launch();

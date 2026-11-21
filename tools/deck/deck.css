@@ -1,0 +1,27 @@
+/* One slide layout for the printed deck (tools/deck/html.ts) and the /slides page (web/src/slides/SlidesPage.tsx). Every
+   rule sits under .deck so the page's own styles are untouched; colours and fonts are the shipped theme's tokens. A slide
+   is drawn at 1280 x 720 and the page scales it to the screen. */
+.deck { font-family: var(--font-text); color: var(--ink); background: var(--paper); }
+.deck *, .deck *::before, .deck *::after { box-sizing: border-box; }
+.deck a { color: var(--river); text-decoration: none; }
+.deck .slide { width: 1280px; height: 720px; padding: 64px 80px 56px; display: flex; flex-direction: column;
+  position: relative; overflow: hidden; page-break-after: always; break-after: page; background: var(--paper); }
+.deck .slide:last-child { page-break-after: auto; break-after: auto; }
+.deck .slide__mark { position: absolute; top: 40px; right: 64px; width: 48px; height: 48px; }
+.deck .slide__mark svg, .deck .slide__mark img { width: 100%; height: 100%; display: block; }
+.deck .slide__n { position: absolute; bottom: 28px; right: 64px; font: 500 14px var(--font-mono); color: var(--ink-soft); }
+.deck h1 { font-family: var(--font-display); font-weight: 600; font-size: 52px; line-height: 1.1; margin: 0 0 20px; color: var(--ink); }
+.deck .lead { font-family: var(--font-display); font-size: 28px; line-height: 1.3; margin: 0 0 28px; color: var(--river); max-width: 940px; }
+.deck .body { display: flex; gap: 40px; flex: 1; min-height: 0; }
+.deck ul { margin: 0; padding: 0; list-style: none; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+.deck li { font-size: 21px; line-height: 1.4; padding-left: 28px; position: relative; }
+.deck li::before { content: ''; position: absolute; left: 0; top: 11px; width: 12px; height: 4px; border-radius: 2px; background: var(--lamp); }
+.deck .foot { margin-top: 20px; font: 14px/1.5 var(--font-mono); color: var(--ink-soft); }
+.deck .foot p { margin: 0; overflow-wrap: anywhere; }
+.deck .slide--cover { background: var(--ink); color: var(--paper); justify-content: center; }
+.deck .slide--cover h1 { font-size: 104px; color: var(--paper); }
+.deck .slide--cover .lead { color: var(--river-pale); font-size: 34px; }
+.deck .slide--cover li { font-size: 22px; color: var(--paper); overflow-wrap: anywhere; }
+.deck .slide--cover a { color: var(--river-pale); }
+.deck .slide--cover .foot, .deck .slide--cover .slide__n { color: var(--paper-deep); }
+.deck .slide--cover .bar { width: 120px; height: 6px; border-radius: 3px; background: var(--lamp); margin-bottom: 36px; }
