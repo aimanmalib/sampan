@@ -31,7 +31,7 @@ test('hidden before connecting, then BCH and PUSD from the wallet, changed by a 
   const before = await connect(page);
   // The Swap tab's own balance line reads the same scan.
   await expect(page.locator('.swap__wallet')).toContainText(`and ${before[2]} PUSD`);
-  await expect(pill(page)).toHaveAttribute('aria-label', new RegExp(`${before[2].replace('.', '\\.')} PUSD`));
+  await expect(pill(page)).toHaveAttribute('aria-label', new RegExp(`${String(before[2]).replace('.', '\\.')} PUSD`));
 
   await expect(primary(page)).toHaveText(en['swap.go']);
   await primary(page).click();

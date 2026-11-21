@@ -1,7 +1,7 @@
 // What the header balance shows (features.headerBalance, K5P6): BCH rounded down to wallet.balanceBchDecimals, then
 // each offered stablecoin with its own decimals. Pure, so the rounding is tested without a page.
-import { formatUnits } from '../../../core/wallet';
-import type { TokenConfig } from '../../../core/config';
+import { formatUnits } from '../../../core/wallet.js';
+import type { TokenConfig } from '../../../core/config.js';
 
 export interface BalanceLine {
   amount: string;
