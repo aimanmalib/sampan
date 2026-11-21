@@ -14,6 +14,29 @@ Sampan menukar BCH dan stablecoin PUSD melalui kolam Cauldron sedia ada di mainn
 pendaratan: hantar BCH ke alamat itu dari mana-mana dompet atau bursa, dan ia sampai ke alamat anda sebagai PUSD, sementara
 pelayan Sampan tidak memegang sebarang kunci.
 
+<!-- route-facts:start (made by scripts/route-facts-table.ts from docs/route-facts.json) -->
+**Apa yang setiap laluan ambil**
+
+Masa ialah median larian mainnet yang berjaya dalam jadual ukuran. Tandatangan dikira oleh ujian dompet palsu setiap aliran. Yuran ialah yuran yang dinamakan kad kos, disebut harga oleh pelayan pada 2026-11-20 23:17 UTC untuk USD 2, 20 dan 100, tanpa perbezaan harga.
+
+| Laluan | Masa (diukur) | Tandatangan dalam Sampan | Yuran pada $2 | Yuran pada $20 | Yuran pada $100 |
+|---|---|---|---|---|---|
+| Tukar di BCH | kira-kira 3 s, 22 larian (1 s hingga 4 s) | 1 tandatangan | $0.01 (0.35 %) | $0.06 (0.31 %) | $0.31 (0.31 %) |
+| BCH dari mana-mana dompet | kira-kira 3 s, 7 larian (1 s hingga 5 s) | satu bayaran dari mana-mana dompet BCH | $0.01 (0.37 %) tambah yuran rangkaian | $0.06 (0.31 %) tambah yuran rangkaian | $0.31 (0.31 %) tambah yuran rangkaian |
+| Hantar keluar: Ethereum melalui THORChain | kira-kira 8 min, 3 larian (6 min hingga 18 min) | 2 tandatangan | $0.26 (13.1 %) | $0.35 (1.8 %) | $0.76 (0.76 %) |
+| Hantar keluar: BNB Smart Chain melalui THORChain | kira-kira 107 s, 2 larian (98 s hingga 116 s) | 2 tandatangan | $0.26 (13.1 %) | $0.35 (1.8 %) | $0.77 (0.77 %) |
+| Hantar keluar: Avalanche C-Chain melalui THORChain | kira-kira 56 min, 2 larian (55 min hingga 57 min) | 2 tandatangan | $0.26 (13.1 %) | $0.35 (1.8 %) | $0.79 (0.79 %) |
+| Hantar keluar: Ethereum melalui NEAR Intents | kira-kira 35 min, 1 larian | 2 tandatangan | $0.31 (15.4 %) | $0.36 (1.8 %) | $0.60 (0.60 %) |
+| Hantar keluar: Base melalui NEAR Intents | kira-kira 34 min, 1 larian | 2 tandatangan | $0.01 (0.49 %) | $0.06 (0.32 %) | $0.30 (0.30 %) |
+| Bawa masuk: Ethereum melalui THORChain | kira-kira 4 min, 3 larian (95 s hingga 34 min) | 2 tandatangan | $0.29 (14.4 %) | $0.38 (1.9 %) | $0.78 (0.78 %) |
+| Bawa masuk: BNB Smart Chain melalui THORChain | kira-kira 56 s, 2 larian (48 s hingga 63 s) | 2 tandatangan | $0.26 (13.2 %) | $0.35 (1.8 %) | $0.77 (0.77 %) |
+| Bawa masuk: Avalanche C-Chain melalui THORChain | belum diukur masanya | 2 tandatangan | $0.27 (13.3 %) | $0.36 (1.8 %) | $0.79 (0.79 %) |
+| Bawa masuk: Ethereum melalui NEAR Intents | kira-kira 22 min, 1 larian | 1 tandatangan | $0.01 (0.42 %) tambah yuran rangkaian | $0.06 (0.31 %) tambah yuran rangkaian | $0.30 (0.30 %) tambah yuran rangkaian |
+| Bawa masuk: Base melalui NEAR Intents | kira-kira 7 min, 1 larian | 1 tandatangan | $0.01 (0.42 %) tambah yuran rangkaian | $0.06 (0.31 %) tambah yuran rangkaian | $0.30 (0.30 %) tambah yuran rangkaian |
+
+Alamat pendaratan menerima satu bayaran dari mana-mana dompet BCH, tanpa dompet untuk disambung. Laluan perlahan dipapar seperti diukur.
+<!-- route-facts:end -->
+
 <!-- bounty:start (made by scripts/bounty-table.ts from docs/bounty/stablecoin-bridge.json and docs/MEASURED.md) -->
 Setiap syarat dan stretch goal bounty Stablecoin Bridge, dipetik perkataan demi perkataan dari [halaman bounty](https://bchblaze.cash/bounties/) seperti dibaca pada 2026-11-19 UTC. Kiraan datang dari lintasan ok dalam [`docs/MEASURED.md`](docs/MEASURED.md), dibuat oleh `scripts/bounty-table.ts`.
 

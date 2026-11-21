@@ -5,3 +5,8 @@ declare module 'virtual:sampan-proof' {
   export default proof;
   export const headline: import('../../core/client/measured').Headline;
 }
+
+declare module 'virtual:sampan-route-facts' {
+  const facts: import('../../core/route-facts').RouteFacts;
+  export default facts;
+}

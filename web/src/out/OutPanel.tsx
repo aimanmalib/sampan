@@ -29,6 +29,7 @@ import { outCard } from '../cost/inputs';
 import { UnitChip } from '../chips/Chip';
 import { PegNote } from '../peg/PegNote';
 import { OutKeep } from '../keep/Keeps';
+import { RouteFactLine } from '../facts/RouteFactLine';
 
 const BCH = 'BCH';
 const BCH_DECIMALS = 8;
@@ -278,6 +279,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
           {primary.label}
         </button>
       )}
+      {atom ? null : <RouteFactLine id={`out:${chosenRoute}:${pick.chain.key}`} />}
       <details className="swap__fees" hidden={atom || costShown}>
         <summary>{t('swap.fees')}</summary>
         {q ? <p>{t('out.routeFee', { ...vars, fee: shown(q.fees.total, q.outDecimals), pct: feePct })}</p> : null}

@@ -30,6 +30,7 @@
     "business-model": "tsx scripts/business-model.ts",
     "crossings": "tsx scripts/crossings-table.ts",
     "bounty": "tsx scripts/bounty-table.ts",
+    "route-facts": "tsx scripts/route-facts-table.ts",
     "deck": "tsx tools/deck/build.ts",
     "og-image": "tsx tools/og-image.tsx",
     "mcp": "tsx mcp/server.ts"

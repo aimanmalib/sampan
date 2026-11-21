@@ -1,0 +1,78 @@
+/* The route facts line under the card's button and the table on /how (K6P5). Colours and sizes from the theme tokens. */
+.facts__line {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.facts__line a {
+  color: inherit;
+}
+/* Six columns do not fit a phone: every row is a small grid, the route across the top, then time and signatures,
+   then the three fees. Labels come from data-label; the header row stays for screen readers only. */
+.facts__table thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.facts__table,
+.facts__table tbody {
+  display: block;
+}
+.facts__table tr {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.facts__table th,
+.facts__table td {
+  display: block;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.facts__table th[scope='row'] {
+  grid-column: 1 / -1;
+}
+.facts__table td:nth-child(2) {
+  grid-column: span 2;
+}
+.facts__table td::before {
+  content: attr(data-label);
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+/* In the swap card's footer row, between Fees and the price's age: at most two short lines inside the row's touch
+   height, so the card is no taller (first screen). An open Fees list moves below the row at full width. */
+.facts__line--short {
+  flex: 1 1 0;
+  min-width: 0;
+  align-self: center;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  text-align: center;
+}
+.swap__foot:has(.facts__line--short) {
+  flex-wrap: wrap;
+}
+.swap__foot > .swap__fees[open] {
+  order: 3;
+  flex-basis: 100%;
+}
+.swap__foot:has(.facts__line--short) > .swap__fees:not([open]) {
+  flex: none;
+}
+/* A long "updated" text (Filipino) may wrap to two lines rather than squeeze the facts into four. */
+.swap__foot:has(.facts__line--short) > .quote-age {
+  flex: 0 1 auto;
+  max-width: 32%;
+  text-align: right;
+  line-height: 1.25;
+}

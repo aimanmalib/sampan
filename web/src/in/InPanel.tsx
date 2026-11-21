@@ -11,6 +11,7 @@ import { thorFromIn } from '../../../core/routes/compare';
 import { formatUnits, parseUnits } from '../../../core/wallet';
 import { api } from '../api';
 import type { LoadedConfig } from '../config';
+import { RouteFactLine } from '../facts/RouteFactLine';
 import { useDisclosure } from '../cross/disclosure';
 import { EvmWallets } from '../evm/EvmWallets';
 import { useEvm } from '../evm/store';
@@ -222,6 +223,7 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
           {label}
         </button>
       )}
+      {choice.route === 'atom' ? null : <RouteFactLine id={`in:${chosenRoute}:${src.chain.key}`} />}
       {gate.dialog}
     </div>
   );

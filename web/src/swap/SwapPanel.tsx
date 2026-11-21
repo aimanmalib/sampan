@@ -7,6 +7,7 @@ import type { TradeSide } from '../../../core/pools/trade';
 import { formatUnits, parseUnits } from '../../../core/wallet';
 import { api } from '../api';
 import type { LoadedConfig } from '../config';
+import { RouteFactLine } from '../facts/RouteFactLine';
 import { useText } from '../i18n';
 import type { Wallet } from '../wallet/useWallet';
 import { WizardHat } from '../wallet/WizardHat';
@@ -200,6 +201,7 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
               : null}
           </p>
         </details>
+        <RouteFactLine id="swap" short />
         <QuoteAge at={quote.status === 'ok' && config.quote.autoRefreshMs > 0 ? quote.at : null} />
       </div>
     </div>

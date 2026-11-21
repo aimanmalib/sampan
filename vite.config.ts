@@ -37,9 +37,25 @@ function proof(): Plugin {
   };
 }
 
+/** `virtual:sampan-route-facts`: docs/route-facts.json (K6P5) as it was when the page was built, for the hero card line and
+ *  the /how table. */
+function routeFacts(): Plugin {
+  const id = 'virtual:sampan-route-facts';
+  const file = fileURLToPath(new URL('./docs/route-facts.json', import.meta.url));
+  return {
+    name: 'sampan-route-facts',
+    resolveId: (source) => (source === id ? `\0${id}` : undefined),
+    load(loaded) {
+      if (loaded !== `\0${id}`) return undefined;
+      this.addWatchFile(file);
+      return `export default ${readFileSync(file, 'utf8').trim()};`;
+    },
+  };
+}
+
 export default defineConfig({
   root,
-  plugins: [react(), htmlText(), proof()],
+  plugins: [react(), htmlText(), proof(), routeFacts()],
   // The WalletConnect provider's own modal is never used (Sampan draws the QR code): keep it out of the bundle.
   resolve: { alias: { '@reown/appkit/core': fileURLToPath(new URL('./web/src/evm/no-appkit.ts', import.meta.url)) } },
   build: { outDir: 'dist', emptyOutDir: true, sourcemap: false },

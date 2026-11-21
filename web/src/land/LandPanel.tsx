@@ -15,6 +15,7 @@ import { formatUnits } from '../../../core/wallet';
 import { shortAddress } from '../address';
 import { api } from '../api';
 import type { LoadedConfig } from '../config';
+import { RouteFactLine } from '../facts/RouteFactLine';
 import { useText, type TextKey } from '../i18n';
 import type { Wallet } from '../wallet/useWallet';
 import { WizardHat } from '../wallet/WizardHat';
@@ -137,6 +138,7 @@ export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
           {primary.hat ? <WizardHat /> : null}
           {primary.label}
         </button>
+        <RouteFactLine id="land" />
         {/* The promise and the empty QR frame sit under the one button so it stays on the first screen after Fill. */}
         <p className="card__note">{t('land.promise', { symbol: token.symbol, pct: String(config.landing.toleranceBpsDirect / 100) })}</p>
         {auto ? (

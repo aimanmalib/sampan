@@ -11,6 +11,29 @@ Built in Malaysia by <a href="https://aimanmalib.com">Aiman Malib</a> · <a href
 Sampan swaps BCH and the PUSD stablecoin through existing Cauldron pools on Bitcoin Cash mainnet, and gives you a landing
 address: send BCH to it from any wallet and it arrives at your address as PUSD, while the Sampan server holds no key.
 
+<!-- route-facts:start (made by scripts/route-facts-table.ts from docs/route-facts.json) -->
+**What each route takes**
+
+Time is the median of the ok mainnet runs in the measured table. Signatures are counted by the fake-wallet test of each flow. Fees are the fees the cost card names, quoted by the server at 2026-11-20 23:17 UTC for USD 2, 20 and 100, without the price difference.
+
+| Route | Time (measured) | Signatures in Sampan | Fee at $2 | Fee at $20 | Fee at $100 |
+|---|---|---|---|---|---|
+| Swap on BCH | about 3 s, 22 runs (1 s to 4 s) | 1 signature | $0.01 (0.35 %) | $0.06 (0.31 %) | $0.31 (0.31 %) |
+| BCH from any wallet | about 3 s, 7 runs (1 s to 5 s) | one payment from any BCH wallet | $0.01 (0.37 %) plus network fee | $0.06 (0.31 %) plus network fee | $0.31 (0.31 %) plus network fee |
+| Send out: Ethereum via THORChain | about 8 min, 3 runs (6 min to 18 min) | 2 signatures | $0.26 (13.1 %) | $0.35 (1.8 %) | $0.76 (0.76 %) |
+| Send out: BNB Smart Chain via THORChain | about 107 s, 2 runs (98 s to 116 s) | 2 signatures | $0.26 (13.1 %) | $0.35 (1.8 %) | $0.77 (0.77 %) |
+| Send out: Avalanche C-Chain via THORChain | about 56 min, 2 runs (55 min to 57 min) | 2 signatures | $0.26 (13.1 %) | $0.35 (1.8 %) | $0.79 (0.79 %) |
+| Send out: Ethereum via NEAR Intents | about 35 min, 1 run | 2 signatures | $0.31 (15.4 %) | $0.36 (1.8 %) | $0.60 (0.60 %) |
+| Send out: Base via NEAR Intents | about 34 min, 1 run | 2 signatures | $0.01 (0.49 %) | $0.06 (0.32 %) | $0.30 (0.30 %) |
+| Bring in: Ethereum via THORChain | about 4 min, 3 runs (95 s to 34 min) | 2 signatures | $0.29 (14.4 %) | $0.38 (1.9 %) | $0.78 (0.78 %) |
+| Bring in: BNB Smart Chain via THORChain | about 56 s, 2 runs (48 s to 63 s) | 2 signatures | $0.26 (13.2 %) | $0.35 (1.8 %) | $0.77 (0.77 %) |
+| Bring in: Avalanche C-Chain via THORChain | not timed yet | 2 signatures | $0.27 (13.3 %) | $0.36 (1.8 %) | $0.79 (0.79 %) |
+| Bring in: Ethereum via NEAR Intents | about 22 min, 1 run | 1 signature | $0.01 (0.42 %) plus network fee | $0.06 (0.31 %) plus network fee | $0.30 (0.30 %) plus network fee |
+| Bring in: Base via NEAR Intents | about 7 min, 1 run | 1 signature | $0.01 (0.42 %) plus network fee | $0.06 (0.31 %) plus network fee | $0.30 (0.30 %) plus network fee |
+
+A landing address takes one payment from any BCH wallet, with no wallet to connect. Slow routes are shown as measured.
+<!-- route-facts:end -->
+
 <!-- bounty:start (made by scripts/bounty-table.ts from docs/bounty/stablecoin-bridge.json and docs/MEASURED.md) -->
 Each requirement and stretch goal of the Stablecoin Bridge bounty, quoted word for word from [the bounty page](https://bchblaze.cash/bounties/) as read on 2026-11-19 UTC. The counts come from the ok crossings in [`docs/MEASURED.md`](docs/MEASURED.md), made by `scripts/bounty-table.ts`.
 
