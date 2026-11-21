@@ -22,6 +22,8 @@ export interface FeaturePaths {
   watch: boolean;
   /** /demo, the demo video with its chapters (features.demo). */
   demo: boolean;
+  /** /slides, the event deck as full-screen slides (features.slides). */
+  slides: boolean;
 }
 
 export async function registerWeb(
@@ -29,7 +31,7 @@ export async function registerWeb(
   webDist: string,
   errorPages: ErrorPages,
   theme: string,
-  features: FeaturePaths = { watch: true, demo: true },
+  features: FeaturePaths = { watch: true, demo: true, slides: true },
 ): Promise<void> {
   const indexFile = path.join(webDist, 'index.html');
   const hasWeb = existsSync(indexFile);
@@ -53,6 +55,7 @@ export async function registerWeb(
     if (request.method !== 'GET' || path.extname(pathname) !== '') return errorPages.notFound(reply);
     if (pathname === '/watch' && !features.watch) return errorPages.notFound(reply);
     if (pathname === '/demo' && !features.demo) return errorPages.notFound(reply);
+    if (pathname === '/slides' && !features.slides) return errorPages.notFound(reply);
     return reply.type('text/html; charset=utf-8').send(indexHtml);
   });
 }

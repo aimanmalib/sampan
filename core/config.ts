@@ -42,7 +42,7 @@ export interface SampanConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
   /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
-  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean; nostrSend: boolean; watchDemo: boolean; keepCompare: boolean; demo: boolean };
+  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean; nostrSend: boolean; watchDemo: boolean; keepCompare: boolean; demo: boolean; slides: boolean };
   /** symbols: the symbols of the live thorchain.assets, repeated here and checked against them (texts name them). */
   route: { active: ActiveRoute; symbols: string[] };
   thorchain: {
@@ -142,7 +142,7 @@ export interface SampanConfig {
   fees: { satsPerByte: number; capSats: number };
   rate: { quotesPerMinute: number; crossingsPerHour: number; invoicesPerHour: number; cloudflareCidrs: string[] };
   compliance: { blockedCountries: string[]; crossChainEnabled: boolean };
-  banner: { deckUrl: string; repoUrl: string; tokenAddress: string; note: boolean };
+  banner: { deckUrl: string; deckPdfUrl: string; repoUrl: string; tokenAddress: string; note: boolean };
   /** The "Judging?" box on the front page. `openOnPhone`: its steps start unfolded on every screen; on a phone they
    *  sit right under the card so the card's primary button stays on the first screen (false = folded, as before). */
   judge: { openOnPhone: boolean };
@@ -199,6 +199,7 @@ export interface SampanConfig {
    * heroProof: the proof line by the card (K6P6), one of HERO_PROOF_KINDS: "latest-in" = the newest ok stablecoin crossing
    * into PUSD from docs/MEASURED.md, "none" = no line.
    * heroTab: the card's tab before a visitor picks one (swap, in or out); a tab that is not open falls back to the first.
+   * slideSwipePx: on /slides, how far a sideways swipe must travel to change the slide (24 to 200 CSS pixels).
    */
   ui: {
     ferryMotion: boolean;
@@ -211,6 +212,7 @@ export interface SampanConfig {
     hero: (typeof HERO_KINDS)[number];
     heroProof: HeroProofKind;
     heroTab: HeroTab;
+    slideSwipePx: number;
   };
   /** Languages the page offers, in menu order, each by its own name; every code has a lang/<code>.json. default: shown until a visitor picks one. */
   i18n: I18nConfig;
@@ -382,6 +384,7 @@ export function validateConfig(c: SampanConfig): string[] {
   need(typeof c.ui?.qrAutoOpen === 'boolean', 'ui.qrAutoOpen: true or false');
   const msIn = (v: unknown, lo: number, hi: number): boolean => typeof v === 'number' && Number.isInteger(v) && v >= lo && v <= hi;
   need(msIn(c.ui?.qrCloseMs, 150, 1500), 'ui.qrCloseMs: an integer from 150 to 1500');
+  need(msIn(c.ui?.slideSwipePx, 24, 200), 'ui.slideSwipePx: an integer from 24 to 200');
   need(msIn(c.ui?.arriveMs, 800, 6000), 'ui.arriveMs: an integer from 800 to 6000');
   const themes: unknown[] = Array.isArray(c.ui?.themes) ? c.ui.themes : [];
   need(
@@ -432,7 +435,7 @@ export function validateConfig(c: SampanConfig): string[] {
       need(x?.verbatim === undefined || /^[a-z][a-zA-Z]*$/.test(x.verbatim), `legal section ${x?.key}: verbatim is one camelCase part name`);
     }
   }
-  for (const url of [c.banner.deckUrl, c.banner.repoUrl, c.site.feedbackUrl]) {
+  for (const url of [c.banner.deckUrl, c.banner.deckPdfUrl, c.banner.repoUrl, c.site.feedbackUrl]) {
     need(url === '' || isHttpsUrl(url) || url.startsWith('/'), `URL must be empty, a path or https: ${url}`);
   }
   errors.push(...validateBusiness(c.business));
@@ -447,6 +450,8 @@ export function validateConfig(c: SampanConfig): string[] {
   errors.push(...validateKeep(c.keepCompare));
   errors.push(...validateActivity(c.activity));
   need(typeof c.features?.demo === 'boolean', 'features.demo: true or false');
+  need(typeof c.features?.slides === 'boolean', 'features.slides: true or false');
+  need(typeof c.banner?.deckPdfUrl === 'string', 'banner.deckPdfUrl: the printed deck, a path or https');
   errors.push(...validateMedia(c.media, String(c.site?.url)));
   errors.push(...validateDemo(c.demo, String(c.media?.host)));
   need((MEASURED_SOURCES as readonly string[]).includes(String(c.measured?.source)), `measured.source: one of ${MEASURED_SOURCES.join(', ')}`);
@@ -544,7 +549,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     atom: c.atom,
     oneClick: oneClickPublic(c.oneClick),
     nostrId: nostrIdPublic(c.features.nostrSend, c.nostrId),
-    ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen, qrCloseMs: c.ui.qrCloseMs, arriveMs: c.ui.arriveMs, theme: c.ui.theme, icons: c.ui.icons, hero: c.ui.hero, heroProof: c.ui.heroProof, heroTab: c.ui.heroTab },
+    ui: { ferryMotion: c.ui.ferryMotion, qrAutoOpen: c.ui.qrAutoOpen, qrCloseMs: c.ui.qrCloseMs, arriveMs: c.ui.arriveMs, theme: c.ui.theme, icons: c.ui.icons, hero: c.ui.hero, heroProof: c.ui.heroProof, heroTab: c.ui.heroTab, slideSwipePx: c.ui.slideSwipePx },
     i18n: { default: c.i18n.default, languages: c.i18n.languages.map(({ code, name, machine }) => (machine ? { code, name, machine } : { code, name })) },
   };
 }

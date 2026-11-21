@@ -1,0 +1,131 @@
+/* /slides: the slide area fills the screen above one bar of controls; the slide itself is drawn at 1280 x 720
+   (tools/deck/deck.css) and scaled with transform to fit, so it never overflows the screen. Theme tokens only. */
+.slides {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  background: var(--ink);
+  color: var(--paper);
+}
+.slides__area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: pan-y pinch-zoom;
+  padding: 0;
+}
+.slides__frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  max-width: 100%;
+}
+.slides__scale {
+  width: 1280px;
+  height: 720px;
+  transform-origin: 0 0;
+}
+.deck .slide__media {
+  flex: 0 0 448px;
+  align-self: flex-start;
+}
+.deck .slide__media video,
+.deck .slide__media img {
+  display: block;
+  width: 448px;
+  height: 252px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--ink);
+}
+.slides__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  padding: 0.375rem max(0.75rem, env(safe-area-inset-right)) max(0.375rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+  font-family: var(--font-text);
+  font-size: 0.9375rem;
+}
+.slides__bar a {
+  color: var(--river-pale);
+}
+.slides__home,
+.slides__pdf,
+.slides__full {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  max-width: 100%;
+}
+.slides__moves,
+.slides__end {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.slides__btn,
+.slides__full {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--river-pale);
+  background: transparent;
+  color: var(--paper);
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.slides__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.slides__btn:focus-visible,
+.slides__full:focus-visible,
+.slides__bar a:focus-visible {
+  outline: var(--focus);
+  outline-offset: 2px;
+}
+.slides__pos {
+  font: 500 0.9375rem var(--font-mono);
+  min-width: 3.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.deck .slide__play {
+  position: relative;
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+}
+.deck .slide__play svg {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 88px;
+  height: 88px;
+}
+.deck .slide__play circle {
+  fill: var(--ink);
+  opacity: 0.85;
+}
+.deck .slide__play path {
+  fill: var(--paper);
+}
+.deck .slide__play:focus-visible {
+  outline: var(--focus);
+  outline-offset: 4px;
+}

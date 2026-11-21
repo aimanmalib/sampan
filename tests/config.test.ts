@@ -233,6 +233,8 @@ describe('ui.qrCloseMs and ui.arriveMs', () => {
     ['qrCloseMs', 1501, 'ui.qrCloseMs: an integer from 150 to 1500'],
     ['qrCloseMs', 400.5, 'ui.qrCloseMs: an integer from 150 to 1500'],
     ['qrCloseMs', '400', 'ui.qrCloseMs: an integer from 150 to 1500'],
+    ['slideSwipePx', 23, 'ui.slideSwipePx: an integer from 24 to 200'],
+    ['slideSwipePx', 201, 'ui.slideSwipePx: an integer from 24 to 200'],
     ['arriveMs', 799, 'ui.arriveMs: an integer from 800 to 6000'],
     ['arriveMs', 6001, 'ui.arriveMs: an integer from 800 to 6000'],
     ['arriveMs', undefined, 'ui.arriveMs: an integer from 800 to 6000'],

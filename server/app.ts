@@ -118,6 +118,6 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   });
 
   await registerMedia(app, options.mediaDir ?? 'media', config.media, errorPages);
-  await registerWeb(app, options.webDist, errorPages, config.ui.theme, { watch: config.features.watchDemo, demo: config.features.demo });
+  await registerWeb(app, options.webDist, errorPages, config.ui.theme, { watch: config.features.watchDemo, demo: config.features.demo, slides: config.features.slides });
   return app;
 }

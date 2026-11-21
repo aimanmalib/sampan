@@ -26,7 +26,8 @@
     "nostrSend": false,
     "watchDemo": true,
     "keepCompare": true,
-    "demo": true
+    "demo": true,
+    "slides": false
   },
   "route": {
     "active": "thorchain",
@@ -237,6 +238,7 @@
   },
   "banner": {
     "deckUrl": "/deck/sampan-blaze-2026.pdf",
+    "deckPdfUrl": "/deck/sampan-blaze-2026.pdf",
     "repoUrl": "https://github.com/aimanmalib/sampan",
     "tokenAddress": "bitcoincash:zplrydnf2z4pj4z9rv7uhmwsuxyrm8hj7uken87e7q",
     "note": true
@@ -382,6 +384,7 @@
     "qrAutoOpen": true,
     "qrCloseMs": 400,
     "arriveMs": 2400,
+    "slideSwipePx": 48,
     "themes": ["paper", "night", "linen", "ink"],
     "theme": "paper",
     "hero": "card",
