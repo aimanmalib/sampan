@@ -16,11 +16,11 @@ import { SwapService } from './swap.js';
 const FIXTURE = new URL('../tests/fixtures/cauldron-pusd-pools.json', import.meta.url).pathname;
 const config = normalizeConfig(shipped as unknown as SampanConfig);
 
-const setup = (funded = true) => {
-  const net = fakeNetwork(config, FIXTURE);
+const setup = (funded = true, cfg = config) => {
+  const net = fakeNetwork(cfg, FIXTURE);
   if (funded) net.fund(userLockHex);
   const pools = new PoolDirectory({ indexers: ['https://i.example'], cacheSeconds: 5, chain: net.chain, fetchActive: net.fetchActive });
-  return { ...net, swaps: new SwapService({ config, chain: net.chain, pools, prefix: 'bitcoincash' }) };
+  return { ...net, swaps: new SwapService({ config: cfg, chain: net.chain, pools, prefix: 'bitcoincash' }) };
 };
 
 const outpoint = (i: Input): string => `${binToHex(i.outpointTransactionHash)}:${i.outpointIndex}`;
@@ -66,7 +66,8 @@ describe('SwapService.quote', () => {
   });
 
   it('refuses a token that is not offered (MUSD behind its flag)', async () => {
-    await expect(setup().swaps.quote({ token: 'MUSD', side: 'buy', amount: 100_000n })).rejects.toMatchObject({ code: 'bad_request' });
+    const off = normalizeConfig({ ...shipped, features: { ...shipped.features, musd: false } } as unknown as SampanConfig);
+    await expect(setup(true, off).swaps.quote({ token: 'MUSD', side: 'buy', amount: 100_000n })).rejects.toMatchObject({ code: 'bad_request' });
   });
 });
 
