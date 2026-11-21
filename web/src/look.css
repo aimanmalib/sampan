@@ -1,0 +1,236 @@
+/* The finish over styles.css (loaded last in main.tsx): the banner, the headline, the card, the sentence under the
+   card and the footer, raised to one look without moving anything on the first screen. Every value is a theme token;
+   no filter, and motion is a hover or a press only. Taking this file out of main.tsx gives the earlier look back. */
+
+/* What the browser draws for us follows the palette too. */
+html {
+  accent-color: var(--river);
+  caret-color: var(--river);
+  scrollbar-color: var(--line) transparent;
+}
+::selection {
+  background: var(--river-pale);
+  color: var(--ink);
+}
+a {
+  text-decoration-thickness: 1px;
+}
+
+/* Event banner: the address chip is a quiet outline, so the page's one filled button stays the card's. The button
+   keeps its full touch height; the outline is drawn smaller inside it. */
+.banner__event {
+  letter-spacing: 0.07em;
+}
+.banner__copy {
+  position: relative;
+  color: var(--paper);
+  background: none;
+}
+.banner__copy::before {
+  content: '';
+  position: absolute;
+  inset: 0.4375rem 0;
+  border: 1px solid var(--lamp);
+  border-radius: 999px;
+  opacity: 0.65;
+  transition: opacity 140ms ease-out;
+}
+.banner__copy:hover::before {
+  opacity: 1;
+}
+.banner__copy > * {
+  position: relative;
+}
+.banner__copy-word {
+  color: var(--lamp);
+}
+@media (min-width: 56rem) {
+  /* One row of links with the address at its end, the note on a line of its own under it. */
+  .banner__inner {
+    padding-block: 0.25rem 0.4375rem;
+    gap: 0 1.25rem;
+  }
+  .banner a {
+    min-height: 2rem;
+  }
+  .banner__address {
+    margin-left: auto;
+    gap: 0.625rem;
+  }
+  .banner__copy {
+    margin-block: -0.375rem;
+  }
+  .banner__note {
+    flex-basis: 100%;
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+}
+
+/* Headline: larger and tighter on a wide screen; the line count stays (the measure is in ch). */
+@media (min-width: 56rem) {
+  .hero__title {
+    font-size: clamp(3.25rem, 5vw, 4.25rem);
+    line-height: 1.02;
+    letter-spacing: -0.022em;
+  }
+}
+
+/* A wide screen that is also tall gives the picture more room: the same drawing, drawn larger and cut at its sides
+   (the boat and both jetties stay in view). Shorter screens keep the strip, so the card stays on the first screen. */
+@media (min-width: 56rem) and (min-height: 50rem) {
+  .scene svg {
+    height: 9.5rem;
+    max-height: none;
+  }
+}
+
+/* While the peg warning shows on a phone it reads at the size of the price line above it, so the card's one primary
+   button stays on the first screen. */
+@media (max-width: 55.99rem) {
+  .swap__error[data-peg] {
+    font-size: 0.8125rem;
+    line-height: 1.35;
+  }
+}
+
+/* Buttons answer a hover and a press. A button's fill never fades: when it turns from disabled to enabled its text
+   and its ground change together, at once. A fade between a light pair and a dark pair passes through a middle nobody
+   can read (and the contrast check caught it there). The card keeps its one-pixel edge and gets no wide shadow: under
+   the tall card WebKit drew that blur again at every change inside it (a spec that clicks through the route rows took
+   three times as long). */
+.button {
+  transition: border-color 140ms ease-out, transform 90ms ease-out;
+}
+.button--primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--river) 86%, var(--ink));
+}
+.button--primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.button--quiet:hover:not(:disabled) {
+  border-color: var(--ink-soft);
+}
+.tabs__tab {
+  transition: color 140ms ease-out;
+}
+.tabs__tab:hover {
+  color: var(--ink);
+}
+
+/* The longer sentence under the card opens the rest of the page: set in the display face across both columns. */
+.page {
+  padding-bottom: clamp(2.5rem, 7vw, 5rem);
+}
+.hero__sub--after {
+  margin-top: clamp(1.25rem, 5vw, 3.5rem);
+  max-width: 46rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 3.3vw, 2rem);
+  line-height: 1.22;
+  letter-spacing: -0.014em;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+.hero__honest {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+@media (min-width: 56rem) {
+  .page--judge .hero__sub--after,
+  .page--judge .hero__honest {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Footer: the deep band, on every page. The sentence about the boat is the last thing a visitor reads. */
+.footer {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+  background: var(--deep);
+  color: var(--deep-soft);
+}
+.footer__in {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: clamp(2.5rem, 7vw, 4.5rem) var(--gap) 2rem;
+  display: grid;
+  gap: 1.25rem;
+}
+.footer__in > * {
+  min-width: 0;
+}
+.footer__top {
+  display: grid;
+  gap: 2rem;
+  margin-bottom: clamp(0.5rem, 3vw, 1.5rem);
+}
+.footer__brand {
+  display: grid;
+  gap: 1.25rem;
+  align-content: start;
+}
+/* The boat again, in a window of its own: the same drawing as the first screen, at rest. */
+.footer__scene {
+  overflow: hidden;
+  border-radius: var(--radius);
+  max-width: 30rem;
+}
+.footer__scene svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 340 / 96;
+}
+@media (min-width: 56rem) {
+  .footer__top {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+    align-items: end;
+    gap: 3rem;
+  }
+}
+.footer .mark {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+.footer .mark__ground {
+  fill: var(--deep-ink);
+}
+.footer .mark__hull {
+  fill: var(--deep);
+}
+.footer__lead {
+  margin: 0;
+  max-width: 22ch;
+  font-size: clamp(1.625rem, 4.4vw, 2.75rem);
+  font-weight: 560;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--deep-ink);
+  text-wrap: balance;
+}
+.footer .health {
+  margin: 0;
+  color: var(--deep-soft);
+}
+.footer .health__part--ok {
+  color: var(--deep-ok);
+}
+.footer .health__part--down,
+.footer .health__part--halted {
+  color: var(--deep-danger);
+}
+.footer__machine {
+  margin: 0;
+  color: var(--deep-soft);
+}
+.footer__meta {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--deep-line);
+  color: var(--deep-soft);
+}
+.footer a {
+  color: var(--deep-ink);
+}

@@ -1,0 +1,101 @@
+/* The sampan drawing (SceneArt.tsx): flat shapes, every colour a theme token. Kept apart from styles.css so the link
+   preview tool can read it with that sheet (tools/og-image.tsx). Where the figure sits is in styles.css (.scene). */
+.scene__sky {
+  fill: var(--paper);
+}
+.scene__far {
+  fill: var(--river-pale);
+}
+.scene__bank {
+  fill: var(--paper-deep);
+  stroke: var(--line);
+}
+.scene__water {
+  fill: var(--river);
+}
+.scene__depth {
+  fill: var(--river-deep);
+}
+.scene__jetty {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.scene__glint {
+  fill: none;
+  stroke: var(--river-pale);
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+.scene__shade {
+  fill: var(--ink);
+  opacity: 0.22;
+}
+.scene__hull {
+  fill: var(--ink);
+}
+.scene__rail {
+  fill: none;
+  stroke: var(--paper);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.scene__pole {
+  stroke: var(--ink);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.scene__coin {
+  fill: var(--lamp);
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+.scene__coin-ring {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1;
+  opacity: 0.4;
+}
+.scene__coin-mark {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  fill: var(--ink);
+}
+/* The arrival: on the front page the boat leaves the far jetty once, crosses to midstream and settles there, in
+   under four seconds, and then nothing on the page moves. Transform only. It does not loop: motion that starts by
+   itself and runs on needs a way to pause it (WCAG 2.2.2), and in WebKit a drawing that never rests kept every frame
+   busy (a click-heavy spec took three times as long). With reduced motion the boat is simply in midstream. */
+.scene .scene__boat {
+  animation: scene-arrive 3.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.scene .scene__bob {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: scene-settle 3.6s ease-out both;
+}
+@keyframes scene-arrive {
+  from {
+    transform: translateX(-78px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes scene-settle {
+  from {
+    transform: rotate(-1.4deg);
+  }
+  45% {
+    transform: rotate(0.9deg);
+  }
+  75% {
+    transform: rotate(-0.3deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}

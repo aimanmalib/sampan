@@ -26,6 +26,15 @@
   --touch: 44px;
   --focus: 3px solid var(--lamp);
 
+  /* The deep band (footer, the dark section of the front page): ground, text, soft text, hairline, status tones. */
+  --deep: #05080f;
+  --deep-ink: #eef1f8;
+  --deep-soft: #aab4ca;
+  --deep-line: rgba(238, 241, 248, 0.14);
+  --deep-ok: #5eead4;
+  --deep-danger: #ff8f80;
+  --river-deep: #2bb7a3;
+
   /* A still gradient, drawn once: no filter, no animation (WebKit). */
   background:
     radial-gradient(120% 60% at 50% -10%, #1f3168 0%, rgba(31, 49, 104, 0) 70%) no-repeat,

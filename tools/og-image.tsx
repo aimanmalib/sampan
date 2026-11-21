@@ -14,7 +14,7 @@ const MAX_BYTES = 300 * 1024;
 const read = (rel: string): string => readFileSync(new URL(`../${rel}`, import.meta.url), 'utf8');
 const en = JSON.parse(read('lang/en.json')) as Record<string, string>;
 const config = JSON.parse(read('config/sampan.json')) as { site: { url: string; ogImage: string } };
-const styles = read('web/src/styles.css');
+const styles = read('web/src/styles.css') + read('web/src/scene.css');
 const escape = (s: string): string => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 
 const art = renderToStaticMarkup(createElement(SceneArt, { viewBox: '0 60 640 110' }));

@@ -26,6 +26,15 @@
   --touch: 44px;
   --focus: 3px solid var(--lamp);
 
+  /* The deep band (footer, the dark section of the front page): ground, text, soft text, hairline, status tones. */
+  --deep: #1d1a16;
+  --deep-ink: #f6f2ea;
+  --deep-soft: #cdc4b6;
+  --deep-line: rgba(246, 242, 234, 0.16);
+  --deep-ok: #8fd0c8;
+  --deep-danger: #f0a898;
+  --river-deep: #0d484c;
+
   background:
     radial-gradient(90% 50% at 85% 0%, #efe4cf 0%, rgba(239, 228, 207, 0) 70%) no-repeat,
     var(--paper);

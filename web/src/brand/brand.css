@@ -1,0 +1,105 @@
+/* The top bar: the mark and name, the section links (wide screens only, so a phone's first screen keeps its height)
+   and the language menu. Colours and sizes from the theme tokens. */
+.brand {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--touch);
+  color: var(--ink);
+  text-decoration: none;
+}
+.mark {
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+}
+.mark__ground {
+  fill: var(--ink);
+}
+.mark__hull {
+  fill: var(--paper);
+}
+.mark__sail {
+  fill: none;
+  stroke: var(--lamp);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.brand .wordmark {
+  letter-spacing: -0.01em;
+}
+/* With a balance pill that has wrapped under the menu (a narrow phone), the name stays on the first line. */
+.topbar:has(.topbar__end > .balance) .brand {
+  align-self: flex-start;
+}
+
+.topnav {
+  display: none;
+}
+@media (min-width: 64rem) {
+  .topnav {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    margin-left: 1.25rem;
+  }
+  .topnav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch);
+    padding: 0 0.75rem;
+    border-radius: 999px;
+    color: var(--ink-soft);
+    font-size: 0.9375rem;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 140ms ease-out, background-color 140ms ease-out;
+  }
+  .topnav a:hover {
+    color: var(--ink);
+    background: var(--paper-deep);
+  }
+}
+
+/* The language menu keeps the browser's own list (a phone shows its wheel); the globe is drawn, not a glyph. */
+.lang {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+}
+.lang__globe {
+  position: absolute;
+  top: 50%;
+  left: 0.8125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  transform: translateY(-50%);
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 1.4;
+  pointer-events: none;
+}
+.lang .topbar__lang {
+  padding-left: 2.375rem;
+  transition: border-color 140ms ease-out;
+}
+.lang .topbar__lang:hover {
+  border-color: var(--ink-soft);
+}
+/* The narrowest phones give the globe's room back to the language name. */
+@media (max-width: 23.99rem) {
+  .lang__globe {
+    display: none;
+  }
+  .lang .topbar__lang {
+    padding-left: 0.875rem;
+  }
+}
+@media (min-width: 56rem) {
+  .lang .topbar__lang {
+    font-size: 0.9375rem;
+  }
+}

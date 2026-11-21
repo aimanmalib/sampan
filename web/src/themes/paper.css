@@ -22,4 +22,19 @@
   --page: 68rem;
   --touch: 44px;
   --focus: 3px solid var(--lamp);
+
+  /* The deep band (footer, the dark section of the front page): ground, text, soft text, hairline, status tones. */
+  --deep: #12261f;
+  --deep-ink: #f4f1ea;
+  --deep-soft: #b7c6bd;
+  --deep-line: rgba(244, 241, 234, 0.16);
+  --deep-ok: #8fd4be;
+  --deep-danger: #ffab99;
+  --river-deep: #0a5347;
+
+  /* A still wash of lamp light behind the card, drawn once in fixed lengths (the page is long): no filter, no
+     animation (WebKit). */
+  background:
+    radial-gradient(44rem 36rem at 100% 0, #f3e7cd 0%, rgba(243, 231, 205, 0) 72%) no-repeat,
+    var(--paper);
 }

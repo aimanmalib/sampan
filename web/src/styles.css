@@ -188,38 +188,6 @@ a {
   height: auto;
   max-height: 11rem;
 }
-.scene__bank {
-  fill: var(--paper-deep);
-  stroke: var(--line);
-}
-.scene__water {
-  fill: var(--river);
-}
-.scene__ripple {
-  fill: none;
-  stroke: var(--river-pale);
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-.scene__hull {
-  fill: var(--ink);
-}
-.scene__pole {
-  stroke: var(--ink);
-  stroke-width: 4;
-  stroke-linecap: round;
-}
-.scene__coin {
-  fill: var(--lamp);
-  stroke: var(--ink);
-  stroke-width: 2;
-}
-.scene__coin-mark {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
-  fill: var(--ink);
-}
 .scene__labels {
   display: flex;
   justify-content: space-between;

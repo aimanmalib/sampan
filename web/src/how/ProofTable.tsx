@@ -5,7 +5,8 @@ import proof from 'virtual:sampan-proof';
 import type { ProofRun } from '../../../core/proof';
 import type { LoadedConfig } from '../config';
 import { useText, type TextKey } from '../i18n';
-import { runText, shortTxid as short } from './txLinks';
+import { RunsHead, TxAnchors } from './RunParts';
+import { runText } from './txLinks';
 
 export function ProofTable({ config }: { config: LoadedConfig }) {
   const { t } = useText();
@@ -17,12 +18,7 @@ export function ProofTable({ config }: { config: LoadedConfig }) {
       t('proof.none')
     ) : (
       <span className="proof__ids">
-        {run.txids.map((x) => (
-          <a key={x.id} className="mono" href={href(x)} target="_blank" rel="noreferrer" title={x.id}>
-            {run.txids.length > 1 ? `${chainName(x.chain)} ` : ''}
-            {short(x.id)}
-          </a>
-        ))}
+        <TxAnchors run={run} chainName={chainName} href={href} />
       </span>
     );
   const repo = config.banner.repoUrl;
@@ -58,16 +54,7 @@ export function ProofTable({ config }: { config: LoadedConfig }) {
       </table>
       <h3>{t('proof.recent')}</h3>
       <table className="proof__table proof__table--runs">
-        <thead>
-          <tr>
-            <th scope="col">{t('proof.col.when')}</th>
-            <th scope="col">{t('proof.col.flow')}</th>
-            <th scope="col">{t('proof.col.amount')}</th>
-            <th scope="col">{t('proof.col.time')}</th>
-            <th scope="col">{t('proof.col.result')}</th>
-            <th scope="col">{t('proof.col.txid')}</th>
-          </tr>
-        </thead>
+        <RunsHead />
         <tbody>
           {proof.runs.slice(0, config.site.proofRuns).map((r, i) => (
             <tr key={`${r.utc}-${i}`}>

@@ -1,0 +1,232 @@
+/* "Right now" (front/Harbour.tsx). Colours from the theme tokens; no filters, no motion. */
+/* Right now: the river at this moment. By default (phones) a plain list: one chain, then what crosses each way and who
+   carries it, each under its label (data-label). */
+.harbour__map {
+  margin-top: clamp(1.25rem, 3vw, 2rem);
+}
+.board,
+.board tbody {
+  display: block;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+.board thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.board tr {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.25rem 1rem;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.board th,
+.board td {
+  display: block;
+  min-width: 0;
+  padding: 0;
+  text-align: left;
+  font-weight: 400;
+}
+.board tbody th {
+  grid-column: 1 / -1;
+  font-weight: 600;
+}
+.board td::before {
+  content: attr(data-label);
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+.board__route {
+  grid-column: 1 / -1;
+}
+.board__net {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+.board__net::before {
+  content: '';
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--river);
+}
+.board__row--paused .board__net::before {
+  background: var(--lamp);
+}
+.board__row--paused td {
+  color: var(--ink-soft);
+}
+.board__wake,
+.harbour__home {
+  display: none;
+}
+.harbour__peg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  margin: 1rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+/* A wide screen draws it as the river: the far bank with a mooring for each chain, one lane of water for each, and
+   the near bank they all land on. In a lane, what can be brought in runs from the far bank towards Bitcoin Cash, what
+   can be sent out runs back from the near bank, and the route that carries them sits in midstream. The column heads
+   say which is which, once. The water is the page's river colour with the paper colour on it (the pair the primary
+   button uses), at full strength: labels are smaller, never fainter. */
+@media (min-width: 68rem) {
+  .harbour__map {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 13.5rem;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--paper-deep);
+  }
+  .board thead {
+    position: static;
+    display: block;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+  .board tr {
+    grid-template-columns: 17.5rem minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 0;
+    padding: 0;
+    border-bottom: 0;
+  }
+  .board thead th {
+    padding: 0.625rem 1.5rem 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--paper);
+    background: var(--river);
+  }
+  .board thead th:first-child {
+    padding-inline: 1.25rem;
+    color: var(--ink-soft);
+    background: none;
+  }
+  /* In the page the heads read network, bring in, send out, route; on the water the route sits between the two. */
+  .board thead th:nth-child(3) {
+    grid-column: 4;
+    grid-row: 1;
+    text-align: right;
+  }
+  .board thead th:nth-child(4) {
+    grid-column: 3;
+    grid-row: 1;
+    padding-inline: 0;
+    text-align: center;
+  }
+  .board tbody th {
+    grid-column: 1;
+    display: flex;
+    align-items: center;
+    padding: 0.875rem 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+  .board tbody td {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3.5rem;
+    padding: 0 1.5rem;
+    color: var(--paper);
+    background: var(--river);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--paper) 22%, transparent);
+  }
+  .board tbody td::before {
+    content: none;
+  }
+  .board .board__lane--in {
+    grid-column: 2;
+  }
+  .board .board__lane--out {
+    grid-column: 4;
+    grid-row: 1;
+    flex-direction: row-reverse;
+  }
+  .board .board__route {
+    grid-column: 3;
+    grid-row: 1;
+    justify-content: center;
+    padding: 0;
+  }
+  .board__what {
+    flex: none;
+    font-weight: 600;
+  }
+  .board__lane--none .board__what {
+    font-weight: 400;
+  }
+  .board__wake {
+    display: block;
+    flex: 1 1 1.5rem;
+    position: relative;
+    min-width: 1.5rem;
+    height: 0;
+    border-top: 2px dashed currentColor;
+    opacity: 0.5;
+  }
+  .board__wake::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    transform: translateY(-50%) rotate(45deg);
+  }
+  .board__lane--out .board__wake::after {
+    right: auto;
+    left: -1px;
+    transform: translateY(-50%) rotate(-135deg);
+  }
+  .board__lane--none .board__wake {
+    display: none;
+  }
+  /* The route's name in midstream; a lane no route carries now has open water there. */
+  .board__via {
+    padding: 0.3125rem 0.875rem;
+    border: 1px solid color-mix(in srgb, var(--paper) 55%, transparent);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .board__via--none {
+    display: none;
+  }
+  .harbour__home {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    margin: 0;
+    padding: 1rem;
+    border-left: 1px solid var(--line);
+    font-weight: 600;
+    text-align: center;
+  }
+  .harbour__home .chip__icon {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}

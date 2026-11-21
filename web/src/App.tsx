@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { descriptionKey, heroSubKey, openFlows, openSymbols, symbolList, type TabId } from '../../core/flows';
 import { ActionCard, cardTabs } from './ActionCard';
 import { ActivityPage } from './activity/ActivityPage';
+import { Brand } from './brand/Brand';
 import { fetchConfig, useConfig } from './config';
 import { Footer } from './Footer';
+import { Story } from './front/Story';
 import { HeroChips } from './HeroChips';
 import { useHealth } from './health';
 import { routeOpenMap } from '../../core/client/health';
@@ -18,7 +20,6 @@ import { doneRoute, FinishedPage } from './cross/Finished';
 import { DemoPage } from './demo/DemoPage';
 import { HowPage } from './how/HowPage';
 import { LegalPage } from './legal/LegalPage';
-import { Measured } from './Measured';
 import { HeroPitch } from './HeroPitch';
 import { HeroProof } from './HeroProof';
 import { PayPages, payRoute } from './pay/PayPages';
@@ -83,7 +84,15 @@ export function App() {
   return (
     <>
       <nav className="topbar">
-        <span className="wordmark">Sampan</span>
+        <Brand />
+        {/* Section links, on a wide screen only (brand/brand.css): a phone's first screen keeps its height. */}
+        <span className="topnav">
+          <a href="/#how">{t('how.title')}</a>
+          {flows.cross ? <a href="/#now">{t('hero.chips.label')}</a> : null}
+          <a href="/#measured">{t('measured.title')}</a>
+          {config?.features.demo ? <a href="/demo">{t('banner.demo')}</a> : null}
+          <a href="/activity">{t('footer.activity')}</a>
+        </span>
         <span className="topbar__end">
           <BalancePill config={config} wallet={wallet} onOpen={front ? openWallet : null} />
           <LangPicker config={config} />
@@ -151,9 +160,10 @@ export function App() {
         {/* ui.hero "card": the headline's longer sentence moves under the card, so the first screen is one line and the card. */}
         {config && heroCard ? <p className="hero__sub hero__sub--after">{t(heroSubKey(flows), vars)}</p> : null}
         {flows.cross && routes.length > 0 ? <p className="hero__honest">{t('hero.honest', { route: routeNames(t, routes) })}</p> : null}
-        <Measured link />
       </main>
       )}
+      {/* Below the first screen: how it works, what is open now, what was measured (the Measured line lives there). */}
+      {front ? <Story config={config} flows={flows} /> : null}
       <Footer />
     </>
   );

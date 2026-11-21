@@ -1,6 +1,7 @@
 // Keeps a fault in one part of the page from blanking the rest: the whole app has one boundary and every tab its own,
 // so a broken tab leaves the headline, the picture and the other tabs in place. A failed script load reloads once.
 import { Component, type ReactNode } from 'react';
+import { Brand } from './brand/Brand';
 import { useText } from './i18n';
 import { browserReload, isChunkError, reloadOnce } from './errors/reload-once';
 
@@ -24,7 +25,7 @@ export function PageCrash() {
   return (
     <>
       <nav className="topbar">
-        <span className="wordmark">Sampan</span>
+        <Brand />
       </nav>
       <main className="page">
         <section className="hero">

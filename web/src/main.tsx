@@ -12,6 +12,8 @@ import './land/land.css';
 import './out/out.css';
 import './in/in.css';
 import './errors/errors.css';
+// Last: the finish over the sheets above.
+import './look.css';
 
 const banner = document.getElementById('banner');
 // /slides is the event deck alone, full screen: no banner, and its code loads only on that page.

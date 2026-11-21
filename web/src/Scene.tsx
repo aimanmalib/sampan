@@ -1,5 +1,6 @@
 import { useText } from './i18n';
 import { SceneArt } from './SceneArt';
+import './scene.css';
 
 /** The first-screen picture: a sampan carrying a coin across the river, a labelled bank on each side. */
 export function Scene() {
