@@ -13,7 +13,7 @@ import { symbolList } from '../core/flows.js';
 const read = (p: string): string => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 const config = JSON.parse(read('config/sampan.json')) as {
   site: { url: string };
-  banner: { deckUrl: string; repoUrl: string; tokenAddress: string };
+  banner: { deckUrl: string; deckPdfUrl: string; repoUrl: string; tokenAddress: string };
   route: { symbols: string[] };
 };
 const en = JSON.parse(read('lang/en.json')) as Record<string, string>;
@@ -109,8 +109,9 @@ describe('event deck', () => {
     expect(slidesHash(changed)).not.toBe(read('tools/deck/printed.sha256').trim());
   });
 
-  it('the committed PDF is the banner deck: a PDF of eight pages under 3 MB', () => {
-    expect(config.banner.deckUrl).toBe('/deck/sampan-blaze-2026.pdf');
+  it('the banner opens /slides and the committed PDF it links is a PDF of eight pages under 3 MB', () => {
+    expect(config.banner.deckUrl).toBe('/slides');
+    expect(config.banner.deckPdfUrl).toBe('/deck/sampan-blaze-2026.pdf');
     const pdf = readFileSync(new URL('../web/public/deck/sampan-blaze-2026.pdf', import.meta.url));
     expect(pdf.subarray(0, 5).toString('latin1')).toBe('%PDF-');
     expect(pdf.length).toBeLessThanOrEqual(3 * 1024 * 1024);

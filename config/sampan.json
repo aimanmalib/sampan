@@ -27,7 +27,7 @@
     "watchDemo": true,
     "keepCompare": true,
     "demo": true,
-    "slides": false
+    "slides": true
   },
   "route": {
     "active": "thorchain",
@@ -237,7 +237,7 @@
     "crossChainEnabled": true
   },
   "banner": {
-    "deckUrl": "/deck/sampan-blaze-2026.pdf",
+    "deckUrl": "/slides",
     "deckPdfUrl": "/deck/sampan-blaze-2026.pdf",
     "repoUrl": "https://github.com/aimanmalib/sampan",
     "tokenAddress": "bitcoincash:zplrydnf2z4pj4z9rv7uhmwsuxyrm8hj7uken87e7q",

@@ -26,8 +26,8 @@ swipe, `#n` for slide n, a Full screen button, and the "Try it in a minute" slid
   would ask the media host before anyone chose to watch. With `features.demo` off the poster, a frame of the live site,
   is shown alone.
 - The last slide and the control bar link the PDF (`banner.deckPdfUrl`), since `banner.deckUrl` moves to `/slides`.
-- `/slides` exists only with `features.slides`; while it is off the server answers the 404 page and the banner keeps
-  pointing at the PDF.
+- `/slides` exists only with `features.slides`; while it is off the server answers the 404 page. With it on,
+  `banner.deckUrl` is `/slides`.
 - The page script is a separate chunk loaded only on `/slides`; the front page does not grow.
 
 ## Way back

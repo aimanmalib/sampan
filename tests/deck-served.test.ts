@@ -1,4 +1,5 @@
-// The banner's deck link: the server answers the committed PDF at banner.deckUrl as application/pdf (ADR 0070).
+// The banner's deck link: /slides (banner.deckUrl, features.slides) is the page, and the committed PDF it links answers at
+// banner.deckPdfUrl as application/pdf (ADR 0070, ADR 0089).
 import type { FastifyInstance } from 'fastify';
 import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -20,16 +21,19 @@ afterEach(async () => {
 });
 
 describe('event deck link', () => {
-  it('answers banner.deckUrl with the PDF', async () => {
+  it('answers banner.deckPdfUrl with the PDF and banner.deckUrl with the page', async () => {
     dist = mkdtempSync(path.join(tmpdir(), 'sampan-deck-'));
     writeFileSync(path.join(dist, 'index.html'), '<!doctype html><title>app</title>');
     mkdirSync(path.join(dist, 'deck'));
     copyFileSync(path.resolve('web/public/deck/sampan-blaze-2026.pdf'), path.join(dist, 'deck', 'sampan-blaze-2026.pdf'));
     const services = createServices({ config, fake: true, dbFile: ':memory:', trustedProxies: [], fakeFixture: path.resolve('tests/fixtures/cauldron-pusd-pools.json') });
     app = await buildApp({ config, webDist: dist, fake: true, services, startWatcher: false });
-    const res = await app.inject({ method: 'GET', url: config.banner.deckUrl });
+    const res = await app.inject({ method: 'GET', url: config.banner.deckPdfUrl });
     expect(res.statusCode).toBe(200);
     expect(res.headers['content-type']).toBe('application/pdf');
     expect(res.rawPayload.subarray(0, 5).toString('latin1')).toBe('%PDF-');
+    const page = await app.inject({ method: 'GET', url: config.banner.deckUrl });
+    expect(page.statusCode).toBe(200);
+    expect(page.headers['content-type']).toMatch(/^text\/html/);
   });
 });
