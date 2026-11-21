@@ -41,4 +41,7 @@ test('/how lists every route of docs/route-facts.json without sideways scroll at
   await page.locator('#route-facts').scrollIntoViewIfNeeded();
   const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
   expect(scroll).toBeLessThanOrEqual(client);
+  // With E2E_SHOTS_DIR set, saves the table for review.
+  const dir = process.env.E2E_SHOTS_DIR;
+  if (dir) await page.locator('#route-facts').screenshot({ path: `${dir}/sampan-route-facts-320-${test.info().project.name}.png` });
 });
