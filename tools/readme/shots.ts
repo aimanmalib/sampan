@@ -48,7 +48,8 @@ async function shoot(browser: Browser, device: string, options: BrowserContextOp
       }
     }
     await open(page, '/', errors);
-    await page.locator('button[lang="ms"]').click();
+    // The language menu is a native select (web/src/LangPicker.tsx).
+    await page.locator('select.topbar__lang').selectOption('ms');
     await page.waitForTimeout(SETTLE_MS);
     if (errors.length) throw new Error(`Malay: console errors: ${errors.join(' | ')}`);
     await save(page, `home-ms-${device}`);
