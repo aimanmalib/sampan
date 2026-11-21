@@ -14,8 +14,9 @@ your wallet": a wallet that had gone left the page in that state with no end, an
   been `reconnecting` for `connect.lostAfterSeconds` (config, default 20). A wallet that answers again before then
   (`walletready`) stays connected. A stored pairing that never reached its wallet is left to the existing retry hint.
 - Entering `lost` drops the session and the wallet scan (the header balance goes) and clears the stored pairing.
-- A notice under the card says "Wallet disconnected" with one button, "Connect again", which starts a new pairing
-  without reloading the page. Text in `lang/<code>.json` (`wallet.lost.*`).
+- A text notice at the top of the card body says "Wallet disconnected" and why. The card keeps one primary button:
+  the panel's connect button reads "Connect again" while the status is `lost`, and starts a new pairing without
+  reloading the page. Text in `lang/<code>.json` (`wallet.lost.*`).
 - The rule lives in `web/src/wallet/lost.ts` (`watchLost`), a small listener with no React in it, so it is tested with
   a fake manager and a fake clock (`tests/wallet-lost.test.ts`). Under `SAMPAN_FAKE` the fake wallet gets a stand-in
   source driven by a `sampan:wallet-link` window event, used only by `e2e/wallet-lost.spec.ts`.

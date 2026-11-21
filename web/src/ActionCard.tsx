@@ -91,6 +91,7 @@ export function ActionCard({
         ))}
       </div>
       <div className="card__body" role="tabpanel" id="tab-panel" aria-labelledby={`tab-${tab}`}>
+        <LostNotice wallet={wallet} />
         <ErrorBoundary key={tab} fallback={<ErrorCard />}>
           <Body config={config} wallet={wallet} fill={fill} halted={halted} onChoose={onChoose} />
         </ErrorBoundary>
@@ -103,7 +104,6 @@ export function ActionCard({
       ) : (
         <RetryHint wallet={wallet} />
       )}
-      <LostNotice wallet={wallet} />
     </section>
   );
 }

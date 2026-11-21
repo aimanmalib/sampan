@@ -12,6 +12,7 @@ import { useEvm } from '../evm/store';
 import { useText, type TextKey } from '../i18n';
 import { ConnectDialog } from '../wallet/ConnectDialog';
 import type { Wallet } from '../wallet/useWallet';
+import { connectLabel } from '../wallet/LostNotice';
 import './activity.css';
 
 type Lookup = { at: 'idle' | 'busy' } | { at: 'found'; url: string } | { at: 'error'; key: TextKey };
@@ -132,7 +133,7 @@ export function ActivityPage({ config, wallet }: { config: LoadedConfig | null; 
         {key === '' ? <p className="activity__note">{t(wallet.status === 'scanning' ? 'wallet.scanning' : 'activity.list.connect')}</p> : null}
         {wallet.session ? null : (
           <button type="button" className="button button--quiet" disabled={wallet.status === 'connecting'} onClick={wallet.connect}>
-            {t(wallet.status === 'connecting' ? 'wallet.connecting' : 'wallet.connect')}
+            {connectLabel(wallet.status, t)}
           </button>
         )}
         <EvmWallets chain={symbolList(config.evm.chains.map((c) => c.name), t('text.and'))} config={config} />

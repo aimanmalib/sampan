@@ -36,6 +36,11 @@ test('a wallet that disconnects shows Wallet disconnected, and Connect again pai
   await expect(box(page)).toContainText(en['wallet.lost.body']);
   await expect(again(page)).toBeVisible();
   await expect(pill(page)).toHaveCount(0);
+  // One action: the card's only visible primary button is Connect again, and the notice itself has no button.
+  const primaries = page.locator('section.card .button--primary:visible');
+  await expect(primaries).toHaveCount(1);
+  await expect(primaries).toHaveText(en['wallet.lost.again']);
+  await expect(box(page).getByRole('button')).toHaveCount(0);
 
   await page.setViewportSize({ width: 320, height: 700 });
   const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);

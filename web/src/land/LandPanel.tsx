@@ -24,6 +24,7 @@ import { PegNote } from '../peg/PegNote';
 import { NostrCard } from '../nostr/NostrCard';
 import { looksLikeNostr, nostrQuery } from '../nostr/query';
 import { useNostrRecipient } from '../nostr/useNostrRecipient';
+import { connectLabel } from '../wallet/LostNotice';
 
 const BCH_DECIMALS = 8;
 
@@ -93,7 +94,7 @@ export function LandPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
   if (phase.at === 'form' || phase.at === 'opening') {
     const busy = phase.at === 'opening';
     const primary = !view && wallet.session === null && ownerText.trim() === ''
-      ? { label: wallet.status === 'connecting' ? t('wallet.connecting') : t('wallet.connect'), disabled: wallet.status === 'connecting', onClick: wallet.connect, hat: true }
+      ? { label: connectLabel(wallet.status, t), disabled: wallet.status === 'connecting', onClick: wallet.connect, hat: true }
       : { label: busy ? t('land.opening') : t('land.open'), disabled: busy || !ownerOk, onClick: () => void open(owner) };
     return (
       <div className="land">

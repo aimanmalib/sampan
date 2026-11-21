@@ -31,6 +31,7 @@ import { UnitChip } from '../chips/Chip';
 import { PegNote } from '../peg/PegNote';
 import { OutKeep } from '../keep/Keeps';
 import { RouteFactLine } from '../facts/RouteFactLine';
+import { connectLabel } from '../wallet/LostNotice';
 
 const BCH = 'BCH';
 const BCH_DECIMALS = 8;
@@ -168,7 +169,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
   };
   const primary = (() => {
     if (!wallet.session) {
-      return { label: wallet.status === 'connecting' ? t('wallet.connecting') : t('wallet.connect'), disabled: wallet.status === 'connecting', onClick: wallet.connect, hat: true };
+      return { label: connectLabel(wallet.status, t), disabled: wallet.status === 'connecting', onClick: wallet.connect, hat: true };
     }
     if (run.phase === 'running') return { label: stepLabel(run.at), disabled: true, onClick: () => {} };
     if (run.phase === 'stopped') return { label: t('out.continue'), disabled: quote.status !== 'ok', onClick: () => void send(run.swapTxid) };

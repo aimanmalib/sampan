@@ -20,6 +20,7 @@ import { QuoteAge } from '../quote/QuoteAge';
 import { useRefreshTick } from '../quote/refresh';
 import { useReview } from '../review/Review';
 import { swapRows } from '../review/rows';
+import { connectLabel } from '../wallet/LostNotice';
 
 const BCH_DECIMALS = 8;
 const QUOTE_PAUSE_MS = 400;
@@ -131,7 +132,7 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
 
   const primary = (() => {
     if (!wallet.session) {
-      return { label: wallet.status === 'connecting' ? t('wallet.connecting') : t('wallet.connect'), disabled: wallet.status === 'connecting', onClick: wallet.connect, hat: true };
+      return { label: connectLabel(wallet.status, t), disabled: wallet.status === 'connecting', onClick: wallet.connect, hat: true };
     }
     if (run.phase === 'running') return { label: t(`swap.step.${run.step}`), disabled: true, onClick: () => {} };
     if (wallet.status === 'scanning') return { label: t('wallet.scanning'), disabled: true, onClick: () => {} };
