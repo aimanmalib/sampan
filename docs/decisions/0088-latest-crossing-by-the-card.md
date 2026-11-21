@@ -25,8 +25,8 @@ without asking the visitor to trust a count.
 - **Layout.** The line sits under the pitch and stays on the first screen (e2e/first-screen.spec.ts checks it in every
   language on an iPhone 13 and at 1440x900 and 1280x720). Wide screen: its own row in the left column under the status
   chips, and the card spans one row more. Phone: one line that scrolls sideways, like the status chips row, because
-  there is no room for a second line. To make room on the phone, the Malay and Filipino "You receive" sentences were
-  shortened to one line, as the English one already was.
+  there is no room for a second line. To make room on the phone, the Malay, Indonesian and Filipino "You receive" sentences were
+  shortened to one line in every theme, as the English one already was.
 
 ## Consequences
 

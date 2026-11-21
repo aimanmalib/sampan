@@ -157,7 +157,7 @@
   "quote.updated": "Diperbarui {seconds} dtk lalu",
   "quote.updatedNow": "Baru saja diperbarui",
   "quote.announce": "Harga diperbarui pukul {time}",
-  "swap.receive": "Anda menerima sekitar {about} {asset}, minimal {min} {asset}.",
+  "swap.receive": "Terima sekitar {about} {asset}, minimal {min} {asset}.",
   "swap.fees": "Biaya",
   "swap.poolFee": "Biaya pool: {pct}% dari sisi BCH, disimpan oleh pool.",
   "swap.networkFee": "Biaya jaringan: paling banyak {fee} BCH. Dompet Anda menampilkan biaya pastinya sebelum Anda menandatangani.",
