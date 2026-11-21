@@ -77,12 +77,14 @@ const payEnv = { SAMPAN_PAY_DEMO_SECRET: `whsec_${Buffer.alloc(32, 3).toString('
  */
 export const E2E_THEME = process.env.E2E_THEME;
 const themed = (patch: object): object => (E2E_THEME ? { ...patch, ui: { ...(patch as { ui?: object }).ui, theme: E2E_THEME } } : patch);
+/** The flow specs sign straight away: the review before signing is off on every fake server unless a patch names it (e2e/review.spec.ts turns it on in the page). */
+const reviewOff = (patch: object): object => ({ ...patch, features: { reviewModal: false, ...(patch as { features?: object }).features } });
 const fakeServer = (p: number, patch: object, outage?: string, extra: Record<string, string> = {}) => ({
   command: 'node dist/server/main.js',
   url: `http://127.0.0.1:${p}/healthz`,
   reuseExistingServer: false,
   timeout: 30_000,
-  env: { PORT: String(p), HOST: '127.0.0.1', SAMPAN_FAKE: '1', SAMPAN_CONFIG_PATCH: JSON.stringify(themed(patch)), ...(outage ? { SAMPAN_FAKE_OUTAGE: outage } : {}), ...extra },
+  env: { PORT: String(p), HOST: '127.0.0.1', SAMPAN_FAKE: '1', SAMPAN_CONFIG_PATCH: JSON.stringify(themed(reviewOff(patch))), ...(outage ? { SAMPAN_FAKE_OUTAGE: outage } : {}), ...extra },
 });
 
 export default defineConfig({

@@ -29,7 +29,7 @@
     "demo": true,
     "slides": true,
     "headerBalance": true,
-    "reviewModal": false
+    "reviewModal": true
   },
   "route": {
     "active": "thorchain",
