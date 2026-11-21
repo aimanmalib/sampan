@@ -3,7 +3,7 @@
 // counted, and the fee quoted at USD 20. A route with no fact draws nothing. The label links to the full table on /how;
 // it says "quoted <UTC>" right after the fee, so "measured" never follows a quoted fee.
 // `short`: the swap card's footer row (the first screen has no room for another line): fewer words and the label
-// "time measured, fee quoted", whose full text (runs and quote time) is the link's accessible name.
+// "time measured, fee quoted"; the link's accessible name starts with that label (WCAG 2.5.3) and adds the runs and the quote time.
 import facts from 'virtual:sampan-route-facts';
 import { factFor, fullLabel, lineLabel, lineParts, shortLabel, shortParts } from '../../../core/route-facts-text';
 import { useText, type TextKey } from '../i18n';
@@ -20,7 +20,7 @@ export function RouteFactLine({ id, short = false }: { id: string; short?: boole
     <p className={short ? 'facts__line facts__line--short' : 'facts__line'} data-route-fact={fact.id}>
       {(short ? shortParts(fact, text) : lineParts(fact, text)).join(' · ')}{' '}
       {label ? (
-        <a href="/how#route-facts" aria-label={short ? fullLabel(fact, text) : undefined}>
+        <a href="/how#route-facts" aria-label={short ? `${label}: ${fullLabel(fact, text)}` : undefined}>
           {label}
         </a>
       ) : null}
