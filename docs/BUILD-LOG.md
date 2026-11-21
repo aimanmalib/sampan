@@ -154,3 +154,5 @@ One line per step, newest last.
 - 2026-11-21: SLD: /slides shows the event deck full screen from the same slide text and one shared layout (tools/deck/deck.css) as the PDF; arrow keys, buttons, swipe (ui.slideSwipePx) and #n move, Full screen where the browser allows, the demo video on 'Try it in a minute' loads only on its play button, PDF linked from the last slide (banner.deckPdfUrl); behind features.slides (off until the gate accepts banner.deckUrl /slides), ADR 0089.
 - 2026-11-21: SLD on: features.slides true and the banner's presentation link opens /slides; the PDF stays at banner.deckPdfUrl.
 - 2026-11-21: SLD test fix: the /slides fit check waits for the new frame height as well as width, since max-width clamps a stale width at once and CI read the old height.
+- 2026-11-21: BAL: the connected wallet's BCH and PUSD balance in the top bar (features.headerBalance), from the existing wallet scan, refreshed after transactions and every wallet.balancePollMs; a click opens the Swap tab.
+- 2026-11-21: BAL on: features.headerBalance true.

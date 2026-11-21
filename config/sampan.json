@@ -28,7 +28,7 @@
     "keepCompare": true,
     "demo": true,
     "slides": true,
-    "headerBalance": false
+    "headerBalance": true
   },
   "route": {
     "active": "thorchain",
