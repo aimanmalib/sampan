@@ -193,6 +193,7 @@
     "relayUrls": ["wss://relay.riften.net:443", "wss://relay.cauldron.quest:443"],
     "maxScanRounds": 10,
     "retryHintSeconds": 20,
+    "lostAfterSeconds": 20,
     "bchBlockSeconds": 600,
     "explorerTxUrl": "https://blockchair.com/bitcoin-cash/transaction/{txid}"
   },

@@ -108,6 +108,8 @@ export interface SampanConfig {
     explorerTxUrl: string;
     /** Seconds of "Waiting for your wallet" before the page offers to start again with a new link. */
     retryHintSeconds: number;
+    /** Seconds a wallet that was ready may stay "reconnecting" before the page says it has disconnected. */
+    lostAfterSeconds: number;
     /** Average BCH block time, for the cost card's time estimate. */
     bchBlockSeconds: number;
   };
@@ -369,6 +371,7 @@ export function validateConfig(c: SampanConfig): string[] {
   );
   need(posInt(c.connect?.maxScanRounds), 'connect.maxScanRounds: positive integer');
   need(posInt(c.connect?.retryHintSeconds), 'connect.retryHintSeconds: positive integer');
+  need(posInt(c.connect?.lostAfterSeconds), 'connect.lostAfterSeconds: positive integer');
   need(posInt(c.connect?.bchBlockSeconds), 'connect.bchBlockSeconds: positive integer');
   need(isHttpsUrl(c.connect?.explorerTxUrl ?? '') && c.connect.explorerTxUrl.includes('{txid}'), 'connect.explorerTxUrl: https URL with {txid}');
   need(posInt(c.rate.quotesPerMinute) && posInt(c.rate.crossingsPerHour) && posInt(c.rate.invoicesPerHour), 'rate: positive integers');

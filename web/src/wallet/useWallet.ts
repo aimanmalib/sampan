@@ -1,15 +1,17 @@
 // One BCH wallet connection for the whole page: WizardConnect in production, the fake wallet under
 // SAMPAN_FAKE=1. After connecting, the wallet's coins are found with /api/wallet/scan.
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWizardConnect, type UseWizardConnectResult } from '@wizardconnect/react';
 import { clearSession, DEFAULT_SESSION_KEY } from '@wizardconnect/dapp';
 import { scanWallet, type WalletView } from '../../../core/client/scan';
 import type { WalletSession } from '../../../core/client/session';
 import { api } from '../api';
 import type { LoadedConfig } from '../config';
+import { fakeLinkSource, watchLost, type LinkSource } from './lost';
 import { wizardSession } from './wizard';
 
-export type WalletStatus = 'idle' | 'connecting' | 'scanning' | 'ready' | 'error';
+/** `lost`: a wallet that was connected has disconnected (see lost.ts); the page offers to connect again. */
+export type WalletStatus = 'idle' | 'connecting' | 'scanning' | 'ready' | 'error' | 'lost';
 
 export interface Wallet {
   status: WalletStatus;
@@ -54,6 +56,29 @@ export function useWallet(config: LoadedConfig | null, fakeName: string): Wallet
   const session = config?.fake ? fakeSession : state === 'connected' ? wizSession : null;
   const view = scanned && scanned.session === session ? scanned.view : null;
 
+  // A wallet that disconnects (or stays reconnecting) drops its session and the stored pairing; "Connect again" pairs anew.
+  const [lost, setLost] = useState(false);
+  const lostAfterMs = (config?.connect.lostAfterSeconds ?? 0) * 1000;
+  const fakeLink = useMemo(() => (config?.fake ? fakeLinkSource() : null), [config?.fake]);
+  const link: LinkSource | null = config?.fake ? (fakeSession ? fakeLink : null) : manager;
+  useEffect(() => {
+    if (!link || lostAfterMs <= 0) return;
+    const readyNow = config?.fake ? true : (manager?.getSessionPaths().length ?? 0) > 0;
+    return watchLost(link, {
+      lostAfterMs,
+      readyNow,
+      onLost: () => {
+        scanId.current++;
+        setScanned(null);
+        setFailedFor(null);
+        setFakeSession(null);
+        setWizSession(null);
+        if (!config?.fake) clearSession(DEFAULT_SESSION_KEY);
+        setLost(true);
+      },
+    });
+  }, [link, lostAfterMs, config?.fake, manager]);
+
   // Scan whenever the session changes, and again when refresh() bumps the round.
   const [round, setRound] = useState(0);
   useEffect(() => {
@@ -67,6 +92,7 @@ export function useWallet(config: LoadedConfig | null, fakeName: string): Wallet
 
   const connect = useCallback(() => {
     if (!config) return;
+    setLost(false);
     if (config.fake) {
       void import('../../../core/client/fake-wallet').then((m) => setFakeSession(m.fakeWalletSession(fakeName)));
       return;
@@ -80,6 +106,7 @@ export function useWallet(config: LoadedConfig | null, fakeName: string): Wallet
     setFailedFor(null);
     setFakeSession(null);
     setWizSession(null);
+    setLost(false);
     if (!config?.fake) await wiz.disconnect();
   }, [config?.fake, wiz]);
 
@@ -89,7 +116,9 @@ export function useWallet(config: LoadedConfig | null, fakeName: string): Wallet
       : failedFor === session
         ? 'error'
         : 'scanning'
-    : wiz.state === 'connecting' || wiz.state === 'reconnecting' || (wiz.state === 'connected' && !config?.fake)
+    : lost
+      ? 'lost'
+      : wiz.state === 'connecting' || wiz.state === 'reconnecting' || (wiz.state === 'connected' && !config?.fake)
       ? 'connecting'
       : 'idle';
 

@@ -141,6 +141,26 @@
   color: var(--ink-soft);
   text-align: center;
 }
+.wallet-lost {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 1rem 1rem;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--card);
+  text-align: center;
+}
+.wallet-lost__title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+.wallet-lost__body {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
 .button--quiet {
   background: var(--paper);
   color: var(--ink);

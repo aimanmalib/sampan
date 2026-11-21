@@ -13,6 +13,7 @@ import { BringIn } from './in/BringIn';
 import { OutPanel } from './out/OutPanel';
 import { SwapPanel } from './swap/SwapPanel';
 import { ConnectDialog } from './wallet/ConnectDialog';
+import { LostNotice } from './wallet/LostNotice';
 import { RetryHint } from './wallet/RetryHint';
 import type { Wallet } from './wallet/useWallet';
 
@@ -102,6 +103,7 @@ export function ActionCard({
       ) : (
         <RetryHint wallet={wallet} />
       )}
+      <LostNotice wallet={wallet} />
     </section>
   );
 }
