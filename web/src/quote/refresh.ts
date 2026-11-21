@@ -1,10 +1,11 @@
 // The price on a panel asks again by itself every quote.autoRefreshMs (K5P2): one ticker for the whole page, counting
-// only while the tab is visible and no dialog is open, so a price never changes under a wallet prompt or a review.
+// only while the tab is visible and no dialog is open, so a price never changes under a wallet prompt. The review before
+// signing is the one dialog marked data-live-quote: the price goes on refreshing under it and the review asks again.
 import { useEffect, useState } from 'react';
 
-/** True while a refresh must wait: the tab is hidden, or a modal dialog is open over the page. */
+/** True while a refresh must wait: the tab is hidden, or a modal dialog other than the review is open over the page. */
 export function refreshBlocked(doc: Pick<Document, 'visibilityState' | 'querySelector'>): boolean {
-  return doc.visibilityState === 'hidden' || doc.querySelector('dialog[open], [aria-modal="true"]') !== null;
+  return doc.visibilityState === 'hidden' || doc.querySelector('dialog[open], [aria-modal="true"]:not([data-live-quote])') !== null;
 }
 
 type Listener = (tick: number) => void;

@@ -5,13 +5,35 @@ import { useText } from '../i18n';
 
 const KEY = 'sampan.crossDisclosure';
 
-const seen = (): boolean => {
+/** True once "I understand" was pressed in this browser (here or in the review before signing). */
+export const seen = (): boolean => {
   try {
     return localStorage.getItem(KEY) === '1';
   } catch {
     return false;
   }
 };
+
+/** Remembers the answer; in private mode the lines show again next time. */
+export function remember(): void {
+  try {
+    localStorage.setItem(KEY, '1');
+  } catch {
+    // Private mode: the dialog shows again next time.
+  }
+}
+
+/** The three lines, shared with the review before signing (features.reviewModal), which shows them inside itself. */
+export function DiscloseLines({ route }: { route: string }) {
+  const { t } = useText();
+  return (
+    <ul className="disclose__list">
+      <li>{t('disclose.route', { route })}</li>
+      <li>{t('disclose.final')}</li>
+      <li>{t('disclose.risks')}</li>
+    </ul>
+  );
+}
 
 function Dialog({ route, onAccept, onClose }: { route: string; onAccept: () => void; onClose: () => void }) {
   const { t } = useText();
@@ -30,11 +52,7 @@ function Dialog({ route, onAccept, onClose }: { route: string; onAccept: () => v
         <h2 id="disclose-title" className="connect__title">
           {t('disclose.title')}
         </h2>
-        <ul className="disclose__list">
-          <li>{t('disclose.route', { route })}</li>
-          <li>{t('disclose.final')}</li>
-          <li>{t('disclose.risks')}</li>
-        </ul>
+        <DiscloseLines route={route} />
         <button ref={okRef} type="button" className="button button--primary" onClick={onAccept}>
           {t('disclose.ok')}
         </button>
@@ -55,11 +73,7 @@ export function useDisclosure(route: string): { run: (fn: () => void) => void; d
       route={route}
       onClose={() => setPending(null)}
       onAccept={() => {
-        try {
-          localStorage.setItem(KEY, '1');
-        } catch {
-          // Private mode: the dialog shows again next time.
-        }
+        remember();
         const fn = pending;
         setPending(null);
         fn();

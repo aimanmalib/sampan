@@ -13,7 +13,8 @@ import type { Wallet } from '../wallet/useWallet';
 import { WizardHat } from '../wallet/WizardHat';
 import { outCodeKey, outErrorKey } from './errors';
 import { useOutQuote } from './useOutQuote';
-import { useDisclosure } from '../cross/disclosure';
+import { useReview } from '../review/Review';
+import { crossRows, shortAddress } from '../review/rows';
 import { EvmWallets } from '../evm/EvmWallets';
 import { shortEvm, useEvm } from '../evm/store';
 import { AtomSwap } from '../atom/AtomSwap';
@@ -51,7 +52,6 @@ const about = (v: string | bigint, decimals: number): string => {
   const step = 10n ** BigInt(Math.max(0, decimals - SHOWN_DECIMALS));
   return formatUnits((BigInt(v) + step / 2n) / step, Math.min(decimals, SHOWN_DECIMALS), SHOWN_DECIMALS);
 };
-const short = (a: string): string => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
 export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wallet: Wallet; onSwap: () => void }) {
   const { t } = useText();
@@ -93,8 +93,18 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
   const quote = oneClick ? ocQuote : thorQuote;
   const chosenRoute = oneClick ? 'near-intents' : config.route.active;
   const routeName = t(`route.${chosenRoute}` as TextKey);
-  const gate = useDisclosure(routeName);
   const q = quote.status === 'ok' ? quote.quote : null;
+  const cost = q && amount !== undefined && pick ? outCard(config, q, source, amount, pick.chain.key, chosenRoute) : null;
+  // The review before signing (features.reviewModal) carries the first-crossing disclosure inside itself.
+  const review = useReview({
+    on: config.features.reviewModal,
+    disclose: routeName,
+    rows:
+      q && amount !== undefined && pick
+        ? crossRows(t, { pay: `${formatUnits(amount, decimals)} ${source}`, about: about(q.expectedOut, q.outDecimals), min: shown(q.minOut, q.outDecimals), asset: pick.symbol, route: routeName, to: shortAddress(destination.trim()), card: cost })
+        : null,
+    onConfirm: () => void send(),
+  });
   if (!pick) return null;
   const vars = { symbol: pick.symbol, chain: pick.chain.name, route: routeName, token: token.symbol };
   const badAddress = destination.trim() !== '' && !/^0x[0-9a-fA-F]{40}$/.test(destination.trim());
@@ -124,7 +134,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
           ...(oneClick ? { route: 'near-intents' as const } : {}),
           prompts: {
             swap: t('out.prompt.swap', { pay, min: q.swap ? formatUnits(BigInt(q.swap.minReceive), BCH_DECIMALS) : '' }),
-            deposit: t('out.prompt.deposit', { ...vars, pay, about: about(q.expectedOut, q.outDecimals), to: short(destination.trim()) }),
+            deposit: t('out.prompt.deposit', { ...vars, pay, about: about(q.expectedOut, q.outDecimals), to: shortAddress(destination.trim()) }),
           },
         },
         onStep: (at) => setRun({ phase: 'running', at }),
@@ -163,10 +173,9 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
     if (run.phase === 'running') return { label: stepLabel(run.at), disabled: true, onClick: () => {} };
     if (run.phase === 'stopped') return { label: t('out.continue'), disabled: quote.status !== 'ok', onClick: () => void send(run.swapTxid) };
     if (wallet.status === 'scanning') return { label: t('wallet.scanning'), disabled: true, onClick: () => {} };
-    return { label: t('out.go'), disabled: quote.status !== 'ok' || lacking || !view, onClick: () => gate.run(() => void send()) };
+    return { label: t('out.go'), disabled: quote.status !== 'ok' || lacking || !view, onClick: review.open };
   })();
   const feePct = q ? (q.fees.totalBps / 100).toFixed(1) : '';
-  const cost = q && amount !== undefined ? outCard(config, q, source, amount, pick.chain.key, chosenRoute) : null;
   // The cost card replaces the older fee line and fee details, so the screen gives one statement of the cost.
   const costShown = cost !== null && !atom;
   const limitVars = { min: minFor(chosenRoute), max: String(config.limits.maxUsd), ...vars };
@@ -286,7 +295,7 @@ export function OutPanel({ config, wallet, onSwap }: { config: LoadedConfig; wal
         <p>{t('swap.networkFee', { fee: formatUnits(BigInt(config.connect.feeCapSats), BCH_DECIMALS) })}</p>
         <p>{t('out.time', { ...vars, minutes: String(Math.max(1, Math.ceil((q?.seconds ?? 600) / 60))) })}</p>
       </details>
-      {gate.dialog}
+      {review.dialog}
     </div>
   );
 }

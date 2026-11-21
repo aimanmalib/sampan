@@ -12,7 +12,8 @@ import { formatUnits, parseUnits } from '../../../core/wallet';
 import { api } from '../api';
 import type { LoadedConfig } from '../config';
 import { RouteFactLine } from '../facts/RouteFactLine';
-import { useDisclosure } from '../cross/disclosure';
+import { useReview } from '../review/Review';
+import { crossRows, shortAddress } from '../review/rows';
 import { EvmWallets } from '../evm/EvmWallets';
 import { useEvm } from '../evm/store';
 import { useText, type TextKey } from '../i18n';
@@ -84,7 +85,6 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
   const quote = oneClick ? ocQuote : thorQuote;
   const chosenRoute = oneClick ? 'near-intents' : config.route.active;
   const route = t(`route.${chosenRoute}` as TextKey);
-  const gate = useDisclosure(route);
   const q0 = quote.status === 'ok' ? quote.quote : null;
   const gas = useGas({
     enabled: !config.fake,
@@ -96,10 +96,30 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
     wallet: evm.connected ? { address: evm.connected.address, provider: evm.connected.wallet.provider } : null,
     token: src?.token ?? { address: '', decimals: 0 },
   });
+  const card = q0 && src ? inCard(config, q0, src.chain, receive !== BCH, oneClick ? undefined : gas, chosenRoute) : null;
+  // The review before signing (features.reviewModal) carries the first-crossing disclosure inside itself.
+  const review = useReview({
+    on: config.features.reviewModal,
+    disclose: route,
+    rows:
+      q0 && src && amount !== undefined
+        ? crossRows(t, {
+            pay: `${formatUnits(amount, ROUTE_DECIMALS)} ${src.symbol}`,
+            about: formatUnits(BigInt(q0.expectedSats), ROUTE_DECIMALS),
+            min: formatUnits(BigInt(q0.minSats), ROUTE_DECIMALS),
+            asset: BCH,
+            ...(receive === BCH ? {} : { thenToken: token.symbol }),
+            route,
+            to: shortAddress(address, 18, 6),
+            card,
+          })
+        : null,
+    onConfirm: () => send(),
+  });
   if (!src) return null;
   const vars = { symbol: src.symbol, chain: src.chain.name, route, token: token.symbol, pct: (config.landing.toleranceBps / 100).toFixed(1) };
   const q = q0;
-  const cost = q ? inCard(config, q, src.chain, receive !== BCH, oneClick ? undefined : gas, chosenRoute) : null;
+  const cost = card;
   const busy = run.phase === 'running';
   const limitVars = { min: minFor(chosenRoute), max: String(config.limits.maxUsd), ...vars };
 
@@ -219,12 +239,12 @@ export function InPanel({ config, wallet }: { config: LoadedConfig; wallet: Wall
           evm={evm.connected ? { address: evm.connected.address, provider: evm.connected.wallet.provider } : null}
         />
       ) : (
-        <button type="button" className="button button--primary" disabled={busy || !q || !evm.connected} onClick={() => gate.run(send)}>
+        <button type="button" className="button button--primary" disabled={busy || !q || !evm.connected} onClick={review.open}>
           {label}
         </button>
       )}
       {choice.route === 'atom' ? null : <RouteFactLine id={`in:${chosenRoute}:${src.chain.key}`} />}
-      {gate.dialog}
+      {review.dialog}
     </div>
   );
 }

@@ -179,6 +179,12 @@ async function doSwap(page: Page, clock: Clock, wallet: { child?: ChildProcess }
   const started = Date.now();
   await primary.click();
   await clock.step('click', `"${en['swap.go']}"`);
+  // With features.reviewModal on, the review lists the numbers first and the wallet is asked only after Confirm.
+  const review = page.locator('.connect__box.review .review__go');
+  if (await review.waitFor({ state: 'visible', timeout: 3000 }).then(() => true, () => false)) {
+    await review.click();
+    await clock.step('click', `"${en['review.confirm']}"`);
+  }
   await clock.step('wallet', WALLET_STEPS[2]!);
   const done = page.locator('.swap__done');
   const failed = page.locator('.swap__error');

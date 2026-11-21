@@ -1,0 +1,43 @@
+/* The review before signing (features.reviewModal): a receipt-like list inside the shared dialog frame. Colours come
+   from the theme tokens; nothing here animates (WebKit). */
+.connect__box.review {
+  justify-items: stretch;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+}
+.review__rows {
+  margin: 0;
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+.review__row {
+  display: grid;
+  grid-template-columns: minmax(0, 7rem) minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed var(--line);
+  min-width: 0;
+}
+.review__row dt {
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+}
+.review__row dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.review__row[data-row='pay'] dd,
+.review__row[data-row='receive'] dd {
+  font-weight: 600;
+}
+.review__updated {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--lamp);
+  background: var(--river-pale);
+  color: var(--ink);
+  border-radius: 6px;
+}

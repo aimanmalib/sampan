@@ -18,6 +18,8 @@ import { PegNote } from '../peg/PegNote';
 import { TokenPick } from './TokenPick';
 import { QuoteAge } from '../quote/QuoteAge';
 import { useRefreshTick } from '../quote/refresh';
+import { useReview } from '../review/Review';
+import { swapRows } from '../review/rows';
 
 const BCH_DECIMALS = 8;
 const QUOTE_PAUSE_MS = 400;
@@ -89,6 +91,24 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
     }
   };
 
+  // The review before signing lists the numbers the wallet is asked to sign (features.reviewModal).
+  const review = useReview({
+    on: config.features.reviewModal,
+    disclose: null,
+    rows:
+      quote.status === 'ok' && amount !== undefined
+        ? swapRows(t, {
+            pay: `${formatUnits(amount, payDecimals)} ${payUnit}`,
+            about: formatUnits(BigInt(quote.quote.demand), getDecimals),
+            min: formatUnits(BigInt(quote.quote.minReceive), getDecimals),
+            asset: getUnit,
+            poolPct: pct(POOL_V0_FEE_NUMERATOR, POOL_V0_FEE_DENOMINATOR),
+            feeCap: formatUnits(BigInt(config.connect.feeCapSats), BCH_DECIMALS),
+          })
+        : null,
+    onConfirm: () => void swap(),
+  });
+
   if (run.phase === 'done') {
     return (
       <div className="swap swap--done" aria-live="polite">
@@ -115,7 +135,7 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
     }
     if (run.phase === 'running') return { label: t(`swap.step.${run.step}`), disabled: true, onClick: () => {} };
     if (wallet.status === 'scanning') return { label: t('wallet.scanning'), disabled: true, onClick: () => {} };
-    return { label: t('swap.go'), disabled: quote.status !== 'ok' || short || !view, onClick: () => void swap() };
+    return { label: t('swap.go'), disabled: quote.status !== 'ok' || short || !view, onClick: review.open };
   })();
 
   return (
@@ -204,6 +224,7 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
         <RouteFactLine id="swap" short />
         <QuoteAge at={quote.status === 'ok' && config.quote.autoRefreshMs > 0 ? quote.at : null} />
       </div>
+      {review.dialog}
     </div>
   );
 }

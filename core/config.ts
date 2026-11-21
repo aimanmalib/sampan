@@ -42,7 +42,7 @@ export interface SampanConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
   /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
-  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean; nostrSend: boolean; watchDemo: boolean; keepCompare: boolean; demo: boolean; slides: boolean; headerBalance: boolean };
+  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean; nostrSend: boolean; watchDemo: boolean; keepCompare: boolean; demo: boolean; slides: boolean; headerBalance: boolean; reviewModal: boolean };
   /** symbols: the symbols of the live thorchain.assets, repeated here and checked against them (texts name them). */
   route: { active: ActiveRoute; symbols: string[] };
   thorchain: {
@@ -458,6 +458,7 @@ export function validateConfig(c: SampanConfig): string[] {
   need(typeof c.features?.demo === 'boolean', 'features.demo: true or false');
   need(typeof c.features?.slides === 'boolean', 'features.slides: true or false');
   need(typeof c.features?.headerBalance === 'boolean', 'features.headerBalance: true or false');
+  need(typeof c.features?.reviewModal === 'boolean', 'features.reviewModal: true or false');
   const poll = c.wallet?.balancePollMs;
   need(poll === 0 || msIn(poll, 5000, 600000), 'wallet.balancePollMs: 0 or an integer from 5000 to 600000');
   need(msIn(c.wallet?.balanceBchDecimals, 2, 8), 'wallet.balanceBchDecimals: an integer from 2 to 8');
