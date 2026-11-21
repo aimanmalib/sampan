@@ -11,7 +11,7 @@ Built in Malaysia by <a href="https://aimanmalib.com">Aiman Malib</a> · <a href
 Sampan swaps BCH and the PUSD stablecoin through existing Cauldron pools on Bitcoin Cash mainnet, and gives you a landing
 address: send BCH to it from any wallet and it arrives at your address as PUSD, while the Sampan server holds no key.
 
-<!-- route-facts:start (made by scripts/route-facts-table.ts from docs/route-facts.json) -->
+<!-- route-facts:start -->
 **What each route takes**
 
 Time is the median of the ok mainnet runs in the measured table. Signatures are counted by the fake-wallet test of each flow. Fees are the fees the cost card names, quoted by the server at 2026-11-20 23:17 UTC for USD 2, 20 and 100, without the price difference.

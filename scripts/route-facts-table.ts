@@ -10,7 +10,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { FEE_AMOUNTS, type RouteFacts } from '../core/route-facts.js';
 import { feeCell, quotedAt, routeName, signaturesText, timeCell, utc, type Text } from '../core/route-facts-text.js';
 
-export const START = '<!-- route-facts:start (made by scripts/route-facts-table.ts from docs/route-facts.json) -->';
+// Exact marker text: the repository gate looks for it.
+export const START = '<!-- route-facts:start -->';
 export const END = '<!-- route-facts:end -->';
 export const FACTS_FILE = 'docs/route-facts.json';
 

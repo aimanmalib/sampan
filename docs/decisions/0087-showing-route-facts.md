@@ -20,7 +20,7 @@ are about to use, and a reader of the repository should see the same numbers, in
   page is rebuilt, so the line never shows a number nobody measured.
 - **/how table.** Every route with time (median, runs, range), signatures and the three fees. Six columns do not fit a
   phone, so each row is a small grid with the column name above each value.
-- **READMEs.** `npm run route-facts -- --write` writes the block between `<!-- route-facts:start … -->` and
+- **READMEs.** `npm run route-facts -- --write` writes the block between `<!-- route-facts:start -->` and
   `<!-- route-facts:end -->` in `README.md` (English) and `README.ms.md` (Malay). `tests/route-facts-render.test.ts`
   fails when a README block differs from what the generator makes now.
 - Slow routes are shown as measured. Minutes start at two minutes; under that the time is in seconds.

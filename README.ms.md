@@ -14,7 +14,7 @@ Sampan menukar BCH dan stablecoin PUSD melalui kolam Cauldron sedia ada di mainn
 pendaratan: hantar BCH ke alamat itu dari mana-mana dompet atau bursa, dan ia sampai ke alamat anda sebagai PUSD, sementara
 pelayan Sampan tidak memegang sebarang kunci.
 
-<!-- route-facts:start (made by scripts/route-facts-table.ts from docs/route-facts.json) -->
+<!-- route-facts:start -->
 **Apa yang setiap laluan ambil**
 
 Masa ialah median larian mainnet yang berjaya dalam jadual ukuran. Tandatangan dikira oleh ujian dompet palsu setiap aliran. Yuran ialah yuran yang dinamakan kad kos, disebut harga oleh pelayan pada 2026-11-20 23:17 UTC untuk USD 2, 20 dan 100, tanpa perbezaan harga.
