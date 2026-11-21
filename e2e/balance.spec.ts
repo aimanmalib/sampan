@@ -11,7 +11,8 @@ test.use({ baseURL: `http://127.0.0.1:${landingPort}` });
 
 const pill = (page: Page) => page.locator('.topbar .balance');
 const primary = (page: Page) => page.locator('.button--primary');
-const shape = /^([0-9.]+) BCH([0-9.]+) PUSD$/;
+// Each offered stablecoin has its line: MUSD follows PUSD while features.musd is on.
+const shape = /^([0-9.]+) BCH([0-9.]+) PUSD((?:[0-9.]+) MUSD)?$/;
 
 async function connect(page: Page): Promise<RegExpExecArray> {
   await page.goto('/');
@@ -36,7 +37,7 @@ test('hidden before connecting, then BCH and PUSD from the wallet, changed by a 
   await expect(primary(page)).toHaveText(en['swap.go']);
   await primary(page).click();
   await expect(page.locator('.swap__done')).toHaveText(en['swap.done'], { timeout: 20_000 });
-  await expect(pill(page)).not.toHaveText(`${before[1]} BCH${before[2]} PUSD`, { timeout: 20_000 });
+  await expect(pill(page)).not.toHaveText(`${before[1]} BCH${before[2]} PUSD${before[3] ?? ''}`, { timeout: 20_000 });
   expect(errors).toEqual([]);
   // After the console check: a WebKit screenshot itself logs a style-src line (ADR 0055).
   await page.screenshot({ path: test.info().outputPath('balance.png') });
