@@ -156,3 +156,4 @@ One line per step, newest last.
 - 2026-11-21: SLD test fix: the /slides fit check waits for the new frame height as well as width, since max-width clamps a stale width at once and CI read the old height.
 - 2026-11-21: BAL: the connected wallet's BCH and PUSD balance in the top bar (features.headerBalance), from the existing wallet scan, refreshed after transactions and every wallet.balancePollMs; a click opens the Swap tab.
 - 2026-11-21: BAL on: features.headerBalance true.
+- 2026-11-21: QRW: the WizardConnect dialog measured in both engines (hat in the title, Copy link straight under the code, same link copied from both, the code decodes to that link with the logo in its middle, no spill at 320 px); the code is centred again at 320 px.
