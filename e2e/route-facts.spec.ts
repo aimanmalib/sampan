@@ -18,8 +18,10 @@ test('the swap tab shows its measured line under the button, linked to the table
   await page.goto('/');
   const line = page.locator('[data-route-fact=swap]');
   await expect(line).toBeVisible();
-  // The footer row form: the short label, with the runs counted in the link's accessible name.
-  await expect(line.getByRole('link')).toHaveText(en['facts.measuredShort']);
+  // The footer row form: the short label says the time was measured and the fee quoted, with the runs counted and the
+  // quote time in the link's accessible name.
+  await expect(line.getByRole('link')).toHaveText(swap!.fees['20'].usd === null ? en['facts.measuredShort'] : en['facts.shortBoth']);
+  if (swap!.fees['20'].usd !== null) await expect(line).toContainText(en['facts.quotedShort']);
   await expect(line.getByRole('link')).toHaveAttribute('aria-label', new RegExp(en['facts.measured'].replace('{n}', String(swap!.time!.n))));
   // It sits in the Fees row, so the card is no taller: the line's box is inside the row's box.
   const [row, box] = await Promise.all([page.locator('.swap__foot').boundingBox(), line.boundingBox()]);

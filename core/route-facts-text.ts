@@ -41,14 +41,23 @@ export function routeName(f: RouteFact, t: Text, chainName: ChainName): string {
   return t('facts.route', { flow, chain: chainName(f.chain), route: t(`route.${f.route}`) });
 }
 
-/** The hero line parts: about the time, the signatures, the fee at USD 20 (parts with no data are left out). */
+/** The hero line parts: about the time with its runs, the signatures, the fee at USD 20 (parts with no data are left out). */
 export function lineParts(f: RouteFact, t: Text): string[] {
   const parts: string[] = [];
-  if (f.time) parts.push(t('facts.time', { time: duration(f.time.median_s, t) }));
+  const time = timePart(f, t);
+  if (time) parts.push(time);
   parts.push(signaturesText(f, t));
   const fee = feeText(f.fees[LINE_AMOUNT], LINE_AMOUNT, t);
   if (fee) parts.push(fee);
   return parts;
+}
+
+/** The time part of a line: "about 8 min, 3 runs", so the runs it was measured over sit next to the time and never after
+ *  a quoted fee. */
+function timePart(f: RouteFact, t: Text): string | null {
+  if (!f.time) return null;
+  const time = duration(f.time.median_s, t);
+  return f.time.n === 1 ? t('facts.runsOne', { time }) : t('facts.runs', { time, n: String(f.time.n) });
 }
 
 /** The short form for the swap card's footer row, which has no room for a line of its own (first screen): the time,
@@ -62,8 +71,24 @@ export function shortParts(f: RouteFact, t: Text): string[] {
   return parts;
 }
 
-/** The label after the hero line: measured over n runs (when timed), and the UTC time the fee was quoted. */
+/** The short form's visible label: which part was measured and which was quoted ("time measured, fee quoted"). */
+export function shortLabel(f: RouteFact, t: Text): string {
+  const quoted = f.fees[LINE_AMOUNT].usd !== null;
+  if (f.time && quoted) return t('facts.shortBoth');
+  if (f.time) return t('facts.measuredShort');
+  return quoted ? t('facts.quotedShort') : '';
+}
+
+/** The label after the full line, right after the fee: the UTC time the fee was quoted ("quoted 2026-11-20 23:17 UTC"),
+ *  or "measured" when there is no quote but a measured time. Empty when there is neither. */
 export function lineLabel(f: RouteFact, t: Text): string {
+  const fee = f.fees[LINE_AMOUNT];
+  if (fee.usd !== null) return t('facts.quotedAt', { at: utc(fee.quoted_at) });
+  return f.time ? t('facts.measuredShort') : '';
+}
+
+/** The whole label for a screen reader: measured over n runs (when timed), and the UTC time the fee was quoted. */
+export function fullLabel(f: RouteFact, t: Text): string {
   const fee = f.fees[LINE_AMOUNT];
   const quoted = fee.usd === null ? null : t('facts.quoted', { at: utc(fee.quoted_at) });
   const measured = !f.time ? null : f.time.n === 1 ? t('facts.measuredOne') : t('facts.measured', { n: String(f.time.n) });
@@ -72,16 +97,17 @@ export function lineLabel(f: RouteFact, t: Text): string {
 
 /** The table's time cell: "about 8 min, 3 runs (6 to 18 min)", or "not timed yet". */
 export function timeCell(f: RouteFact, t: Text): string {
-  if (!f.time) return t('facts.notTimed');
+  const time = timePart(f, t);
+  if (!f.time || !time) return t('facts.notTimed');
   const range = f.time.n > 1 ? ` ${t('facts.range', { min: duration(f.time.min_s, t), max: duration(f.time.max_s, t) })}` : '';
-  const time = duration(f.time.median_s, t);
-  return `${f.time.n === 1 ? t('facts.runsOne', { time }) : t('facts.runs', { time, n: String(f.time.n) })}${range}`;
+  return `${time}${range}`;
 }
 
 /** The table's fee cell at one amount: "$0.35 (1.8 %)", "plus network fee" when left out, or "no quote". */
 export function feeCell(fee: Fee, t: Text): string {
   if (fee.usd === null) return t('facts.noQuote');
-  const text = `${money(fee.usd)} (${percent(fee.pct)} %)`;
+  // A no-break space, so a narrow cell does not wrap the % sign onto a line of its own.
+  const text = `${money(fee.usd)} (${percent(fee.pct)}\u00a0%)`;
   return fee.network === 'excluded' ? `${text} ${t('facts.plusNetwork')}` : text;
 }
 

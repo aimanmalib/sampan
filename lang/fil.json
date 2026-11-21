@@ -782,12 +782,15 @@
   "facts.sig.one": "1 lagda",
   "facts.sig.many": "{n} lagda",
   "facts.payment": "isang bayad mula sa anumang BCH wallet",
-  "facts.fee": "bayad {usd} sa {at} ({pct} %)",
+  "facts.fee": "bayad {usd} sa {at} ({pct} %)",
   "facts.feeShort": "bayad {usd} sa {at}",
   "facts.plusNetwork": "dagdag ang network fee",
   "facts.noQuote": "walang sipi",
   "facts.measured": "sinukat sa {n} run",
   "facts.measuredOne": "sinukat sa 1 run",
   "facts.measuredShort": "sinukat",
-  "facts.quoted": "bayad sinipi {at}"
+  "facts.quoted": "bayad sinipi {at}",
+  "facts.quotedAt": "sinipi {at}",
+  "facts.shortBoth": "oras sinukat, bayad sinipi",
+  "facts.quotedShort": "sinipi ang bayad"
 }

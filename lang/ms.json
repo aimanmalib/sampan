@@ -782,12 +782,15 @@
   "facts.sig.one": "1 tandatangan",
   "facts.sig.many": "{n} tandatangan",
   "facts.payment": "satu bayaran dari mana-mana dompet BCH",
-  "facts.fee": "yuran {usd} pada {at} ({pct} %)",
+  "facts.fee": "yuran {usd} pada {at} ({pct} %)",
   "facts.feeShort": "yuran {usd} pada {at}",
   "facts.plusNetwork": "tambah yuran rangkaian",
   "facts.noQuote": "tiada sebut harga",
   "facts.measured": "diukur atas {n} larian",
   "facts.measuredOne": "diukur atas 1 larian",
   "facts.measuredShort": "diukur",
-  "facts.quoted": "yuran disebut harga {at}"
+  "facts.quoted": "yuran disebut harga {at}",
+  "facts.quotedAt": "disebut harga {at}",
+  "facts.shortBoth": "masa diukur, yuran disebut harga",
+  "facts.quotedShort": "yuran disebut harga"
 }

@@ -782,12 +782,15 @@
   "facts.sig.one": "1 signature",
   "facts.sig.many": "{n} signatures",
   "facts.payment": "one payment from any BCH wallet",
-  "facts.fee": "fee {usd} at {at} ({pct} %)",
+  "facts.fee": "fee {usd} at {at} ({pct} %)",
   "facts.feeShort": "fee {usd} at {at}",
   "facts.plusNetwork": "plus network fee",
   "facts.noQuote": "no quote",
   "facts.measured": "measured over {n} runs",
   "facts.measuredOne": "measured over 1 run",
   "facts.measuredShort": "measured",
-  "facts.quoted": "fee quoted {at}"
+  "facts.quoted": "fee quoted {at}",
+  "facts.quotedAt": "quoted {at}",
+  "facts.shortBoth": "time measured, fee quoted",
+  "facts.quotedShort": "fee quoted"
 }
