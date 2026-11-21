@@ -1,7 +1,7 @@
 // The dialog frame shared by WizardConnect (BCH), WalletConnect (EVM) and the review before signing: title, close button
 // with focus, Tab kept inside the box, Escape and a click outside to close, no blurred backdrop. An optional icon (hidden
 // from screen readers) leads the title. `liveQuote` lets the page's price refresh go on under the dialog (the review
-// shows the change and asks again, ADR 0091); every other dialog pauses it (quote/refresh.ts).
+// shows the change and asks again, ADR 0092); every other dialog pauses it (quote/refresh.ts).
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useText } from '../i18n';
 
