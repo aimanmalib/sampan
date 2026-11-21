@@ -22,6 +22,7 @@ import { Measured } from './Measured';
 import { HeroPitch } from './HeroPitch';
 import { HeroProof } from './HeroProof';
 import { PayPages, payRoute } from './pay/PayPages';
+import { BalancePill } from './wallet/BalancePill';
 import { useWallet } from './wallet/useWallet';
 import { WatchPage } from './watch/WatchPage';
 
@@ -52,6 +53,16 @@ export function App() {
   // Sampan Pay pages exist only with features.pay; until the config says so nothing is drawn, then the front page.
   const pay = payRoute(location.pathname);
   const payShown = pay && (config ? config.features.pay : !serverDown) ? pay : null;
+  const front = !payShown && !watch && !activity && !demo && !how && !legal && !done && !crossing;
+  // The header balance opens the Swap tab, where the full balance and Disconnect are (K5P6).
+  const openWallet = (): void => {
+    setChosen('swap');
+    requestAnimationFrame(() => {
+      const tab = document.getElementById('tab-swap');
+      tab?.scrollIntoView({ block: 'nearest' });
+      tab?.focus();
+    });
+  };
 
   useEffect(() => {
     fetchConfig().catch(() => setServerDown(true));
@@ -73,7 +84,10 @@ export function App() {
     <>
       <nav className="topbar">
         <span className="wordmark">Sampan</span>
-        <LangPicker config={config} />
+        <span className="topbar__end">
+          <BalancePill config={config} wallet={wallet} onOpen={front ? openWallet : null} />
+          <LangPicker config={config} />
+        </span>
       </nav>
       {payShown ? (
         <main className="page">

@@ -146,6 +146,7 @@
   "wallet.scanFailed": "Hindi mabasa ang coins ng iyong wallet. Mag-disconnect at kumonekta ulit.",
   "wallet.balance": "Nasa iyong wallet: {bch} BCH at {token} {symbol}",
   "wallet.disconnect": "Mag-disconnect",
+  "wallet.pill.label": "Nasa iyong wallet: {amounts}. Binubuksan ang tab na {tab}",
   "wallet.fakeName": "Test wallet (walang totoong pondo)",
   "swap.direction": "Direksyon ng swap",
   "swap.token": "Stablecoin",

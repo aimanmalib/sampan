@@ -146,6 +146,7 @@
   "wallet.scanFailed": "Syiling dompet anda tidak dapat dibaca. Putuskan dan sambung semula.",
   "wallet.balance": "Dalam dompet anda: {bch} BCH dan {token} {symbol}",
   "wallet.disconnect": "Putuskan",
+  "wallet.pill.label": "Dalam dompet anda: {amounts}. Membuka tab {tab}",
   "wallet.fakeName": "Dompet ujian (tiada dana sebenar)",
   "swap.direction": "Arah tukaran",
   "swap.token": "Syiling stabil",

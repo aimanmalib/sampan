@@ -1,0 +1,46 @@
+/* Header balance (features.headerBalance): a pill beside the language menu, one line per asset. Its numbers are never
+   cut short: when the pill and the menu do not fit beside the wordmark (a 320 px phone, a long language name), the
+   pill moves to a second line under the menu (wrap-reverse) instead. Flex row: min-width 0 and max-width 100%. */
+.topbar__end {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.topbar:has(.topbar__end > .balance) .wordmark {
+  align-self: flex-start;
+  line-height: var(--touch);
+}
+.balance {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: var(--touch);
+  flex: none;
+  max-width: 100%;
+  padding: 0.125rem 0.875rem;
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  text-align: right;
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.balance:hover {
+  border-color: var(--river);
+}
+.balance__line {
+  white-space: nowrap;
+}
+.balance__unit {
+  color: var(--ink-soft);
+}

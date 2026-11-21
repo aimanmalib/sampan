@@ -42,7 +42,7 @@ export interface SampanConfig {
   tokens: Record<string, TokenConfig>;
   defaultToken: string;
   /** A flow stays hidden until it has been measured on mainnet (SAMPAN_CONFIG_PATCH can switch it on for tests). */
-  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean; nostrSend: boolean; watchDemo: boolean; keepCompare: boolean; demo: boolean; slides: boolean };
+  features: { musd: boolean; swap: boolean; landing: boolean; pay: boolean; atom: boolean; oneClick: boolean; nostrSend: boolean; watchDemo: boolean; keepCompare: boolean; demo: boolean; slides: boolean; headerBalance: boolean };
   /** symbols: the symbols of the live thorchain.assets, repeated here and checked against them (texts name them). */
   route: { active: ActiveRoute; symbols: string[] };
   thorchain: {
@@ -95,8 +95,12 @@ export interface SampanConfig {
     indexWaitMs: number;
     indexPollMs: number;
   };
-  /** Wallet scan: stop after `gapLimit` unused addresses in a row; results are kept in memory only. */
-  wallet: { gapLimit: number; maxAddressesPerScan: number; scanCacheSeconds: number };
+  /**
+   * Wallet scan: stop after `gapLimit` unused addresses in a row; results are kept in memory only.
+   * balancePollMs: how often the header balance (features.headerBalance) scans the connected wallet again, 0 = only
+   * after a transaction. balanceBchDecimals: BCH digits the header shows (rounded down; the Swap tab keeps all eight).
+   */
+  wallet: { gapLimit: number; maxAddressesPerScan: number; scanCacheSeconds: number; balancePollMs: number; balanceBchDecimals: number };
   /** Page side of the BCH wallet connection: WizardConnect relays, scan rounds and the explorer link. */
   connect: {
     relayUrls: string[];
@@ -245,6 +249,8 @@ export interface PublicConfig {
   judge: SampanConfig['judge'];
   site: SampanConfig['site'];
   legal: SampanConfig['legal'];
+  /** The header balance (features.headerBalance): wallet.balancePollMs and wallet.balanceBchDecimals. */
+  balance: { pollMs: number; bchDecimals: number };
   connect: SampanConfig['connect'] & { gapLimit: number; feeCapSats: number; satsPerByte: number; tokenDustSats: number };
   /** How often the page asks GET /api/health again: intervalSeconds, or retrySeconds while something is not ok;
    *  and how long it waits on any API request before it says the server is not answering. */
@@ -451,6 +457,10 @@ export function validateConfig(c: SampanConfig): string[] {
   errors.push(...validateActivity(c.activity));
   need(typeof c.features?.demo === 'boolean', 'features.demo: true or false');
   need(typeof c.features?.slides === 'boolean', 'features.slides: true or false');
+  need(typeof c.features?.headerBalance === 'boolean', 'features.headerBalance: true or false');
+  const poll = c.wallet?.balancePollMs;
+  need(poll === 0 || msIn(poll, 5000, 600000), 'wallet.balancePollMs: 0 or an integer from 5000 to 600000');
+  need(msIn(c.wallet?.balanceBchDecimals, 2, 8), 'wallet.balanceBchDecimals: an integer from 2 to 8');
   need(typeof c.banner?.deckPdfUrl === 'string', 'banner.deckPdfUrl: the printed deck, a path or https');
   errors.push(...validateMedia(c.media, String(c.site?.url)));
   errors.push(...validateDemo(c.demo, String(c.media?.host)));
@@ -536,6 +546,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     judge: { openOnPhone: c.judge.openOnPhone },
     site: c.site,
     legal: c.legal,
+    balance: { pollMs: c.wallet.balancePollMs, bchDecimals: c.wallet.balanceBchDecimals },
     connect: { ...c.connect, gapLimit: c.wallet.gapLimit, feeCapSats: c.fees.capSats, satsPerByte: c.fees.satsPerByte, tokenDustSats: c.landing.tokenDustSats },
     health: { intervalSeconds: c.ops.healthIntervalSeconds, retrySeconds: c.ops.healthRetrySeconds, requestTimeoutSeconds: c.ops.requestTimeoutSeconds },
     business: { feeBps: c.business.feeBps, feeAddress: c.business.feeAddress },

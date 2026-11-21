@@ -146,6 +146,7 @@
   "wallet.scanFailed": "Tidak dapat membaca koin di dompet Anda. Putuskan lalu hubungkan lagi.",
   "wallet.balance": "Di dompet Anda: {bch} BCH dan {token} {symbol}",
   "wallet.disconnect": "Putuskan",
+  "wallet.pill.label": "Di dompet Anda: {amounts}. Membuka tab {tab}",
   "wallet.fakeName": "Dompet uji (tanpa dana nyata)",
   "swap.direction": "Arah penukaran",
   "swap.token": "Stablecoin",

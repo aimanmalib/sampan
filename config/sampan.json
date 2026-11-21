@@ -27,7 +27,8 @@
     "watchDemo": true,
     "keepCompare": true,
     "demo": true,
-    "slides": true
+    "slides": true,
+    "headerBalance": false
   },
   "route": {
     "active": "thorchain",
@@ -183,7 +184,9 @@
   "wallet": {
     "gapLimit": 20,
     "maxAddressesPerScan": 60,
-    "scanCacheSeconds": 30
+    "scanCacheSeconds": 30,
+    "balancePollMs": 30000,
+    "balanceBchDecimals": 5
   },
   "connect": {
     "relayUrls": ["wss://relay.riften.net:443", "wss://relay.cauldron.quest:443"],

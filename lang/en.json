@@ -146,6 +146,7 @@
   "wallet.scanFailed": "Could not read your wallet's coins. Disconnect and connect again.",
   "wallet.balance": "In your wallet: {bch} BCH and {token} {symbol}",
   "wallet.disconnect": "Disconnect",
+  "wallet.pill.label": "In your wallet: {amounts}. Opens the {tab} tab",
   "wallet.fakeName": "Test wallet (no real funds)",
   "swap.direction": "Swap direction",
   "swap.token": "Stablecoin",
