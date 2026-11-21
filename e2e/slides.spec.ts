@@ -48,11 +48,13 @@ async function swipe(page: Page, dx: number): Promise<void> {
 async function fits(page: Page, width: number, height: number): Promise<void> {
   await page.setViewportSize({ width, height });
   await expect(shown(page)).toBeVisible();
-  // The slide is rescaled when the area's ResizeObserver reports; wait for the new fit, not a fixed time.
+  // The slide is rescaled when the area's ResizeObserver reports; wait for the new fit, not a fixed time. Check the
+  // height too: the frame's max-width clamps a stale width at once, so width alone can pass while the old height stays.
   await expect.poll(() => page.evaluate(() => {
     const area = document.querySelector('.slides__area')!.getBoundingClientRect();
     const frame = document.querySelector('.slides__frame')!.getBoundingClientRect();
-    return Math.abs(frame.width - Math.min(area.width, (area.height * 1280) / 720)) < 1.5;
+    const w = Math.min(area.width, (area.height * 1280) / 720);
+    return Math.abs(frame.width - w) < 1.5 && Math.abs(frame.height - (w * 720) / 1280) < 1.5;
   })).toBe(true);
   const m = await page.evaluate(() => {
     const box = (s: string) => document.querySelector(s)!.getBoundingClientRect();
