@@ -17,7 +17,7 @@
   },
   "defaultToken": "PUSD",
   "features": {
-    "musd": false,
+    "musd": true,
     "swap": true,
     "landing": true,
     "pay": true,

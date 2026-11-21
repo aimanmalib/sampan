@@ -227,8 +227,8 @@
       "quote": "Project only needs to support 1 BCH stablecoin, but supporting multiple would be better",
       "rule": "bchStables",
       "note": {
-        "en": "BCH stablecoins with an ok crossing: {bchStables}. The MUSD pools are measured; MUSD stays off until its swaps are measured.",
-        "ms": "Stablecoin BCH dengan lintasan ok: {bchStables}. Kolam MUSD sudah diukur; MUSD kekal mati sehingga tukarannya diukur."
+        "en": "BCH stablecoins with an ok crossing: {bchStables}. MUSD can be chosen in Swap and Bring in; its swaps and its crossing are in the measured runs.",
+        "ms": "Stablecoin BCH dengan lintasan ok: {bchStables}. MUSD boleh dipilih dalam Tukar di BCH dan Bawa masuk; tukaran dan lintasannya ada dalam larian yang diukur."
       },
       "proof": [
         {
@@ -240,7 +240,7 @@
           }
         }
       ],
-      "status": "open"
+      "status": "met"
     },
     {
       "section": "Stretch goals",

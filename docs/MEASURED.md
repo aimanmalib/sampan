@@ -65,6 +65,9 @@
 | 2026-11-20T11:43:59Z | in | 1.6 AVAX.USDC to PUSD (landing address, at least 0.00662708 BCH arriving) | bch cdcc100d17c5abd68a6027af149b310b47fcc64e6746b52a83b03d2177734f52 · avax 0xa96ca364099151ad92a13adb66378c610812b2140642a8b53c286b7f4a885b66 · convert a11e06bd4888e8edc5598ff0fb8bf37b761fd95219488d86e1e842b8be74e8e7 | 50.4 | fail (broadcast dropped: the conversion spent a pool coin of the dropped swap above; no server knows it) |
 | 2026-11-20T12:16:45Z | in | 1.6 AVAX.USDC to PUSD (landing address, at least 0.00662708 BCH arriving; converted again by the landing finisher after the first conversion was dropped) | bch cdcc100d17c5abd68a6027af149b310b47fcc64e6746b52a83b03d2177734f52 · avax 0xa96ca364099151ad92a13adb66378c610812b2140642a8b53c286b7f4a885b66 · convert f30306b8239f99062a1d1a2a0ae690f711f094279fdad2682477765d1c8ea293 | - | ok |
 | 2026-11-20T12:53:44Z | swap | 0.001 BCH to at least 0.18 PUSD · demo video | bac74ab72a6541a44a2bc786ac681c0e11af8fe2b58b1cbb9e2f439c0c3c80db | 4.4 | ok |
+| 2026-11-21T21:18:12Z | swap | 0.001 BCH to at least 0.18 MUSD | 968515130f3d9367dc53529b1295e20b9b1243e7790cab80c41763e23871b03d | 1.4 | ok |
+| 2026-11-21T21:18:17Z | swap | 0.19 MUSD to at least 0.00096108 BCH | 02ffdcfd3ab49f73b184b7d62d0ebc6bae02ce0167acc5b806838dcd1f55227b | 3.4 | ok |
+| 2026-11-21T21:18:51Z | in | 1.55 AVAX.USDT to MUSD (landing address, at least 0.00637492 BCH arriving) | bch c5148de00659feb163454225f9ef2a759f38cb4654930473989bd4ece8ef56ec · avax 0xd77f2910e1166535eea4c8b30ddf95193a4d747de509e349e5eca22999b8cd47 · convert 913ebd11772604fb266e79b3905e543c90373428c7ffa2f73704ac3e5fe67f37 | 63.2 | ok |
 
 Rows are written by `tools/measure/swap.ts`: the built server against mainnet, the real page in Chromium, and the
 headless test wallet (`tools/test-wallet`) paired through the page's own WizardConnect link. `seconds` runs from

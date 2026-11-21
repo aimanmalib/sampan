@@ -1,6 +1,6 @@
 // MUSD behind features.musd (MUSa, ADR 0075), against the network fake server, the only one with the flag on
 // (playwright.config.ts networkPatch); the fake chain holds the captured pools under each offered token. Swap: the
-// stablecoin choice names PUSD and MUSD, MUSD is quoted, bought with the fake wallet and its balance read. Bring in:
+// stablecoin choice shows only with a wallet connected and names PUSD and MUSD, MUSD is quoted, bought with the fake wallet and its balance read. Bring in:
 // "As MUSD" quotes a landing address that turns the BCH into MUSD. Both fit 320 px with a clean console.
 // Skipped against a live site.
 import { expect, test, type Page } from '@playwright/test';
@@ -33,14 +33,18 @@ test('Swap: pick MUSD, see its quote, buy it with the fake wallet', async ({ pag
   await page.goto('/');
   await page.getByRole('tab', { name: en['tabs.swap'] }).click();
   const pick = page.getByRole('radiogroup', { name: en['swap.token'] });
+  // No wallet yet: no stablecoin choice, so the first screen keeps its height (ADR 0096).
+  await expect(page.locator('.swap__receive')).toContainText(/at least [0-9.]+ PUSD\./, { timeout: 15_000 });
+  await expect(pick).toHaveCount(0);
+
+  await primary(page).click();
+  await expect(page.locator('.swap__wallet')).toContainText(/In your wallet: [0-9.]+ BCH and [0-9.]+ PUSD/, { timeout: 20_000 });
   await expect(pick.getByRole('radio')).toHaveText(['PUSD', 'MUSD']);
   await expect(pick.getByRole('radio', { name: 'PUSD', exact: true })).toHaveAttribute('aria-checked', 'true');
   await pick.getByRole('radio', { name: 'MUSD', exact: true }).click();
   await expect(page.getByRole('radio', { name: 'BCH to MUSD' })).toHaveAttribute('aria-checked', 'true');
   await expect(page.locator('.swap__receive')).toContainText(/at least [0-9.]+ MUSD\./, { timeout: 15_000 });
-
-  await primary(page).click();
-  await expect(page.locator('.swap__wallet')).toContainText(/In your wallet: [0-9.]+ BCH and [0-9.]+ MUSD/, { timeout: 20_000 });
+  await expect(page.locator('.swap__wallet')).toContainText(/In your wallet: [0-9.]+ BCH and [0-9.]+ MUSD/);
   await expect(primary(page)).toHaveText(en['swap.go']);
   await primary(page).click();
   await expect(page.locator('.swap__done')).toHaveText(en['swap.done'], { timeout: 20_000 });

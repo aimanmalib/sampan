@@ -36,7 +36,10 @@ const pct = (num: bigint, den: bigint): string => (Number((num * 10000n) / den) 
 export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wallet }) {
   const { t } = useText();
   const [symbol, setSymbol] = useState(config.defaultToken);
-  const token = config.tokens[symbol] ?? config.tokens[config.defaultToken]!;
+  // The stablecoin choice shows once a wallet is connected, so the card on the first screen keeps its height (ADR 0096);
+  // without a wallet the swap is on the default token.
+  const picking = Boolean(wallet.session);
+  const token = (picking ? config.tokens[symbol] : undefined) ?? config.tokens[config.defaultToken]!;
   const [side, setSide] = useState<TradeSide>('buy');
   const [text, setText] = useState(config.limits.judgeSwapBch);
   const [run, setRun] = useState<Run>({ phase: 'idle' });
@@ -64,7 +67,7 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
   };
 
   const pickToken = (next: string): void => {
-    if (next === symbol || busy) return;
+    if (next === token.symbol || busy) return;
     setSymbol(next);
     if (side === 'sell') setText('');
     setRun({ phase: 'idle' });
@@ -148,7 +151,7 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
           </button>
         ))}
       </div>
-      <TokenPick config={config} value={symbol} disabled={busy} onPick={pickToken} />
+      {picking ? <TokenPick config={config} value={token.symbol} disabled={busy} onPick={pickToken} /> : null}
       <label className="field">
         <span className="field__label">{t('swap.amount')}</span>
         <span className="field__row">

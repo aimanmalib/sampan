@@ -91,7 +91,7 @@ describe('POST /api/in/*', () => {
   });
 
   it('refuses MUSD while its flag is off, and lands MUSD through its own landing address when it is on (MUSa)', async () => {
-    await start(crossOn);
+    await start(patchConfig(crossOn, JSON.stringify({ features: { musd: false } })));
     expect((await post('/api/in/quote', ask('MUSD'))).statusCode).toBe(400);
     await app!.close();
     await start(patchConfig(crossOn, JSON.stringify({ features: { musd: true } })));
