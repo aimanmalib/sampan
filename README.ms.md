@@ -10,10 +10,16 @@ Dibina di Malaysia oleh <a href="https://aimanmalib.com">Aiman Malib</a> · <a h
 
 <p align="center"><img src="docs/images/home-ms-desktop.png" width="838" alt="Halaman utama Sampan dalam Bahasa Melayu pada pelayar desktop"></p>
 
+<!-- pitch:start (made by scripts/pitch-block.ts from lang and docs/MEASURED.md) -->
+**Stablecoin keluar dan masuk Bitcoin Cash.**\
+Terima BCH dan simpan dolar, atau bawa masuk USDC dan USDT sebagai PUSD.\
+Diukur di mainnet: 18 lintasan, 4 rangkaian, 45 transaksi.
+<!-- pitch:end -->
+
 Ini terjemahan Bahasa Melayu bagi [README.md](README.md). Jika kedua-duanya berbeza, versi Inggeris yang terpakai.
 
 Sampan menukar BCH dan stablecoin PUSD melalui kolam Cauldron sedia ada di mainnet Bitcoin Cash, dan memberi anda alamat
-pendaratan: hantar BCH ke alamat itu dari mana-mana dompet atau bursa, dan ia sampai ke alamat anda sebagai PUSD, sementara
+pendaratan: hantar BCH ke alamat itu dari mana-mana dompet, dan ia sampai ke alamat anda sebagai PUSD, sementara
 pelayan Sampan tidak memegang sebarang kunci.
 
 <!-- route-facts:start -->
@@ -75,11 +81,37 @@ jadi gunakan amaun yang kecil.
 
 Di halaman utama, **Isikan untuk saya** membuka tab Bawa masuk untuk langkah 3.
 
+Diukur di laman hidup pada 16 November 2026, komit `f301d1d` ([Judge path](docs/MEASURED.md#judge-path)): dari membuka
+halaman hingga id transaksi mainnet kelihatan mengambil 1.9 s dalam Chromium desktop dan 4.0 s dalam WebKit iPhone 13
+tanpa dompet, dan 13.6 s serta 14.2 s untuk tukaran 0.001 BCH dengan dompet ujian tanpa kepala, yang 3 tindakan
+dompetnya dikira, bukan diukur masa.
+
 [Video seminit](https://sampan-media.sasateguh.com/media/demo/sampan-demo-60.mp4) menunjukkan satu lintasan dari mula
 hingga tiba. Panduan penuh bersuara ada di [halaman demo](https://sampan.sasateguh.com/demo) dalam bab, dan setiap bab
 menyenaraikan transaksi mainnet yang ditunjukkannya, dengan sari kata Inggeris, Melayu, Indonesia dan Filipino.
 
 <p align="center"><img src="docs/images/home-ms-iphone.jpg" width="200" alt="Halaman yang sama pada iPhone 13 dalam WebKit"></p>
+
+## Apa yang anda boleh buat dengan Sampan
+
+1. **Terima bayaran melalui alamat pendaratan.** Mana-mana dompet BCH membayarnya sebagai bayaran biasa, tanpa dompet
+   untuk disambung. BCH itu sampai ke alamat token anda sebagai PUSD, atau kembali selepas enam blok. Alamat itu ialah
+   kontrak dan pelayan Sampan tidak memegang sebarang kunci. [Kontrak pendaratan](#kontrak-pendaratan) ·
+   [larian pendaratan](docs/MEASURED.md#landing-address-runs)
+2. **Terima bayaran melalui API invois dengan webhook bertandatangan.** Sampan Pay meletakkan harga invois dalam USD,
+   memberinya alamat pendaratan sendiri dan melaporkan hasilnya dengan webhook bertandatangan.
+   [Larian Pay](docs/MEASURED.md#sampan-pay-runs)
+3. **Gerakkan stablecoin antara BCH dan rangkaian lain.** Hantar keluar dan Bawa masuk membawa USDC dan USDT, ditandatangani
+   dalam dompet anda sendiri, pada rangkaian yang mempunyai lintasan diukur. [Lintasan](#lintasan) ·
+   [fakta laluan](docs/route-facts.json)
+4. **Guna dari ejen AI.** Pelayan MCP menyebut harga tukaran, membuka alamat pendaratan dan membaca status. Ia tidak
+   memegang kunci dan tidak pernah menandatangan. [Guna Sampan dari ejen AI](#guna-sampan-dari-ejen-ai) ·
+   [larian ejen AI](docs/MEASURED.md#ai-agent)
+5. **Baca dalam empat bahasa.** Inggeris, Melayu, Indonesia dan Filipino; teks Indonesia dan Filipino diterjemah dengan
+   perisian, dan kaki halaman menyatakannya. [`lang/`](lang/) · `i18n` dalam [`config/sampan.json`](config/sampan.json)
+6. **Semak setiap angka.** Setiap angka awam datang dari [`docs/MEASURED.md`](docs/MEASURED.md), tempat larian yang gagal
+   kekal bersama sebabnya, dan monitor sintetik memeriksa laman hidup tanpa membayar apa-apa.
+   [Nota larian gagal](docs/MEASURED.md#notes-on-failed-runs) · [`docs/OPERATIONS.md`](docs/OPERATIONS.md)
 
 ## Masalah dan jawapannya
 
@@ -90,7 +122,7 @@ selepas setiap bayaran.
 
 Sampan menjawab dengan dua perkara yang boleh digunakan hari ini. Tab tukar memperdagangkan BCH dan PUSD dalam satu transaksi
 yang ditandatangani oleh dompet anda sendiri, selepas laman menyemak apa yang dibina oleh pelayan. Alamat pendaratan ialah
-kontrak kecil: sesiapa pun yang membayar BCH kepadanya, dari mana-mana dompet atau bursa, syiling itu hanya boleh keluar ke
+kontrak kecil: sesiapa pun yang membayar BCH kepadanya, dari mana-mana dompet, syiling itu hanya boleh keluar ke
 satu tempat, iaitu alamat anda, sama ada sebagai PUSD pada kadar minimum atau lebih tinggi, atau selepas enam blok sebagai BCH
 itu sendiri. Anda menyimpan kad pemulihan, jadi anda boleh menyelesaikan atau memulihkan pendaratan tanpa Sampan.
 
@@ -247,7 +279,7 @@ dompet diminta menandatangani.
 | Kriteria atau syarat | Di mana melihatnya |
 |---|---|
 | Inovasi dan kreativiti | Alamat pendaratan ([Kontrak pendaratan](#kontrak-pendaratan)): pembayar tidak memerlukan dompet token atau akaun Sampan |
-| Reka bentuk dan kebolehgunaan | Laman hidup dalam Bahasa Inggeris dan Bahasa Melayu, telefon dahulu; langkah penjurian ada pada skrin pembuka ([ujian e2e](e2e/first-screen.spec.ts)) |
+| Reka bentuk dan kebolehgunaan | Laman hidup dalam Bahasa Inggeris, Melayu, Indonesia dan Filipino, telefon dahulu; langkah penjurian ada pada skrin pembuka ([ujian e2e](e2e/first-screen.spec.ts)) |
 | Kekuatan teknikal | Semakan pelayar sebelum tandatangan (`core/check.ts`), kontrak dan ujiannya, [Apa yang diukur](#apa-yang-diukur) |
 | Potensi perniagaan | [Had](#had): tetapan yuran laluan rentas rantaian wujud dalam config dan bernilai 0 sepanjang acara |
 | Mainnet Track: demo hidup satu klik | [sampan.sasateguh.com](https://sampan.sasateguh.com), pertukaran atau pendaratan 0.001 BCH di mainnet |
@@ -262,12 +294,14 @@ dompet diminta menandatangani.
   hanya selepas satu lintasan diukur yang tiba dalam arah itu ([Lintasan](#lintasan)). Laman membina ayatnya tentang
   rantaian dan laluan daripada tanda itu. Bila satu laluan menghentikan satu rantaian, laman memaparkan rangkaian itu
   dijeda dan tidak menawarkannya.
-- **MUSD dimatikan** (`features.musd` ialah `false`). PUSD satu-satunya token yang ditawarkan.
+- **PUSD secara lalai.** MUSD boleh dipilih dalam Tukar dan Bawa masuk; Hantar keluar menawarkan PUSD sahaja.
+- **Tiada hantar melalui pautan.** Menghantar dolar melalui pautan (`/s/`) bukan sebahagian binaan ini.
 - **Amaun kecil.** Satu pertukaran paling banyak 250 USD dan bahagian BCH sekurang-kurangnya 50000 satoshi; minimum yang sama
   terpakai pada pendaratan (`limits` dalam config).
 - **Kadar berubah.** Pendaratan ditukar apabila kolam membayar sekurang-kurangnya kadar minimumnya, yang ditetapkan semasa
   alamat dibuat. Jika harga bergerak melebihi toleransi dahulu, BCH itu kembali selepas enam blok.
-- **Dompet.** Dua dompet web dan dompet ujian tanpa kepala telah diuji. Aplikasi dompet mudah alih belum diukur.
+- **Dompet.** Dua dompet web dan dompet ujian tanpa kepala telah diuji. Paytaca dan Selene di iPhone dicuba pada telefon
+  pemilik dan tidak diukur masa ([Dompet yang diuji](#dompet-yang-diuji)).
 - **Belum diukur di sini:** penggunaan oleh orang selain pembina, saiz pasaran, dan sebarang hasil. Tetapan yuran laluan
   (`thorchain.affiliateBps`) ialah 0.
 
@@ -320,12 +354,13 @@ SDK MCP, dan `quote_swap` diuji dengan Claude Code (`claude -p` dengan hanya ala
 - `contracts/` kontrak pendaratan, artifak yang disusun dan ujiannya.
 - `server/` API Fastify, klien Electrum dan pengindeks, SQLite (`node:sqlite`), penyelesai pendaratan. Ia tidak pernah
   memegang kunci peribadi.
-- `web/` laman Vite dan React; semua teks datang dari `lang/en.json` dan `lang/ms.json`.
+- `web/` laman Vite dan React; semua teks datang dari `lang/<kod>.json`, satu fail setiap bahasa.
 - `config/sampan.json` memegang setiap nilai yang mungkin berubah: had, pelayan, masa, bendera.
 - `mcp/` pelayan MCP untuk ejen AI (tiada kunci, tiada tandatangan).
 - `tools/` skrip pengukuran dan dompet ujian tanpa kepala; `docs/decisions/` merekod setiap keputusan reka bentuk.
 
-Lebih lanjut dalam [`AGENTS.md`](AGENTS.md) (Bahasa Inggeris).
+Modul, aliran data, sempadan kepercayaan dan penskalaan: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Nota kerja
+dalam [`AGENTS.md`](AGENTS.md) (kedua-duanya Bahasa Inggeris).
 
 ## Pihak ketiga
 

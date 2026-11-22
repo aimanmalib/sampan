@@ -2,7 +2,9 @@
 
 Notes for anyone (person or coding agent) working in this repository.
 
-## Layout (planned)
+## Layout
+
+Modules, data flow, trust boundaries and scaling are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 - `core/` pure TypeScript: pool math, transaction builders, the invariant checker. No I/O; `core/client/` holds the page flows (scan, swap) with the fetch function passed in.
 - `contracts/` CashScript sources, compiled artifacts and their tests.
@@ -10,12 +12,14 @@ Notes for anyone (person or coding agent) working in this repository.
 - `web/` Vite + React page. All user-facing text comes from `lang/`.
 - `tools/` command-line helpers for measuring mainnet runs; `tools/test-wallet` is a headless WizardConnect wallet that signs only what `checkTransaction` and the test budget allow.
 - `config/sampan.json` every value that may change (limits, servers, timings, flags). Code reads it; code does not hold it.
-- `lang/en.json`, `lang/ms.json` UI text, English and Malay, same keys.
+- `lang/<code>.json` UI text, one file per language listed in `config.i18n` (English, Malay, Indonesian, Filipino), same keys.
+- `mcp/` Model Context Protocol server over stdio, a client of the public API; no keys, no signing.
+- `scripts/` README block generators (`npm run bounty`, `crossings`, `route-facts`, `pitch` with `-- --write`), the public finisher, the gate.
 - `docs/decisions/` short architecture decision records.
 
 ## Rules
 
-- Everything tracked is in English. Malay appears only in `lang/ms.json`.
+- Everything tracked is in English. Other languages appear only in `lang/<code>.json` and the translated `README.ms.md`.
 - The server never holds a private key. It builds unsigned transactions; the page checks each one before the wallet signs.
 - Public numbers come only from `docs/MEASURED.md` or the live stats endpoint.
 - Small modules (aim for 300 lines or fewer). Record a decision as an ADR when the plan leaves it open.
@@ -35,6 +39,6 @@ Node 22 (`.nvmrc`), npm.
 
 ## Invariants checked by tests
 
-- `lang/en.json` and `lang/ms.json` have the same keys and placeholders.
+- Every `lang/<code>.json` has the same keys and placeholders as `lang/en.json`.
 - `config/sampan.json` passes `validateConfig` (`core/config.ts`); `/api/config` never exposes server-only sections.
 - Every response has a strict CSP; HTML is `no-transform`; `noindex` follows `site.noindex`.

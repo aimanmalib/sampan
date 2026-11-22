@@ -10,8 +10,11 @@ Built in Malaysia by <a href="https://aimanmalib.com">Aiman Malib</a> · <a href
 
 <p align="center"><img src="docs/images/home-desktop.png" width="838" alt="Sampan front page on a desktop browser: the headline, the river picture, the judging steps and the Swap on BCH card with 0.001 BCH to PUSD"></p>
 
-Sampan swaps BCH and the PUSD stablecoin through existing Cauldron pools on Bitcoin Cash mainnet, and gives you a landing
-address: send BCH to it from any wallet and it arrives at your address as PUSD, while the Sampan server holds no key.
+<!-- pitch:start (made by scripts/pitch-block.ts from lang and docs/MEASURED.md) -->
+**Stablecoins in and out of Bitcoin Cash.**\
+Get paid in BCH and keep dollars, or bring USDC and USDT in as PUSD.\
+Measured on mainnet: 18 crossings, 4 chains, 45 transactions.
+<!-- pitch:end -->
 
 <!-- route-facts:start -->
 **What each route takes**
@@ -35,6 +38,9 @@ Time is the median of the ok mainnet runs in the measured table. Signatures are 
 
 A landing address takes one payment from any BCH wallet, with no wallet to connect. Slow routes are shown as measured.
 <!-- route-facts:end -->
+
+Sampan swaps BCH and the PUSD stablecoin through existing Cauldron pools on Bitcoin Cash mainnet, and gives you a landing
+address: send BCH to it from any wallet and it arrives at your address as PUSD, while the Sampan server holds no key.
 
 <!-- bounty:start (made by scripts/bounty-table.ts from docs/bounty/stablecoin-bridge.json and docs/MEASURED.md) -->
 Each requirement and stretch goal of the Stablecoin Bridge bounty, quoted word for word from [the bounty page](https://bchblaze.cash/bounties/) as read on 2026-11-19 UTC. The counts come from the ok crossings in [`docs/MEASURED.md`](docs/MEASURED.md), made by `scripts/bounty-table.ts`.
@@ -70,11 +76,34 @@ amounts small.
 
 On the front page, **Fill this in for me** opens the Bring in tab for step 3.
 
+Timed on the live site on 16 November 2026 at commit `f301d1d` ([Judge path](docs/MEASURED.md#judge-path)): from opening
+the page to a mainnet transaction id on screen took 1.9 s in desktop Chromium and 4.0 s in WebKit on an iPhone 13
+without a wallet, and 13.6 s and 14.2 s for the 0.001 BCH swap with the headless test wallet, whose 3 wallet actions are
+counted, not timed.
+
 The [one minute video](https://sampan-media.sasateguh.com/media/demo/sampan-demo-60.mp4) shows one crossing from start
 to finish. The full narrated walkthrough is on the [demo page](https://sampan.sasateguh.com/demo) in chapters, and each
 chapter lists the mainnet transactions it shows, with subtitles in English, Malay, Indonesian and Filipino.
 
 <p align="center"><img src="docs/images/tab-in-desktop.png" width="430" alt="The Bring in tab: BCH from any wallet arrives as PUSD at the token address you enter"> <img src="docs/images/home-iphone.jpg" width="200" alt="The same page on an iPhone 13 in WebKit"></p>
+
+## What you can do with Sampan
+
+1. **Get paid through a landing address.** Any BCH wallet pays it as an ordinary payment, with no wallet to connect. The
+   BCH arrives at your token address as PUSD, or comes back after six blocks. The address is a contract and the Sampan
+   server holds no key. [The landing contract](#the-landing-contract) · [landing runs](docs/MEASURED.md#landing-address-runs)
+2. **Take payments through an invoice API with a signed webhook.** Sampan Pay prices an invoice in USD, gives it its own
+   landing address and reports the result with a signed webhook. [Sampan Pay](#sampan-pay) ·
+   [Pay runs](docs/MEASURED.md#sampan-pay-runs)
+3. **Move stablecoins between BCH and other chains.** Send out and Bring in carry USDC and USDT, signed in your own
+   wallets, on the chains with a measured crossing. [Crossings](#crossings) · [route facts](docs/route-facts.json)
+4. **Use it from an AI agent.** The MCP server quotes swaps, opens landing addresses and reads status. It holds no key and
+   never signs. [Use Sampan from an AI agent](#use-sampan-from-an-ai-agent) · [AI agent runs](docs/MEASURED.md#ai-agent)
+5. **Read it in four languages.** English, Malay, Indonesian and Filipino; the Indonesian and Filipino text is translated
+   with software, and the page footer says so. [`lang/`](lang/) · `i18n` in [`config/sampan.json`](config/sampan.json)
+6. **Check every number.** Each public number comes from [`docs/MEASURED.md`](docs/MEASURED.md), where failed runs stay
+   with their cause, and a synthetic monitor probes the live site without paying anything.
+   [Notes on failed runs](docs/MEASURED.md#notes-on-failed-runs) · [`docs/OPERATIONS.md`](docs/OPERATIONS.md)
 
 ## The problem and the answer
 
@@ -316,7 +345,7 @@ does not match its own address; both are refused before any wallet is asked to s
 | Criterion or rule | Where to look |
 |---|---|
 | Innovation and creativity | The landing address ([The landing contract](#the-landing-contract)): a payer needs no token wallet and no Sampan account |
-| Design and usability | The live site in English and Malay, laid out for phones; the judging steps sit on the opening screen ([its e2e test](e2e/first-screen.spec.ts)) |
+| Design and usability | The live site in English, Malay, Indonesian and Filipino, laid out for phones; the judging steps sit on the opening screen ([its e2e test](e2e/first-screen.spec.ts)) |
 | Technical strength | Browser check before signing (`core/check.ts`), the contract and its tests, [What is measured](#what-is-measured) |
 | Business potential | [Business model](#business-model): users, sourced numbers, the fee settings (0 during the event) and a scenario table made from config |
 | Mainnet Track: live demo in one click | [sampan.sasateguh.com](https://sampan.sasateguh.com), a 0.001 BCH swap or landing on mainnet |
@@ -330,12 +359,14 @@ does not match its own address; both are refused before any wallet is asked to s
   `thorchain.assets` and `oneClick.assets` ([`config/sampan.json`](config/sampan.json)), and an asset is marked only after
   a measured crossing that arrived in that direction ([Crossings](#crossings)). The page builds its sentences about chains
   and routes from those marks. When a route halts a chain, the page shows that network as paused instead of offering it.
-- **MUSD is off** (`features.musd` is `false`). PUSD is the one token offered.
+- **PUSD by default.** MUSD can be chosen in Swap and Bring in; Send out offers PUSD only.
+- **No send by link.** Sending dollars by a link (`/s/`) is not part of this build.
 - **Small amounts.** A swap is at most 250 USD and the BCH side at least 50000 satoshis; the same minimum applies to a
   landing (`limits` in config).
 - **Rates move.** A landing converts when the pools pay at least its minimum rate, set when the address is made. If the price
   moves more than the tolerance before that, the BCH comes back after six blocks instead.
-- **Wallets.** Two web wallets and the headless test wallet were checked. Mobile wallet apps were not measured.
+- **Wallets.** Two web wallets and the headless test wallet were checked. Paytaca and Selene on an iPhone were tried on
+  the owner's phone and not timed ([Wallets checked](#wallets-checked)).
 - **Not measured here:** use by people other than the builder, the size of the market, and any revenue. The route fee setting
   (`thorchain.affiliateBps`) is 0.
 
@@ -386,12 +417,13 @@ tested with the MCP SDK client, and `quote_swap` was tested with Claude Code (`c
 - `core/` pure TypeScript: pool math, transaction builders, the browser check, the landing address. No I/O.
 - `contracts/` the landing contract, its compiled artifact and tests.
 - `server/` Fastify API, Electrum and indexer clients, SQLite (`node:sqlite`), the landing finisher. It never holds a private key.
-- `web/` Vite and React page; all text comes from `lang/en.json` and `lang/ms.json`.
+- `web/` Vite and React page; all text comes from `lang/<code>.json`, one file per language.
 - `config/sampan.json` holds every value that may change: limits, servers, timings, flags.
 - `mcp/` the MCP server for AI agents (no keys, no signing).
 - `tools/` measuring scripts and the headless test wallet; `docs/decisions/` records each design decision.
 
-More in [`AGENTS.md`](AGENTS.md).
+Modules, data flow, trust boundaries and scaling: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Working notes in
+[`AGENTS.md`](AGENTS.md).
 
 ## Third-party
 
