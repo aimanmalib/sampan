@@ -168,6 +168,7 @@
   "swap.sampanFee": "Yuran Sampan: {pct}% daripada bahagian BCH, dibayar kepada Sampan dalam transaksi yang sama.",
   "swap.sampanFeeNone": "Yuran Sampan: tiada.",
   "swap.sampanFeeQuote": "Bagi sebut harga ini: {fee} BCH.",
+  "swap.tokenDecimals": "{symbol} ada {decimals} tempat perpuluhan, jadi amaun yang anda terima dibundarkan ke bawah kepada {step} {symbol} terdekat.",
   "swap.go": "Tukar",
   "swap.step.building": "Membina transaksi",
   "swap.step.checking": "Menyemaknya dalam pelayar ini",

@@ -168,6 +168,7 @@
   "swap.sampanFee": "Biaya Sampan: {pct}% dari sisi BCH, dibayarkan ke Sampan dalam transaksi yang sama.",
   "swap.sampanFeeNone": "Biaya Sampan: tidak ada.",
   "swap.sampanFeeQuote": "Pada penawaran ini: {fee} BCH.",
+  "swap.tokenDecimals": "{symbol} memiliki {decimals} angka desimal, jadi jumlah yang Anda terima dibulatkan ke bawah ke {step} {symbol} terdekat.",
   "swap.go": "Tukar",
   "swap.step.building": "Menyusun transaksi",
   "swap.step.checking": "Memeriksanya di browser ini",

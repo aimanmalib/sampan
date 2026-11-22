@@ -224,6 +224,7 @@ export function SwapPanel({ config, wallet }: { config: LoadedConfig; wallet: Wa
               ? ` ${t('swap.sampanFeeQuote', { fee: formatUnits(BigInt(quote.quote.sampanFeeSats), BCH_DECIMALS) })}`
               : null}
           </p>
+          <p>{t('swap.tokenDecimals', { symbol: token.symbol, decimals: String(token.decimals), step: formatUnits(1n, token.decimals) })}</p>
         </details>
         <RouteFactLine id="swap" short />
         <QuoteAge at={quote.status === 'ok' && config.quote.autoRefreshMs > 0 ? quote.at : null} />

@@ -78,3 +78,9 @@ test('the Fees panel names the Sampan fee, none while business.feeBps is 0', asy
   await page.locator('.swap__fees summary').click();
   await expect(page.locator('.swap__fees')).toContainText(en['swap.sampanFeeNone']);
 });
+
+test('the Fees panel says the token amount is rounded down to its smallest unit', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.swap__fees summary').click();
+  await expect(page.locator('.swap__fees')).toContainText('rounded down to the nearest 0.01 PUSD');
+});

@@ -168,6 +168,7 @@
   "swap.sampanFee": "Sampan fee: {pct}% of the BCH side, paid to Sampan in the same transaction.",
   "swap.sampanFeeNone": "Sampan fee: none.",
   "swap.sampanFeeQuote": "On this quote: {fee} BCH.",
+  "swap.tokenDecimals": "{symbol} has {decimals} decimal places, so the amount you receive is rounded down to the nearest {step} {symbol}.",
   "swap.go": "Swap",
   "swap.step.building": "Building the transaction",
   "swap.step.checking": "Checking it in this browser",

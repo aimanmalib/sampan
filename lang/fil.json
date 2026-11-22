@@ -168,6 +168,7 @@
   "swap.sampanFee": "Bayad sa Sampan: {pct}% ng BCH side, ibinabayad sa Sampan sa parehong transaction.",
   "swap.sampanFeeNone": "Bayad sa Sampan: wala.",
   "swap.sampanFeeQuote": "Sa quote na ito: {fee} BCH.",
+  "swap.tokenDecimals": "May {decimals} decimal place ang {symbol}, kaya ang halagang matatanggap mo ay ibinababa sa pinakamalapit na {step} {symbol}.",
   "swap.go": "I-swap",
   "swap.step.building": "Binubuo ang transaction",
   "swap.step.checking": "Sinusuri ito sa browser na ito",
