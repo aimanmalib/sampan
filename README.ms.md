@@ -5,8 +5,10 @@
 <p align="center"><a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-0f6b5c" alt="Lesen: MIT"></a> <a href="https://sampan.sasateguh.com"><img src="https://img.shields.io/badge/demo-live-0f6b5c" alt="Demo hidup"></a> <a href="#apa-yang-diukur"><img src="https://img.shields.io/badge/BCH-mainnet-0f6b5c" alt="Diukur di mainnet BCH"></a></p>
 
 <p align="center"><b>Stablecoin dolar masuk dan keluar Bitcoin Cash, ditandatangani dalam dompet anda sendiri.</b> · <i>Dollar stablecoins in and out of Bitcoin Cash, signed in your own wallet.</i><br>
-<a href="https://sampan.sasateguh.com"><b>demo hidup</b></a> · <a href="docs/JUDGE.md"><b>Menilai? Mula di sini</b></a> · <a href="#cuba-dalam-seminit">Cuba</a> · <a href="#jalankan-sendiri">Jalankan</a> · <a href="#apa-yang-diukur">Apa yang diukur</a> · <a href="#had">Had</a> · <a href="README.md">English</a><br>
+<a href="https://sampan-media.sasateguh.com/media/demo/sampan-demo-60.mp4"><b>&#9654;&#xFE0E; video demo, 60 s</b></a> · <a href="https://sampan.sasateguh.com"><b>demo hidup</b></a> · <a href="https://sampan.sasateguh.com/deck/sampan-blaze-2026.pdf">slaid</a> · <a href="docs/JUDGE.md"><b>Menilai? Mula di sini</b></a> · <a href="#cuba-dalam-seminit">Cuba</a> · <a href="#jalankan-sendiri">Jalankan</a> · <a href="#apa-yang-diukur">Apa yang diukur</a> · <a href="#had">Had</a> · <a href="README.md">English</a><br>
 Dibina di Malaysia oleh <a href="https://aimanmalib.com">Aiman Malib</a> · <a href="https://sasateguh.com">Sasa Teguh</a></p>
+
+<p align="center"><img src="docs/images/home-ms-desktop.png" width="838" alt="Halaman utama Sampan dalam Bahasa Melayu pada pelayar desktop"></p>
 
 Ini terjemahan Bahasa Melayu bagi [README.md](README.md). Jika kedua-duanya berbeza, versi Inggeris yang terpakai.
 
@@ -77,7 +79,7 @@ Di halaman utama, **Isikan untuk saya** membuka tab Bawa masuk untuk langkah 3.
 hingga tiba. Panduan penuh bersuara ada di [halaman demo](https://sampan.sasateguh.com/demo) dalam bab, dan setiap bab
 menyenaraikan transaksi mainnet yang ditunjukkannya, dengan sari kata Inggeris, Melayu, Indonesia dan Filipino.
 
-<p align="center"><img src="docs/images/home-ms-desktop.png" width="720" alt="Halaman utama Sampan dalam Bahasa Melayu pada pelayar desktop"> <img src="docs/images/home-ms-iphone.jpg" width="200" alt="Halaman yang sama pada iPhone 13 dalam WebKit"></p>
+<p align="center"><img src="docs/images/home-ms-iphone.jpg" width="200" alt="Halaman yang sama pada iPhone 13 dalam WebKit"></p>
 
 ## Masalah dan jawapannya
 

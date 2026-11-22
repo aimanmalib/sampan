@@ -5,8 +5,10 @@
 <p align="center"><a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-0f6b5c" alt="Licence: MIT"></a> <a href="https://sampan.sasateguh.com"><img src="https://img.shields.io/badge/demo-live-0f6b5c" alt="Live demo"></a> <a href="#what-is-measured"><img src="https://img.shields.io/badge/BCH-mainnet-0f6b5c" alt="Measured on BCH mainnet"></a></p>
 
 <p align="center"><b>Dollar stablecoins in and out of Bitcoin Cash, signed in your own wallet.</b> · <i>Stablecoin dolar masuk dan keluar Bitcoin Cash, ditandatangani dalam dompet anda sendiri.</i><br>
-<a href="https://sampan.sasateguh.com"><b>live demo</b></a> · <a href="docs/JUDGE.md"><b>Judging? Start here</b></a> · <a href="#try-it-in-a-minute">Try it</a> · <a href="#run-it">Run it</a> · <a href="#what-is-measured">What is measured</a> · <a href="#limits">Limits</a> · <a href="README.ms.md">Bahasa Melayu</a><br>
+<a href="https://sampan-media.sasateguh.com/media/demo/sampan-demo-60.mp4"><b>&#9654;&#xFE0E; demo video, 60 s</b></a> · <a href="https://sampan.sasateguh.com"><b>live demo</b></a> · <a href="https://sampan.sasateguh.com/deck/sampan-blaze-2026.pdf">slides</a> · <a href="docs/JUDGE.md"><b>Judging? Start here</b></a> · <a href="#try-it-in-a-minute">Try it</a> · <a href="#run-it">Run it</a> · <a href="#what-is-measured">What is measured</a> · <a href="#limits">Limits</a> · <a href="README.ms.md">Bahasa Melayu</a><br>
 Built in Malaysia by <a href="https://aimanmalib.com">Aiman Malib</a> · <a href="https://sasateguh.com">Sasa Teguh</a></p>
+
+<p align="center"><img src="docs/images/home-desktop.png" width="838" alt="Sampan front page on a desktop browser: the headline, the river picture, the judging steps and the Swap on BCH card with 0.001 BCH to PUSD"></p>
 
 Sampan swaps BCH and the PUSD stablecoin through existing Cauldron pools on Bitcoin Cash mainnet, and gives you a landing
 address: send BCH to it from any wallet and it arrives at your address as PUSD, while the Sampan server holds no key.
@@ -71,8 +73,6 @@ On the front page, **Fill this in for me** opens the Bring in tab for step 3.
 The [one minute video](https://sampan-media.sasateguh.com/media/demo/sampan-demo-60.mp4) shows one crossing from start
 to finish. The full narrated walkthrough is on the [demo page](https://sampan.sasateguh.com/demo) in chapters, and each
 chapter lists the mainnet transactions it shows, with subtitles in English, Malay, Indonesian and Filipino.
-
-<p align="center"><img src="docs/images/home-desktop.png" width="720" alt="Sampan front page on a desktop browser: the headline, the river picture, the judging steps and the Swap on BCH card with 0.001 BCH to PUSD"></p>
 
 <p align="center"><img src="docs/images/tab-in-desktop.png" width="430" alt="The Bring in tab: BCH from any wallet arrives as PUSD at the token address you enter"> <img src="docs/images/home-iphone.jpg" width="200" alt="The same page on an iPhone 13 in WebKit"></p>
 
