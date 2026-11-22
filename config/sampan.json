@@ -292,6 +292,15 @@
       { "key": "oneclick", "oneClick": true }
     ]
   },
+  "faq": {
+    "items": ["what", "custody", "token", "landing", "fees", "server", "network", "refund", "verify"],
+    "custody": [
+      { "key": "wallet" },
+      { "key": "landing" },
+      { "key": "route", "cross": true },
+      { "key": "server" }
+    ]
+  },
   "ops": {
     "healthIntervalSeconds": 600,
     "healthRetrySeconds": 30,

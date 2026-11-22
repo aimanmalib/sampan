@@ -47,6 +47,9 @@ export function HowPage({ config }: { config: LoadedConfig | null }) {
           <a href="/demo">{t('how.demo')}</a>
         </p>
       ) : null}
+      <p className="how__faq">
+        <a href="/faq">{t('faq.title')}</a>
+      </p>
 
       {flows.land ? (
         <section className="how__flow">

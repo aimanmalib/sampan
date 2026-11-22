@@ -8,6 +8,7 @@ import { nostrIdPublic, validateNostrId, type NostrIdConfig } from './nostr-conf
 import { validatePeg, type PegConfig } from './peg.js';
 import { validateActivity, type ActivityConfig } from './activity.js';
 import { validateDemo, validateMedia, type DemoConfig, type MediaConfig } from './demo.js';
+import { validateFaq, type FaqConfig } from './faq.js';
 import { validateKeep, type KeepConfig } from './keep.js';
 import { chainsOf, liveAssets, symbolsOf, validateAssets, validateEvmChain, type EvmChain, type RouteAsset } from './route-assets.js';
 import { HERO_PROOF_KINDS, type HeroProofKind } from './hero-proof.js';
@@ -167,6 +168,8 @@ export interface SampanConfig {
   };
   /** /terms and /risks: who runs the site and which sections to show (text in lang/ under terms.<key>.* and risks.<key>.*). */
   legal: { operator: string; terms: LegalSection[]; risks: LegalSection[] };
+  /** /faq: question keys and custody steps (core/faq.ts; text in lang/ under faq.*). */
+  faq: FaqConfig;
   ops: {
     healthIntervalSeconds: number;
     /** Sooner re-check while any health probe is down (a container start can race the first connections). */
@@ -251,6 +254,7 @@ export interface PublicConfig {
   judge: SampanConfig['judge'];
   site: SampanConfig['site'];
   legal: SampanConfig['legal'];
+  faq: FaqConfig;
   /** The header balance (features.headerBalance): wallet.balancePollMs and wallet.balanceBchDecimals. */
   balance: { pollMs: number; bchDecimals: number };
   connect: SampanConfig['connect'] & { gapLimit: number; feeCapSats: number; satsPerByte: number; tokenDustSats: number };
@@ -457,6 +461,7 @@ export function validateConfig(c: SampanConfig): string[] {
   need(typeof c.features?.watchDemo === 'boolean', 'features.watchDemo: true or false');
   need(typeof c.features?.keepCompare === 'boolean', 'features.keepCompare: true or false');
   errors.push(...validateKeep(c.keepCompare));
+  errors.push(...validateFaq(c.faq));
   errors.push(...validateActivity(c.activity));
   need(typeof c.features?.demo === 'boolean', 'features.demo: true or false');
   need(typeof c.features?.slides === 'boolean', 'features.slides: true or false');
@@ -550,6 +555,7 @@ export function publicConfig(c: SampanConfig): PublicConfig {
     judge: { openOnPhone: c.judge.openOnPhone },
     site: c.site,
     legal: c.legal,
+    faq: c.faq,
     balance: { pollMs: c.wallet.balancePollMs, bchDecimals: c.wallet.balanceBchDecimals },
     connect: { ...c.connect, gapLimit: c.wallet.gapLimit, feeCapSats: c.fees.capSats, satsPerByte: c.fees.satsPerByte, tokenDustSats: c.landing.tokenDustSats },
     health: { intervalSeconds: c.ops.healthIntervalSeconds, retrySeconds: c.ops.healthRetrySeconds, requestTimeoutSeconds: c.ops.requestTimeoutSeconds },

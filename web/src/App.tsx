@@ -18,6 +18,7 @@ import { Scene } from './Scene';
 import { CrossingPage } from './CrossingPage';
 import { doneRoute, FinishedPage } from './cross/Finished';
 import { DemoPage } from './demo/DemoPage';
+import { FaqPage } from './faq/FaqPage';
 import { HowPage } from './how/HowPage';
 import { LegalPage } from './legal/LegalPage';
 import { HeroPitch } from './HeroPitch';
@@ -46,6 +47,7 @@ export function App() {
   const crossing = /^\/c\/([0-9a-f]{32})$/.exec(location.pathname)?.[1];
   const done = doneRoute(location.pathname);
   const how = location.pathname === '/how';
+  const faq = location.pathname === '/faq';
   const watch = location.pathname === '/watch';
   const activity = location.pathname === '/activity';
   // /demo only with features.demo; the server answers the 404 page while it is off.
@@ -54,7 +56,7 @@ export function App() {
   // Sampan Pay pages exist only with features.pay; until the config says so nothing is drawn, then the front page.
   const pay = payRoute(location.pathname);
   const payShown = pay && (config ? config.features.pay : !serverDown) ? pay : null;
-  const front = !payShown && !watch && !activity && !demo && !how && !legal && !done && !crossing;
+  const front = !payShown && !watch && !activity && !demo && !how && !faq && !legal && !done && !crossing;
   // The header balance opens the Swap tab, where the full balance and Disconnect are (K5P6).
   const openWallet = (): void => {
     setChosen('swap');
@@ -117,6 +119,10 @@ export function App() {
       ) : how ? (
         <main>
           <HowPage config={config} />
+        </main>
+      ) : faq ? (
+        <main>
+          <FaqPage config={config} />
         </main>
       ) : legal ? (
         <main>

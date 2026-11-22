@@ -8,10 +8,12 @@
 .how > * {
   min-width: 0;
 }
-.how__back {
+.how__back,
+.how__faq {
   margin: 0;
 }
-.how__back a {
+.how__back a,
+.how__faq a {
   display: inline-flex;
   align-items: center;
   min-height: var(--touch);
