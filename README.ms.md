@@ -268,9 +268,10 @@ stablecoin di rantaian lain, penukaran kepada PUSD bagi Bawa masuk, dan jejak TH
 
 ### Ujian
 
-Larian Depot CI `08cj526tf5` pada 16 November 2026, komit `f93ceb9`, menjalankan `scripts/gerbang-ujian.sh`: lint, semakan
-jenis, 256 ujian unit dalam 40 fail (vitest), binaan, dan 36 ujian pelayar (Playwright, Chromium desktop dan WebKit iPhone 13)
-terhadap pelayan yang dibina dengan pembekal palsu. Semuanya lulus. Ujian unit merangkumi pelayan yang menambah output orang
+Larian Depot CI `vl6vmckmpp` pada 22 November 2026, komit `c4c018b`, menjalankan `scripts/gerbang-ujian.sh`: lint, semakan
+jenis, 1050 ujian unit dalam 127 fail (vitest), binaan, dan ujian pelayar (Playwright, Chromium desktop dan WebKit iPhone 13)
+terhadap pelayan yang dibina dengan pembekal palsu: 436 lulus dan 16 dilangkau, kemudian 91 lulus dan 3 dilangkau dalam setiap
+satu daripada tiga tema lain. Tiada yang gagal. Ujian unit merangkumi pelayan yang menambah output orang
 asing atau merendahkan minimum, dan kad pendaratan yang tidak sepadan dengan alamatnya sendiri; kedua-duanya ditolak sebelum
 dompet diminta menandatangani.
 
@@ -315,7 +316,7 @@ npm ci && npm run build && SAMPAN_FAKE=1 npm start
 ```
 
 Buka `http://localhost:8080`; `curl http://localhost:8080/healthz` menjawab `{"ok":true}`. Tetapkan `PORT` untuk port lain.
-Ini disemak pada 16 November 2026 dari `git archive HEAD` dalam folder kosong. Tanpa `SAMPAN_FAKE=1` pelayan berhubung dengan
+Ini disemak pada 22 November 2026 pada komit `c4c018b` dari `git archive HEAD` dalam folder kosong. Tanpa `SAMPAN_FAKE=1` pelayan berhubung dengan
 pelayan Electrum mainnet dan pengindeks Cauldron yang disenaraikan dalam config. `npm test` menjalankan ujian unit dan
 `bash scripts/gerbang-ujian.sh` menjalankan seluruh gerbang.
 

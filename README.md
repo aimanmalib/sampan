@@ -335,9 +335,10 @@ stablecoin transaction on the other chain, the conversion to PUSD for Bring in, 
 
 ### Tests
 
-Depot CI run `08cj526tf5` on 16 November 2026, commit `f93ceb9`, ran `scripts/gerbang-ujian.sh`: lint, type checks,
-256 unit tests in 40 files (vitest), the build, and 36 browser tests (Playwright, Chromium desktop and WebKit iPhone 13)
-against the built server with fake providers. All passed. The unit tests include a server that adds a stranger's output or lowers the minimum, and a landing card that
+Depot CI run `vl6vmckmpp` on 22 November 2026, commit `c4c018b`, ran `scripts/gerbang-ujian.sh`: lint, type checks,
+1050 unit tests in 127 files (vitest), the build, and the browser tests (Playwright, Chromium desktop and WebKit iPhone 13)
+against the built server with fake providers: 436 passed and 16 skipped, then 91 passed and 3 skipped in each of the three
+other themes. Nothing failed. The unit tests include a server that adds a stranger's output or lowers the minimum, and a landing card that
 does not match its own address; both are refused before any wallet is asked to sign.
 
 ## Judging criteria and track rules
@@ -379,7 +380,7 @@ npm ci && npm run build && SAMPAN_FAKE=1 npm start
 ```
 
 Open `http://localhost:8080`; `curl http://localhost:8080/healthz` answers `{"ok":true}`. Set `PORT` to use another port.
-This was checked on 16 November 2026 from `git archive HEAD` in an empty folder. Without `SAMPAN_FAKE=1` the server talks to
+This was checked on 22 November 2026 at commit `c4c018b` from `git archive HEAD` in an empty folder. Without `SAMPAN_FAKE=1` the server talks to
 mainnet Electrum servers and the Cauldron indexer listed in the config. `npm test` runs the unit tests and
 `bash scripts/gerbang-ujian.sh` runs the whole gate.
 
